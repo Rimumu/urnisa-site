@@ -22,7 +22,7 @@ const About: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                 <div className="md:col-span-1 flex flex-col items-center">
                     <img
-                        src="/Urnisa.png"
+                        src="https://i.ibb.co.com/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png"
                         alt="Urnisa Profile"
                         className="w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-brand-primary shadow-lg shadow-brand-primary/30"
                     />
