@@ -42,20 +42,17 @@ const Home: React.FC = () => {
                 </p>
                 <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
                     {/* 
-                      Discord Widget Configuration:
+                      Using WidgetBot for a more reliable and interactive Discord embed.
                       - Server ID: 1336782145833668729
                       - Channel ID: 1336782147490549869
-                      For this to work, ensure the following in Discord Server Settings > Widget:
-                      1. Server Widget is enabled.
-                      2. 'Invite Channel' is set to 'No Invite Channel'.
-                      3. The specified channel (and its category) must be visible to the '@everyone' role.
+                      This provides a live view of the channel directly on the site.
                     */}
-                    <iframe 
-                        src="https://discordapp.com/widget?id=1336782145833668729&channel=1336782147490549869&theme=dark" 
-                        width="100%" 
-                        height="500" 
-                        allowTransparency={true} 
-                        frameBorder="0" 
+                    <iframe
+                        src="https://e.widgetbot.io/channels/1336782145833668729/1336782147490549869"
+                        width="100%"
+                        height="500"
+                        allowTransparency={true}
+                        frameBorder="0"
                         sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
                         className="rounded-lg"
                         title="Discord server widget"
