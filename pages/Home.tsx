@@ -40,22 +40,19 @@ const Home: React.FC = () => {
                 <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
                     Become a part of the STEAK House community! Join our Discord server to chat with others, get live notifications, and stay updated on all events.
                 </p>
-                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
-                    {/* 
-                      Using WidgetBot for a more reliable and interactive Discord embed.
+                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40 overflow-hidden h-[600px]">
+                    {/*
+                      Using the WidgetBot iframe embed for maximum stability.
                       - Server ID: 1336782145833668729
                       - Channel ID: 1336782147490549869
-                      This provides a live view of the channel directly on the site.
                     */}
                     <iframe
-                        src="https://e.widgetbot.io/channels/1336782145833668729/1336782147490549869"
+                        src="https://e.widgetbot.io/embed/if/1336782145833668729/1336782147490549869"
                         width="100%"
-                        height="500"
-                        allowTransparency={true}
-                        frameBorder="0"
-                        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                        className="rounded-lg"
-                        title="Discord server widget"
+                        height="100%"
+                        allow="fullscreen; clipboard-write; autoplay"
+                        style={{ border: 'none' }}
+                        title="Discord Embed"
                     ></iframe>
                 </div>
             </div>
