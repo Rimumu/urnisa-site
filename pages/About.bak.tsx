@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const InfoCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -23,7 +22,7 @@ const About: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                 <div className="md:col-span-1 flex flex-col items-center">
                     <img
-                        src="https://storage.googleapis.com/aai-web-samples/Urnisa.png"
+                        src="/Urnisa.png"
                         alt="Urnisa Profile"
                         className="w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-brand-primary shadow-lg shadow-brand-primary/30"
                     />

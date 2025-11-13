@@ -39,6 +39,11 @@ const Navbar: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <NavLink to="/" className="text-white font-extrabold text-xl tracking-wider flex items-center gap-3">
+                <img 
+                  src="/Urnisa.png" 
+                  alt="Urnisa's profile picture" 
+                  className="w-9 h-9 rounded-full object-cover border-2 border-brand-primary/80" 
+                />
                 <span>
                   URNISA
                 </span>
