@@ -9,6 +9,7 @@ import Minecraft from './pages/Minecraft';
 import About from './pages/About';
 import InteractiveBackground from './components/InteractiveBackground';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
+import ScrollToTopButton from './components/ScrollToTopButton';
 
 const App: React.FC = () => {
   const [showCapybara, setShowCapybara] = useState(false);
@@ -30,6 +31,7 @@ const App: React.FC = () => {
         </Routes>
       </main>
       <Footer />
+      <ScrollToTopButton />
       <CapybaraEasterEgg 
         isVisible={showCapybara}
         onClose={() => setShowCapybara(false)}
