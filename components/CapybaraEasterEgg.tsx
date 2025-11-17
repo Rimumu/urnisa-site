@@ -65,12 +65,14 @@ const CapybaraEasterEgg: React.FC<CapybaraEasterEggProps> = ({ isVisible, onClos
       >
         {/* Static Image - visible by default, fades out on click */}
         <img
+          loading="lazy"
           src={STATIC_CAPY_URL}
           alt={altText}
           className={`${commonImageClasses} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
         />
         {/* Animated GIF - hidden by default, fades in on click */}
         <img
+          loading="lazy"
           // Only provide the src if the GIF is animating to ensure it loops correctly
           src={isAnimating ? ANIMATED_CAPY_URL : undefined}
           alt={altText}

@@ -54,6 +54,7 @@ const Home: React.FC = () => {
                 </h2>
                 <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
                     <img 
+                        loading="lazy"
                         src="https://i.ibb.co/gbWdRKst/3-am-15.png" 
                         alt="Urnisa's weekly stream schedule" 
                         className="rounded-lg w-full"
