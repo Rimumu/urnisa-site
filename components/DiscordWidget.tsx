@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useDiscordWidget } from '../hooks/useDiscordWidget';
-import { DISCORD_INVITE_URL } from '../constants';
+import { DISCORD_INVITE_URL, FEATURED_ROLES } from '../constants';
 
 interface DiscordWidgetProps {
   serverId: string;
@@ -41,6 +41,7 @@ const SkeletonLoader: React.FC = () => (
 
 const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
   const { data, loading, error } = useDiscordWidget(serverId);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
   if (loading) {
     return <SkeletonLoader />;
@@ -56,15 +57,23 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
     );
   }
 
+  const roleData = FEATURED_ROLES.find(r => r.name === selectedRole);
+  const membersToDisplay = roleData ? roleData.members : data.members;
+  const listTitle = selectedRole ? `${selectedRole}` : `Members Online (${data.presence_count})`;
+
   return (
     <div className="bg-brand-secondary text-left w-full rounded-2xl shadow-2xl shadow-black/40 border border-white/10 overflow-hidden">
       {/* Banner and Icon */}
       <div className="relative">
-        <div className="h-32 bg-gradient-to-r from-brand-primary via-red-800 to-brand-bg"></div>
         <img
-          src="https://cdn.discordapp.com/icons/1336782145833668729/a_0d5b799e0b8e6b1e6b8c9d0f1f8e5f7e.gif?size=128"
+          src="https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png"
+          alt={`${data.name} server banner`}
+          className="w-full h-32 object-cover"
+        />
+        <img
+          src="https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png"
           alt={`${data.name} server icon`}
-          className="w-24 h-24 rounded-full absolute -bottom-12 left-6 border-4 border-brand-secondary bg-brand-bg"
+          className="w-24 h-24 rounded-full absolute -bottom-12 left-6 border-4 border-brand-secondary bg-brand-bg object-cover"
         />
       </div>
 
@@ -86,12 +95,36 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
           Join Server
         </a>
       </div>
+      
+      {/* Role Filters Section */}
+      <div className="px-6 pb-4">
+        <h4 className="font-bold text-xs text-gray-400 uppercase mb-2">Filter Members</h4>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedRole(null)}
+            className={`px-3 py-1 rounded-full text-sm font-semibold transition-colors ${selectedRole === null ? 'bg-brand-primary text-white' : 'bg-black/30 text-gray-300 hover:bg-white/10'}`}
+          >
+            All Members
+          </button>
+          {FEATURED_ROLES.map(role => (
+            <button 
+              key={role.name}
+              onClick={() => setSelectedRole(role.name)}
+              className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold transition-colors ${selectedRole === role.name ? 'bg-brand-primary text-white' : 'bg-black/30 text-gray-300 hover:bg-white/10'}`}
+            >
+              <span className={`w-3 h-3 rounded-full ${role.color.replace('text-', 'bg-')}`}></span>
+              <span>{role.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
 
       {/* Member List */}
       <div className="px-6 pb-6">
-        <h4 className="font-bold text-xs text-gray-400 uppercase mb-2">Members Online</h4>
+        <h4 className="font-bold text-xs text-gray-400 uppercase mb-2">{listTitle}</h4>
         <div className="max-h-80 overflow-y-auto pr-2 space-y-2">
-          {data.members.map((member) => (
+          {membersToDisplay.map((member) => (
             <div key={member.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-white/5">
               <div className="relative">
                 <img src={member.avatar_url} alt={`${member.username}'s avatar`} className="w-10 h-10 rounded-full" />
@@ -99,12 +132,17 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
               </div>
               <div className="flex-grow overflow-hidden">
                 <p className="font-semibold text-white truncate">{member.username}</p>
-                {member.game && (
+                {'game' in member && member.game && (
                   <p className="text-xs text-gray-400 truncate">Playing {member.game.name}</p>
                 )}
               </div>
             </div>
           ))}
+           {membersToDisplay.length === 0 && (
+             <div className="text-center py-8 text-gray-400">
+               <p>No members to display for this role.</p>
+             </div>
+           )}
         </div>
       </div>
     </div>
