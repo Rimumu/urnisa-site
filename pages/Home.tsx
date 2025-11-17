@@ -42,17 +42,18 @@ const Home: React.FC = () => {
                 </p>
                 <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40 overflow-hidden h-[600px]">
                     {/*
-                      Using the WidgetBot iframe embed for maximum stability.
-                      - Server ID: 1336782145833668729
-                      - Channel ID: 1336782147490549869
+                      Using the official Discord widget for maximum stability.
+                      Third-party services like WidgetBot have proven unreliable due to internal CORS errors.
+                      Server ID: 1336782145833668729
                     */}
                     <iframe
-                        src="https://e.widgetbot.io/embed/if/1336782145833668729/1336782147490549869"
+                        src="https://discord.com/widget?id=1336782145833668729&theme=dark"
                         width="100%"
                         height="100%"
-                        allow="fullscreen; clipboard-write; autoplay"
-                        style={{ border: 'none' }}
-                        title="Discord Embed"
+                        allowTransparency={true}
+                        frameBorder="0"
+                        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                        title="Discord Server Widget"
                     ></iframe>
                 </div>
             </div>
