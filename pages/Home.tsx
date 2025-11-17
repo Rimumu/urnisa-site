@@ -46,7 +46,7 @@ const Home: React.FC = () => {
             {/* Schedule Section */}
             <div 
                 ref={scheduleRef}
-                className={`mt-8 w-full max-w-5xl transition-all duration-700 ease-out ${isScheduleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                className={`mt-8 w-full max-w-5xl transition-all duration-1000 ease-out ${isScheduleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
                 style={{ scrollMarginTop: '5rem' }} // Offset for the sticky navbar
             >
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
@@ -64,7 +64,7 @@ const Home: React.FC = () => {
             {/* Discord Section */}
             <div 
                 ref={discordRef}
-                className={`mt-16 w-full max-w-5xl transition-all duration-700 ease-out ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                className={`mt-16 w-full max-w-5xl transition-all duration-1000 ease-out ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
             >
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Join our <span className="text-brand-primary">Discord</span>
