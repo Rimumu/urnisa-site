@@ -64,11 +64,12 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <NavLink to="/" onClick={handlePfpClick} className="text-white font-extrabold text-xl tracking-wider flex items-center gap-3">
-                <img 
+                <img
                   loading="lazy"
-                  src="https://i.ibb.co.com/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png" 
-                  alt="Urnisa's profile picture" 
-                  className="w-9 h-9 rounded-full object-cover border-2 border-brand-primary/80" 
+                  src="https://i.ibb.co/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png"
+                  srcSet="https://i.ibb.co/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png 1x, https://i.ibb.co/7YjY2yr/profile-300w.png 2x"
+                  alt="Urnisa's profile picture"
+                  className="w-9 h-9 rounded-full object-cover border-2 border-brand-primary/80"
                 />
                 <span>
                   URNISA

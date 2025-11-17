@@ -53,10 +53,12 @@ const Home: React.FC = () => {
                     Stream <span className="text-brand-primary">Schedule</span>
                 </h2>
                 <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
-                    <img 
+                    <img
                         loading="lazy"
-                        src="https://i.ibb.co/gbWdRKst/3-am-15.png" 
-                        alt="Urnisa's weekly stream schedule" 
+                        src="https://i.ibb.co/hZ2vVfS/schedule-480w.png"
+                        srcSet="https://i.ibb.co/hZ2vVfS/schedule-480w.png 480w, https://i.ibb.co/FWSV5v1/schedule-800w.png 800w, https://i.ibb.co/gbWdRKst/3-am-15.png 1080w"
+                        sizes="(min-width: 1024px) 1024px, 100vw"
+                        alt="Urnisa's weekly stream schedule"
                         className="rounded-lg w-full"
                     />
                 </div>

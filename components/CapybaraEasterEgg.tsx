@@ -7,7 +7,8 @@ interface CapybaraEasterEggProps {
 }
 
 const ANIMATED_CAPY_URL = 'https://i.ibb.co/BKZX0KGm/Capy-NODDERS.gif';
-const STATIC_CAPY_URL = 'https://i.ibb.co/5y5dFhw/Capy-NODDERS.png';
+const STATIC_CAPY_URL_1X = 'https://i.ibb.co/5y5dFhw/Capy-NODDERS.png'; // Original 256w
+const STATIC_CAPY_URL_2X = 'https://i.ibb.co/529H3F8/Capy-NODDERS-512w.png'; // New 512w
 
 const CapybaraEasterEgg: React.FC<CapybaraEasterEggProps> = ({ isVisible, onClose }) => {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -66,7 +67,8 @@ const CapybaraEasterEgg: React.FC<CapybaraEasterEggProps> = ({ isVisible, onClos
         {/* Static Image - visible by default, fades out on click */}
         <img
           loading="lazy"
-          src={STATIC_CAPY_URL}
+          src={STATIC_CAPY_URL_1X}
+          srcSet={`${STATIC_CAPY_URL_1X} 1x, ${STATIC_CAPY_URL_2X} 2x`}
           alt={altText}
           className={`${commonImageClasses} ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
         />
