@@ -51,7 +51,7 @@ const CapybaraEasterEgg: React.FC<CapybaraEasterEggProps> = ({ isVisible, onClos
 
   return (
     <div
-      className={`fixed bottom-0 right-5 z-[100] transition-transform duration-700 ease-in-out ${
+      className={`fixed bottom-0 right-24 z-[100] transition-transform duration-700 ease-in-out ${
         isVisible ? 'translate-y-0' : 'translate-y-full'
       }`}
       aria-hidden={!isVisible}
