@@ -8,6 +8,12 @@ const Home: React.FC = () => {
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
     const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
 
+    const handleScrollToSchedule = () => {
+        // The `scrollMarginTop` style on the scheduleRef element ensures that
+        // the sticky navbar does not overlap the section title after scrolling.
+        scheduleRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
     return (
         <div className="flex flex-col items-center text-center">
             <h1 className="text-4xl md:text-6xl font-extrabold mb-2">
@@ -23,10 +29,25 @@ const Home: React.FC = () => {
                 </div>
             </div>
 
+            {/* Scroll Down Arrow */}
+            <div className="mt-12 text-center">
+                <button
+                    onClick={handleScrollToSchedule}
+                    className="text-brand-primary animate-bounce transition-transform duration-200 hover:scale-110 focus:outline-none"
+                    aria-label="Scroll to schedule"
+                    title="Scroll to schedule"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+
             {/* Schedule Section */}
             <div 
                 ref={scheduleRef}
-                className={`mt-16 w-full max-w-5xl transition-all duration-700 ease-out ${isScheduleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                className={`mt-8 w-full max-w-5xl transition-all duration-700 ease-out ${isScheduleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                style={{ scrollMarginTop: '5rem' }} // Offset for the sticky navbar
             >
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Stream <span className="text-brand-primary">Schedule</span>
