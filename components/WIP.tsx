@@ -8,7 +8,7 @@ interface WIPProps {
 const WIP: React.FC<WIPProps> = ({ pageName }) => {
     return (
         <div className="flex flex-col items-center justify-center text-center py-16">
-            <div className="bg-black/30 backdrop-blur-lg p-10 rounded-2xl shadow-2xl border border-white/10 max-w-lg transform hover:scale-105 transition-transform duration-300">
+            <div className="bg-brand-secondary p-10 rounded-2xl shadow-2xl border border-white/10 max-w-lg transform hover:scale-105 transition-transform duration-300">
                 <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4">
                     <span className="text-brand-primary">{pageName}</span>
                 </h1>
