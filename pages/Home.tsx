@@ -6,7 +6,7 @@ import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 const Home: React.FC = () => {
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
-    const [discordWidgetRef, isDiscordWidgetVisible] = useScrollAnimation<HTMLDivElement>();
+    const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
 
     return (
         <div className="flex flex-col items-center text-center">
@@ -42,7 +42,8 @@ const Home: React.FC = () => {
 
             {/* Discord Section */}
             <div 
-                className="mt-16 w-full max-w-5xl"
+                ref={discordRef}
+                className={`mt-16 w-full max-w-5xl transition-all duration-700 ease-out ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
             >
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Join our <span className="text-brand-primary">Discord</span>
@@ -50,10 +51,7 @@ const Home: React.FC = () => {
                 <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
                     Become a part of the STEAK House community! Join our Discord server to chat with others, get live notifications, and stay updated on all events.
                 </p>
-                <div 
-                    ref={discordWidgetRef}
-                    className={`bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40 overflow-hidden h-[600px] transition-all duration-700 ease-out ${isDiscordWidgetVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-                >
+                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40 overflow-hidden h-[600px]">
                     {/*
                       Using the official Discord widget for maximum stability.
                       Third-party services like WidgetBot have proven unreliable due to internal CORS errors.
