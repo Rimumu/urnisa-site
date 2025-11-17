@@ -8,21 +8,19 @@ import Subathon from './pages/Subathon';
 import Minecraft from './pages/Minecraft';
 import About from './pages/About';
 import InteractiveBackground from './components/InteractiveBackground';
-import { useKonamiCode } from './hooks/useKonamiCode';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 
 const App: React.FC = () => {
   const [showCapybara, setShowCapybara] = useState(false);
   
-  // When the Konami code is entered, show the capybara!
-  useKonamiCode(() => {
+  const triggerEasterEgg = () => {
     setShowCapybara(true);
-  });
+  };
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <InteractiveBackground />
-      <Navbar />
+      <Navbar onEasterEggTrigger={triggerEasterEgg} />
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Home />} />

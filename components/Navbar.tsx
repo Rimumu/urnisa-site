@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTwitchStatus } from '../hooks/useTwitchStatus';
 
@@ -13,9 +13,33 @@ const NavLinks: React.FC = () => (
     </>
 );
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+    onEasterEggTrigger: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
   const [isOpen, setIsOpen] = useState(false);
   const isLive = useTwitchStatus();
+
+  // Easter Egg logic
+  const pfpClickCount = useRef(0);
+  const lastPfpClickTime = useRef(0);
+
+  const handlePfpClick = () => {
+    const now = Date.now();
+    // Reset if clicks are more than 1 second apart to ensure they are "rapid"
+    if (now - lastPfpClickTime.current > 1000) {
+      pfpClickCount.current = 1;
+    } else {
+      pfpClickCount.current++;
+    }
+    lastPfpClickTime.current = now;
+
+    if (pfpClickCount.current === 3) {
+      onEasterEggTrigger();
+      pfpClickCount.current = 0; // Reset after triggering
+    }
+  };
 
   // Lock body scroll when the mobile menu is open to improve user experience.
   useEffect(() => {
@@ -39,7 +63,7 @@ const Navbar: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <NavLink to="/" className="text-white font-extrabold text-xl tracking-wider flex items-center gap-3">
+              <NavLink to="/" onClick={handlePfpClick} className="text-white font-extrabold text-xl tracking-wider flex items-center gap-3">
                 <img 
                   src="https://i.ibb.co.com/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png" 
                   alt="Urnisa's profile picture" 
