@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -8,8 +8,17 @@ import Subathon from './pages/Subathon';
 import Minecraft from './pages/Minecraft';
 import About from './pages/About';
 import InteractiveBackground from './components/InteractiveBackground';
+import { useKonamiCode } from './hooks/useKonamiCode';
+import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 
 const App: React.FC = () => {
+  const [showCapybara, setShowCapybara] = useState(false);
+  
+  // When the Konami code is entered, show the capybara!
+  useKonamiCode(() => {
+    setShowCapybara(true);
+  });
+
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <InteractiveBackground />
@@ -23,6 +32,10 @@ const App: React.FC = () => {
         </Routes>
       </main>
       <Footer />
+      <CapybaraEasterEgg 
+        isVisible={showCapybara}
+        onClose={() => setShowCapybara(false)}
+      />
     </div>
   );
 };
