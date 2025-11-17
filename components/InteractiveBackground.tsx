@@ -63,8 +63,8 @@ const InteractiveBackground: React.FC = () => {
           twinkleSpeed: 0.0005 + Math.random() * 0.001,
           // All particles get a drift velocity now.
           // Stars drift a bit faster than the faint dust particles for a parallax effect.
-          driftVx: (Math.random() - 0.5) * (isStar ? 0.1 : 0.05),
-          driftVy: (Math.random() - 0.5) * (isStar ? 0.1 : 0.05),
+          driftVx: (Math.random() - 0.5) * (isStar ? 0.2 : 0.04),
+          driftVy: (Math.random() - 0.5) * (isStar ? 0.2 : 0.04),
         };
 
         particles.current.push(particle);
@@ -92,7 +92,7 @@ const InteractiveBackground: React.FC = () => {
 
         if (distance < mouse.current.radius) {
           // Enhance parallax: stars (closer) are pushed more strongly than dust (further).
-          const parallaxMultiplier = p.isStar ? 1 : 0.3;
+          const parallaxMultiplier = p.isStar ? 1.2 : 0.2;
           const force = (mouse.current.radius - distance) / mouse.current.radius * parallaxMultiplier;
           forceDirectionX = (dx / distance) * force * -1; // Push away
           forceDirectionY = (dy / distance) * force * -1;
