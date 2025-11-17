@@ -1,3 +1,4 @@
+
 import React from 'react';
 import TwitchEmbed from '../components/TwitchEmbed';
 import { TWITCH_CHANNEL_NAME } from '../constants';
@@ -13,7 +14,7 @@ const Home: React.FC = () => {
             </p>
 
             <div className="w-full max-w-5xl">
-                <div className="w-full bg-brand-secondary rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
+                <div className="w-full bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
                     <TwitchEmbed channel={TWITCH_CHANNEL_NAME} />
                 </div>
             </div>
@@ -23,7 +24,7 @@ const Home: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Stream <span className="text-brand-primary">Schedule</span>
                 </h2>
-                <div className="bg-brand-secondary rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
+                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
                     <img 
                         src="https://i.ibb.co/gbWdRKst/3-am-15.png" 
                         alt="Urnisa's weekly stream schedule" 
@@ -40,7 +41,7 @@ const Home: React.FC = () => {
                 <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
                     Become a part of the STEAK House community! Join our Discord server to chat with others, get live notifications, and stay updated on all events.
                 </p>
-                <div className="bg-brand-secondary rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40 overflow-hidden h-[600px]">
+                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40 overflow-hidden h-[600px]">
                     {/*
                       Using the official Discord widget for maximum stability.
                       Third-party services like WidgetBot have proven unreliable due to internal CORS errors.

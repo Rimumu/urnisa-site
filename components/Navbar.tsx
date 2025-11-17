@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTwitchStatus } from '../hooks/useTwitchStatus';
@@ -88,7 +89,7 @@ const Navbar: React.FC = () => {
       <div
         id="mobile-menu"
         className={`
-          md:hidden fixed inset-0 z-40 bg-brand-bg/95 backdrop-blur-xl
+          md:hidden fixed inset-0 z-40 bg-brand-bg/95 backdrop-blur-sm
           transition-opacity duration-300 ease-in-out
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}

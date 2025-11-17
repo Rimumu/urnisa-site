@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 
 // Define the structure of a particle
@@ -23,7 +24,6 @@ const InteractiveBackground: React.FC = () => {
   const particles = useRef<Particle[]>([]);
   // Fix: Explicitly pass `undefined` as the initial value to `useRef`.
   const animationFrameId = useRef<number | undefined>(undefined);
-  const scrollFactor = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -70,37 +70,12 @@ const InteractiveBackground: React.FC = () => {
         particles.current.push(particle);
       }
     };
-
-    const lerp = (start: number, end: number, t: number): number => {
-        return start * (1 - t) + end * t;
-    };
     
     const animate = () => {
-      // Get the current scroll factor
-      const currentScrollFactor = scrollFactor.current;
-
-      // Define start and end colors for the gradient
-      const startTop = { r: 58, g: 16, b: 23 }; // #3a1017
-      const startBottom = { r: 31, g: 9, b: 12 }; // #1f090c
-      const endTop = { r: 10, g: 2, b: 3 };     // Dark reddish black
-      const endBottom = { r: 0, g: 0, b: 0 };     // Black
-
-      // Interpolate colors based on scroll factor
-      const topR = Math.round(lerp(startTop.r, endTop.r, currentScrollFactor));
-      const topG = Math.round(lerp(startTop.g, endTop.g, currentScrollFactor));
-      const topB = Math.round(lerp(startTop.b, endTop.b, currentScrollFactor));
-
-      const bottomR = Math.round(lerp(startBottom.r, endBottom.r, currentScrollFactor));
-      const bottomG = Math.round(lerp(startBottom.g, endBottom.g, currentScrollFactor));
-      const bottomB = Math.round(lerp(startBottom.b, endBottom.b, currentScrollFactor));
-
-      const currentTopColor = `rgb(${topR}, ${topG}, ${topB})`;
-      const currentBottomColor = `rgb(${bottomR}, ${bottomG}, ${bottomB})`;
-
-      // Create and apply the gradient background
+      // Create and apply the static gradient background
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, currentTopColor);
-      gradient.addColorStop(1, currentBottomColor);
+      gradient.addColorStop(0, '#3a1017'); // brand-bg
+      gradient.addColorStop(1, '#1f090c'); // brand-secondary
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -199,20 +174,10 @@ const InteractiveBackground: React.FC = () => {
       setup();
     };
 
-    const handleScroll = () => {
-        // The scroll distance over which the background transitions to its darkest state.
-        const scrollThreshold = 500; 
-        const factor = Math.min(window.scrollY / scrollThreshold, 1);
-        scrollFactor.current = factor;
-    };
-
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseleave', handleMouseLeave);
     window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Initial call to set the color based on initial scroll position
-    handleScroll();
     setup();
     animate();
 
@@ -223,7 +188,6 @@ const InteractiveBackground: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
