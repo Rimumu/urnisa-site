@@ -2,10 +2,21 @@
 import React, { useState } from 'react';
 import { useDiscordWidget } from '../hooks/useDiscordWidget';
 import { DISCORD_INVITE_URL, FEATURED_ROLES } from '../constants';
+import { useImageLoaded } from '../hooks/useImageLoaded';
+import { getDiscordAvatarUrl } from '../utils/discord';
 
 interface DiscordWidgetProps {
   serverId: string;
 }
+
+// URLs for high-resolution images
+const BANNER_URL = "https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png";
+const ICON_URL = "https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png";
+
+// URLs for tiny, blurred placeholder images, proxied through a resizing service
+const BANNER_PLACEHOLDER_URL = "https://images.weserv.nl/?url=i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png&w=48&h=16&blur=3&fit=cover";
+const ICON_PLACEHOLDER_URL = "https://images.weserv.nl/?url=i.ibb.co/j9W0ZQhn/nisa-nomnom.png&w=24&h=24&blur=3&fit=cover";
+
 
 const StatusIndicator: React.FC<{ status: 'online' | 'idle' | 'dnd' }> = ({ status }) => {
   const colorClasses = {
@@ -43,6 +54,10 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
   const { data, loading, error } = useDiscordWidget(serverId);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
+  // Hooks to track when the full-resolution images are loaded
+  const isBannerLoaded = useImageLoaded(BANNER_URL);
+  const isIconLoaded = useImageLoaded(ICON_URL);
+
   if (loading) {
     return <SkeletonLoader />;
   }
@@ -64,20 +79,40 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
   return (
     <div className="bg-brand-secondary text-left w-full rounded-2xl shadow-2xl shadow-black/40 border border-white/10 overflow-hidden">
       {/* Banner and Icon */}
-      <div className="relative">
-        <img
-          loading="lazy"
-          src="https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png"
-          alt={`${data.name} server banner`}
-          className="w-full h-32 object-cover"
-        />
-        <img
-          loading="lazy"
-          src="https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png"
-          alt={`${data.name} server icon`}
-          className="w-24 h-24 rounded-full absolute -bottom-12 left-6 border-4 border-brand-secondary bg-brand-bg object-cover"
-        />
-      </div>
+       <div className="relative">
+        <div className="relative w-full h-32 bg-brand-surface overflow-hidden">
+            {/* Low-res, blurred placeholder. Always rendered. */}
+            <img
+                src={BANNER_PLACEHOLDER_URL}
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover scale-110" // Scale up to hide blurry edges
+            />
+            {/* High-res image. Fades in on top when loaded. */}
+            <img
+                src={BANNER_URL}
+                alt={`${data.name} server banner`}
+                className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-700 ease-in-out ${isBannerLoaded ? 'opacity-100' : 'opacity-0'}`}
+            />
+        </div>
+
+        <div className="w-24 h-24 rounded-full absolute -bottom-12 left-6 border-4 border-brand-secondary bg-brand-bg object-cover overflow-hidden">
+            {/* Low-res, blurred placeholder */}
+            <img
+                src={ICON_PLACEHOLDER_URL}
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover scale-110"
+            />
+            {/* High-res image */}
+            <img
+                src={ICON_URL}
+                alt={`${data.name} server icon`}
+                className={`w-full h-full rounded-full absolute top-0 left-0 transition-opacity duration-700 ease-in-out ${isIconLoaded ? 'opacity-100' : 'opacity-0'}`}
+            />
+        </div>
+    </div>
+
 
       {/* Server Info & Join Button */}
       <div className="pt-16 pb-4 px-6 flex justify-between items-start">
@@ -129,7 +164,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
           {membersToDisplay.map((member) => (
             <div key={member.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-white/5">
               <div className="relative">
-                <img loading="lazy" src={member.avatar_url} alt={`${member.username}'s avatar`} className="w-10 h-10 rounded-full" />
+                <img loading="lazy" src={getDiscordAvatarUrl(member)} alt={`${member.username}'s avatar`} className="w-10 h-10 rounded-full" />
                 <StatusIndicator status={member.status} />
               </div>
               <div className="flex-grow overflow-hidden">
