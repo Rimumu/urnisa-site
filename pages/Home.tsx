@@ -1,8 +1,9 @@
 
 import React from 'react';
 import TwitchEmbed from '../components/TwitchEmbed';
-import { TWITCH_CHANNEL_NAME } from '../constants';
+import { TWITCH_CHANNEL_NAME, DISCORD_SERVER_ID } from '../constants';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import DiscordWidget from '../components/DiscordWidget';
 
 const Home: React.FC = () => {
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
@@ -75,22 +76,7 @@ const Home: React.FC = () => {
                 <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
                     Become a part of the STEAK House community! Join our Discord server to chat with others, get live notifications, and stay updated on all events.
                 </p>
-                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40 overflow-hidden h-[600px]">
-                    {/*
-                      Using the official Discord widget for maximum stability.
-                      Third-party services like WidgetBot have proven unreliable due to internal CORS errors.
-                      Server ID: 1336782145833668729
-                    */}
-                    <iframe
-                        src="https://discord.com/widget?id=1336782145833668729&theme=dark"
-                        width="100%"
-                        height="100%"
-                        allowTransparency={true}
-                        frameBorder="0"
-                        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                        title="Discord Server Widget"
-                    ></iframe>
-                </div>
+                <DiscordWidget serverId={DISCORD_SERVER_ID} />
             </div>
         </div>
     );
