@@ -76,7 +76,9 @@ const Home: React.FC = () => {
                 <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
                     Become a part of the STEAK House community! Join our Discord server to chat with others, get live notifications, and stay updated on all events.
                 </p>
-                <DiscordWidget serverId={DISCORD_SERVER_ID} />
+                {/* The DiscordWidget is only rendered when it becomes visible,
+                    which triggers the data fetch. This is lazy loading. */}
+                {isDiscordVisible && <DiscordWidget serverId={DISCORD_SERVER_ID} />}
             </div>
         </div>
     );

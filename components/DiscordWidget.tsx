@@ -66,11 +66,13 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       {/* Banner and Icon */}
       <div className="relative">
         <img
+          loading="lazy"
           src="https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png"
           alt={`${data.name} server banner`}
           className="w-full h-32 object-cover"
         />
         <img
+          loading="lazy"
           src="https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png"
           alt={`${data.name} server icon`}
           className="w-24 h-24 rounded-full absolute -bottom-12 left-6 border-4 border-brand-secondary bg-brand-bg object-cover"
@@ -127,7 +129,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
           {membersToDisplay.map((member) => (
             <div key={member.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-white/5">
               <div className="relative">
-                <img src={member.avatar_url} alt={`${member.username}'s avatar`} className="w-10 h-10 rounded-full" />
+                <img loading="lazy" src={member.avatar_url} alt={`${member.username}'s avatar`} className="w-10 h-10 rounded-full" />
                 <StatusIndicator status={member.status} />
               </div>
               <div className="flex-grow overflow-hidden">
