@@ -3,7 +3,7 @@ export const TWITCH_CHANNEL_NAME = 'urnisa_';
 export const DISCORD_SERVER_ID = '1336782145833668729';
 export const DISCORD_INVITE_URL = 'https://discord.gg/urnisa';
 
-// AFTER YOU DEPLOY TO RENDER:
+// AFTER YOU DEPLOY TO RENDER:!
 // Replace 'http://localhost:3001' below with your new Render URL (e.g., 'https://urnisa-bot.onrender.com')
 export const API_BASE_URL = 'https://urnisa-bot.onrender.com';
 
