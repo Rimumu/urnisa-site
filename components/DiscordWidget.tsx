@@ -1,7 +1,8 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useDiscordWidget } from '../hooks/useDiscordWidget';
-import { DISCORD_INVITE_URL, DISCORD_ROLES_CONFIG } from '../constants';
+import { useDiscordChat, DiscordMessage } from '../hooks/useDiscordChat';
+import { DISCORD_INVITE_URL, DISCORD_ROLES_CONFIG, DISCORD_CHAT_CHANNEL_ID } from '../constants';
 import { useImageLoaded } from '../hooks/useImageLoaded';
 import { getDiscordAvatarUrl } from '../utils/discord';
 
@@ -78,11 +79,68 @@ const MemberRow: React.FC<{ member: any }> = ({ member }) => (
     </div>
 );
 
+const ChatMessage: React.FC<{ message: DiscordMessage }> = ({ message }) => {
+    const date = new Date(message.timestamp);
+    // Format: "Today at 4:20 PM" or "10/25/2023"
+    const dateString = date.toLocaleDateString() === new Date().toLocaleDateString()
+        ? `Today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : date.toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    return (
+        <div className="flex gap-3 p-2 hover:bg-white/5 rounded-md transition-colors group">
+             <div className="flex-shrink-0 pt-1">
+                <img 
+                    src={getDiscordAvatarUrl(message.author)} 
+                    alt={message.author.username}
+                    className="w-10 h-10 rounded-full bg-brand-surface object-cover"
+                />
+            </div>
+            <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-2">
+                    <span className="font-semibold text-white text-sm">{message.author.username}</span>
+                    <span className="text-xs text-gray-500">{dateString}</span>
+                </div>
+                <div className="text-gray-300 text-sm whitespace-pre-wrap break-words mt-0.5">
+                    {message.content}
+                </div>
+                {message.attachments && message.attachments.length > 0 && (
+                    <div className="mt-2">
+                        {message.attachments.map((att) => (
+                            <div key={att.id} className="max-w-[200px] rounded overflow-hidden border border-white/10">
+                                {att.content_type?.startsWith('image/') ? (
+                                     <img src={att.url} alt="attachment" className="max-w-full max-h-48 object-contain bg-black/20" />
+                                ) : (
+                                    <a href={att.url} target="_blank" rel="noreferrer" className="block p-2 text-xs text-brand-primary hover:underline bg-black/20 truncate">
+                                        📎 {att.filename}
+                                    </a>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
   const { data, ownerData, loading, error } = useDiscordWidget(serverId);
+  // We only fetch chat messages if the chat tab is active, or we can fetch eager. 
+  // To keep it snappy, we'll fetch when the component mounts (it's lazy loaded by Home.tsx anyway).
+  const { messages, loading: chatLoading, error: chatError } = useDiscordChat(DISCORD_CHAT_CHANNEL_ID);
 
   const isBannerLoaded = useImageLoaded(BANNER_URL);
   const isIconLoaded = useImageLoaded(ICON_URL);
+
+  const [activeTab, setActiveTab] = useState<'members' | 'chat'>('members');
+
+  // Auto-scroll chat to bottom
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (activeTab === 'chat' && messages.length > 0) {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [activeTab, messages]);
 
   // State for collapsible sections
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -136,17 +194,11 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
             : memberUsername;
 
         if (isMatch(ownerConfig, memberId, memberUsername, fullUsername)) {
-            // Special handling for Owner:
-            // If we have fetched specific data from the bot (ownerData), 
-            // we merge it into the widget member object. 
-            // This ensures we show the correct Server Avatar and Nickname even if they are online.
             let finalOwnerMember = { ...member };
             if (ownerData && String(ownerData.id).trim() === memberId) {
                 finalOwnerMember.nick = ownerData.nick;
                 finalOwnerMember.avatar_url = ownerData.avatar_url;
-                // We prefer the nickname, but if not present, the component falls back to global_name/username
             }
-
             groups.owner.push(finalOwnerMember);
             return;
         }
@@ -162,19 +214,15 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
 
     // Fallback: If Owner is offline (not in widget data), inject them using fetched profile data
     if (groups.owner.length === 0 && ownerConfig && ownerConfig.userIds.length > 0) {
-        // Use data from the local bot API if available
         const realOwner = ownerData;
         
         groups.owner.push({
             id: ownerConfig.userIds[0],
             username: realOwner?.username || ownerConfig.usernames[0] || 'Owner',
             global_name: realOwner?.global_name || null,
-            // Use 'nick' from the bot API which corresponds to the server nickname
             nick: realOwner?.nick || null, 
             discriminator: realOwner?.discriminator || '0000',
-            // 'avatar_url' is pre-calculated by our server.js
             avatar_url: realOwner?.avatar_url || ownerConfig.avatarUrl, 
-            // We don't have the raw avatar hash here usually if coming from constants, but server provides avatar_url
             avatar: null, 
             status: 'offline',
             game: null
@@ -210,7 +258,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
   }
 
   return (
-    <div className="bg-brand-secondary text-left w-full rounded-2xl shadow-2xl shadow-black/40 border border-white/10 overflow-hidden flex flex-col h-full max-h-[600px]">
+    <div className="bg-brand-secondary text-left w-full rounded-2xl shadow-2xl shadow-black/40 border border-white/10 overflow-hidden flex flex-col h-full max-h-[650px]">
       {/* Header Section */}
        <div className="relative flex-shrink-0">
         <div className="relative w-full h-28 bg-brand-surface overflow-hidden">
@@ -267,89 +315,133 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
           Join
         </a>
       </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex px-6 border-b border-white/5 mb-2 gap-4">
+          <button 
+            onClick={() => setActiveTab('members')}
+            className={`pb-2 text-sm font-bold transition-colors ${activeTab === 'members' ? 'text-white border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-200'}`}
+          >
+            👥 Members
+          </button>
+          <button 
+            onClick={() => setActiveTab('chat')}
+            className={`pb-2 text-sm font-bold transition-colors ${activeTab === 'chat' ? 'text-white border-b-2 border-brand-primary' : 'text-gray-400 hover:text-gray-200'}`}
+          >
+            💬 Chat Preview
+          </button>
+      </div>
       
-      {/* Member List */}
-      <div className="flex-grow overflow-y-auto px-4 pb-4 custom-scrollbar space-y-4">
+      {/* Content Area */}
+      <div className="flex-grow overflow-y-auto px-4 pb-4 custom-scrollbar">
         
-        {/* Owner Section */}
-        {categorizedMembers && categorizedMembers.owner.length > 0 && (
-            <div>
-                <button 
-                    onClick={() => toggleSection('owner')}
-                    className="w-full flex items-center justify-between font-bold text-xs text-pink-300 uppercase mb-2 px-2 tracking-wider border-b border-pink-500/20 pb-1 hover:bg-white/5 rounded transition-colors focus:outline-none"
-                >
-                    <span className="flex items-center gap-2">
-                        <span>👑</span> Owner 
-                        <span className="text-pink-300/50 text-[10px]">({categorizedMembers.owner.length})</span>
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${expandedSections['owner'] ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-                {expandedSections['owner'] && (
-                    <div className="space-y-1">
-                        {categorizedMembers.owner.map(member => (
-                            <MemberRow key={member.id} member={member} />
-                        ))}
+        {activeTab === 'members' ? (
+            <div className="space-y-4">
+                {/* Owner Section */}
+                {categorizedMembers && categorizedMembers.owner.length > 0 && (
+                    <div>
+                        <button 
+                            onClick={() => toggleSection('owner')}
+                            className="w-full flex items-center justify-between font-bold text-xs text-pink-300 uppercase mb-2 px-2 tracking-wider border-b border-pink-500/20 pb-1 hover:bg-white/5 rounded transition-colors focus:outline-none"
+                        >
+                            <span className="flex items-center gap-2">
+                                <span>👑</span> Owner 
+                                <span className="text-pink-300/50 text-[10px]">({categorizedMembers.owner.length})</span>
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${expandedSections['owner'] ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        {expandedSections['owner'] && (
+                            <div className="space-y-1">
+                                {categorizedMembers.owner.map(member => (
+                                    <MemberRow key={member.id} member={member} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Guard Dogs Section */}
+                {categorizedMembers && categorizedMembers.guard_dogs.length > 0 && (
+                    <div>
+                        <button 
+                            onClick={() => toggleSection('guard_dogs')}
+                            className="w-full flex items-center justify-between font-bold text-xs text-green-400 uppercase mb-2 px-2 tracking-wider border-b border-green-500/20 pb-1 hover:bg-white/5 rounded transition-colors focus:outline-none"
+                        >
+                            <span className="flex items-center gap-2">
+                                <span>🛡️</span> Guard Dogs
+                                <span className="text-green-400/50 text-[10px]">({categorizedMembers.guard_dogs.length})</span>
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${expandedSections['guard_dogs'] ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        {expandedSections['guard_dogs'] && (
+                            <div className="space-y-1">
+                                {categorizedMembers.guard_dogs.map(member => (
+                                    <MemberRow key={member.id} member={member} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Meatlings Section */}
+                {categorizedMembers && categorizedMembers.meatlings.length > 0 && (
+                    <div>
+                        <button 
+                            onClick={() => toggleSection('meatlings')}
+                            className="w-full flex items-center justify-between font-bold text-xs text-gray-400 uppercase mb-2 px-2 tracking-wider border-b border-white/10 pb-1 hover:bg-white/5 rounded transition-colors focus:outline-none"
+                        >
+                            <span className="flex items-center gap-2">
+                                Meatlings
+                                <span className="text-gray-500 text-[10px]">({categorizedMembers.meatlings.length})</span>
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${expandedSections['meatlings'] ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        {expandedSections['meatlings'] && (
+                            <div className="space-y-1">
+                                {categorizedMembers.meatlings.map(member => (
+                                    <MemberRow key={member.id} member={member} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Empty State if no one is online */}
+                {data && data.members.length === 0 && categorizedMembers?.owner.length === 0 && (
+                    <div className="text-center py-10 text-gray-500">
+                        <p>No one is online right now... 🦗</p>
                     </div>
                 )}
             </div>
-        )}
-
-        {/* Guard Dogs Section */}
-        {categorizedMembers && categorizedMembers.guard_dogs.length > 0 && (
-            <div>
-                <button 
-                    onClick={() => toggleSection('guard_dogs')}
-                    className="w-full flex items-center justify-between font-bold text-xs text-green-400 uppercase mb-2 px-2 tracking-wider border-b border-green-500/20 pb-1 hover:bg-white/5 rounded transition-colors focus:outline-none"
-                >
-                     <span className="flex items-center gap-2">
-                        <span>🛡️</span> Guard Dogs
-                        <span className="text-green-400/50 text-[10px]">({categorizedMembers.guard_dogs.length})</span>
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${expandedSections['guard_dogs'] ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-                {expandedSections['guard_dogs'] && (
-                    <div className="space-y-1">
-                        {categorizedMembers.guard_dogs.map(member => (
-                            <MemberRow key={member.id} member={member} />
-                        ))}
+        ) : (
+            // Chat View
+            <div className="space-y-2 min-h-[200px]">
+                {chatLoading ? (
+                    <div className="flex flex-col items-center justify-center h-40 text-gray-400 space-y-2">
+                        <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-xs">Loading chat...</p>
                     </div>
-                )}
-            </div>
-        )}
-
-        {/* Meatlings Section */}
-        {categorizedMembers && categorizedMembers.meatlings.length > 0 && (
-            <div>
-                 <button 
-                    onClick={() => toggleSection('meatlings')}
-                    className="w-full flex items-center justify-between font-bold text-xs text-gray-400 uppercase mb-2 px-2 tracking-wider border-b border-white/10 pb-1 hover:bg-white/5 rounded transition-colors focus:outline-none"
-                >
-                    <span className="flex items-center gap-2">
-                        Meatlings
-                        <span className="text-gray-500 text-[10px]">({categorizedMembers.meatlings.length})</span>
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${expandedSections['meatlings'] ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-                {expandedSections['meatlings'] && (
-                    <div className="space-y-1">
-                        {categorizedMembers.meatlings.map(member => (
-                            <MemberRow key={member.id} member={member} />
-                        ))}
+                ) : chatError ? (
+                    <div className="text-center py-10 text-red-400">
+                        <p>Could not load chat preview.</p>
+                        <p className="text-xs opacity-70 mt-1">Please try again later.</p>
                     </div>
+                ) : messages.length === 0 ? (
+                     <div className="text-center py-10 text-gray-500">
+                        <p>It's quiet... too quiet. 🦗</p>
+                    </div>
+                ) : (
+                    messages.map(msg => (
+                        <ChatMessage key={msg.id} message={msg} />
+                    ))
                 )}
-            </div>
-        )}
-
-        {/* Empty State if no one is online */}
-        {data && data.members.length === 0 && categorizedMembers?.owner.length === 0 && (
-             <div className="text-center py-10 text-gray-500">
-                <p>No one is online right now... 🦗</p>
+                <div ref={chatEndRef} />
             </div>
         )}
       </div>
