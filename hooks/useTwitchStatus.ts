@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { TWITCH_CHANNEL_NAME } from '../constants';
 
@@ -19,9 +20,10 @@ export const useTwitchStatus = (): boolean => {
       
       if (response.ok) {
         const text = await response.text();
+        const cleanText = text.trim().toLowerCase();
         // If the text includes 'offline', the channel is not live.
         // Otherwise, it returns a time string (e.g., "2 hours, 4 minutes"), meaning they are live.
-        setIsLive(!text.includes('offline'));
+        setIsLive(!cleanText.includes('offline') && cleanText.length > 0);
       }
     } catch (error) {
       console.error('Error fetching Twitch status:', error);
