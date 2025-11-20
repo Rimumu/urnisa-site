@@ -1,28 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { TWITCH_CHANNEL_NAME } from '../constants';
 
 /**
- * A mock hook to simulate fetching Twitch live status.
- * In a real application, this would involve making an API call to the Twitch API
- * via a secure backend proxy to avoid exposing API keys on the client-side.
+ * A hook that fetches the real-time live status of the Twitch channel.
+ * Uses the decapi.me API to check uptime, which avoids the need for 
+ * server-side OAuth handling for a simple status check.
  * 
  * @returns {boolean} A boolean indicating if the stream is live.
  */
 export const useTwitchStatus = (): boolean => {
   const [isLive, setIsLive] = useState(false);
 
-  useEffect(() => {
-    // Start with a random status to make the initial state unpredictable.
-    setIsLive(Math.random() > 0.5);
-
-    // Set up an interval to toggle the live status every 10 seconds.
-    // This demonstrates the dynamic nature of the UI component.
-    const interval = setInterval(() => {
-      setIsLive(prevStatus => !prevStatus);
-    }, 10000);
-
-    // Clean up the interval when the component unmounts to prevent memory leaks.
-    return () => clearInterval(interval);
+  const checkStatus = useCallback(async () => {
+    try {
+      // decapi.me returns the uptime if live, or "[channel] is offline" if not.
+      // This is a reliable way to check status from the frontend without CORS issues.
+      const response = await fetch(`https://decapi.me/twitch/uptime/${TWITCH_CHANNEL_NAME}`);
+      
+      if (response.ok) {
+        const text = await response.text();
+        // If the text includes 'offline', the channel is not live.
+        // Otherwise, it returns a time string (e.g., "2 hours, 4 minutes"), meaning they are live.
+        setIsLive(!text.includes('offline'));
+      }
+    } catch (error) {
+      console.error('Error fetching Twitch status:', error);
+      // We do not update state on error to prevent UI flickering
+    }
   }, []);
+
+  useEffect(() => {
+    // Check status immediately on mount
+    checkStatus();
+
+    // Poll every 60 seconds to keep status updated
+    const interval = setInterval(checkStatus, 60000);
+
+    return () => clearInterval(interval);
+  }, [checkStatus]);
 
   return isLive;
 };
