@@ -136,7 +136,18 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
             : memberUsername;
 
         if (isMatch(ownerConfig, memberId, memberUsername, fullUsername)) {
-            groups.owner.push(member);
+            // Special handling for Owner:
+            // If we have fetched specific data from the bot (ownerData), 
+            // we merge it into the widget member object. 
+            // This ensures we show the correct Server Avatar and Nickname even if they are online.
+            let finalOwnerMember = { ...member };
+            if (ownerData && String(ownerData.id).trim() === memberId) {
+                finalOwnerMember.nick = ownerData.nick;
+                finalOwnerMember.avatar_url = ownerData.avatar_url;
+                // We prefer the nickname, but if not present, the component falls back to global_name/username
+            }
+
+            groups.owner.push(finalOwnerMember);
             return;
         }
         
