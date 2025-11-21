@@ -14,6 +14,31 @@ const BANNER_URL = "https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png";
 const ICON_URL = "https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png";
 const CHANNEL_NAME = "₊˚ᰔ┊chill";
 
+// Helper for formatting file sizes
+const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
+// Icons
+const FileIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-brand-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+        <polyline points="13 2 13 9 20 9"></polyline>
+    </svg>
+);
+
+const DownloadIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400 group-hover/att:text-brand-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+);
+
 const SkeletonLoader: React.FC = () => (
     <div className="w-full h-[600px] md:h-[750px] bg-black/30 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden flex flex-col shadow-2xl">
         <div className="h-40 bg-white/5 animate-pulse"></div>
@@ -102,7 +127,7 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
                 const [revealed, setRevealed] = useState(false);
                 return (
                     <span 
-                        onClick={() => setRevealed(true)}
+                        onClick={(e) => { e.stopPropagation(); setRevealed(true); }}
                         className={`
                             rounded-[3px] px-1 cursor-pointer transition-all duration-200
                             ${revealed ? 'bg-white/10' : 'bg-[#1e1f22] hover:bg-[#2b2d31] select-none text-transparent'}
@@ -150,7 +175,8 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
                     src={url} 
                     alt={`:${name}:`} 
                     title={`:${name}:`}
-                    className={`${isJumbo ? 'w-12 h-12 my-1' : 'w-6 h-6 -translate-y-0.5'} inline-block object-contain align-middle mx-0.5 hover:scale-110 transition-transform duration-200`}
+                    className={`${isJumbo ? 'w-10 h-10 md:w-12 md:h-12 my-1' : 'w-5 h-5 md:w-6 md:h-6 -translate-y-0.5'} inline-block object-contain align-middle mx-0.5 hover:scale-110 transition-transform duration-200`}
+                    loading="lazy"
                 />
             );
         });
@@ -208,33 +234,39 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
     }
 
     return (
-        <div className={`flex flex-col group transition-colors border-l-2 border-transparent hover:border-brand-primary/50 relative px-4 py-0.5 hover:bg-white/5 ${message.referenced_message ? 'mt-3' : 'mt-0.5'}`}>
+        <div className={`flex flex-col group transition-colors border-l-2 border-transparent hover:border-brand-primary/50 relative px-4 py-1 hover:bg-white/5 ${message.referenced_message ? 'mt-3' : 'mt-0.5'}`}>
             
             {/* Reply Reference */}
             {message.referenced_message && (
-                <div className="flex items-center gap-1.5 mb-0.5 ml-[56px] relative opacity-60 hover:opacity-100 transition-opacity group/reply select-none">
+                <div className="flex items-center gap-2 mb-1 ml-[52px] relative opacity-70 hover:opacity-100 transition-opacity group/reply select-none">
                     {/* The Spine */}
-                    <div className="absolute bottom-[50%] right-[100%] w-[34px] h-[10px] border-l-[2px] border-t-[2px] border-gray-500/40 rounded-tl-[6px] mb-[1px] mr-[6px]"></div>
+                    <div className="absolute bottom-2 right-full w-9 h-3 border-l-[2px] border-t-[2px] border-gray-600 rounded-tl-[6px] mr-2"></div>
                     
                     <img 
                         src={getDiscordAvatarUrl(message.referenced_message.author)}
                         alt="Ref Avatar"
                         className="w-4 h-4 rounded-full bg-brand-secondary shrink-0"
                     />
-                    <span className="font-bold text-gray-300 text-[0.75rem] hover:underline cursor-pointer truncate max-w-[100px]">
+                    <span className="font-bold text-gray-300 text-xs hover:underline cursor-pointer truncate max-w-[120px]">
                         {message.referenced_message.author.global_name || message.referenced_message.author.username}
                     </span>
-                    <span className="text-[0.75rem] text-gray-400 truncate max-w-[200px] md:max-w-sm cursor-pointer transition-colors group-hover/reply:text-gray-200">
-                        {message.referenced_message.content || <span className="italic">Click to see attachment</span>}
-                    </span>
+                    
+                    {/* Render the reply content with formatting (mentions/emotes) but line-clamped */}
+                    <div className="text-xs text-gray-500 truncate max-w-[200px] md:max-w-sm cursor-pointer transition-colors group-hover/reply:text-gray-300 flex items-center gap-1 overflow-hidden h-[1.2em]">
+                         {message.referenced_message.content 
+                            ? parseDiscordContent(message.referenced_message.content, message.referenced_message.mentions || [])
+                            : <span className="italic">Click to see attachment</span>
+                         }
+                    </div>
                 </div>
             )}
 
             <div className="flex gap-4">
-                <div className="flex-shrink-0 pt-1">
+                <div className="flex-shrink-0 pt-0.5">
                     <img 
                         src={avatarUrl} 
                         alt={displayName}
+                        loading="lazy"
                         className="w-10 h-10 rounded-full bg-brand-secondary object-cover cursor-pointer ring-2 ring-transparent group-hover:ring-brand-primary/30 transition-all shadow-lg"
                     />
                 </div>
@@ -254,50 +286,86 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                     
                     {/* Attachments */}
                     {message.attachments && message.attachments.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {message.attachments.map((att) => (
-                                <div key={att.id} className="overflow-hidden rounded-lg border border-white/10 bg-black/30 hover:bg-black/50 transition-all group/att">
-                                    {att.content_type?.startsWith('image/') ? (
-                                         <div className="relative">
-                                            <a href={att.url} target="_blank" rel="noreferrer" className="block">
-                                                <img 
-                                                    src={att.url} 
-                                                    alt={att.filename}
-                                                    className="max-w-full max-h-[300px] object-contain min-w-[100px] min-h-[100px]" 
-                                                />
+                        <div className="mt-2 flex flex-wrap gap-3">
+                            {message.attachments.map((att) => {
+                                const isImage = att.content_type?.startsWith('image/');
+                                return (
+                                    <div key={att.id} className="overflow-hidden rounded-lg border border-white/10 bg-black/30 group/att max-w-full">
+                                        {isImage ? (
+                                             <div className="relative">
+                                                <a href={att.url} target="_blank" rel="noreferrer" className="block cursor-zoom-in">
+                                                    <img 
+                                                        src={att.url} 
+                                                        alt={att.filename}
+                                                        loading="lazy"
+                                                        className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] bg-repeat" 
+                                                    />
+                                                </a>
+                                             </div>
+                                        ) : (
+                                            <a href={att.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 pr-4 max-w-sm hover:bg-white/5 transition-colors">
+                                                <div className="w-10 h-10 rounded bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
+                                                    <FileIcon />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="text-brand-primary font-bold text-sm truncate group-hover/att:underline" title={att.filename}>{att.filename}</div>
+                                                    <div className="text-xs text-gray-500 font-mono mt-0.5">{formatFileSize(att.size)}</div>
+                                                </div>
+                                                <div className="ml-3">
+                                                    <DownloadIcon />
+                                                </div>
                                             </a>
-                                         </div>
-                                    ) : (
-                                        <a href={att.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 pr-4 max-w-md hover:bg-white/5 transition-colors">
-                                            <div className="w-10 h-10 rounded bg-brand-primary/20 flex items-center justify-center text-2xl flex-shrink-0 text-brand-primary">
-                                                📄
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="text-brand-primary font-bold text-sm truncate group-hover/att:underline">{att.filename}</div>
-                                                <div className="text-xs text-gray-500 font-mono mt-0.5">{(att.size / 1024).toFixed(0)} KB</div>
-                                            </div>
-                                            <div className="ml-auto text-gray-500 opacity-0 group-hover/att:opacity-100 transition-opacity">
-                                                ⬇
-                                            </div>
-                                        </a>
-                                    )}
-                                </div>
-                            ))}
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
 
                     {/* Stickers */}
                     {message.sticker_items && message.sticker_items.length > 0 && (
-                        <div className="mt-2">
-                            {message.sticker_items.map((sticker) => (
-                                <img 
-                                    key={sticker.id} 
-                                    src={`https://cdn.discordapp.com/stickers/${sticker.id}.png`} 
-                                    alt={sticker.name}
-                                    className="w-32 h-32 object-contain hover:scale-105 transition-transform drop-shadow-md"
-                                    title={sticker.name}
-                                />
-                            ))}
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            {message.sticker_items.map((sticker) => {
+                                // Format 1 = PNG, 2 = APNG, 3 = Lottie, 4 = GIF
+                                // Default to PNG endpoint, but switch to GIF for format 4
+                                const extension = sticker.format_type === 4 ? 'gif' : 'png';
+                                return (
+                                    <img 
+                                        key={sticker.id} 
+                                        src={`https://cdn.discordapp.com/stickers/${sticker.id}.${extension}`} 
+                                        alt={sticker.name}
+                                        className="w-28 h-28 md:w-32 md:h-32 object-contain hover:scale-105 transition-transform drop-shadow-md"
+                                        title={sticker.name}
+                                        loading="lazy"
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Reactions */}
+                    {message.reactions && message.reactions.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                            {message.reactions.map((reaction, idx) => {
+                                const emojiUrl = reaction.emoji.id 
+                                    ? `https://cdn.discordapp.com/emojis/${reaction.emoji.id}.${reaction.emoji.animated ? 'gif' : 'png'}` 
+                                    : null;
+                                
+                                return (
+                                    <div 
+                                        key={idx} 
+                                        className="bg-[#2b2d31] hover:bg-[#373a40] border border-transparent hover:border-gray-600 rounded-[8px] px-1.5 py-0.5 flex items-center gap-1.5 cursor-pointer select-none transition-colors min-h-[1.5rem]"
+                                        title={`${reaction.emoji.name} - ${reaction.count}`}
+                                    >
+                                        {emojiUrl ? (
+                                            <img src={emojiUrl} alt={reaction.emoji.name || ''} className="w-4 h-4 object-contain" />
+                                        ) : (
+                                            <span className="text-sm leading-none">{reaction.emoji.name}</span>
+                                        )}
+                                        <span className="text-xs font-bold text-gray-400">{reaction.count}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -331,8 +399,15 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       );
   }
 
+  // State classes for the content when overlay is active
+  // Instead of backdrop-blur on the overlay, we blur the content itself for a cleaner effect.
+  const contentState = showJoinOverlay 
+    ? "blur-md brightness-[0.3] pointer-events-none scale-[1.01]" 
+    : "scale-100";
+  const transitionClass = "transition-all duration-500 ease-out transform";
+
   return (
-    <div className="flex flex-col h-[600px] md:h-[800px] w-full bg-black/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl font-sans text-gray-200 text-left relative">
+    <div className="flex flex-col h-[600px] md:h-[800px] w-full bg-black/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl font-sans text-gray-200 text-left relative isolate">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: rgba(0,0,0,0.2); }
@@ -342,7 +417,10 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
 
       {/* Overlay Logic */}
       {showJoinOverlay && (
-        <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+            {/* Clickable backdrop to close */}
+            <div className="absolute inset-0 bg-black/10" onClick={() => setShowJoinOverlay(false)}></div>
+
             <div className="relative bg-[#1e1f22] w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-white/10 transform scale-100 transition-all animate-in zoom-in-95 duration-200">
                 <button 
                     onClick={() => setShowJoinOverlay(false)}
@@ -382,7 +460,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       )}
 
       {/* 1. Header Section - Banner & Server Info */}
-      <div className="shrink-0 relative h-40 bg-brand-secondary overflow-hidden group select-none">
+      <div className={`shrink-0 relative h-40 bg-brand-secondary overflow-hidden group select-none ${transitionClass} ${contentState}`}>
             <img src={BANNER_URL} alt="Server Banner" className="w-full h-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105" />
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
@@ -408,13 +486,13 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       </div>
 
       {/* 2. Channel Bar */}
-      <div className="shrink-0 h-14 border-b border-white/5 flex items-center px-5 bg-black/20 shadow-sm z-20 backdrop-blur-sm">
+      <div className={`shrink-0 h-14 border-b border-white/5 flex items-center px-5 bg-black/20 shadow-sm z-20 backdrop-blur-sm ${transitionClass} ${contentState}`}>
             <span className="text-2xl mr-3 text-brand-accent">#</span>
             <span className="font-bold text-white text-lg tracking-wide mr-3 drop-shadow-sm">{CHANNEL_NAME}</span>
       </div>
 
       {/* 3. Chat Area */}
-      <div className="flex-1 relative min-h-0">
+      <div className={`flex-1 relative min-h-0 ${transitionClass} ${contentState}`}>
         <div 
             className="w-full h-full overflow-y-auto custom-scrollbar bg-transparent scroll-smooth" 
             ref={chatContainerRef} 
@@ -444,7 +522,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       </div>
 
       {/* 4. Input Area */}
-      <div className="shrink-0 p-4 bg-black/20 z-20 border-t border-white/5">
+      <div className={`shrink-0 p-4 bg-black/20 z-20 border-t border-white/5 ${transitionClass} ${contentState}`}>
          <div 
             onClick={() => setShowJoinOverlay(true)}
             className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer select-none transition-colors group hover:border-white/10 hover:bg-black/50"

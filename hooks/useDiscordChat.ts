@@ -29,6 +29,15 @@ export interface DiscordMessage {
         discriminator: string;
         global_name?: string;
     }[];
+    reactions?: {
+        emoji: {
+            id: string | null;
+            name: string | null;
+            animated?: boolean;
+        };
+        count: number;
+        me: boolean;
+    }[];
     referenced_message?: {
         id: string;
         author: {
@@ -39,6 +48,12 @@ export interface DiscordMessage {
             discriminator: string;
         };
         content: string;
+        mentions?: {
+            id: string;
+            username: string;
+            discriminator: string;
+            global_name?: string;
+        }[];
     } | null;
 }
 
