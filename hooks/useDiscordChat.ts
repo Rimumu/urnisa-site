@@ -13,6 +13,17 @@ export interface DiscordMessage {
         discriminator: string;
     };
     attachments: any[];
+    sticker_items?: {
+        id: string;
+        name: string;
+        format_type: number; // 1 = PNG, 2 = APNG, 3 = LOTTIE, 4 = GIF
+    }[];
+    mentions?: {
+        id: string;
+        username: string;
+        discriminator: string;
+        global_name?: string;
+    }[];
 }
 
 export const useDiscordChat = (channelId: string) => {

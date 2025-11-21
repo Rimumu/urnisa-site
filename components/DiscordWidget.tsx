@@ -1,8 +1,8 @@
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDiscordWidget } from '../hooks/useDiscordWidget';
 import { useDiscordChat, DiscordMessage } from '../hooks/useDiscordChat';
-import { DISCORD_INVITE_URL, DISCORD_ROLES_CONFIG, DISCORD_CHAT_CHANNEL_ID } from '../constants';
+import { DISCORD_INVITE_URL, DISCORD_CHAT_CHANNEL_ID } from '../constants';
 import { useImageLoaded } from '../hooks/useImageLoaded';
 import { getDiscordAvatarUrl } from '../utils/discord';
 
@@ -16,80 +16,151 @@ const ICON_URL = "https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png";
 
 // URLs for tiny, blurred placeholder images
 const BANNER_PLACEHOLDER_URL = "https://images.weserv.nl/?url=i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png&w=48&h=16&blur=3&fit=cover";
-const ICON_PLACEHOLDER_URL = "https://images.weserv.nl/?url=i.ibb.co/j9W0ZQhn/nisa-nomnom.png&w=24&h=24&blur=3&fit=cover";
-
-const StatusIndicator: React.FC<{ status: string }> = ({ status }) => {
-  const statusColor: Record<string, string> = {
-    online: 'bg-green-500',
-    idle: 'bg-amber-400',
-    dnd: 'bg-red-500',
-    offline: 'bg-gray-500',
-  };
-
-  return (
-    <div className="absolute -bottom-0.5 -right-0.5 bg-brand-secondary rounded-full p-[2px]">
-        <div 
-            className={`h-2.5 w-2.5 rounded-full ${statusColor[status] || 'bg-gray-500'}`} 
-            title={status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Offline'}
-        />
-    </div>
-  );
-};
 
 const SkeletonLoader: React.FC = () => (
     <div className="w-full h-[600px] bg-brand-secondary rounded-2xl border border-white/10 overflow-hidden flex flex-col animate-pulse">
         <div className="h-32 bg-white/5"></div>
-        <div className="flex-1 flex">
-            <div className="flex-1 p-4 space-y-4">
-                <div className="h-4 bg-white/5 rounded w-3/4"></div>
-                <div className="h-4 bg-white/5 rounded w-1/2"></div>
-                <div className="h-4 bg-white/5 rounded w-5/6"></div>
-            </div>
-            <div className="w-60 bg-white/5 border-l border-white/5 p-4 space-y-4 hidden md:block">
-                 <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-white/10"></div>
-                    <div className="h-3 bg-white/10 rounded w-20"></div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-white/10"></div>
-                    <div className="h-3 bg-white/10 rounded w-20"></div>
-                </div>
-            </div>
+        <div className="flex-1 flex flex-col p-4 space-y-4">
+            <div className="h-4 bg-white/5 rounded w-3/4"></div>
+            <div className="h-4 bg-white/5 rounded w-1/2"></div>
+            <div className="h-4 bg-white/5 rounded w-5/6"></div>
+            <div className="flex-grow"></div>
+            <div className="h-12 bg-white/5 rounded w-full"></div>
         </div>
     </div>
 );
 
-const MemberRow: React.FC<{ member: any }> = ({ member }) => (
-    <div className="flex items-center gap-3 p-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
-        <div className="relative flex-shrink-0">
-            <img 
-                loading="lazy" 
-                src={getDiscordAvatarUrl(member)} 
-                alt={`${member.username}'s avatar`} 
-                className="w-8 h-8 rounded-full object-cover bg-brand-secondary" 
-            />
-            <StatusIndicator status={member.status} />
-        </div>
-        <div className="flex-grow overflow-hidden min-w-0 text-left">
-            <div className="flex items-center justify-between">
-                <p className={`font-medium truncate text-sm transition-colors ${member.status === 'offline' ? 'text-gray-500' : 'text-gray-300 group-hover:text-white'}`}>
-                    {member.nick || member.global_name || member.username}
-                </p>
-            </div>
+// Helper to parse Discord markdown, emotes, and mentions
+const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boolean = false) => {
+    if (!content) return null;
+
+    // Helper function to recursively split text based on patterns
+    const splitText = (text: string | React.ReactNode[], regex: RegExp, transform: (match: RegExpMatchArray, index: number) => React.ReactNode): React.ReactNode[] => {
+        const result: React.ReactNode[] = [];
+        
+        // Force text to be array if it isn't
+        const nodes = Array.isArray(text) ? text : [text];
+
+        nodes.forEach((node) => {
+            if (typeof node !== 'string') {
+                result.push(node);
+                return;
+            }
+
+            const parts = node.split(regex);
+            let match;
+            // Reset regex index
+            regex.lastIndex = 0;
             
-            {/* Activity / Game Status */}
-            {member.game ? (
-                <p className="text-[10px] text-gray-400 truncate">
-                    Playing <span className="font-semibold text-gray-300">{member.game.name}</span>
-                </p>
-            ) : (
-                <p className="text-[10px] text-gray-500 truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                    View Profile
-                </p>
-            )}
-        </div>
-    </div>
-);
+            // If no match, keep string as is
+            if (parts.length === 1) {
+                result.push(node);
+                return;
+            }
+
+            // Iterate parts and reconstruct with transformed elements
+            // Note: .split(regex) with capturing groups includes the captures in the result array
+            // But for complex regex with multiple groups, it's safer to match manually or handle the split array carefully
+            // For simplicity here, we use a basic split/match approach suitable for specific patterns.
+            
+            // React-friendly split:
+            let lastIndex = 0;
+            while ((match = regex.exec(node)) !== null) {
+                const before = node.slice(lastIndex, match.index);
+                if (before) result.push(before);
+                
+                result.push(transform(match, lastIndex));
+                
+                lastIndex = regex.lastIndex;
+            }
+            const remaining = node.slice(lastIndex);
+            if (remaining) result.push(remaining);
+        });
+
+        return result;
+    };
+
+    let parts: React.ReactNode[] = [content];
+
+    // 1. Code Blocks (```text```)
+    parts = splitText(parts, /```([\s\S]*?)```/g, (match, i) => (
+        <pre key={`codeblock-${i}`} className="bg-[#2b2d31] p-2 rounded border border-white/10 overflow-x-auto font-mono text-xs my-1">
+            <code>{match[1]}</code>
+        </pre>
+    ));
+
+    // 2. Inline Code (`text`)
+    parts = splitText(parts, /`([^`]+)`/g, (match, i) => (
+        <code key={`inline-${i}`} className="bg-[#2b2d31] px-1 rounded font-mono text-sm mx-0.5">
+            {match[1]}
+        </code>
+    ));
+
+    // 3. Custom Emotes (<:name:id> or <a:name:id>)
+    parts = splitText(parts, /<(a)?:(\w+):(\d+)>/g, (match, i) => {
+        const isAnimated = match[1] === 'a';
+        const name = match[2];
+        const id = match[3];
+        const url = `https://cdn.discordapp.com/emojis/${id}.${isAnimated ? 'gif' : 'png'}`;
+        return (
+            <img 
+                key={`emote-${id}-${i}`} 
+                src={url} 
+                alt={`:${name}:`} 
+                title={`:${name}:`}
+                className={`${isJumbo ? 'w-12 h-12' : 'w-6 h-6 -my-1'} inline-block object-contain vertical-align-middle`}
+            />
+        );
+    });
+
+    // 4. Mentions (<@id> or <@!id>)
+    parts = splitText(parts, /<@!?(\d+)>/g, (match, i) => {
+        const userId = match[1];
+        const user = mentions.find(m => m.id === userId);
+        const displayName = user ? (user.global_name || user.username) : 'Unknown User';
+        return (
+            <span key={`mention-${userId}-${i}`} className="bg-[#3c4270] text-[#dee0fc] hover:bg-[#5865f2] px-1 rounded cursor-pointer transition-colors font-medium">
+                @{displayName}
+            </span>
+        );
+    });
+
+    // 5. Spoilers (||text||)
+    parts = splitText(parts, /\|\|(.*?)\|\|/g, (match, i) => (
+        <span key={`spoiler-${i}`} className="bg-[#202225] text-transparent hover:text-gray-100 hover:bg-[#40444b] rounded px-1 cursor-pointer transition-all select-none">
+            {match[1]}
+        </span>
+    ));
+
+    // 6. Bold (**text**)
+    parts = splitText(parts, /\*\*(.*?)\*\*/g, (match, i) => (
+        <strong key={`bold-${i}`} className="font-bold text-white">{match[1]}</strong>
+    ));
+
+    // 7. Italic (*text* or _text_)
+    parts = splitText(parts, /(\*|_)(.*?)\1/g, (match, i) => (
+        <em key={`italic-${i}`} className="italic">{match[2]}</em>
+    ));
+
+    // 8. Underline (__text__)
+    parts = splitText(parts, /__(.*?)__/g, (match, i) => (
+        <u key={`underline-${i}`} className="underline decoration-gray-400">{match[1]}</u>
+    ));
+
+    // 9. Strikethrough (~~text~~)
+    parts = splitText(parts, /~~(.*?)~~/g, (match, i) => (
+        <s key={`strike-${i}`} className="line-through text-gray-500">{match[1]}</s>
+    ));
+
+    // 10. Links (http...)
+    parts = splitText(parts, /(https?:\/\/[^\s]+)/g, (match, i) => (
+        <a key={`link-${i}`} href={match[1]} target="_blank" rel="noreferrer" className="text-[#00b0f4] hover:underline break-all">
+            {match[1]}
+        </a>
+    ));
+
+    return parts;
+};
 
 const ChatMessage: React.FC<{ message: DiscordMessage }> = ({ message }) => {
     const date = new Date(message.timestamp);
@@ -97,8 +168,15 @@ const ChatMessage: React.FC<{ message: DiscordMessage }> = ({ message }) => {
         ? `Today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
         : date.toLocaleString([], { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+    // Detect if message is only emojis (Jumbo mode)
+    // Checks if content only contains standard emojis or custom discord emotes, and whitespace
+    // Simple check: remove all emote patterns and whitespace, if empty -> jumbo
+    const emoteRegex = /<(a)?:(\w+):(\d+)>|\p{Extended_Pictographic}/gu;
+    const strippedContent = message.content.replace(emoteRegex, '').trim();
+    const isJumbo = strippedContent.length === 0 && message.content.length > 0 && message.content.length < 200;
+
     return (
-        <div className="flex gap-3 p-1 py-1.5 hover:bg-black/20 rounded-sm transition-colors group text-left">
+        <div className="flex gap-3 p-1 py-1.5 hover:bg-black/20 rounded-sm transition-colors group text-left leading-[1.375rem]">
              <div className="flex-shrink-0 pt-0.5">
                 <img 
                     src={getDiscordAvatarUrl(message.author)} 
@@ -106,14 +184,16 @@ const ChatMessage: React.FC<{ message: DiscordMessage }> = ({ message }) => {
                     className="w-10 h-10 rounded-full bg-brand-surface object-cover cursor-pointer hover:opacity-80 transition-opacity"
                 />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 overflow-hidden">
                 <div className="flex items-baseline gap-2">
                     <span className="font-medium text-white text-sm hover:underline cursor-pointer">{message.author.username}</span>
                     <span className="text-[10px] text-gray-500">{dateString}</span>
                 </div>
-                <div className="text-gray-300 text-[14px] whitespace-pre-wrap break-words leading-relaxed">
-                    {message.content}
+                <div className={`text-gray-300 text-[15px] whitespace-pre-wrap break-words ${isJumbo ? 'leading-relaxed' : ''}`}>
+                    {parseDiscordContent(message.content, message.mentions, isJumbo)}
                 </div>
+                
+                {/* Attachments */}
                 {message.attachments && message.attachments.length > 0 && (
                     <div className="mt-2 space-y-1">
                         {message.attachments.map((att) => (
@@ -129,143 +209,41 @@ const ChatMessage: React.FC<{ message: DiscordMessage }> = ({ message }) => {
                         ))}
                     </div>
                 )}
+
+                {/* Stickers */}
+                {message.sticker_items && message.sticker_items.length > 0 && (
+                    <div className="mt-2">
+                        {message.sticker_items.map((sticker) => (
+                            <img 
+                                key={sticker.id} 
+                                src={`https://cdn.discordapp.com/stickers/${sticker.id}.png`} 
+                                alt={sticker.name}
+                                className="w-[160px] h-[160px] object-contain hover:scale-105 transition-transform"
+                                title={sticker.name}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
 const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
-  const { data, ownerData, loading, error } = useDiscordWidget(serverId);
+  // We still use the widget hook to get the server banner info (name, presence count)
+  const { data, loading, error } = useDiscordWidget(serverId);
   const { messages, loading: chatLoading, error: chatError } = useDiscordChat(DISCORD_CHAT_CHANNEL_ID);
 
   const isBannerLoaded = useImageLoaded(BANNER_URL);
   const isIconLoaded = useImageLoaded(ICON_URL);
 
-  const [activeTab, setActiveTab] = useState<'chat' | 'members'>('chat');
-  
-  const ownerRole = DISCORD_ROLES_CONFIG.find(r => r.id === 'owner');
-  const guardRole = DISCORD_ROLES_CONFIG.find(r => r.id === 'guard_dogs');
-
   // Auto-scroll chat to bottom
   const chatEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if ((activeTab === 'chat' || window.innerWidth >= 768) && messages.length > 0) {
+    if (messages.length > 0) {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [activeTab, messages]);
-
-  // State for collapsible sections
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    owner: true,
-    guard_dogs: true,
-    meatlings: true
-  });
-
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  // Categorize and Sort Members
-  const categorizedMembers = useMemo(() => {
-    if (!data || !data.members) return null;
-
-    const groups: Record<string, any[]> = {
-        owner: [],
-        guard_dogs: [],
-        meatlings: []
-    };
-
-    // Normalize helper
-    const norm = (val: any) => String(val || '').trim().toLowerCase();
-
-    // Pre-calculate sets of IDs for O(1) lookup
-    const ownerIds = new Set(ownerRole?.userIds?.map(norm) || []);
-    const guardIds = new Set(guardRole?.userIds?.map(norm) || []);
-    const ownerUsernames = new Set(ownerRole?.usernames?.map(norm) || []);
-
-    // 1. SINGLE PASS BUCKET SORT
-    // Iterate through all online members exactly ONCE and assign to the highest priority group.
-    data.members.forEach(member => {
-        const mId = norm(member.id);
-        const mUser = norm(member.username);
-
-        // Priority 1: Owner
-        if (ownerIds.has(mId) || ownerUsernames.has(mUser)) {
-            groups.owner.push(member);
-            return; // Assigned! Move to next member.
-        }
-
-        // Priority 2: Guard Dogs
-        if (guardIds.has(mId)) {
-            groups.guard_dogs.push(member);
-            return; // Assigned!
-        }
-
-        // Priority 3: Meatlings (Everyone else)
-        groups.meatlings.push(member);
-    });
-
-    // 2. OWNER HANDLING (Search & Rescue + Injection)
-    // We want to ensure the owner is displayed with high-quality data if possible.
-    const targetOwnerId = ownerData ? norm(ownerData.id) : (Array.from(ownerIds)[0] || '');
-
-    // Check if owner ended up in the Owner bucket (Ideal case)
-    let finalOwnerEntry = groups.owner.find(m => norm(m.id) === targetOwnerId);
-
-    // If not in Owner bucket, check if they accidentally fell into Meatlings 
-    // (e.g. if ID config had a typo but we have a fresh ID from ownerData)
-    if (!finalOwnerEntry && targetOwnerId) {
-        const rescueIndex = groups.meatlings.findIndex(m => norm(m.id) === targetOwnerId);
-        if (rescueIndex !== -1) {
-            // Found them in meatlings! Move them to Owner.
-            finalOwnerEntry = groups.meatlings[rescueIndex];
-            groups.meatlings.splice(rescueIndex, 1); // Remove from meatlings to prevent duplicate
-            groups.owner.push(finalOwnerEntry);
-        }
-    }
-
-    // If still not found, they are OFFLINE. Inject them using bot data.
-    if (!finalOwnerEntry && ownerData) {
-        finalOwnerEntry = {
-            ...ownerData,
-            status: 'offline',
-            game: undefined
-        };
-        groups.owner.push(finalOwnerEntry);
-    }
-
-    // 3. ENHANCE DATA
-    // If we have the owner entry (from any source) and we have bot data, merge it.
-    if (finalOwnerEntry && ownerData) {
-        const idx = groups.owner.indexOf(finalOwnerEntry);
-        if (idx !== -1) {
-            groups.owner[idx] = {
-                ...finalOwnerEntry, // Base data (preserves 'online' status if from widget)
-                nick: ownerData.nick || finalOwnerEntry.nick, // Prefer Bot/Server Nickname
-                avatar_url: ownerData.avatar_url || finalOwnerEntry.avatar_url, // Prefer Bot Avatar
-                global_name: ownerData.global_name || finalOwnerEntry.global_name,
-                // IMPORTANT: Do not overwrite status/game with bot data if the user was actually online
-                status: finalOwnerEntry.status, 
-                game: finalOwnerEntry.game 
-            };
-        }
-    }
-
-    // 4. SORT ALPHABETICALLY
-    const sortByName = (a: any, b: any) => {
-        const getName = (m: any) => (m.nick || m.global_name || m.username || '').toLowerCase();
-        return getName(a).localeCompare(getName(b));
-    };
-
-    groups.owner.sort(sortByName);
-    groups.guard_dogs.sort(sortByName);
-    groups.meatlings.sort(sortByName);
-
-    return groups;
-  }, [data, ownerData, ownerRole, guardRole]);
+  }, [messages]);
 
   if (loading) {
     return <SkeletonLoader />;
@@ -327,24 +305,15 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
             </a>
        </div>
 
-      {/* 2. Main Content Area (Split Pane) */}
-      <div className="flex-grow flex overflow-hidden relative bg-[#2b2d31]"> {/* Discord-ish dark bg */}
-        
-        {/* Left Pane: Chat */}
-        <div className={`flex-1 flex flex-col min-w-0 bg-black/10 transition-all ${activeTab === 'chat' ? 'flex' : 'hidden md:flex'}`}>
+      {/* 2. Chat Content Area (Full Width) */}
+      <div className="flex-grow flex flex-col min-w-0 bg-[#313338]">
              
              {/* Channel Header */}
-             <div className="h-12 border-b border-white/5 flex items-center px-4 shrink-0 bg-brand-secondary/40 backdrop-blur-sm shadow-sm z-10">
+             <div className="h-12 border-b border-black/20 flex items-center px-4 shrink-0 bg-[#2b2d31] shadow-sm z-10">
                 <svg className="w-5 h-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M5.88657 21C5.57547 21 5.3399 20.7189 5.39427 20.4126L6.00001 17H2.59511C2.28449 17 2.04905 16.7198 2.10259 16.4138L2.27759 15.4138C2.31946 15.1746 2.52722 15 2.77011 15H6.35001L7.41001 9H4.00511C3.69449 9 3.45905 8.71977 3.51259 8.41381L3.68759 7.41381C3.72946 7.17456 3.93722 7 4.18011 7H7.76001L8.39677 3.41262C8.43914 3.17391 8.64664 3 8.88907 3H9.87344C10.1845 3 10.4201 3.28107 10.3657 3.58738L9.76001 7H15.76L16.3968 3.41262C16.4391 3.17391 16.6466 3 16.8891 3H17.8734C18.1845 3 18.4201 3.28107 18.3657 3.58738L17.76 7H21.4049C21.7155 7 21.951 7.28023 21.8974 7.58619L21.7224 8.58619C21.6805 8.82544 21.4728 9 21.2299 9H17.41L16.35 15H19.7549C20.0655 15 20.301 15.2802 20.2474 15.5862L20.0724 16.5862C20.0305 16.8254 19.8228 17 19.5799 17H16.0001L15.3632 20.5874C15.3209 20.8261 15.1134 21 14.8709 21H13.8866C13.5755 21 13.3399 20.7189 13.3943 20.4126L14 17H8.00001L7.36325 20.5874C7.32088 20.8261 7.11337 21 6.87094 21H5.88657ZM9.41001 9L8.35001 15H14.35L15.41 9H9.41001Z" /></svg>
                 <span className="font-bold text-white text-sm tracking-wide">general-chat</span>
                 <div className="hidden sm:block w-px h-4 bg-white/10 mx-4"></div>
                 <span className="hidden sm:block text-xs text-gray-400 truncate">Welcome to the Steak House!</span>
-                
-                {/* Mobile Tabs Toggle */}
-                <div className="ml-auto flex md:hidden bg-black/20 rounded p-0.5">
-                    <button onClick={() => setActiveTab('chat')} className={`px-2 py-1 rounded text-xs font-bold ${activeTab === 'chat' ? 'bg-brand-primary text-white' : 'text-gray-400'}`}>Chat</button>
-                    <button onClick={() => setActiveTab('members')} className={`px-2 py-1 rounded text-xs font-bold ${activeTab === 'members' ? 'bg-brand-primary text-white' : 'text-gray-400'}`}>People</button>
-                </div>
              </div>
 
             {/* Messages Container */}
@@ -374,7 +343,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
             </div>
 
              {/* Input Area */}
-            <div className="p-4 bg-brand-secondary/10 shrink-0">
+            <div className="p-4 bg-[#313338] shrink-0">
                  <div className="w-full bg-[#383a40] rounded-lg px-4 py-3 text-gray-400 text-sm flex items-center gap-3 cursor-not-allowed select-none shadow-inner">
                     <div className="w-6 h-6 rounded-full bg-gray-500/20 flex items-center justify-center">
                         <span className="text-lg leading-none pb-1">+</span>
@@ -391,81 +360,6 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
                  </p>
             </div>
         </div>
-
-        {/* Right Pane: Members List */}
-        <div className={`w-full md:w-[240px] bg-[#2b2d31] border-l border-black/20 flex-col overflow-y-auto custom-scrollbar shrink-0 ${activeTab === 'members' ? 'flex' : 'hidden md:flex'}`}>
-            <div className="p-3 space-y-6">
-                
-                {/* Role: Owner */}
-                {categorizedMembers && categorizedMembers.owner.length > 0 && (
-                    <div>
-                        <button 
-                            onClick={() => toggleSection('owner')}
-                            className="w-full flex items-center justify-between font-bold text-[11px] uppercase mb-2 px-2 transition-opacity focus:outline-none group hover:opacity-80"
-                        >
-                            <span className={ownerRole?.color || 'text-gray-400'}>Owner — {categorizedMembers.owner.length}</span>
-                            <span className="text-[10px] text-gray-400 group-hover:text-white">{expandedSections['owner'] ? '▼' : '›'}</span>
-                        </button>
-                        {expandedSections['owner'] && (
-                            <div className="space-y-0.5">
-                                {categorizedMembers.owner.map(member => (
-                                    <MemberRow key={member.id} member={member} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Role: Guard Dogs */}
-                {categorizedMembers && categorizedMembers.guard_dogs.length > 0 && (
-                    <div>
-                         <button 
-                            onClick={() => toggleSection('guard_dogs')}
-                            className="w-full flex items-center justify-between font-bold text-[11px] uppercase mb-2 px-2 transition-opacity focus:outline-none group hover:opacity-80"
-                        >
-                            <span className={guardRole?.color || 'text-gray-400'}>Guard Dogs — {categorizedMembers.guard_dogs.length}</span>
-                            <span className="text-[10px] text-gray-400 group-hover:text-white">{expandedSections['guard_dogs'] ? '▼' : '›'}</span>
-                        </button>
-                        {expandedSections['guard_dogs'] && (
-                            <div className="space-y-0.5">
-                                {categorizedMembers.guard_dogs.map(member => (
-                                    <MemberRow key={member.id} member={member} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Role: Meatlings */}
-                {categorizedMembers && categorizedMembers.meatlings.length > 0 && (
-                    <div>
-                         <button 
-                            onClick={() => toggleSection('meatlings')}
-                            className="w-full flex items-center justify-between font-bold text-[11px] text-gray-400 uppercase mb-2 px-2 transition-opacity focus:outline-none group hover:opacity-80"
-                        >
-                            <span>Meatlings — {categorizedMembers.meatlings.length}</span>
-                            <span className="text-[10px] group-hover:text-white">{expandedSections['meatlings'] ? '▼' : '›'}</span>
-                        </button>
-                        {expandedSections['meatlings'] && (
-                            <div className="space-y-0.5">
-                                {categorizedMembers.meatlings.map(member => (
-                                    <MemberRow key={member.id} member={member} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Empty State */}
-                {data && data.members.length === 0 && (
-                    <div className="text-center py-8 opacity-50">
-                        <p className="text-4xl mb-2">🍃</p>
-                        <p className="text-xs text-gray-400">It's quiet here...</p>
-                    </div>
-                )}
-            </div>
-        </div>
-      </div>
     </div>
   );
 };
