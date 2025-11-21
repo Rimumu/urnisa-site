@@ -63,12 +63,11 @@ export const useDiscordWidget = (serverId: string): UseDiscordWidgetReturn => {
     if (!serverId) return;
 
     const fetchData = async () => {
-      setLoading(true);
+      // Only set loading true on the very first fetch to prevent UI flickering on polls
+      if (!data) setLoading(true);
       setError(null);
       try {
         // 1. Fetch Server Widget Data (Online members)
-        // We use the promise.all pattern to fetch both concurrently if possible, 
-        // but here we'll just do them sequentially to handle errors gracefully.
         const widgetResponse = await fetch(`https://discord.com/api/guilds/${serverId}/widget.json`);
         if (!widgetResponse.ok) {
           throw new Error(`Failed to fetch Discord widget data. Status: ${widgetResponse.status}`);
@@ -79,16 +78,16 @@ export const useDiscordWidget = (serverId: string): UseDiscordWidgetReturn => {
         // 2. Fetch Owner Data (Real profile via our local Bot Proxy)
         try {
             // We use the API_BASE_URL from constants.
-            // Initially this is localhost, but you will change it to your Render URL after deployment.
             const userResponse = await fetch(`${API_BASE_URL}/api/owner`);
             if (userResponse.ok) {
                 const userData: DiscordOwnerData = await userResponse.json();
                 setOwnerData(userData);
             } else {
-                console.warn("Bot proxy server returned error:", userResponse.status);
+                // Only warn in console, don't break the UI
+                // console.warn("Bot proxy server returned error:", userResponse.status);
             }
         } catch (userError) {
-            console.warn(`Could not connect to bot server at ${API_BASE_URL}. Owner data will use fallbacks.`);
+             // console.warn(`Could not connect to bot server at ${API_BASE_URL}. Owner data will use fallbacks.`);
         }
 
       } catch (e) {
@@ -102,8 +101,14 @@ export const useDiscordWidget = (serverId: string): UseDiscordWidgetReturn => {
       }
     };
 
+    // Initial fetch
     fetchData();
-  }, [serverId]);
+
+    // Poll every 10 seconds for real-time status updates
+    const interval = setInterval(fetchData, 10000);
+
+    return () => clearInterval(interval);
+  }, [serverId]); // We don't include 'data' in dependencies to avoid infinite loops.
 
   return { data, ownerData, loading, error };
 };

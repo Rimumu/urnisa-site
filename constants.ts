@@ -36,7 +36,7 @@ export const DISCORD_ROLES_CONFIG = [
         name: 'Guard Dogs', 
         color: 'text-green-400',
         // Add Moderator/VIP IDs here
-        userIds: [], 
+        userIds: ['938038904072855562'], 
         // Fallback usernames
         usernames: ['MegaBooster', 'SuperFan'] 
     },
