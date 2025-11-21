@@ -9,8 +9,13 @@ export interface DiscordMessage {
     author: {
         id: string;
         username: string;
+        global_name?: string;
         avatar: string | null;
         discriminator: string;
+    };
+    member?: {
+        nick?: string;
+        avatar?: string;
     };
     attachments: any[];
     sticker_items?: {
