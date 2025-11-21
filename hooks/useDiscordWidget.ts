@@ -71,13 +71,9 @@ export const useDiscordWidget = (serverId: string): UseDiscordWidgetReturn => {
       }
     };
 
-    // Initial fetch
+    // Initial fetch only
     fetchData();
 
-    // Poll every 10 seconds for real-time status updates
-    const interval = setInterval(fetchData, 10000);
-
-    return () => clearInterval(interval);
   }, [serverId]); 
 
   return { data, loading, error };

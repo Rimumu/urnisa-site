@@ -208,63 +208,99 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
     }
 
     return (
-        <div className="flex gap-4 px-4 py-2 hover:bg-white/5 group transition-colors border-l-2 border-transparent hover:border-brand-primary/50">
-             <div className="flex-shrink-0 pt-1">
-                <img 
-                    src={avatarUrl} 
-                    alt={displayName}
-                    className="w-10 h-10 rounded-full bg-brand-secondary object-cover cursor-pointer ring-2 ring-transparent group-hover:ring-brand-primary/30 transition-all shadow-lg"
-                />
-            </div>
-            <div className="min-w-0 flex-1">
-                <div className="flex items-baseline gap-2">
-                    <span className="font-bold text-white hover:text-brand-primary hover:underline cursor-pointer transition-colors text-sm md:text-base">
-                        {displayName}
+        <div className={`flex flex-col group transition-colors border-l-2 border-transparent hover:border-brand-primary/50 relative px-4 py-1 hover:bg-white/5 ${message.referenced_message ? 'mt-2' : 'mt-0.5'}`}>
+            
+            {/* Reply Reference */}
+            {message.referenced_message && (
+                <div className="flex items-center gap-2 mb-1 ml-14 relative opacity-70 hover:opacity-100 transition-opacity text-xs">
+                    {/* The Spine */}
+                    <div className="absolute -left-9 top-1/2 w-8 h-[2px] bg-white/20 -translate-y-1/2 border-l-2 border-t-2 border-white/20 rounded-tl-md h-2.5 top-3 left-[-26px] border-r-0 border-b-0"></div>
+                    
+                    <img 
+                        src={getDiscordAvatarUrl(message.referenced_message.author)}
+                        alt="Ref Avatar"
+                        className="w-4 h-4 rounded-full opacity-80"
+                    />
+                    <span className="font-bold text-gray-300 hover:underline cursor-pointer">
+                        {message.referenced_message.author.global_name || message.referenced_message.author.username}
                     </span>
-                    <span className="text-[0.7rem] text-gray-500 group-hover:text-gray-400 transition-colors font-medium">
-                        {dateString}
+                    <span className="text-gray-500 truncate max-w-xs cursor-pointer hover:text-gray-400 transition-colors">
+                        {message.referenced_message.content || <span className="italic">Click to see attachment</span>}
                     </span>
                 </div>
-                
-                <div className={`text-gray-300 text-[0.9375rem] whitespace-pre-wrap break-words leading-relaxed ${isJumbo ? 'text-4xl leading-normal mt-1' : 'mt-0.5'}`}>
-                    {parseDiscordContent(message.content, message.mentions, isJumbo)}
-                </div>
-                
-                {/* Attachments */}
-                {message.attachments && message.attachments.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                        {message.attachments.map((att) => (
-                            <div key={att.id} className="max-w-full rounded-lg overflow-hidden bg-black/40 border border-white/10 hover:border-brand-primary/50 transition-colors group/att">
-                                {att.content_type?.startsWith('image/') ? (
-                                     <img src={att.url} alt="attachment" className="max-w-[300px] max-h-[300px] object-contain" />
-                                ) : (
-                                    <a href={att.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 max-w-xs">
-                                        <div className="text-3xl">📎</div>
-                                        <div className="overflow-hidden min-w-0">
-                                            <div className="text-brand-primary group-hover/att:underline truncate text-sm font-bold">{att.filename}</div>
-                                            <div className="text-xs text-gray-500 font-mono">{(att.size / 1024).toFixed(0)} KB</div>
-                                        </div>
-                                    </a>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                )}
+            )}
 
-                {/* Stickers */}
-                {message.sticker_items && message.sticker_items.length > 0 && (
-                    <div className="mt-2">
-                        {message.sticker_items.map((sticker) => (
-                            <img 
-                                key={sticker.id} 
-                                src={`https://cdn.discordapp.com/stickers/${sticker.id}.png`} 
-                                alt={sticker.name}
-                                className="w-32 h-32 object-contain hover:scale-105 transition-transform drop-shadow-md"
-                                title={sticker.name}
-                            />
-                        ))}
+            <div className="flex gap-4">
+                <div className="flex-shrink-0 pt-1">
+                    <img 
+                        src={avatarUrl} 
+                        alt={displayName}
+                        className="w-10 h-10 rounded-full bg-brand-secondary object-cover cursor-pointer ring-2 ring-transparent group-hover:ring-brand-primary/30 transition-all shadow-lg"
+                    />
+                </div>
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                        <span className="font-bold text-white hover:text-brand-primary hover:underline cursor-pointer transition-colors text-sm md:text-base">
+                            {displayName}
+                        </span>
+                        <span className="text-[0.7rem] text-gray-500 group-hover:text-gray-400 transition-colors font-medium">
+                            {dateString}
+                        </span>
                     </div>
-                )}
+                    
+                    <div className={`text-gray-300 text-[0.9375rem] whitespace-pre-wrap break-words leading-relaxed ${isJumbo ? 'text-4xl leading-normal mt-1' : 'mt-0.5'}`}>
+                        {parseDiscordContent(message.content, message.mentions, isJumbo)}
+                    </div>
+                    
+                    {/* Attachments */}
+                    {message.attachments && message.attachments.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            {message.attachments.map((att) => (
+                                <div key={att.id} className="overflow-hidden rounded-lg border border-white/10 bg-black/30 hover:bg-black/50 transition-all group/att">
+                                    {att.content_type?.startsWith('image/') ? (
+                                         <div className="relative">
+                                            <a href={att.url} target="_blank" rel="noreferrer" className="block">
+                                                <img 
+                                                    src={att.url} 
+                                                    alt={att.filename}
+                                                    className="max-w-full max-h-[300px] object-contain min-w-[100px] min-h-[100px]" 
+                                                />
+                                            </a>
+                                         </div>
+                                    ) : (
+                                        <a href={att.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 pr-4 max-w-md hover:bg-white/5 transition-colors">
+                                            <div className="w-10 h-10 rounded bg-brand-primary/20 flex items-center justify-center text-2xl flex-shrink-0 text-brand-primary">
+                                                📄
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-brand-primary font-bold text-sm truncate group-hover/att:underline">{att.filename}</div>
+                                                <div className="text-xs text-gray-500 font-mono mt-0.5">{(att.size / 1024).toFixed(0)} KB</div>
+                                            </div>
+                                            <div className="ml-auto text-gray-500 opacity-0 group-hover/att:opacity-100 transition-opacity">
+                                                ⬇
+                                            </div>
+                                        </a>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Stickers */}
+                    {message.sticker_items && message.sticker_items.length > 0 && (
+                        <div className="mt-2">
+                            {message.sticker_items.map((sticker) => (
+                                <img 
+                                    key={sticker.id} 
+                                    src={`https://cdn.discordapp.com/stickers/${sticker.id}.png`} 
+                                    alt={sticker.name}
+                                    className="w-32 h-32 object-contain hover:scale-105 transition-transform drop-shadow-md"
+                                    title={sticker.name}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

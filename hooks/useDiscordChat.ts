@@ -29,6 +29,17 @@ export interface DiscordMessage {
         discriminator: string;
         global_name?: string;
     }[];
+    referenced_message?: {
+        id: string;
+        author: {
+            id: string;
+            username: string;
+            global_name?: string;
+            avatar: string | null;
+            discriminator: string;
+        };
+        content: string;
+    } | null;
 }
 
 export const useDiscordChat = (channelId: string) => {
@@ -47,9 +58,10 @@ export const useDiscordChat = (channelId: string) => {
                     throw new Error(`Failed to fetch messages: ${response.status}`);
                 }
                 const data = await response.json();
-                // Discord returns newest first, but we usually want to render top-to-bottom 
-                // where bottom is newest. So we reverse the array.
-                setMessages(data.reverse());
+                // The server now reverses it, so we don't need to reverse here if we want oldest-first.
+                // If server sends oldest-first (due to reverse() there), we just set it.
+                // Checking server.js: it sends `messages.reverse()`.
+                setMessages(data);
             } catch (err) {
                 console.error("Error loading chat preview:", err);
                 setError(err instanceof Error ? err : new Error('Unknown error'));
@@ -60,10 +72,6 @@ export const useDiscordChat = (channelId: string) => {
 
         fetchMessages();
         
-        // Optional: Poll for new messages every 30 seconds
-        const interval = setInterval(fetchMessages, 30000);
-        return () => clearInterval(interval);
-
     }, [channelId]);
 
     return { messages, loading, error };
