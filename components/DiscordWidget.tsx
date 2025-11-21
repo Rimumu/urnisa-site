@@ -208,23 +208,23 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
     }
 
     return (
-        <div className={`flex flex-col group transition-colors border-l-2 border-transparent hover:border-brand-primary/50 relative px-4 py-1 hover:bg-white/5 ${message.referenced_message ? 'mt-2' : 'mt-0.5'}`}>
+        <div className={`flex flex-col group transition-colors border-l-2 border-transparent hover:border-brand-primary/50 relative px-4 py-0.5 hover:bg-white/5 ${message.referenced_message ? 'mt-3' : 'mt-0.5'}`}>
             
             {/* Reply Reference */}
             {message.referenced_message && (
-                <div className="flex items-center gap-2 mb-1 ml-14 relative opacity-70 hover:opacity-100 transition-opacity text-xs">
+                <div className="flex items-center gap-1.5 mb-0.5 ml-[56px] relative opacity-60 hover:opacity-100 transition-opacity group/reply select-none">
                     {/* The Spine */}
-                    <div className="absolute -left-9 top-1/2 w-8 h-[2px] bg-white/20 -translate-y-1/2 border-l-2 border-t-2 border-white/20 rounded-tl-md h-2.5 top-3 left-[-26px] border-r-0 border-b-0"></div>
+                    <div className="absolute bottom-[50%] right-[100%] w-[34px] h-[10px] border-l-[2px] border-t-[2px] border-gray-500/40 rounded-tl-[6px] mb-[1px] mr-[6px]"></div>
                     
                     <img 
                         src={getDiscordAvatarUrl(message.referenced_message.author)}
                         alt="Ref Avatar"
-                        className="w-4 h-4 rounded-full opacity-80"
+                        className="w-4 h-4 rounded-full bg-brand-secondary shrink-0"
                     />
-                    <span className="font-bold text-gray-300 hover:underline cursor-pointer">
+                    <span className="font-bold text-gray-300 text-[0.75rem] hover:underline cursor-pointer truncate max-w-[100px]">
                         {message.referenced_message.author.global_name || message.referenced_message.author.username}
                     </span>
-                    <span className="text-gray-500 truncate max-w-xs cursor-pointer hover:text-gray-400 transition-colors">
+                    <span className="text-[0.75rem] text-gray-400 truncate max-w-[200px] md:max-w-sm cursor-pointer transition-colors group-hover/reply:text-gray-200">
                         {message.referenced_message.content || <span className="italic">Click to see attachment</span>}
                     </span>
                 </div>
@@ -312,27 +312,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
-  const [showScrollButton, setShowScrollButton] = useState(false);
-
-  const handleScroll = () => {
-    if (chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-      shouldAutoScrollRef.current = distanceFromBottom < 50;
-      setShowScrollButton(distanceFromBottom > 200);
-    }
-  };
-
-  const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-        chatContainerRef.current.scrollTo({
-            top: chatContainerRef.current.scrollHeight,
-            behavior: 'smooth'
-        });
-        shouldAutoScrollRef.current = true;
-        setShowScrollButton(false);
-    }
-  };
+  const [showJoinOverlay, setShowJoinOverlay] = useState(false);
 
   useEffect(() => {
     if (messages.length > 0 && shouldAutoScrollRef.current && chatContainerRef.current) {
@@ -352,13 +332,54 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
   }
 
   return (
-    <div className="flex flex-col h-[600px] md:h-[800px] w-full bg-black/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl font-sans text-gray-200 text-left">
+    <div className="flex flex-col h-[600px] md:h-[800px] w-full bg-black/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl font-sans text-gray-200 text-left relative">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background-color: rgba(0,0,0,0.2); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #581c25; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #e5383b; }
       `}</style>
+
+      {/* Overlay Logic */}
+      {showJoinOverlay && (
+        <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="relative bg-[#1e1f22] w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-white/10 transform scale-100 transition-all animate-in zoom-in-95 duration-200">
+                <button 
+                    onClick={() => setShowJoinOverlay(false)}
+                    className="absolute top-3 right-3 z-20 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                </button>
+
+                {/* Banner */}
+                <div className="h-32 bg-brand-secondary relative">
+                    <img src={BANNER_URL} alt="Server Banner" className="w-full h-full object-cover opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1e1f22] to-transparent"></div>
+                </div>
+
+                {/* Icon & Content */}
+                <div className="px-6 pb-8 text-center -mt-12 relative z-10">
+                    <div className="mx-auto w-24 h-24 rounded-[20px] p-1 bg-[#1e1f22] mb-4 shadow-lg">
+                         <img src={ICON_URL} alt="Server Icon" className="w-full h-full rounded-[16px] object-cover" />
+                    </div>
+                    
+                    <h2 className="text-2xl font-extrabold text-white mb-1">{data.name}</h2>
+                    <p className="text-gray-400 text-sm mb-6">Join the server to chat!</p>
+
+                    <a 
+                        href={DISCORD_INVITE_URL} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-all hover:scale-105 shadow-lg"
+                    >
+                        Join Server
+                    </a>
+                </div>
+            </div>
+        </div>
+      )}
 
       {/* 1. Header Section - Banner & Server Info */}
       <div className="shrink-0 relative h-40 bg-brand-secondary overflow-hidden group select-none">
@@ -371,7 +392,6 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
                      <div className="w-full h-full rounded-[13px] overflow-hidden bg-brand-secondary">
                         <img src={ICON_URL} alt="Icon" className="w-full h-full object-cover" />
                      </div>
-                     <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#23a559] rounded-full border-[4px] border-black" title="Online"></div>
                  </div>
                  <div className="mb-1 flex-1 min-w-0 pb-1">
                      <h2 className="text-white font-extrabold text-2xl leading-tight truncate drop-shadow-lg tracking-wide">{data.name}</h2>
@@ -388,55 +408,47 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       </div>
 
       {/* 2. Channel Bar */}
-      <div className="shrink-0 h-14 border-b border-white/5 flex items-center px-5 bg-black/20 shadow-sm z-20 backdrop-blur-sm mt-4">
+      <div className="shrink-0 h-14 border-b border-white/5 flex items-center px-5 bg-black/20 shadow-sm z-20 backdrop-blur-sm">
             <span className="text-2xl mr-3 text-brand-accent">#</span>
             <span className="font-bold text-white text-lg tracking-wide mr-3 drop-shadow-sm">{CHANNEL_NAME}</span>
       </div>
 
       {/* 3. Chat Area */}
-      <div 
-        className="flex-1 overflow-y-auto custom-scrollbar relative min-h-0 bg-transparent scroll-smooth" 
-        ref={chatContainerRef} 
-        onScroll={handleScroll}
-      >
-          {/* Spacer */}
-          <div className="min-h-full flex flex-col justify-end py-4">
-              {chatLoading ? (
-                  <div className="flex flex-col items-center justify-center h-32 text-gray-400 space-y-4">
-                       <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
-                       <p className="text-sm font-medium animate-pulse">Loading chat history...</p>
-                  </div>
-              ) : chatError ? (
-                  <div className="p-6 text-center text-brand-primary bg-brand-primary/5 mx-8 rounded-lg border border-brand-primary/20">
-                      <p className="font-bold">⚠ Connection Interrupted</p>
-                      <p className="text-sm opacity-80">Could not load messages at this time.</p>
-                  </div>
-              ) : messages.length === 0 ? (
-                  <div className="p-12 text-center text-gray-500 flex flex-col items-center opacity-70">
-                      <span className="text-4xl mb-3">🍃</span>
-                      <span className="font-medium">It's quiet... too quiet.</span>
-                  </div>
-              ) : (
-                  messages.map((msg) => <ChatMessage key={msg.id} message={msg} serverId={serverId} />)
-              )}
-          </div>
-
-          {showScrollButton && (
-            <button 
-                onClick={scrollToBottom}
-                className="sticky bottom-6 left-[50%] translate-x-[-50%] z-30 bg-brand-surface hover:bg-brand-primary text-white px-5 py-2 rounded-full shadow-xl border border-white/10 flex items-center gap-2 transition-all active:scale-95 hover:scale-105 group animate-bounce"
-            >
-                <span className="text-xs font-bold">New Messages</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-          )}
+      <div className="flex-1 relative min-h-0">
+        <div 
+            className="w-full h-full overflow-y-auto custom-scrollbar bg-transparent scroll-smooth" 
+            ref={chatContainerRef} 
+        >
+            {/* Spacer */}
+            <div className="min-h-full flex flex-col justify-end py-4">
+                {chatLoading ? (
+                    <div className="flex flex-col items-center justify-center h-32 text-gray-400 space-y-4">
+                        <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-sm font-medium animate-pulse">Loading chat history...</p>
+                    </div>
+                ) : chatError ? (
+                    <div className="p-6 text-center text-brand-primary bg-brand-primary/5 mx-8 rounded-lg border border-brand-primary/20">
+                        <p className="font-bold">⚠ Connection Interrupted</p>
+                        <p className="text-sm opacity-80">Could not load messages at this time.</p>
+                    </div>
+                ) : messages.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500 flex flex-col items-center opacity-70">
+                        <span className="text-4xl mb-3">🍃</span>
+                        <span className="font-medium">It's quiet... too quiet.</span>
+                    </div>
+                ) : (
+                    messages.map((msg) => <ChatMessage key={msg.id} message={msg} serverId={serverId} />)
+                )}
+            </div>
+        </div>
       </div>
 
       {/* 4. Input Area */}
       <div className="shrink-0 p-4 bg-black/20 z-20 border-t border-white/5">
-         <div className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 flex items-center gap-3 cursor-not-allowed select-none transition-colors group hover:border-white/10">
+         <div 
+            onClick={() => setShowJoinOverlay(true)}
+            className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 flex items-center gap-3 cursor-pointer select-none transition-colors group hover:border-white/10 hover:bg-black/50"
+         >
             <div className="w-7 h-7 rounded-full bg-white/10 text-gray-400 flex items-center justify-center font-bold text-lg pb-0.5 group-hover:bg-brand-primary group-hover:text-white transition-all duration-300">
                 +
             </div>
