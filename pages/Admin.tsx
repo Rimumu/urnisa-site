@@ -112,9 +112,6 @@ const Admin: React.FC = () => {
                                 placeholder="https://..."
                                 required
                             />
-                            <p className="text-xs text-gray-500 mt-2">
-                                Note: If the server restarts (common on free hosting), this will revert to default.
-                            </p>
                         </div>
 
                         {newUrl && (
