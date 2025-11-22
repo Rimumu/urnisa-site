@@ -9,18 +9,41 @@ const Admin: React.FC = () => {
     const [newUrl, setNewUrl] = useState('');
     const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [loading, setLoading] = useState(false);
+    const [loginError, setLoginError] = useState('');
     
     // Use current schedule to show preview
     const { scheduleUrl: currentUrl } = useSchedule();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simple check: try to update with the current URL just to verify the token
-        // Or we can just store it statefully and let the first update request fail if wrong.
-        // For UX, let's just assume logged in locally, real validation happens on API call.
-        if (password) {
-            setIsAuthenticated(true);
-            setNewUrl(currentUrl);
+        if (!password) return;
+        
+        setLoading(true);
+        setLoginError('');
+        
+        try {
+            // Verify password with the backend
+            const response = await fetch(`${API_BASE_URL}/api/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setIsAuthenticated(true);
+                setNewUrl(currentUrl);
+            } else {
+                setLoginError('Incorrect password. Access denied.');
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            setLoginError('Failed to connect to server.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -45,7 +68,10 @@ const Admin: React.FC = () => {
                 setStatus({ type: 'success', message: 'Schedule updated successfully!' });
             } else {
                 setStatus({ type: 'error', message: data.error || 'Failed to update.' });
-                if (response.status === 401) setIsAuthenticated(false); // Log out if unauthorized
+                if (response.status === 401) {
+                    setIsAuthenticated(false); // Log out if unauthorized
+                    setLoginError('Session expired or password changed.');
+                }
             }
         } catch (error) {
             setStatus({ type: 'error', message: 'Network error.' });
@@ -72,11 +98,19 @@ const Admin: React.FC = () => {
                                 placeholder="Enter admin password"
                             />
                         </div>
+                        
+                        {loginError && (
+                            <div className="text-red-400 text-sm text-center bg-red-900/20 p-2 rounded border border-red-900/40">
+                                {loginError}
+                            </div>
+                        )}
+
                         <button 
                             type="submit"
-                            className="w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                            disabled={loading}
+                            className={`w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            Access Dashboard
+                            {loading ? 'Verifying...' : 'Access Dashboard'}
                         </button>
                     </form>
                 </div>
