@@ -403,24 +403,36 @@ const About: React.FC = () => {
 
                             {activeTab === 'credits' && (
                                 <div className="space-y-4">
-                                    {creditsContent.map((credit) => (
-                                        <div key={credit.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
-                                            {credit.image ? (
-                                                 <img src={credit.image} alt={credit.name} className="w-12 h-12 rounded-full object-cover shadow-lg" />
-                                            ) : (
-                                                <div 
-                                                    className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg"
-                                                    style={{ backgroundColor: credit.color || '#e5383b' }}
-                                                >
-                                                    {credit.initial || credit.name.charAt(0)}
+                                    {creditsContent.map((credit) => {
+                                        const Wrapper = credit.link ? 'a' : 'div';
+                                        const wrapperProps = credit.link ? {
+                                            href: credit.link,
+                                            target: "_blank",
+                                            rel: "noreferrer",
+                                            className: "flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer hover:border-brand-primary/50"
+                                        } : {
+                                            className: "flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors"
+                                        };
+
+                                        return (
+                                            <Wrapper key={credit.id} {...wrapperProps}>
+                                                {credit.image ? (
+                                                     <img src={credit.image} alt={credit.name} className="w-12 h-12 rounded-full object-cover shadow-lg" />
+                                                ) : (
+                                                    <div 
+                                                        className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg"
+                                                        style={{ backgroundColor: credit.color || '#e5383b' }}
+                                                    >
+                                                        {credit.initial || credit.name.charAt(0)}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h4 className="font-bold text-white text-lg group-hover:text-brand-primary transition-colors">{credit.name}</h4>
+                                                    <p className="text-sm text-gray-400">{credit.role}</p>
                                                 </div>
-                                            )}
-                                            <div>
-                                                <h4 className="font-bold text-white text-lg">{credit.name}</h4>
-                                                <p className="text-sm text-gray-400">{credit.role}</p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                            </Wrapper>
+                                        );
+                                    })}
                                     
                                     {/* View Art Gallery Button */}
                                     <button 
@@ -452,7 +464,13 @@ const About: React.FC = () => {
                                     {artworksContent.map((artist) => (
                                         <div key={artist.id} className="bg-white/5 p-5 rounded-2xl border border-white/5">
                                             <h3 className="text-xl font-bold text-white mb-4 border-b border-white/10 pb-2 flex justify-between items-center">
-                                                {artist.artistName}
+                                                {artist.artistLink ? (
+                                                    <a href={artist.artistLink} target="_blank" rel="noreferrer" className="hover:text-brand-primary hover:underline transition-colors">
+                                                        {artist.artistName}
+                                                    </a>
+                                                ) : (
+                                                    artist.artistName
+                                                )}
                                                 <span className="text-xs font-normal text-gray-500 bg-black/30 px-2 py-1 rounded-full">{artist.images.length} works</span>
                                             </h3>
                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

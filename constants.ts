@@ -55,7 +55,8 @@ export const DEFAULT_CREDITS_CONTENT = [
         role: 'Website Developer',
         image: '', 
         color: '#e5383b', // brand-primary
-        initial: 'R'
+        initial: 'R',
+        link: 'https://github.com/Rimumu'
     },
     {
         id: '2',
@@ -63,7 +64,8 @@ export const DEFAULT_CREDITS_CONTENT = [
         role: 'Stream Overlays & Emotes',
         image: '',
         color: '#9333ea', // purple-600
-        initial: 'A'
+        initial: 'A',
+        link: ''
     },
     {
         id: '3',
@@ -71,7 +73,8 @@ export const DEFAULT_CREDITS_CONTENT = [
         role: 'Keeping the chat clean & cozy',
         image: '',
         color: '#3b82f6', // blue-500
-        initial: 'M'
+        initial: 'M',
+        link: ''
     }
 ];
 
@@ -79,6 +82,7 @@ export const DEFAULT_ARTWORKS_CONTENT = [
     {
         id: '1',
         artistName: 'Official Art',
+        artistLink: '',
         images: [
             'https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png',
             'https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png'

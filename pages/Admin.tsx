@@ -291,7 +291,7 @@ const Admin: React.FC = () => {
         setLocalCredits(updated);
     };
     const addCreditItem = () => {
-        setLocalCredits([...localCredits, { id: Date.now().toString(), name: 'Name', role: 'Role', color: '#e5383b', initial: '?' }]);
+        setLocalCredits([...localCredits, { id: Date.now().toString(), name: 'Name', role: 'Role', color: '#e5383b', initial: '?', link: '' }]);
     };
     const removeCreditItem = (index: number) => {
         setLocalCredits(localCredits.filter((_, i) => i !== index));
@@ -299,7 +299,7 @@ const Admin: React.FC = () => {
 
     // Helper: Artworks Editors
     const addArtist = () => {
-        setLocalArtworks([...localArtworks, { id: Date.now().toString(), artistName: 'New Artist', images: [] }]);
+        setLocalArtworks([...localArtworks, { id: Date.now().toString(), artistName: 'New Artist', artistLink: '', images: [] }]);
     };
     const removeArtist = (index: number) => {
         setLocalArtworks(localArtworks.filter((_, i) => i !== index));
@@ -307,6 +307,11 @@ const Admin: React.FC = () => {
     const updateArtistName = (index: number, name: string) => {
         const updated = [...localArtworks];
         updated[index].artistName = name;
+        setLocalArtworks(updated);
+    };
+    const updateArtistLink = (index: number, link: string) => {
+        const updated = [...localArtworks];
+        updated[index].artistLink = link;
         setLocalArtworks(updated);
     };
     const addImageToArtist = (artistIndex: number, url: string) => {
@@ -411,7 +416,10 @@ const Admin: React.FC = () => {
                                     <input type="text" placeholder="Role" value={item.role} onChange={(e) => updateCreditItem(idx, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-300 text-sm" />
                                 </div>
                                 <input type="text" placeholder="Image URL" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
-                                <input type="text" placeholder="Initial (If no image)" value={item.initial || ''} onChange={(e) => updateCreditItem(idx, 'initial', e.target.value)} className="w-20 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs" maxLength={2} />
+                                <div className="flex gap-2">
+                                     <input type="text" placeholder="Link (Optional)" value={item.link || ''} onChange={(e) => updateCreditItem(idx, 'link', e.target.value)} className="flex-1 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                     <input type="text" placeholder="Initial" value={item.initial || ''} onChange={(e) => updateCreditItem(idx, 'initial', e.target.value)} className="w-20 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs" maxLength={2} />
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -430,15 +438,27 @@ const Admin: React.FC = () => {
                         <div key={artist.id} className="bg-white/5 p-4 rounded-xl border border-white/5 relative group">
                              <button onClick={() => removeArtist(artistIdx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">🗑️ Delete Artist</button>
                              
-                             <div className="mb-4">
-                                <label className="text-xs text-gray-500 uppercase">Artist Name</label>
-                                <input 
-                                    type="text" 
-                                    value={artist.artistName} 
-                                    onChange={(e) => updateArtistName(artistIdx, e.target.value)} 
-                                    className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white font-bold" 
-                                    placeholder="Artist Name"
-                                />
+                             <div className="mb-4 space-y-2">
+                                <div>
+                                    <label className="text-xs text-gray-500 uppercase">Artist Name</label>
+                                    <input 
+                                        type="text" 
+                                        value={artist.artistName} 
+                                        onChange={(e) => updateArtistName(artistIdx, e.target.value)} 
+                                        className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white font-bold" 
+                                        placeholder="Artist Name"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500 uppercase">Artist Profile Link (Optional)</label>
+                                    <input 
+                                        type="text" 
+                                        value={artist.artistLink || ''} 
+                                        onChange={(e) => updateArtistLink(artistIdx, e.target.value)} 
+                                        className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-gray-300 text-sm font-mono" 
+                                        placeholder="https://twitter.com/artist"
+                                    />
+                                </div>
                              </div>
 
                              <div className="space-y-2">

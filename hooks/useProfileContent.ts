@@ -15,11 +15,13 @@ export interface CreditItem {
     image?: string;
     color?: string;
     initial?: string;
+    link?: string;
 }
 
 export interface ArtistItem {
     id: string;
     artistName: string;
+    artistLink?: string;
     images: string[];
 }
 
