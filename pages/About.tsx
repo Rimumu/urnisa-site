@@ -203,7 +203,7 @@ const About: React.FC = () => {
                     glass-card rounded-[30px] border border-white/10 overflow-hidden relative
                     flex flex-col md:flex-row
                     transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]
-                    ${activeTab ? 'w-full max-w-4xl' : 'w-full max-w-md'}
+                    ${activeTab === 'gallery' ? 'w-full max-w-7xl' : activeTab ? 'w-full max-w-4xl' : 'w-full max-w-md'}
                 `}
             >
                 {/* LEFT PANEL: Main Profile */}
@@ -341,9 +341,10 @@ const About: React.FC = () => {
                         ${activeTab ? 'opacity-100 max-h-[800px] md:max-h-none flex-1' : 'opacity-0 max-h-0 md:max-h-full md:w-0'}
                     `}
                 >
-                    <div className="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar p-6 md:p-8">
-                        <div className="flex justify-between items-start mb-6 sticky top-0 z-20 bg-transparent">
-                            <h2 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-md">
+                    <div className="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar">
+                        {/* Sticky Header - Updated to use brand-themed glass effect */}
+                        <div className="flex justify-between items-center sticky top-0 z-20 bg-brand-secondary/60 backdrop-blur-2xl border-b border-white/10 px-6 py-4 md:px-8 md:py-5 shadow-sm">
+                            <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-md truncate pr-4">
                                 {activeTab === 'about' && <span className="text-brand-primary">About Me</span>}
                                 {activeTab === 'contact' && <span className="text-brand-primary">Contact</span>}
                                 {activeTab === 'credits' && <span className="text-brand-primary">Credits</span>}
@@ -351,13 +352,13 @@ const About: React.FC = () => {
                             </h2>
                             <button 
                                 onClick={() => setActiveTab(null)} 
-                                className="p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all duration-300 transform hover:rotate-90"
+                                className="p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all duration-300 transform hover:rotate-90 shrink-0"
                             >
                                 <CloseIcon />
                             </button>
                         </div>
 
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10" key={activeTab || 'empty'}>
+                        <div className="p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10" key={activeTab || 'empty'}>
                             {activeTab === 'about' && (
                                 <div className="text-gray-300 leading-relaxed space-y-4 text-sm md:text-base">
                                     {aboutContent.map((item) => (
@@ -456,7 +457,7 @@ const About: React.FC = () => {
                                 <div className="space-y-8">
                                     <button 
                                         onClick={() => setActiveTab('credits')}
-                                        className="text-sm text-gray-400 hover:text-white flex items-center gap-1 mb-4"
+                                        className="text-sm text-gray-400 hover:text-white flex items-center gap-1 mb-4 px-1 transition-colors"
                                     >
                                         ← Back to Credits
                                     </button>
@@ -473,7 +474,7 @@ const About: React.FC = () => {
                                                 )}
                                                 <span className="text-xs font-normal text-gray-500 bg-black/30 px-2 py-1 rounded-full">{artist.images.length} works</span>
                                             </h3>
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                                 {artist.images.map((img, idx) => (
                                                     <div 
                                                         key={idx} 
