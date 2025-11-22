@@ -342,8 +342,8 @@ const About: React.FC = () => {
                     `}
                 >
                     <div className="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar">
-                        {/* Sticky Header - Updated to use brand-themed glass effect */}
-                        <div className="flex justify-between items-center sticky top-0 z-20 bg-brand-secondary/60 backdrop-blur-2xl border-b border-white/10 px-6 py-4 md:px-8 md:py-5 shadow-sm">
+                        {/* Sticky Header - Removed sticky per user request */}
+                        <div className="flex justify-between items-center bg-brand-secondary/60 backdrop-blur-2xl border-b border-white/10 px-6 py-4 md:px-8 md:py-5 shadow-sm">
                             <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-md truncate pr-4">
                                 {activeTab === 'about' && <span className="text-brand-primary">About Me</span>}
                                 {activeTab === 'contact' && <span className="text-brand-primary">Contact</span>}
