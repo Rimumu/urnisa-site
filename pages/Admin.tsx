@@ -7,9 +7,14 @@ import { useProfileContent, AboutItem, CreditItem } from '../hooks/useProfileCon
 // --- RICH TEXT EDITOR COMPONENT ---
 const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
     const contentRef = useRef<HTMLDivElement>(null);
+    const [activeFormats, setActiveFormats] = useState({
+        bold: false,
+        italic: false,
+        underline: false,
+        list: false
+    });
 
     // Sync external value changes to internal ref if they differ (e.g. initial load)
-    // We check document.activeElement to avoid resetting the cursor while the user is actively typing.
     useEffect(() => {
         if (contentRef.current && contentRef.current.innerHTML !== value) {
              if (document.activeElement !== contentRef.current) {
@@ -20,23 +25,94 @@ const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void 
 
     const exec = (command: string) => {
         document.execCommand(command, false, undefined);
+        checkActiveStates();
+        if (contentRef.current) onChange(contentRef.current.innerHTML);
+        contentRef.current?.focus();
+    };
+
+    const checkActiveStates = () => {
+        setActiveFormats({
+            bold: document.queryCommandState('bold'),
+            italic: document.queryCommandState('italic'),
+            underline: document.queryCommandState('underline'),
+            list: document.queryCommandState('insertUnorderedList'),
+        });
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const text = e.clipboardData.getData('text/plain');
+        document.execCommand('insertText', false, text);
         if (contentRef.current) onChange(contentRef.current.innerHTML);
     };
 
     return (
-        <div className="w-full bg-black/20 border border-white/10 rounded overflow-hidden flex flex-col h-48">
-             <div className="flex gap-1 p-1 bg-white/5 border-b border-white/5 select-none">
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('bold'); }} className="p-1 hover:bg-white/10 rounded text-white font-bold w-8 h-8 flex items-center justify-center" title="Bold">B</button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('italic'); }} className="p-1 hover:bg-white/10 rounded text-white italic w-8 h-8 flex items-center justify-center" title="Italic">I</button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('underline'); }} className="p-1 hover:bg-white/10 rounded text-white underline w-8 h-8 flex items-center justify-center" title="Underline">U</button>
-                <div className="w-px bg-white/10 mx-1"></div>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('insertUnorderedList'); }} className="p-1 hover:bg-white/10 rounded text-white w-8 h-8 flex items-center justify-center" title="Bullet List">•</button>
+        <div className="w-full bg-black/20 border border-white/10 rounded-xl overflow-hidden flex flex-col h-56 group focus-within:border-brand-primary/50 transition-colors">
+             <style>{`
+                .editor-content ul {
+                    list-style-type: disc !important;
+                    padding-left: 1.5em !important;
+                    margin-top: 0.5em;
+                    margin-bottom: 0.5em;
+                }
+                .editor-content li {
+                    display: list-item !important;
+                }
+             `}</style>
+             <div className="flex gap-1 p-2 bg-white/5 border-b border-white/5 select-none items-center">
+                <button 
+                    type="button" 
+                    onMouseDown={(e) => { e.preventDefault(); exec('bold'); }} 
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center font-bold ${activeFormats.bold ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+                    title="Bold"
+                >
+                    B
+                </button>
+                <button 
+                    type="button" 
+                    onMouseDown={(e) => { e.preventDefault(); exec('italic'); }} 
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center italic ${activeFormats.italic ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+                    title="Italic"
+                >
+                    I
+                </button>
+                <button 
+                    type="button" 
+                    onMouseDown={(e) => { e.preventDefault(); exec('underline'); }} 
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center underline ${activeFormats.underline ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+                    title="Underline"
+                >
+                    U
+                </button>
+                <div className="w-px h-5 bg-white/10 mx-1"></div>
+                <button 
+                    type="button" 
+                    onMouseDown={(e) => { e.preventDefault(); exec('insertUnorderedList'); }} 
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center ${activeFormats.list ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+                    title="Bullet List"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
             </div>
             <div
                 ref={contentRef}
-                className="flex-1 p-2 text-white text-sm outline-none overflow-y-auto"
+                className="editor-content flex-1 p-3 text-white text-sm outline-none overflow-y-auto"
                 contentEditable
-                onInput={(e) => onChange(e.currentTarget.innerHTML)}
+                onInput={(e) => {
+                    onChange(e.currentTarget.innerHTML);
+                    checkActiveStates();
+                }}
+                onKeyUp={checkActiveStates}
+                onMouseUp={checkActiveStates}
+                onClick={checkActiveStates}
+                onPaste={handlePaste}
                 suppressContentEditableWarning
                 style={{ minHeight: '100px' }}
             />
