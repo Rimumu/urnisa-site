@@ -111,9 +111,61 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
             </code>
         ));
 
-        // --- PRIORITY 2: CONTAINERS ---
+        // --- PRIORITY 2: LEAF NODES (Emotes, Links, Mentions) ---
+        // MOVED UP so that underscores in IDs or names don't trigger Italics parsing.
 
-        // 3. Blockquotes
+        // 3. Links
+        parts = splitText(parts, /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g, (match, i) => (
+            <a key={`a-${i}`} href={match[1]} target="_blank" rel="noreferrer" className="text-brand-primary hover:text-brand-accent hover:underline break-all transition-colors">
+                {match[1]}
+            </a>
+        ));
+
+        // 4. Emotes
+        parts = splitText(parts, /<(a)?:(\w+):(\d+)>/g, (match, i) => {
+            const isAnimated = match[1] === 'a';
+            const name = match[2];
+            const id = match[3];
+            const url = `https://cdn.discordapp.com/emojis/${id}.${isAnimated ? 'gif' : 'png'}`;
+            return (
+                <img 
+                    key={`e-${id}-${i}`} 
+                    src={url} 
+                    alt={`:${name}:`} 
+                    title={`:${name}:`}
+                    className={`${isJumbo ? 'w-10 h-10 md:w-12 md:h-12 my-1' : 'w-5 h-5 md:w-6 md:h-6 -translate-y-0.5'} inline-block object-contain align-middle mx-0.5 hover:scale-110 transition-transform duration-200`}
+                    loading="lazy"
+                />
+            );
+        });
+
+        // 5. User Mentions
+        parts = splitText(parts, /<@!?(\d+)>/g, (match, i) => {
+            const userId = match[1];
+            const user = mentions.find(m => m.id === userId);
+            const displayName = user ? (user.global_name || user.username) : userId;
+            return (
+                <span key={`m-${i}`} className="bg-brand-accent/10 text-brand-accent border border-brand-accent/20 px-1.5 py-0.5 rounded-[4px] cursor-pointer font-medium hover:bg-brand-accent hover:text-brand-secondary transition-all select-none inline-block leading-none mx-0.5">
+                    @{displayName}
+                </span>
+            );
+        });
+        
+        // 6. Role & Channel Mentions
+        parts = splitText(parts, /<@&(\d+)>/g, (match, i) => (
+            <span key={`r-${i}`} className="bg-brand-primary/10 text-brand-primary px-1.5 py-0.5 rounded-[4px] cursor-pointer font-medium hover:bg-brand-primary hover:text-white transition-colors select-none text-xs uppercase tracking-wide">
+                @Role
+            </span>
+        ));
+        parts = splitText(parts, /<#(\d+)>/g, (match, i) => (
+            <span key={`c-${i}`} className="bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-[4px] cursor-pointer font-medium hover:bg-white/20 hover:text-white transition-colors select-none">
+                #channel
+            </span>
+        ));
+
+        // --- PRIORITY 3: CONTAINERS & STYLING ---
+
+        // 7. Blockquotes
         parts = splitText(parts, /^(?:>>>\s|>\s)([\s\S]*)/gm, (match, i) => (
             <div key={`bq-${i}`} className="flex gap-3 my-2 pl-1 relative group">
                  <div className="w-1 bg-brand-primary rounded-full shrink-0 opacity-60 group-hover:opacity-100 transition-opacity"></div>
@@ -121,7 +173,7 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
             </div>
         ));
 
-        // 4. Spoilers (Interactive)
+        // 8. Spoilers (Interactive)
         parts = splitText(parts, /\|\|(.*?)\|\|/g, (match, i) => {
             const SpoilerContent = () => {
                 const [revealed, setRevealed] = useState(false);
@@ -140,7 +192,8 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
             return <SpoilerContent key={`spoiler-${i}`} />;
         });
 
-        // 5. Styling
+        // 9. Styling
+        // Processing these last ensures that underscores in emotes/links don't break things.
         parts = splitText(parts, /\*\*(.*?)\*\*/g, (match, i) => (
             <strong key={`b-${i}`} className="font-bold text-white">{process(match[1])}</strong>
         ));
@@ -152,57 +205,6 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
         ));
         parts = splitText(parts, /~~(.*?)~~/g, (match, i) => (
             <s key={`s-${i}`} className="line-through text-gray-500">{process(match[1])}</s>
-        ));
-
-        // --- PRIORITY 3: LEAF NODES ---
-
-        // 6. Links
-        parts = splitText(parts, /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g, (match, i) => (
-            <a key={`a-${i}`} href={match[1]} target="_blank" rel="noreferrer" className="text-brand-primary hover:text-brand-accent hover:underline break-all transition-colors">
-                {match[1]}
-            </a>
-        ));
-
-        // 7. Emotes
-        parts = splitText(parts, /<(a)?:(\w+):(\d+)>/g, (match, i) => {
-            const isAnimated = match[1] === 'a';
-            const name = match[2];
-            const id = match[3];
-            const url = `https://cdn.discordapp.com/emojis/${id}.${isAnimated ? 'gif' : 'png'}`;
-            return (
-                <img 
-                    key={`e-${id}-${i}`} 
-                    src={url} 
-                    alt={`:${name}:`} 
-                    title={`:${name}:`}
-                    className={`${isJumbo ? 'w-10 h-10 md:w-12 md:h-12 my-1' : 'w-5 h-5 md:w-6 md:h-6 -translate-y-0.5'} inline-block object-contain align-middle mx-0.5 hover:scale-110 transition-transform duration-200`}
-                    loading="lazy"
-                />
-            );
-        });
-
-        // 8. User Mentions
-        parts = splitText(parts, /<@!?(\d+)>/g, (match, i) => {
-            const userId = match[1];
-            const user = mentions.find(m => m.id === userId);
-            const displayName = user ? (user.global_name || user.username) : userId;
-            return (
-                <span key={`m-${i}`} className="bg-brand-accent/10 text-brand-accent border border-brand-accent/20 px-1.5 py-0.5 rounded-[4px] cursor-pointer font-medium hover:bg-brand-accent hover:text-brand-secondary transition-all select-none inline-block leading-none mx-0.5">
-                    @{displayName}
-                </span>
-            );
-        });
-        
-        // 9. Role & Channel Mentions
-        parts = splitText(parts, /<@&(\d+)>/g, (match, i) => (
-            <span key={`r-${i}`} className="bg-brand-primary/10 text-brand-primary px-1.5 py-0.5 rounded-[4px] cursor-pointer font-medium hover:bg-brand-primary hover:text-white transition-colors select-none text-xs uppercase tracking-wide">
-                @Role
-            </span>
-        ));
-        parts = splitText(parts, /<#(\d+)>/g, (match, i) => (
-            <span key={`c-${i}`} className="bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-[4px] cursor-pointer font-medium hover:bg-white/20 hover:text-white transition-colors select-none">
-                #channel
-            </span>
         ));
         
         return parts;
@@ -326,8 +328,6 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                     {message.sticker_items && message.sticker_items.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                             {message.sticker_items.map((sticker) => {
-                                // Format 1 = PNG, 2 = APNG, 3 = Lottie, 4 = GIF
-                                // Default to PNG endpoint, but switch to GIF for format 4
                                 const extension = sticker.format_type === 4 ? 'gif' : 'png';
                                 return (
                                     <img 
@@ -354,7 +354,7 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                                 return (
                                     <div 
                                         key={idx} 
-                                        className="bg-black/30 hover:bg-brand-primary/10 border border-white/10 hover:border-brand-primary/40 rounded-[8px] px-1.5 py-0.5 flex items-center gap-1.5 cursor-pointer select-none transition-all duration-200 min-h-[1.5rem] group/reaction"
+                                        className="bg-black/40 hover:bg-brand-primary/20 border border-white/5 hover:border-brand-primary/50 rounded-[8px] px-1.5 py-0.5 flex items-center gap-1.5 cursor-pointer select-none transition-all duration-200 min-h-[1.5rem] group/reaction shadow-sm"
                                         title={`${reaction.emoji.name} - ${reaction.count}`}
                                     >
                                         {emojiUrl ? (
@@ -399,8 +399,6 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       );
   }
 
-  // State classes for the content when overlay is active
-  // Instead of backdrop-blur on the overlay, we blur the content itself for a cleaner effect.
   const contentState = showJoinOverlay 
     ? "blur-md brightness-[0.3] pointer-events-none scale-[1.01]" 
     : "scale-100";
@@ -415,12 +413,9 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #e5383b; }
       `}</style>
 
-      {/* Overlay Logic */}
       {showJoinOverlay && (
         <div className="absolute inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-            {/* Clickable backdrop to close */}
             <div className="absolute inset-0 bg-black/10" onClick={() => setShowJoinOverlay(false)}></div>
-
             <div className="relative bg-[#1e1f22] w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-white/10 transform scale-100 transition-all animate-in zoom-in-95 duration-200">
                 <button 
                     onClick={() => setShowJoinOverlay(false)}
@@ -431,13 +426,11 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
                     </svg>
                 </button>
 
-                {/* Banner */}
                 <div className="h-32 bg-brand-secondary relative">
                     <img src={BANNER_URL} alt="Server Banner" className="w-full h-full object-cover opacity-80" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1e1f22] to-transparent"></div>
                 </div>
 
-                {/* Icon & Content */}
                 <div className="px-6 pb-8 text-center -mt-12 relative z-10">
                     <div className="mx-auto w-24 h-24 rounded-[20px] p-1 bg-[#1e1f22] mb-4 shadow-lg">
                          <img src={ICON_URL} alt="Server Icon" className="w-full h-full rounded-[16px] object-cover" />
@@ -459,10 +452,9 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
         </div>
       )}
 
-      {/* 1. Header Section - Banner & Server Info */}
+      {/* Header Section */}
       <div className={`shrink-0 relative h-40 bg-brand-secondary overflow-hidden group select-none ${transitionClass} ${contentState}`}>
             <img src={BANNER_URL} alt="Server Banner" className="w-full h-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105" />
-            {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
             
             <div className="absolute bottom-0 left-0 p-5 flex items-end gap-4 w-full z-10">
@@ -485,19 +477,18 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
             </div>
       </div>
 
-      {/* 2. Channel Bar */}
+      {/* Channel Bar */}
       <div className={`shrink-0 h-14 border-b border-white/5 flex items-center px-5 bg-black/20 shadow-sm z-20 backdrop-blur-sm ${transitionClass} ${contentState}`}>
             <span className="text-2xl mr-3 text-brand-accent">#</span>
             <span className="font-bold text-white text-lg tracking-wide mr-3 drop-shadow-sm">{CHANNEL_NAME}</span>
       </div>
 
-      {/* 3. Chat Area */}
+      {/* Chat Area */}
       <div className={`flex-1 relative min-h-0 ${transitionClass} ${contentState}`}>
         <div 
             className="w-full h-full overflow-y-auto custom-scrollbar bg-transparent scroll-smooth" 
             ref={chatContainerRef} 
         >
-            {/* Spacer */}
             <div className="min-h-full flex flex-col justify-end py-4">
                 {chatLoading ? (
                     <div className="flex flex-col items-center justify-center h-32 text-gray-400 space-y-4">
@@ -521,7 +512,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
         </div>
       </div>
 
-      {/* 4. Input Area */}
+      {/* Input Area */}
       <div className={`shrink-0 p-4 bg-black/20 z-20 border-t border-white/5 ${transitionClass} ${contentState}`}>
          <div 
             onClick={() => setShowJoinOverlay(true)}
@@ -533,6 +524,7 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
             <div className="text-gray-500 text-sm font-medium truncate group-hover:text-gray-400 transition-colors">
                 Message #{CHANNEL_NAME}
             </div>
+            {/* Send Arrow Icon */}
             <div className="ml-auto opacity-50 shrink-0 group-hover:opacity-100 transition-opacity">
                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-gray-400 group-hover:text-brand-primary transition-colors">
                     <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
