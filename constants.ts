@@ -3,6 +3,7 @@ export const TWITCH_CHANNEL_NAME = 'urnisa_';
 export const DISCORD_SERVER_ID = '1336782145833668729';
 export const DISCORD_INVITE_URL = 'https://discord.gg/urnisa';
 export const DISCORD_CHAT_CHANNEL_ID = '1336782147490549869';
+export const DEFAULT_SCHEDULE_URL = 'https://cdn.discordapp.com/attachments/1338254150479118347/1439859590152978443/3_am_17.png?ex=6921fbfd&is=6920aa7d&hm=926ad591d323ccc29cd9f7dc2e256de99d8f5dcc292aa3a883f565455844c977&';
 
 // --------------------------------------------------------------------------
 // IMPORTANT: REPLACE THE URL BELOW WITH YOUR ACTUAL RENDER APP URL

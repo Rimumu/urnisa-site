@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 import TwitchEmbed from '../components/TwitchEmbed';
 import { TWITCH_CHANNEL_NAME, DISCORD_SERVER_ID } from '../constants';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { useSchedule } from '../hooks/useSchedule';
 import DiscordWidget from '../components/DiscordWidget';
 
 const Home: React.FC = () => {
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
     const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
+    const { scheduleUrl } = useSchedule();
     
     // Track if the Discord widget has ever been visible to keep it mounted during exit animations
     const [hasDiscordLoaded, setHasDiscordLoaded] = useState(false);
@@ -65,7 +67,7 @@ const Home: React.FC = () => {
                 <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
                     <img
                         loading="lazy"
-                        src="https://cdn.discordapp.com/attachments/1338254150479118347/1439859590152978443/3_am_17.png?ex=6921fbfd&is=6920aa7d&hm=926ad591d323ccc29cd9f7dc2e256de99d8f5dcc292aa3a883f565455844c977&"
+                        src={scheduleUrl}
                         alt="Urnisa's weekly stream schedule"
                         className="rounded-lg w-full"
                     />

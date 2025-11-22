@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Subathon from './pages/Subathon';
 import Minecraft from './pages/Minecraft';
 import About from './pages/About';
+import Admin from './pages/Admin';
 import InteractiveBackground from './components/InteractiveBackground';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -28,6 +29,7 @@ const App: React.FC = () => {
           <Route path="/nisathon" element={<Subathon />} />
           <Route path="/minecraft" element={<Minecraft />} />
           <Route path="/about" element={<About />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
       <Footer />
