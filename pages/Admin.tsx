@@ -8,18 +8,25 @@ import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/u
 // Converts standard drive sharing links to direct image URLs
 const convertGoogleDriveLink = (url: string): string => {
     if (!url) return '';
-    if (!url.includes('drive.google.com')) return url;
+    const cleanUrl = url.trim();
+    
+    // Check if it's a google drive link
+    if (!cleanUrl.includes('drive.google.com') && !cleanUrl.includes('docs.google.com')) {
+        return cleanUrl;
+    }
     
     // Regex to extract the ID from various Drive URL formats
-    // Matches /file/d/ID/view or ?id=ID
-    const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)|\?id=([a-zA-Z0-9_-]+)/);
-    const id = idMatch ? (idMatch[1] || idMatch[2]) : null;
+    // Matches /file/d/ID/view, /d/ID/, ?id=ID
+    const idMatch = cleanUrl.match(/(?:\/file\/d\/|\/d\/|\?id=)([-\w]+)/);
+    const id = idMatch ? idMatch[1] : null;
     
     if (id) {
-        // Returns the direct view URL
-        return `https://drive.google.com/uc?export=view&id=${id}`;
+        // Use the thumbnail endpoint with a large size (w4000) to get a high-res image.
+        // This is more reliable for <img> tags than 'uc?export=view' which often triggers 
+        // download headers or CORS issues.
+        return `https://drive.google.com/thumbnail?id=${id}&sz=w4000`;
     }
-    return url;
+    return cleanUrl;
 };
 
 // --- RICH TEXT EDITOR COMPONENT ---
