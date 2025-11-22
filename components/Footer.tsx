@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
       <div className="container mx-auto py-6 px-4">
         <div className="flex justify-center items-center">
           <p className="text-gray-400 text-sm">
-            &copy; {new Date().getFullYear()} Urnisa. All Rights Reserved.
+            &copy; {new Date().getFullYear()} urnisa. All Rights Reserved.
           </p>
         </div>
       </div>

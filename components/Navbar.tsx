@@ -72,7 +72,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
                   className="w-9 h-9 rounded-full object-cover border-2 border-brand-primary/80"
                 />
                 <span>
-                  URNISA
+                  urnisa
                 </span>
                 <div
                   className={`w-3 h-3 rounded-full transition-colors ${

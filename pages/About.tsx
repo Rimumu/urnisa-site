@@ -197,7 +197,7 @@ const About: React.FC = () => {
                         {/* Header Info */}
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center gap-1">
-                                <h1 className="text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-lg">URNISA</h1>
+                                <h1 className="text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-lg">urnisa</h1>
                             </div>
                             <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mt-1 font-mono min-h-[1.5em]">
                                 <span className={`text-brand-primary font-semibold ${isWaiting ? '' : 'cursor-blink'}`}>{text}</span>
@@ -405,7 +405,7 @@ const About: React.FC = () => {
             
             {/* Footer text */}
             <div className="mt-6 text-xs text-gray-600 font-mono animate-in fade-in delay-500 duration-1000">
-                EST. 2023 • URNISA
+                EST. 2023 • urnisa
             </div>
         </div>
     );
