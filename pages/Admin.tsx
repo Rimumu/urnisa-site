@@ -4,6 +4,24 @@ import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 
+// --- HELPER: GOOGLE DRIVE CONVERTER ---
+// Converts standard drive sharing links to direct image URLs
+const convertGoogleDriveLink = (url: string): string => {
+    if (!url) return '';
+    if (!url.includes('drive.google.com')) return url;
+    
+    // Regex to extract the ID from various Drive URL formats
+    // Matches /file/d/ID/view or ?id=ID
+    const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)|\?id=([a-zA-Z0-9_-]+)/);
+    const id = idMatch ? (idMatch[1] || idMatch[2]) : null;
+    
+    if (id) {
+        // Returns the direct view URL
+        return `https://drive.google.com/uc?export=view&id=${id}`;
+    }
+    return url;
+};
+
 // --- RICH TEXT EDITOR COMPONENT ---
 const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
     const contentRef = useRef<HTMLDivElement>(null);
@@ -180,6 +198,9 @@ const Admin: React.FC = () => {
         setLoading(true);
         setScheduleStatus(null);
 
+        // Auto-convert Google Drive links before saving
+        const processedUrl = convertGoogleDriveLink(newScheduleUrl);
+
         try {
             const response = await fetch(`${API_BASE_URL}/api/schedule`, {
                 method: 'POST',
@@ -187,11 +208,13 @@ const Admin: React.FC = () => {
                     'Content-Type': 'application/json',
                     'Authorization': password
                 },
-                body: JSON.stringify({ url: newScheduleUrl })
+                body: JSON.stringify({ url: processedUrl })
             });
             const data = await response.json();
             if (response.ok) {
                 setScheduleStatus({ type: 'success', message: 'Schedule updated successfully!' });
+                // Update local state to show the converted link
+                setNewScheduleUrl(processedUrl);
             } else {
                 setScheduleStatus({ type: 'error', message: data.error || 'Failed to update.' });
             }
@@ -249,8 +272,15 @@ const Admin: React.FC = () => {
     // Helper: Credits Editors
     const updateCreditItem = (index: number, field: keyof CreditItem, value: string) => {
         const updated = [...localCredits];
+        let finalValue = value;
+        
+        // Auto-convert Drive links for images
+        if (field === 'image') {
+            finalValue = convertGoogleDriveLink(value);
+        }
+        
         // @ts-ignore
-        updated[index] = { ...updated[index], [field]: value };
+        updated[index] = { ...updated[index], [field]: finalValue };
         setLocalCredits(updated);
     };
     const addCreditItem = () => {
@@ -274,8 +304,11 @@ const Admin: React.FC = () => {
     };
     const addImageToArtist = (artistIndex: number, url: string) => {
         if (!url) return;
+        // Auto-convert Drive links
+        const processedUrl = convertGoogleDriveLink(url);
+        
         const updated = [...localArtworks];
-        updated[artistIndex].images.push(url);
+        updated[artistIndex].images.push(processedUrl);
         setLocalArtworks(updated);
     };
     const removeImageFromArtist = (artistIndex: number, imageIndex: number) => {
@@ -314,10 +347,10 @@ const Admin: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white mb-4 border-b border-white/10 pb-2">📅 Stream Schedule</h2>
                 <form onSubmit={handleUpdateSchedule} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL</label>
+                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL (Supports Google Drive links)</label>
                         <input type="url" value={newScheduleUrl} onChange={(e) => setNewScheduleUrl(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none font-mono text-sm" required />
                     </div>
-                    {newScheduleUrl && <img src={newScheduleUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
+                    {newScheduleUrl && <img src={convertGoogleDriveLink(newScheduleUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
                     <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">{loading ? 'Saving...' : 'Update Schedule'}</button>
                     {scheduleStatus && <span className={`ml-4 text-sm ${scheduleStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{scheduleStatus.message}</span>}
                 </form>
@@ -359,8 +392,8 @@ const Admin: React.FC = () => {
                             <button onClick={() => removeCreditItem(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
                             
                             <div className="space-y-2">
-                                <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white border border-white/20" style={{ backgroundColor: item.color }}>
-                                    {item.image ? <img src={item.image} className="w-full h-full rounded-full object-cover" /> : (item.initial || item.name.charAt(0))}
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white border border-white/20 overflow-hidden" style={{ backgroundColor: item.color }}>
+                                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : (item.initial || item.name.charAt(0))}
                                 </div>
                                 <input type="color" value={item.color} onChange={(e) => updateCreditItem(idx, 'color', e.target.value)} className="w-12 h-6 bg-transparent cursor-pointer" />
                             </div>
@@ -370,7 +403,7 @@ const Admin: React.FC = () => {
                                     <input type="text" placeholder="Name" value={item.name} onChange={(e) => updateCreditItem(idx, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm font-bold" />
                                     <input type="text" placeholder="Role" value={item.role} onChange={(e) => updateCreditItem(idx, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-300 text-sm" />
                                 </div>
-                                <input type="text" placeholder="Image URL (Optional)" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                <input type="text" placeholder="Image URL (Supports Google Drive)" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
                                 <input type="text" placeholder="Initial (If no image)" value={item.initial || ''} onChange={(e) => updateCreditItem(idx, 'initial', e.target.value)} className="w-20 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs" maxLength={2} />
                             </div>
                         </div>
@@ -421,7 +454,7 @@ const Admin: React.FC = () => {
                                         type="text" 
                                         id={`new-img-${artist.id}`}
                                         className="flex-1 bg-black/20 border border-white/10 rounded px-3 py-1 text-gray-400 text-xs font-mono"
-                                        placeholder="Paste Image URL here..."
+                                        placeholder="Paste Image URL (Google Drive supported)"
                                     />
                                     <button 
                                         onClick={() => {
