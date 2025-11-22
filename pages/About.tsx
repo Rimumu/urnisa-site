@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useProfileContent } from '../hooks/useProfileContent';
 
 // Assets
 const PROFILE_IMAGE = "https://i.ibb.co/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png";
@@ -48,6 +49,7 @@ type TabType = 'about' | 'contact' | 'credits' | null;
 
 const About: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabType>(null);
+    const { aboutContent, creditsContent } = useProfileContent();
     
     // Typewriter State
     const [text, setText] = useState('');
@@ -59,7 +61,6 @@ const About: React.FC = () => {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
-    // Calculate if we are currently in the "pause" phase (Word finished, waiting to delete)
     const currentRole = roles[loopNum % roles.length];
     const isWaiting = isDeleting && text === currentRole;
 
@@ -74,19 +75,16 @@ const About: React.FC = () => {
                 : fullText.substring(0, text.length + 1)
             );
 
-            // Determine speed based on action
             let speed = 150;
-            if (isDeleting) speed = 75; // Delete faster
+            if (isDeleting) speed = 75;
 
             if (!isDeleting && text === fullText) {
-                // Finished typing word
-                speed = 2000; // Pause at end
+                speed = 2000;
                 setIsDeleting(true);
             } else if (isDeleting && text === '') {
-                // Finished deleting
                 setIsDeleting(false);
                 setLoopNum(loopNum + 1);
-                speed = 500; // Pause before next word
+                speed = 500;
             }
 
             setTypingSpeed(speed);
@@ -117,7 +115,6 @@ const About: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] w-full px-4 font-sans text-white relative py-10">
-            {/* Styles for custom animations */}
             <style>{`
                 @keyframes blink {
                     0%, 100% { opacity: 1; }
@@ -160,7 +157,6 @@ const About: React.FC = () => {
                 <span>{toastMessage}</span>
             </div>
 
-            {/* Expanding Card Container */}
             <div 
                 className={`
                     glass-card rounded-[30px] border border-white/10 overflow-hidden relative
@@ -171,7 +167,6 @@ const About: React.FC = () => {
             >
                 {/* LEFT PANEL: Main Profile */}
                 <div className="w-full md:w-[28rem] flex-shrink-0 bg-black/20 relative z-10 flex flex-col">
-                    {/* Banner */}
                     <div className="h-32 w-full relative overflow-hidden flex-shrink-0">
                         <img 
                             src={BANNER_IMAGE} 
@@ -182,7 +177,6 @@ const About: React.FC = () => {
                     </div>
 
                     <div className="px-6 pb-8 relative flex-1 flex flex-col">
-                        {/* Profile Picture */}
                         <div className="relative -mt-16 mb-4 w-fit mx-auto group">
                             <div className="w-28 h-28 rounded-full p-1 bg-[#121212] relative z-10">
                                 <img 
@@ -194,24 +188,21 @@ const About: React.FC = () => {
                             <div className="absolute inset-0 rounded-full bg-brand-primary/40 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-0"></div>
                         </div>
 
-                        {/* Header Info */}
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center gap-1">
-                                <h1 className="text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-lg">urnisa</h1>
+                                <h1 className="text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-lg">URNISA</h1>
                             </div>
                             <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mt-1 font-mono min-h-[1.5em]">
                                 <span className={`text-brand-primary font-semibold ${isWaiting ? '' : 'cursor-blink'}`}>{text}</span>
                             </div>
                         </div>
 
-                        {/* Bio Section */}
                         <div className="bg-[#0a0a0a]/60 rounded-2xl p-4 border border-white/5 mb-4 text-center backdrop-blur-md">
                             <p className="text-gray-300 text-sm leading-relaxed">
                                 "Just here to have fun together being a gremlin and try out new things!"
                             </p>
                         </div>
 
-                        {/* Socials Grid */}
                         <div className="grid grid-cols-4 gap-3 mb-4">
                             {[
                                 { name: 'Twitch', url: 'https://twitch.tv/urnisa_', icon: 'https://cdn.simpleicons.org/twitch/9146FF' },
@@ -231,7 +222,6 @@ const About: React.FC = () => {
                             ))}
                         </div>
                         
-                        {/* Discord Button */}
                         <button 
                             onClick={handleCopyDiscord}
                             className="w-full bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/50 text-[#5865F2] font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 mb-4 group hover:shadow-[0_0_15px_rgba(88,101,242,0.3)]"
@@ -241,7 +231,6 @@ const About: React.FC = () => {
                             <CopyIcon />
                         </button>
 
-                        {/* Specs Toggle */}
                         <button 
                             onClick={() => setShowSpecs(!showSpecs)}
                             className="w-full flex items-center justify-between bg-black/40 hover:bg-black/60 border border-white/10 px-4 py-3 rounded-xl text-sm text-gray-300 transition-all mb-4"
@@ -263,7 +252,6 @@ const About: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Navigation Buttons - Pushed to bottom */}
                         <div className="mt-auto grid grid-cols-3 gap-3 pt-2 border-t border-white/5">
                             <button 
                                 onClick={() => toggleTab('about')} 
@@ -330,9 +318,12 @@ const About: React.FC = () => {
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10" key={activeTab || 'empty'}>
                             {activeTab === 'about' && (
                                 <div className="text-gray-300 leading-relaxed space-y-4 text-sm md:text-base">
-                                    <div className="bg-white/5 rounded-xl p-5 border border-white/5">
-                                        <p className="text-gray-300">put introduction here</p>
-                                    </div>
+                                    {aboutContent.map((item) => (
+                                        <div key={item.id} className="bg-white/5 rounded-xl p-5 border border-white/5">
+                                            {item.title && <h3 className="font-bold text-white mb-2">{item.title}</h3>}
+                                            <p className="text-gray-300 whitespace-pre-wrap">{item.text}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
 
@@ -366,29 +357,24 @@ const About: React.FC = () => {
 
                             {activeTab === 'credits' && (
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
-                                        <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-brand-primary/30">R</div>
-                                        <div>
-                                            <h4 className="font-bold text-white text-lg">Rimu</h4>
-                                            <p className="text-sm text-gray-400">Website Developer</p>
+                                    {creditsContent.map((credit) => (
+                                        <div key={credit.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                                            {credit.image ? (
+                                                 <img src={credit.image} alt={credit.name} className="w-12 h-12 rounded-full object-cover shadow-lg" />
+                                            ) : (
+                                                <div 
+                                                    className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg"
+                                                    style={{ backgroundColor: credit.color || '#e5383b' }}
+                                                >
+                                                    {credit.initial || credit.name.charAt(0)}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <h4 className="font-bold text-white text-lg">{credit.name}</h4>
+                                                <p className="text-sm text-gray-400">{credit.role}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
-                                        <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-purple-600/30">A</div>
-                                        <div>
-                                            <h4 className="font-bold text-white text-lg">ArtistName</h4>
-                                            <p className="text-sm text-gray-400">Stream Overlays & Emotes</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
-                                        <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg shadow-blue-500/30">M</div>
-                                        <div>
-                                            <h4 className="font-bold text-white text-lg">Moderators</h4>
-                                            <p className="text-sm text-gray-400">Keeping the chat clean & cozy</p>
-                                        </div>
-                                    </div>
+                                    ))}
 
                                     <div className="mt-8 pt-6 border-t border-white/10 text-center">
                                         <p className="text-gray-500 text-xs">
@@ -403,7 +389,6 @@ const About: React.FC = () => {
                 </div>
             </div>
             
-            {/* Footer text */}
             <div className="mt-6 text-xs text-gray-600 font-mono animate-in fade-in delay-500 duration-1000">
                 EST. 2023 • urnisa
             </div>
@@ -412,4 +397,3 @@ const About: React.FC = () => {
 };
 
 export default About;
-    

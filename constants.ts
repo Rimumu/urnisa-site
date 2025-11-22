@@ -21,28 +21,56 @@ const isLocal =
 export const API_BASE_URL = isLocal ? 'http://localhost:3001' : RENDER_URL;
 
 // Configuration for grouping online members from the Discord Widget API.
-// Since the widget API does not return roles, we must manually map specific
-// User IDs or Usernames to these groups.
 export const DISCORD_ROLES_CONFIG = [
     { 
         id: 'owner',
         name: 'Owner', 
         color: 'text-pink-300',
-        // Real Discord User ID for the owner provided by user.
         userIds: ['433262414759198720'], 
         usernames: ['Urnisa', 'urnisa', 'urnisa_', 'nisa'],
-        // Fallback avatar if user is offline or avatar cannot be fetched.
-        // Using the Nisa Nomnom icon as it is more brand-appropriate than the Twitch PFP.
         avatarUrl: 'https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png'
     },
     { 
         id: 'guard_dogs',
         name: 'Guard Dogs', 
         color: 'text-green-400',
-        // Add Moderator/VIP IDs here
         userIds: ['938038904072855562'], 
-        // Fallback usernames
         usernames: ['MegaBooster', 'SuperFan'] 
     },
-    // Any user not matching the above roles will be placed in the "Meatlings" section.
+];
+
+// Default Content for About Page (Database Fallback)
+export const DEFAULT_ABOUT_CONTENT = [
+    {
+        id: '1',
+        title: 'Introduction',
+        text: 'put introduction here'
+    }
+];
+
+export const DEFAULT_CREDITS_CONTENT = [
+    {
+        id: '1',
+        name: 'Rimu',
+        role: 'Website Developer',
+        image: '', 
+        color: '#e5383b', // brand-primary
+        initial: 'R'
+    },
+    {
+        id: '2',
+        name: 'ArtistName',
+        role: 'Stream Overlays & Emotes',
+        image: '',
+        color: '#9333ea', // purple-600
+        initial: 'A'
+    },
+    {
+        id: '3',
+        name: 'Moderators',
+        role: 'Keeping the chat clean & cozy',
+        image: '',
+        color: '#3b82f6', // blue-500
+        initial: 'M'
+    }
 ];

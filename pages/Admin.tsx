@@ -1,46 +1,56 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
+import { useProfileContent, AboutItem, CreditItem } from '../hooks/useProfileContent';
 
 const Admin: React.FC = () => {
     const [password, setPassword] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [newUrl, setNewUrl] = useState('');
-    const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [loading, setLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
     
-    // Use current schedule to show preview
-    const { scheduleUrl: currentUrl } = useSchedule();
+    // Schedule State
+    const { scheduleUrl: currentScheduleUrl } = useSchedule();
+    const [newScheduleUrl, setNewScheduleUrl] = useState('');
+    const [scheduleStatus, setScheduleStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // Profile Content State
+    const { aboutContent, creditsContent, refetch: refetchProfile } = useProfileContent();
+    const [localAbout, setLocalAbout] = useState<AboutItem[]>([]);
+    const [localCredits, setLocalCredits] = useState<CreditItem[]>([]);
+    const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // Init local state when data fetches
+    useEffect(() => {
+        setNewScheduleUrl(currentScheduleUrl);
+    }, [currentScheduleUrl]);
+
+    useEffect(() => {
+        setLocalAbout(aboutContent);
+        setLocalCredits(creditsContent);
+    }, [aboutContent, creditsContent]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!password) return;
-        
         setLoading(true);
         setLoginError('');
         
         try {
-            // Verify password with the backend
             const response = await fetch(`${API_BASE_URL}/api/verify`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password })
             });
-
             const data = await response.json();
 
             if (response.ok && data.success) {
                 setIsAuthenticated(true);
-                setNewUrl(currentUrl);
             } else {
                 setLoginError('Incorrect password. Access denied.');
             }
         } catch (error) {
-            console.error("Login error:", error);
             setLoginError('Failed to connect to server.');
         } finally {
             setLoading(false);
@@ -50,68 +60,93 @@ const Admin: React.FC = () => {
     const handleUpdateSchedule = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setStatus(null);
+        setScheduleStatus(null);
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/schedule`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': password // Send password as auth header
+                    'Authorization': password
                 },
-                body: JSON.stringify({ url: newUrl })
+                body: JSON.stringify({ url: newScheduleUrl })
             });
-
             const data = await response.json();
-
             if (response.ok) {
-                setStatus({ type: 'success', message: 'Schedule updated successfully!' });
+                setScheduleStatus({ type: 'success', message: 'Schedule updated successfully!' });
             } else {
-                setStatus({ type: 'error', message: data.error || 'Failed to update.' });
-                if (response.status === 401) {
-                    setIsAuthenticated(false); // Log out if unauthorized
-                    setLoginError('Session expired or password changed.');
-                }
+                setScheduleStatus({ type: 'error', message: data.error || 'Failed to update.' });
             }
         } catch (error) {
-            setStatus({ type: 'error', message: 'Network error.' });
+            setScheduleStatus({ type: 'error', message: 'Network error.' });
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSaveProfile = async (type: 'about' | 'credits') => {
+        setLoading(true);
+        setProfileStatus(null);
+        const data = type === 'about' ? localAbout : localCredits;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password
+                },
+                body: JSON.stringify({ type, data })
+            });
+            if (response.ok) {
+                setProfileStatus({ type: 'success', message: `${type === 'about' ? 'About' : 'Credits'} saved successfully!` });
+                refetchProfile();
+            } else {
+                setProfileStatus({ type: 'error', message: 'Failed to save.' });
+            }
+        } catch (error) {
+            setProfileStatus({ type: 'error', message: 'Network error.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Helper: About Content Editors
+    const updateAboutItem = (index: number, field: keyof AboutItem, value: string) => {
+        const updated = [...localAbout];
+        updated[index] = { ...updated[index], [field]: value };
+        setLocalAbout(updated);
+    };
+    const addAboutItem = () => {
+        setLocalAbout([...localAbout, { id: Date.now().toString(), title: 'New Section', text: '' }]);
+    };
+    const removeAboutItem = (index: number) => {
+        setLocalAbout(localAbout.filter((_, i) => i !== index));
+    };
+
+    // Helper: Credits Editors
+    const updateCreditItem = (index: number, field: keyof CreditItem, value: string) => {
+        const updated = [...localCredits];
+        // @ts-ignore
+        updated[index] = { ...updated[index], [field]: value };
+        setLocalCredits(updated);
+    };
+    const addCreditItem = () => {
+        setLocalCredits([...localCredits, { id: Date.now().toString(), name: 'Name', role: 'Role', color: '#e5383b', initial: '?' }]);
+    };
+    const removeCreditItem = (index: number) => {
+        setLocalCredits(localCredits.filter((_, i) => i !== index));
     };
 
     if (!isAuthenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-2xl w-full max-w-md">
-                    <h1 className="text-3xl font-extrabold text-center mb-6 text-white">
-                        Admin <span className="text-brand-primary">Login</span>
-                    </h1>
+                    <h1 className="text-3xl font-extrabold text-center mb-6 text-white">Admin <span className="text-brand-primary">Login</span></h1>
                     <form onSubmit={handleLogin} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-400 mb-1">Password</label>
-                            <input 
-                                type="password" 
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors"
-                                placeholder="Enter admin password"
-                            />
-                        </div>
-                        
-                        {loginError && (
-                            <div className="text-red-400 text-sm text-center bg-red-900/20 p-2 rounded border border-red-900/40">
-                                {loginError}
-                            </div>
-                        )}
-
-                        <button 
-                            type="submit"
-                            disabled={loading}
-                            className={`w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            {loading ? 'Verifying...' : 'Access Dashboard'}
-                        </button>
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none" placeholder="Enter password" />
+                        {loginError && <div className="text-red-400 text-sm text-center">{loginError}</div>}
+                        <button type="submit" disabled={loading} className="w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-lg transition-all">{loading ? 'Verifying...' : 'Access Dashboard'}</button>
                     </form>
                 </div>
             </div>
@@ -119,77 +154,82 @@ const Admin: React.FC = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-extrabold text-center mb-8 text-white">
-                Admin <span className="text-brand-primary">Dashboard</span>
-            </h1>
-
-            <div className="grid gap-8">
-                {/* Schedule Updater Card */}
-                <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-2xl">
-                    <div className="flex items-center gap-4 mb-6 border-b border-white/10 pb-4">
-                        <div className="p-3 bg-brand-primary/20 rounded-lg text-2xl">📅</div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">Stream Schedule</h2>
-                            <p className="text-gray-400 text-sm">Update the schedule image displayed on the home page.</p>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleUpdateSchedule} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-300 mb-2">Image URL</label>
-                            <input 
-                                type="url" 
-                                value={newUrl}
-                                onChange={(e) => setNewUrl(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary transition-colors font-mono text-sm"
-                                placeholder="https://..."
-                                required
-                            />
-                        </div>
-
-                        {newUrl && (
-                            <div className="mt-4">
-                                <label className="block text-xs uppercase font-bold text-gray-500 mb-2">Preview</label>
-                                <div className="rounded-lg overflow-hidden border border-white/10 bg-black/20 max-w-md mx-auto">
-                                    <img src={newUrl} alt="Preview" className="w-full h-auto opacity-90" onError={(e) => (e.currentTarget.style.display = 'none')} />
-                                </div>
-                            </div>
-                        )}
-
-                        {status && (
-                            <div className={`p-4 rounded-lg text-center font-medium ${status.type === 'success' ? 'bg-green-500/20 text-green-300 border border-green-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30'}`}>
-                                {status.message}
-                            </div>
-                        )}
-
-                        <button 
-                            type="submit" 
-                            disabled={loading}
-                            className={`w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg flex justify-center items-center ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
-                        >
-                            {loading ? (
-                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            ) : (
-                                'Save Changes'
-                            )}
-                        </button>
-                    </form>
+        <div className="max-w-5xl mx-auto space-y-8 pb-20">
+            <h1 className="text-4xl font-extrabold text-center mb-8 text-white">Admin <span className="text-brand-primary">Dashboard</span></h1>
+            
+            {profileStatus && (
+                <div className={`fixed top-24 right-4 z-50 p-4 rounded-lg shadow-xl ${profileStatus.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
+                    {profileStatus.message}
                 </div>
+            )}
 
-                {/* Future Modules (Spin Wheel, etc.) */}
-                <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-xl opacity-60 grayscale pointer-events-none relative overflow-hidden">
-                     <div className="absolute top-4 right-4 bg-yellow-500/20 text-yellow-300 text-xs font-bold px-2 py-1 rounded border border-yellow-500/30 uppercase">Coming Soon</div>
-                     <div className="flex items-center gap-4 mb-6 border-b border-white/10 pb-4">
-                        <div className="p-3 bg-purple-500/20 rounded-lg text-2xl">🎡</div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">Nisathon Wheel</h2>
-                            <p className="text-gray-400 text-sm">Customize spin wheel segments and probabilities.</p>
-                        </div>
+            {/* --- SCHEDULE --- */}
+            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                <h2 className="text-2xl font-bold text-white mb-4 border-b border-white/10 pb-2">📅 Stream Schedule</h2>
+                <form onSubmit={handleUpdateSchedule} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL</label>
+                        <input type="url" value={newScheduleUrl} onChange={(e) => setNewScheduleUrl(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none font-mono text-sm" required />
                     </div>
+                    {newScheduleUrl && <img src={newScheduleUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
+                    <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">{loading ? 'Saving...' : 'Update Schedule'}</button>
+                    {scheduleStatus && <span className={`ml-4 text-sm ${scheduleStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{scheduleStatus.message}</span>}
+                </form>
+            </div>
+
+            {/* --- ABOUT ME EDITOR --- */}
+            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                    <h2 className="text-2xl font-bold text-white">ℹ️ About Me Content</h2>
+                    <button onClick={() => handleSaveProfile('about')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded text-sm transition-colors">Save Changes</button>
+                </div>
+                <div className="space-y-4">
+                    {localAbout.map((item, idx) => (
+                        <div key={item.id} className="bg-white/5 p-4 rounded-xl border border-white/5 relative group">
+                            <button onClick={() => removeAboutItem(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
+                            <div className="mb-2">
+                                <label className="text-xs text-gray-500 uppercase">Title (Optional)</label>
+                                <input type="text" value={item.title} onChange={(e) => updateAboutItem(idx, 'title', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm font-bold" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500 uppercase">Text Body</label>
+                                <textarea value={item.text} onChange={(e) => updateAboutItem(idx, 'text', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm h-24" />
+                            </div>
+                        </div>
+                    ))}
+                    <button onClick={addAboutItem} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Section</button>
+                </div>
+            </div>
+
+            {/* --- CREDITS EDITOR --- */}
+            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                    <h2 className="text-2xl font-bold text-white">⭐ Credits Content</h2>
+                    <button onClick={() => handleSaveProfile('credits')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded text-sm transition-colors">Save Changes</button>
+                </div>
+                <div className="space-y-4">
+                    {localCredits.map((item, idx) => (
+                        <div key={item.id} className="bg-white/5 p-4 rounded-xl border border-white/5 relative group flex gap-4 items-start">
+                            <button onClick={() => removeCreditItem(idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
+                            
+                            <div className="space-y-2">
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white border border-white/20" style={{ backgroundColor: item.color }}>
+                                    {item.image ? <img src={item.image} className="w-full h-full rounded-full object-cover" /> : (item.initial || item.name.charAt(0))}
+                                </div>
+                                <input type="color" value={item.color} onChange={(e) => updateCreditItem(idx, 'color', e.target.value)} className="w-12 h-6 bg-transparent cursor-pointer" />
+                            </div>
+
+                            <div className="flex-1 space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <input type="text" placeholder="Name" value={item.name} onChange={(e) => updateCreditItem(idx, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm font-bold" />
+                                    <input type="text" placeholder="Role" value={item.role} onChange={(e) => updateCreditItem(idx, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-300 text-sm" />
+                                </div>
+                                <input type="text" placeholder="Image URL (Optional)" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                <input type="text" placeholder="Initial (If no image)" value={item.initial || ''} onChange={(e) => updateCreditItem(idx, 'initial', e.target.value)} className="w-20 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs" maxLength={2} />
+                            </div>
+                        </div>
+                    ))}
+                    <button onClick={addCreditItem} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Credit</button>
                 </div>
             </div>
         </div>
