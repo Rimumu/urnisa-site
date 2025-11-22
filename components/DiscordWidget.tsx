@@ -354,15 +354,15 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                                 return (
                                     <div 
                                         key={idx} 
-                                        className="bg-[#2b2d31] hover:bg-[#373a40] border border-transparent hover:border-gray-600 rounded-[8px] px-1.5 py-0.5 flex items-center gap-1.5 cursor-pointer select-none transition-colors min-h-[1.5rem]"
+                                        className="bg-black/30 hover:bg-brand-primary/10 border border-white/10 hover:border-brand-primary/40 rounded-[8px] px-1.5 py-0.5 flex items-center gap-1.5 cursor-pointer select-none transition-all duration-200 min-h-[1.5rem] group/reaction"
                                         title={`${reaction.emoji.name} - ${reaction.count}`}
                                     >
                                         {emojiUrl ? (
                                             <img src={emojiUrl} alt={reaction.emoji.name || ''} className="w-4 h-4 object-contain" />
                                         ) : (
-                                            <span className="text-sm leading-none">{reaction.emoji.name}</span>
+                                            <span className="text-sm leading-none text-gray-200">{reaction.emoji.name}</span>
                                         )}
-                                        <span className="text-xs font-bold text-gray-400">{reaction.count}</span>
+                                        <span className="text-xs font-bold text-gray-400 group-hover/reaction:text-brand-accent transition-colors">{reaction.count}</span>
                                     </div>
                                 );
                             })}

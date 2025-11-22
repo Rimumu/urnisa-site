@@ -67,18 +67,19 @@ export const useDiscordChat = (channelId: string) => {
 
         const fetchMessages = async () => {
             setLoading(true);
+            const targetUrl = `${API_BASE_URL}/api/messages?channelId=${channelId}`;
             try {
-                const response = await fetch(`${API_BASE_URL}/api/messages?channelId=${channelId}`);
+                // Debug log to see exactly where we are trying to connect
+                console.log(`Fetching chat from: ${targetUrl}`);
+                
+                const response = await fetch(targetUrl);
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch messages: ${response.status}`);
+                    throw new Error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
                 }
                 const data = await response.json();
-                // The server now reverses it, so we don't need to reverse here if we want oldest-first.
-                // If server sends oldest-first (due to reverse() there), we just set it.
-                // Checking server.js: it sends `messages.reverse()`.
                 setMessages(data);
             } catch (err) {
-                console.error("Error loading chat preview:", err);
+                console.error(`Error loading chat preview from ${targetUrl}:`, err);
                 setError(err instanceof Error ? err : new Error('Unknown error'));
             } finally {
                 setLoading(false);

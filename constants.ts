@@ -6,14 +6,17 @@ export const DISCORD_CHAT_CHANNEL_ID = '1336782147490549869';
 
 // --------------------------------------------------------------------------
 // IMPORTANT: REPLACE THE URL BELOW WITH YOUR ACTUAL RENDER APP URL
-// Example: 'https://urnisa-backend-adb1.onrender.com'
 // --------------------------------------------------------------------------
 const RENDER_URL = 'https://urnisa-bot.onrender.com';
 
 // Automatically use localhost for development, and Render for production.
-// If you want to test the Render backend while running the frontend locally,
-// change `isLocal` to false.
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Checks for localhost, 127.0.0.1, and common local network IPs (192.168.x.x).
+const hostname = window.location.hostname;
+const isLocal = 
+    hostname === 'localhost' || 
+    hostname === '127.0.0.1' || 
+    hostname.startsWith('192.168.');
+
 export const API_BASE_URL = isLocal ? 'http://localhost:3001' : RENDER_URL;
 
 // Configuration for grouping online members from the Discord Widget API.
