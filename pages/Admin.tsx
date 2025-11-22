@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
-import { useProfileContent, AboutItem, CreditItem } from '../hooks/useProfileContent';
+import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 
 // --- RICH TEXT EDITOR COMPONENT ---
 const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
@@ -132,9 +132,10 @@ const Admin: React.FC = () => {
     const [scheduleStatus, setScheduleStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // Profile Content State
-    const { aboutContent, creditsContent, refetch: refetchProfile } = useProfileContent();
+    const { aboutContent, creditsContent, artworksContent, refetch: refetchProfile } = useProfileContent();
     const [localAbout, setLocalAbout] = useState<AboutItem[]>([]);
     const [localCredits, setLocalCredits] = useState<CreditItem[]>([]);
+    const [localArtworks, setLocalArtworks] = useState<ArtistItem[]>([]);
     const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // Init local state when data fetches
@@ -145,7 +146,8 @@ const Admin: React.FC = () => {
     useEffect(() => {
         setLocalAbout(aboutContent);
         setLocalCredits(creditsContent);
-    }, [aboutContent, creditsContent]);
+        setLocalArtworks(artworksContent);
+    }, [aboutContent, creditsContent, artworksContent]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -200,10 +202,13 @@ const Admin: React.FC = () => {
         }
     };
 
-    const handleSaveProfile = async (type: 'about' | 'credits') => {
+    const handleSaveProfile = async (type: 'about' | 'credits' | 'artworks') => {
         setLoading(true);
         setProfileStatus(null);
-        const data = type === 'about' ? localAbout : localCredits;
+        let data;
+        if (type === 'about') data = localAbout;
+        else if (type === 'credits') data = localCredits;
+        else if (type === 'artworks') data = localArtworks;
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/profile`, {
@@ -215,7 +220,8 @@ const Admin: React.FC = () => {
                 body: JSON.stringify({ type, data })
             });
             if (response.ok) {
-                setProfileStatus({ type: 'success', message: `${type === 'about' ? 'About' : 'Credits'} saved successfully!` });
+                const typeLabel = type === 'artworks' ? 'Artworks' : type === 'about' ? 'About' : 'Credits';
+                setProfileStatus({ type: 'success', message: `${typeLabel} saved successfully!` });
                 refetchProfile();
             } else {
                 setProfileStatus({ type: 'error', message: 'Failed to save.' });
@@ -252,6 +258,30 @@ const Admin: React.FC = () => {
     };
     const removeCreditItem = (index: number) => {
         setLocalCredits(localCredits.filter((_, i) => i !== index));
+    };
+
+    // Helper: Artworks Editors
+    const addArtist = () => {
+        setLocalArtworks([...localArtworks, { id: Date.now().toString(), artistName: 'New Artist', images: [] }]);
+    };
+    const removeArtist = (index: number) => {
+        setLocalArtworks(localArtworks.filter((_, i) => i !== index));
+    };
+    const updateArtistName = (index: number, name: string) => {
+        const updated = [...localArtworks];
+        updated[index].artistName = name;
+        setLocalArtworks(updated);
+    };
+    const addImageToArtist = (artistIndex: number, url: string) => {
+        if (!url) return;
+        const updated = [...localArtworks];
+        updated[artistIndex].images.push(url);
+        setLocalArtworks(updated);
+    };
+    const removeImageFromArtist = (artistIndex: number, imageIndex: number) => {
+        const updated = [...localArtworks];
+        updated[artistIndex].images = updated[artistIndex].images.filter((_, i) => i !== imageIndex);
+        setLocalArtworks(updated);
     };
 
     if (!isAuthenticated) {
@@ -346,6 +376,70 @@ const Admin: React.FC = () => {
                         </div>
                     ))}
                     <button onClick={addCreditItem} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Credit</button>
+                </div>
+            </div>
+
+            {/* --- ART GALLERY EDITOR --- */}
+            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                    <h2 className="text-2xl font-bold text-white">🎨 Art Gallery Editor</h2>
+                    <button onClick={() => handleSaveProfile('artworks')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded text-sm transition-colors">Save Changes</button>
+                </div>
+                <div className="space-y-6">
+                    {localArtworks.map((artist, artistIdx) => (
+                        <div key={artist.id} className="bg-white/5 p-4 rounded-xl border border-white/5 relative group">
+                             <button onClick={() => removeArtist(artistIdx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">🗑️ Delete Artist</button>
+                             
+                             <div className="mb-4">
+                                <label className="text-xs text-gray-500 uppercase">Artist Name</label>
+                                <input 
+                                    type="text" 
+                                    value={artist.artistName} 
+                                    onChange={(e) => updateArtistName(artistIdx, e.target.value)} 
+                                    className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-white font-bold" 
+                                    placeholder="Artist Name"
+                                />
+                             </div>
+
+                             <div className="space-y-2">
+                                <label className="text-xs text-gray-500 uppercase">Artwork Images</label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                                    {artist.images.map((img, imgIdx) => (
+                                        <div key={imgIdx} className="relative aspect-square bg-black/30 rounded overflow-hidden group/img">
+                                            <img src={img} className="w-full h-full object-cover" />
+                                            <button 
+                                                onClick={() => removeImageFromArtist(artistIdx, imgIdx)}
+                                                className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-red-400 font-bold transition-opacity"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        id={`new-img-${artist.id}`}
+                                        className="flex-1 bg-black/20 border border-white/10 rounded px-3 py-1 text-gray-400 text-xs font-mono"
+                                        placeholder="Paste Image URL here..."
+                                    />
+                                    <button 
+                                        onClick={() => {
+                                            const input = document.getElementById(`new-img-${artist.id}`) as HTMLInputElement;
+                                            if (input.value) {
+                                                addImageToArtist(artistIdx, input.value);
+                                                input.value = '';
+                                            }
+                                        }}
+                                        className="bg-brand-primary/20 text-brand-primary px-4 rounded border border-brand-primary/50 hover:bg-brand-primary hover:text-white transition-colors text-xs font-bold"
+                                    >
+                                        Add Image
+                                    </button>
+                                </div>
+                             </div>
+                        </div>
+                    ))}
+                    <button onClick={addArtist} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Artist Group</button>
                 </div>
             </div>
         </div>

@@ -74,3 +74,14 @@ export const DEFAULT_CREDITS_CONTENT = [
         initial: 'M'
     }
 ];
+
+export const DEFAULT_ARTWORKS_CONTENT = [
+    {
+        id: '1',
+        artistName: 'Official Art',
+        images: [
+            'https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png',
+            'https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png'
+        ]
+    }
+];

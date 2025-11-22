@@ -45,11 +45,11 @@ const StarIcon = () => (
 
 const roles = ["VTuber", "Streamer", "Yapper", "Gremlin"];
 
-type TabType = 'about' | 'contact' | 'credits' | null;
+type TabType = 'about' | 'contact' | 'credits' | 'gallery' | null;
 
 const About: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabType>(null);
-    const { aboutContent, creditsContent } = useProfileContent();
+    const { aboutContent, creditsContent, artworksContent } = useProfileContent();
     
     // Typewriter State
     const [text, setText] = useState('');
@@ -60,6 +60,9 @@ const About: React.FC = () => {
     const [showSpecs, setShowSpecs] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+
+    // Lightbox State
+    const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
     const currentRole = roles[loopNum % roles.length];
     const isWaiting = isDeleting && text === currentRole;
@@ -177,6 +180,23 @@ const About: React.FC = () => {
                 </svg>
                 <span>{toastMessage}</span>
             </div>
+
+            {/* Lightbox */}
+            {lightboxImage && (
+                <div 
+                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
+                    onClick={() => setLightboxImage(null)}
+                >
+                    <img 
+                        src={lightboxImage} 
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                        alt="Full size artwork"
+                    />
+                    <button className="absolute top-6 right-6 text-white hover:text-brand-primary p-2">
+                        <CloseIcon />
+                    </button>
+                </div>
+            )}
 
             <div 
                 className={`
@@ -302,7 +322,7 @@ const About: React.FC = () => {
                                 onClick={() => toggleTab('credits')} 
                                 className={`
                                     rounded-xl py-3 flex flex-col items-center gap-1 transition-all duration-300 group
-                                    ${activeTab === 'credits' 
+                                    ${activeTab === 'credits' || activeTab === 'gallery'
                                         ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' 
                                         : 'bg-white/5 hover:bg-brand-primary/20 border border-white/5 hover:border-brand-primary/50 text-gray-400 hover:text-white'}
                                 `}
@@ -327,6 +347,7 @@ const About: React.FC = () => {
                                 {activeTab === 'about' && <span className="text-brand-primary">About Me</span>}
                                 {activeTab === 'contact' && <span className="text-brand-primary">Contact</span>}
                                 {activeTab === 'credits' && <span className="text-brand-primary">Credits</span>}
+                                {activeTab === 'gallery' && <span className="text-brand-primary">Art Gallery</span>}
                             </h2>
                             <button 
                                 onClick={() => setActiveTab(null)} 
@@ -400,6 +421,15 @@ const About: React.FC = () => {
                                             </div>
                                         </div>
                                     ))}
+                                    
+                                    {/* View Art Gallery Button */}
+                                    <button 
+                                        onClick={() => setActiveTab('gallery')}
+                                        className="w-full mt-4 bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/50 text-brand-primary font-bold py-4 rounded-xl transition-all duration-300 flex flex-col items-center justify-center group"
+                                    >
+                                        <span className="text-2xl mb-1 group-hover:scale-110 transition-transform">🎨</span>
+                                        <span>View Art Gallery</span>
+                                    </button>
 
                                     <div className="mt-8 pt-6 border-t border-white/10 text-center">
                                         <p className="text-gray-500 text-xs">
@@ -407,6 +437,43 @@ const About: React.FC = () => {
                                             © {new Date().getFullYear()} Urnisa. All rights reserved.
                                         </p>
                                     </div>
+                                </div>
+                            )}
+                            
+                            {activeTab === 'gallery' && (
+                                <div className="space-y-8">
+                                    <button 
+                                        onClick={() => setActiveTab('credits')}
+                                        className="text-sm text-gray-400 hover:text-white flex items-center gap-1 mb-4"
+                                    >
+                                        ← Back to Credits
+                                    </button>
+                                    
+                                    {artworksContent.map((artist) => (
+                                        <div key={artist.id} className="bg-white/5 p-5 rounded-2xl border border-white/5">
+                                            <h3 className="text-xl font-bold text-white mb-4 border-b border-white/10 pb-2 flex justify-between items-center">
+                                                {artist.artistName}
+                                                <span className="text-xs font-normal text-gray-500 bg-black/30 px-2 py-1 rounded-full">{artist.images.length} works</span>
+                                            </h3>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                {artist.images.map((img, idx) => (
+                                                    <div 
+                                                        key={idx} 
+                                                        className="aspect-square rounded-lg overflow-hidden cursor-zoom-in relative group border border-white/10 hover:border-brand-primary/50 transition-colors bg-black/20"
+                                                        onClick={() => setLightboxImage(img)}
+                                                    >
+                                                        <img 
+                                                            src={img} 
+                                                            alt={`Art by ${artist.artistName}`}
+                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            loading="lazy"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
