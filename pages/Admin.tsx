@@ -354,7 +354,7 @@ const Admin: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white mb-4 border-b border-white/10 pb-2">📅 Stream Schedule</h2>
                 <form onSubmit={handleUpdateSchedule} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL (Supports Google Drive links)</label>
+                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL</label>
                         <input type="url" value={newScheduleUrl} onChange={(e) => setNewScheduleUrl(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none font-mono text-sm" required />
                     </div>
                     {newScheduleUrl && <img src={convertGoogleDriveLink(newScheduleUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
@@ -410,7 +410,7 @@ const Admin: React.FC = () => {
                                     <input type="text" placeholder="Name" value={item.name} onChange={(e) => updateCreditItem(idx, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm font-bold" />
                                     <input type="text" placeholder="Role" value={item.role} onChange={(e) => updateCreditItem(idx, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-300 text-sm" />
                                 </div>
-                                <input type="text" placeholder="Image URL (Supports Google Drive)" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                <input type="text" placeholder="Image URL" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
                                 <input type="text" placeholder="Initial (If no image)" value={item.initial || ''} onChange={(e) => updateCreditItem(idx, 'initial', e.target.value)} className="w-20 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs" maxLength={2} />
                             </div>
                         </div>
@@ -461,7 +461,7 @@ const Admin: React.FC = () => {
                                         type="text" 
                                         id={`new-img-${artist.id}`}
                                         className="flex-1 bg-black/20 border border-white/10 rounded px-3 py-1 text-gray-400 text-xs font-mono"
-                                        placeholder="Paste Image URL (Google Drive supported)"
+                                        placeholder="Paste Image URL"
                                     />
                                     <button 
                                         onClick={() => {
