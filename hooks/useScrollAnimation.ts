@@ -16,12 +16,9 @@ export const useScrollAnimation = <T extends HTMLElement>(): [React.RefObject<T>
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // If the element is intersecting (visible)
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          // We can stop observing it once it has become visible
-          observer.unobserve(entry.target);
-        }
+        // Update state based on intersection status.
+        // This allows the animation to reverse when scrolling out of view.
+        setIsVisible(entry.isIntersecting);
       },
       {
         // Trigger the animation when the element is 15% visible

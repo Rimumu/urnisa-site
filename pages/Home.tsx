@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import TwitchEmbed from '../components/TwitchEmbed';
 import { TWITCH_CHANNEL_NAME, DISCORD_SERVER_ID } from '../constants';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
@@ -8,6 +8,15 @@ import DiscordWidget from '../components/DiscordWidget';
 const Home: React.FC = () => {
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
     const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
+    
+    // Track if the Discord widget has ever been visible to keep it mounted during exit animations
+    const [hasDiscordLoaded, setHasDiscordLoaded] = useState(false);
+
+    useEffect(() => {
+        if (isDiscordVisible && !hasDiscordLoaded) {
+            setHasDiscordLoaded(true);
+        }
+    }, [isDiscordVisible, hasDiscordLoaded]);
 
     const handleScrollToSchedule = () => {
         // The `scrollMarginTop` style on the scheduleRef element ensures that
@@ -47,7 +56,7 @@ const Home: React.FC = () => {
             {/* Schedule Section */}
             <div 
                 ref={scheduleRef}
-                className={`mt-8 w-full max-w-5xl transition-all duration-1000 ease-out ${isScheduleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
+                className={`mt-8 w-full max-w-5xl transition-all duration-1000 ease-out transform ${isScheduleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
                 style={{ scrollMarginTop: '5rem' }} // Offset for the sticky navbar
             >
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
@@ -68,7 +77,7 @@ const Home: React.FC = () => {
             {/* Discord Section */}
             <div 
                 ref={discordRef}
-                className={`mt-16 w-full max-w-5xl transition-all duration-1000 ease-out ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
+                className={`mt-16 w-full max-w-5xl transition-all duration-1000 ease-out transform ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
             >
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Join our <span className="text-brand-primary">Discord</span>
@@ -76,9 +85,8 @@ const Home: React.FC = () => {
                 <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
                     Become a part of the STEAK House community! Join our Discord server to chat with others, get live notifications, and stay updated on all events.
                 </p>
-                {/* The DiscordWidget is only rendered when it becomes visible,
-                    which triggers the data fetch. This is lazy loading. */}
-                {isDiscordVisible && <DiscordWidget serverId={DISCORD_SERVER_ID} />}
+                {/* Keep DiscordWidget mounted once loaded to ensure smooth exit animations */}
+                {hasDiscordLoaded && <DiscordWidget serverId={DISCORD_SERVER_ID} />}
             </div>
         </div>
     );
