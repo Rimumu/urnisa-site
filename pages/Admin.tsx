@@ -1,8 +1,48 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem } from '../hooks/useProfileContent';
+
+// --- RICH TEXT EDITOR COMPONENT ---
+const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    // Sync external value changes to internal ref if they differ (e.g. initial load)
+    // We check document.activeElement to avoid resetting the cursor while the user is actively typing.
+    useEffect(() => {
+        if (contentRef.current && contentRef.current.innerHTML !== value) {
+             if (document.activeElement !== contentRef.current) {
+                 contentRef.current.innerHTML = value;
+             }
+        }
+    }, [value]);
+
+    const exec = (command: string) => {
+        document.execCommand(command, false, undefined);
+        if (contentRef.current) onChange(contentRef.current.innerHTML);
+    };
+
+    return (
+        <div className="w-full bg-black/20 border border-white/10 rounded overflow-hidden flex flex-col h-48">
+             <div className="flex gap-1 p-1 bg-white/5 border-b border-white/5 select-none">
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('bold'); }} className="p-1 hover:bg-white/10 rounded text-white font-bold w-8 h-8 flex items-center justify-center" title="Bold">B</button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('italic'); }} className="p-1 hover:bg-white/10 rounded text-white italic w-8 h-8 flex items-center justify-center" title="Italic">I</button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('underline'); }} className="p-1 hover:bg-white/10 rounded text-white underline w-8 h-8 flex items-center justify-center" title="Underline">U</button>
+                <div className="w-px bg-white/10 mx-1"></div>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); exec('insertUnorderedList'); }} className="p-1 hover:bg-white/10 rounded text-white w-8 h-8 flex items-center justify-center" title="Bullet List">•</button>
+            </div>
+            <div
+                ref={contentRef}
+                className="flex-1 p-2 text-white text-sm outline-none overflow-y-auto"
+                contentEditable
+                onInput={(e) => onChange(e.currentTarget.innerHTML)}
+                suppressContentEditableWarning
+                style={{ minHeight: '100px' }}
+            />
+        </div>
+    );
+};
 
 const Admin: React.FC = () => {
     const [password, setPassword] = useState('');
@@ -193,7 +233,7 @@ const Admin: React.FC = () => {
                             </div>
                             <div>
                                 <label className="text-xs text-gray-500 uppercase">Text Body</label>
-                                <textarea value={item.text} onChange={(e) => updateAboutItem(idx, 'text', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm h-24" />
+                                <RichTextEditor value={item.text} onChange={(val) => updateAboutItem(idx, 'text', val)} />
                             </div>
                         </div>
                     ))}

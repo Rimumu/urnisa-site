@@ -147,6 +147,27 @@ const About: React.FC = () => {
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: rgba(229, 56, 59, 0.8);
                 }
+                
+                /* Rich Text Content Styles */
+                .rich-text ul {
+                    list-style-type: disc;
+                    padding-left: 1.5rem;
+                    margin-top: 0.5rem;
+                    margin-bottom: 0.5rem;
+                }
+                .rich-text li {
+                    margin-bottom: 0.25rem;
+                }
+                .rich-text b, .rich-text strong {
+                    font-weight: bold;
+                    color: white;
+                }
+                .rich-text i, .rich-text em {
+                    font-style: italic;
+                }
+                .rich-text u {
+                    text-decoration: underline;
+                }
             `}</style>
 
             {/* Toast Notification */}
@@ -321,7 +342,11 @@ const About: React.FC = () => {
                                     {aboutContent.map((item) => (
                                         <div key={item.id} className="bg-white/5 rounded-xl p-5 border border-white/5">
                                             {item.title && <h3 className="font-bold text-white mb-2">{item.title}</h3>}
-                                            <p className="text-gray-300 whitespace-pre-wrap">{item.text}</p>
+                                            {/* Rich Text Renderer */}
+                                            <div 
+                                                className="rich-text text-gray-300 whitespace-pre-wrap" 
+                                                dangerouslySetInnerHTML={{ __html: item.text }} 
+                                            />
                                         </div>
                                     ))}
                                 </div>
