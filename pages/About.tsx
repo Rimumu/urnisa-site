@@ -42,24 +42,59 @@ const StarIcon = () => (
     </svg>
 );
 
-const roles = ["Streamer", "Content Creator", "Yapper", "Gamer"];
+const roles = ["VTuber", "Streamer", "Yapper", "Gremlin"];
 
 type TabType = 'about' | 'contact' | 'credits' | null;
 
 const About: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabType>(null);
-    const [roleIndex, setRoleIndex] = useState(0);
+    
+    // Typewriter State
+    const [text, setText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [loopNum, setLoopNum] = useState(0);
+    const [typingSpeed, setTypingSpeed] = useState(150);
+
     const [showSpecs, setShowSpecs] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
-    // Role rotator effect
+    // Calculate if we are currently in the "pause" phase (Word finished, waiting to delete)
+    const currentRole = roles[loopNum % roles.length];
+    const isWaiting = isDeleting && text === currentRole;
+
+    // Typewriter Effect Logic
     useEffect(() => {
-        const interval = setInterval(() => {
-            setRoleIndex((prev) => (prev + 1) % roles.length);
-        }, 2500);
-        return () => clearInterval(interval);
-    }, []);
+        const handleTyping = () => {
+            const i = loopNum % roles.length;
+            const fullText = roles[i];
+
+            setText(isDeleting 
+                ? fullText.substring(0, text.length - 1) 
+                : fullText.substring(0, text.length + 1)
+            );
+
+            // Determine speed based on action
+            let speed = 150;
+            if (isDeleting) speed = 75; // Delete faster
+
+            if (!isDeleting && text === fullText) {
+                // Finished typing word
+                speed = 2000; // Pause at end
+                setIsDeleting(true);
+            } else if (isDeleting && text === '') {
+                // Finished deleting
+                setIsDeleting(false);
+                setLoopNum(loopNum + 1);
+                speed = 500; // Pause before next word
+            }
+
+            setTypingSpeed(speed);
+        };
+
+        const timer = setTimeout(handleTyping, typingSpeed);
+        return () => clearTimeout(timer);
+    }, [text, isDeleting, loopNum, typingSpeed]);
 
     const triggerToast = (msg: string) => {
         setToastMessage(msg);
@@ -91,7 +126,7 @@ const About: React.FC = () => {
                 .cursor-blink::after {
                     content: '|';
                     display: inline-block;
-                    margin-left: 2px;
+                    margin-left: 0;
                     animation: blink 1s infinite;
                     color: #e5383b;
                 }
@@ -162,10 +197,10 @@ const About: React.FC = () => {
                         {/* Header Info */}
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center gap-1">
-                                <h1 className="text-2xl font-bold text-white tracking-wide drop-shadow-lg">urnisa</h1>
+                                <h1 className="text-3xl md:text-4xl font-bold text-white tracking-wide drop-shadow-lg">URNISA</h1>
                             </div>
-                            <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mt-1 font-mono">
-                                <span className="cursor-blink text-brand-primary font-semibold">{roles[roleIndex]}</span>
+                            <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mt-1 font-mono min-h-[1.5em]">
+                                <span className={`text-brand-primary font-semibold ${isWaiting ? '' : 'cursor-blink'}`}>{text}</span>
                             </div>
                         </div>
 
@@ -179,7 +214,7 @@ const About: React.FC = () => {
                         {/* Socials Grid */}
                         <div className="grid grid-cols-4 gap-3 mb-4">
                             {[
-                                { name: 'Twitch', url: 'https://twitch.tv/urnisa_', icon: 'https://cdn.simpleicons.org/twitch/e5383b' },
+                                { name: 'Twitch', url: 'https://twitch.tv/urnisa_', icon: 'https://cdn.simpleicons.org/twitch/9146FF' },
                                 { name: 'X', url: 'https://x.com/urnisa__', icon: 'https://cdn.simpleicons.org/x/white' },
                                 { name: 'Youtube', url: 'https://www.youtube.com/@urniisaa', icon: 'https://cdn.simpleicons.org/youtube/e5383b' },
                                 { name: 'TikTok', url: 'https://www.tiktok.com/@urnisa_ttv', icon: 'https://cdn.simpleicons.org/tiktok/white' },
@@ -357,7 +392,7 @@ const About: React.FC = () => {
 
                                     <div className="mt-8 pt-6 border-t border-white/10 text-center">
                                         <p className="text-gray-500 text-xs">
-                                            Built with React, Tailwind, and Vite <br/>
+                                            Built with React and Vite by Rimu<br/>
                                             © {new Date().getFullYear()} Urnisa. All rights reserved.
                                         </p>
                                     </div>
@@ -377,3 +412,4 @@ const About: React.FC = () => {
 };
 
 export default About;
+    
