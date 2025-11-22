@@ -33,7 +33,7 @@ const EventItem: React.FC<{ event: string; detail: string }> = ({ event, detail 
     </li>
 );
 
-const Subathon: React.FC = () => {
+const Nisathon: React.FC = () => {
     const mockEvents = [
         { event: "Anonymous gifted 5 subs!", detail: "2 minutes ago" },
         { event: "CoolUser123 subscribed (Tier 1)!", detail: "5 minutes ago" },
@@ -45,7 +45,7 @@ const Subathon: React.FC = () => {
     return (
         <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-                <h1 className="text-5xl font-extrabold text-white">Urnisa's Grand <span className="text-brand-primary">Subathon</span></h1>
+                <h1 className="text-5xl font-extrabold text-white">Urnisa's Grand <span className="text-brand-primary">Nisathon</span></h1>
                 <p className="text-gray-300 mt-4 max-w-3xl mx-auto">
                     Join the epic event! Every subscription, cheer, and donation extends the stream and unlocks awesome new goals. Your support makes it all happen!
                 </p>
@@ -62,7 +62,7 @@ const Subathon: React.FC = () => {
                     <div className="mt-8 text-center p-6 bg-black/30 rounded-lg">
                         <h3 className="text-3xl font-bold text-brand-accent">Stream Timer</h3>
                         <p className="text-5xl font-mono font-extrabold my-2 text-white">10:25:42</p>
-                        <p className="text-gray-400">Time remaining in the Subathon!</p>
+                        <p className="text-gray-400">Time remaining in the Nisathon!</p>
                     </div>
                 </div>
 
@@ -90,4 +90,4 @@ const Subathon: React.FC = () => {
     );
 };
 
-export default Subathon;
+export default Nisathon;

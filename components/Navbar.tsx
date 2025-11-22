@@ -7,7 +7,7 @@ import { useTwitchStatus } from '../hooks/useTwitchStatus';
 const NavLinks: React.FC = () => (
     <>
         <NavLink to="/" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
-        <NavLink to="/subathon" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Subathon</NavLink>
+        <NavLink to="/nisathon" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Nisathon</NavLink>
         <NavLink to="/minecraft" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Minecraft</NavLink>
         <NavLink to="/about" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>About Me</NavLink>
     </>
@@ -123,7 +123,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
       >
         <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
             <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Home</NavLink>
-            <NavLink to="/subathon" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Subathon</NavLink>
+            <NavLink to="/nisathon" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Nisathon</NavLink>
             <NavLink to="/minecraft" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Minecraft</NavLink>
             <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>About Me</NavLink>
         </div>

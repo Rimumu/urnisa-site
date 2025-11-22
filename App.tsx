@@ -25,7 +25,7 @@ const App: React.FC = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/subathon" element={<Subathon />} />
+          <Route path="/nisathon" element={<Subathon />} />
           <Route path="/minecraft" element={<Minecraft />} />
           <Route path="/about" element={<About />} />
         </Routes>

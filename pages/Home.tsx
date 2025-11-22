@@ -65,9 +65,7 @@ const Home: React.FC = () => {
                 <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
                     <img
                         loading="lazy"
-                        src="https://i.ibb.co/hZ2vVfS/schedule-480w.png"
-                        srcSet="https://i.ibb.co/hZ2vVfS/schedule-480w.png 480w, https://i.ibb.co/FWSV5v1/schedule-800w.png 800w, https://i.ibb.co/gbWdRKst/3-am-15.png 1080w"
-                        sizes="(min-width: 1024px) 1024px, 100vw"
+                        src="https://cdn.discordapp.com/attachments/1338254150479118347/1439859590152978443/3_am_17.png?ex=6921fbfd&is=6920aa7d&hm=926ad591d323ccc29cd9f7dc2e256de99d8f5dcc292aa3a883f565455844c977&"
                         alt="Urnisa's weekly stream schedule"
                         className="rounded-lg w-full"
                     />
