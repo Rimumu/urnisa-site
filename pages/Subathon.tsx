@@ -55,18 +55,18 @@ interface ContributorEvent {
 }
 
 const MOCK_CONTRIBUTORS: ContributorEvent[] = [
-    { id: '1', user: 'Anonymouse', type: 'gift', amount: '5 Subs', timestamp: 'Just now' },
-    { id: '2', user: 'LoyalFan99', type: 'sub', amount: 'Prime', timestamp: '2 mins ago' },
-    { id: '3', user: 'RichCat', type: 'donation', amount: '$50.00', message: 'Happy Birthday Nisa!', timestamp: '5 mins ago' },
-    { id: '4', user: 'BitSpammer', type: 'bits', amount: '1000', timestamp: '8 mins ago' },
+    { id: '1', user: 'Anony', type: 'gift', amount: '5 Subs', timestamp: 'Just now' },
+    { id: '2', user: 'Balls69Prime', type: 'sub', amount: 'Prime', timestamp: '2 mins ago' },
+    { id: '3', user: 'Fan2', type: 'donation', amount: '$50.00', message: 'Happy Birthday Nisa!', timestamp: '5 mins ago' },
+    { id: '4', user: 'BitsFan', type: 'bits', amount: '1000', timestamp: '8 mins ago' },
     { id: '5', user: 'NewViewer', type: 'sub', amount: 'Tier 1', timestamp: '15 mins ago' },
     { id: '6', user: 'OldTimer', type: 'sub', amount: '24 Months', timestamp: '22 mins ago' },
-    { id: '7', user: 'GenerousGod', type: 'gift', amount: '20 Subs', timestamp: '30 mins ago' },
-    { id: '8', user: 'SmallBean', type: 'bits', amount: '100', timestamp: '45 mins ago' },
-    { id: '9', user: 'CoffeeBuyer', type: 'donation', amount: '$5.00', timestamp: '1 hour ago' },
-    { id: '10', user: 'LurkerNoMore', type: 'sub', amount: 'Tier 1', timestamp: '1 hour ago' },
-    { id: '11', user: 'MidnightRaider', type: 'bits', amount: '5000', message: 'HYPE HYPE', timestamp: '2 hours ago' },
-    { id: '12', user: 'SupportiveFriend', type: 'donation', amount: '$100.00', timestamp: '3 hours ago' },
+    { id: '7', user: 'GifterSub', type: 'gift', amount: '20 Subs', timestamp: '30 mins ago' },
+    { id: '8', user: 'Bits100Fan', type: 'bits', amount: '100', timestamp: '45 mins ago' },
+    { id: '9', user: 'DonoFan', type: 'donation', amount: '$5.00', timestamp: '1 hour ago' },
+    { id: '10', user: 'Lurker', type: 'sub', amount: 'Tier 1', timestamp: '1 hour ago' },
+    { id: '11', user: 'HyperFan', type: 'bits', amount: '5000', message: 'HYPE HYPE', timestamp: '2 hours ago' },
+    { id: '12', user: 'BigDonor', type: 'donation', amount: '$100.00', timestamp: '3 hours ago' },
 ];
 
 interface TopContributor {
@@ -76,16 +76,16 @@ interface TopContributor {
 }
 
 const MOCK_TOP_CONTRIBUTORS: TopContributor[] = [
-    { rank: 1, user: "OilPrince_99", totalNisaballs: 500 },
+    { rank: 1, user: "BigBalls", totalNisaballs: 500 },
     { rank: 2, user: "SimpLord", totalNisaballs: 350 },
-    { rank: 3, user: "RichMom", totalNisaballs: 210 },
-    { rank: 4, user: "CryptoBro", totalNisaballs: 150 },
-    { rank: 5, user: "StudentLoans", totalNisaballs: 95 },
-    { rank: 6, user: "Gifter_X", totalNisaballs: 80 },
-    { rank: 7, user: "LurkerPro", totalNisaballs: 65 },
-    { rank: 8, user: "ModAbuse", totalNisaballs: 50 },
+    { rank: 3, user: "Idkfan", totalNisaballs: 210 },
+    { rank: 4, user: "User4", totalNisaballs: 150 },
+    { rank: 5, user: "Balls69", totalNisaballs: 95 },
+    { rank: 6, user: "GifterSub", totalNisaballs: 80 },
+    { rank: 7, user: "Lurker", totalNisaballs: 65 },
+    { rank: 8, user: "KEKW", totalNisaballs: 50 },
     { rank: 9, user: "PogChamp", totalNisaballs: 45 },
-    { rank: 10, user: "Kappa123", totalNisaballs: 30 },
+    { rank: 10, user: "Kappa", totalNisaballs: 30 },
 ];
 
 // --- ICONS & HELPERS ---
