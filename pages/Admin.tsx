@@ -52,7 +52,7 @@ const LinkWarning: React.FC<{ url: string }> = ({ url }) => {
         return (
             <div className="text-red-400 text-xs mt-1 flex items-start gap-1 font-bold">
                 <span>⛔</span>
-                <span>Discord links expire after 24h. Please upload to Imgur or Google Drive.</span>
+                <span>Discord links expire after 24h. Please use the upload feature or use Imgur or Google Drive!</span>
             </div>
         );
     }
@@ -497,7 +497,7 @@ const Admin: React.FC = () => {
                                         value={artist.artistLink || ''} 
                                         onChange={(e) => updateArtistLink(artistIdx, e.target.value)} 
                                         className="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-gray-300 text-sm font-mono" 
-                                        placeholder="https://twitter.com/artist"
+                                        placeholder="https://x.com/artist"
                                     />
                                 </div>
                              </div>
@@ -555,7 +555,7 @@ const Admin: React.FC = () => {
                                     <div id={`warning-${artist.id}`} style={{ display: 'none' }}>
                                         <div className="text-red-500 text-xs flex items-start gap-1 font-bold">
                                             <span>⛔</span>
-                                            <span>Discord links expire after 24h. Use Imgur.</span>
+                                            <span>Discord links expire after 24h!</span>
                                         </div>
                                     </div>
                                 </div>
