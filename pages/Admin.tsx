@@ -29,6 +29,20 @@ const convertGoogleDriveLink = (url: string): string => {
     return cleanUrl;
 };
 
+const isDiscordLink = (url: string) => {
+    return url.includes('cdn.discordapp.com') || url.includes('media.discordapp.net');
+};
+
+const LinkWarning: React.FC<{ url: string }> = ({ url }) => {
+    if (!url || !isDiscordLink(url)) return null;
+    return (
+        <div className="text-yellow-500 text-xs mt-1 flex items-start gap-1">
+            <span>⚠️</span>
+            <span>Warning: Discord links expire after 24h. Use Imgur, Google Drive, or another host for permanent images.</span>
+        </div>
+    );
+};
+
 // --- RICH TEXT EDITOR COMPONENT ---
 const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
     const contentRef = useRef<HTMLDivElement>(null);
@@ -361,6 +375,7 @@ const Admin: React.FC = () => {
                     <div>
                         <label className="block text-sm font-bold text-gray-400 mb-1">Image URL</label>
                         <input type="url" value={newScheduleUrl} onChange={(e) => setNewScheduleUrl(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none font-mono text-sm" required />
+                        <LinkWarning url={newScheduleUrl} />
                     </div>
                     {newScheduleUrl && <img src={convertGoogleDriveLink(newScheduleUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
                     <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">{loading ? 'Saving...' : 'Update Schedule'}</button>
@@ -415,7 +430,10 @@ const Admin: React.FC = () => {
                                     <input type="text" placeholder="Name" value={item.name} onChange={(e) => updateCreditItem(idx, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm font-bold" />
                                     <input type="text" placeholder="Role" value={item.role} onChange={(e) => updateCreditItem(idx, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-300 text-sm" />
                                 </div>
-                                <input type="text" placeholder="Image URL" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                <div className="w-full">
+                                    <input type="text" placeholder="Image URL" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                    <LinkWarning url={item.image || ''} />
+                                </div>
                                 <div className="flex gap-2">
                                      <input type="text" placeholder="Link (Optional)" value={item.link || ''} onChange={(e) => updateCreditItem(idx, 'link', e.target.value)} className="flex-1 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
                                      <input type="text" placeholder="Initial" value={item.initial || ''} onChange={(e) => updateCreditItem(idx, 'initial', e.target.value)} className="w-20 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs" maxLength={2} />
@@ -476,25 +494,43 @@ const Admin: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        id={`new-img-${artist.id}`}
-                                        className="flex-1 bg-black/20 border border-white/10 rounded px-3 py-1 text-gray-400 text-xs font-mono"
-                                        placeholder="Paste Image URL"
-                                    />
-                                    <button 
-                                        onClick={() => {
-                                            const input = document.getElementById(`new-img-${artist.id}`) as HTMLInputElement;
-                                            if (input.value) {
-                                                addImageToArtist(artistIdx, input.value);
-                                                input.value = '';
-                                            }
-                                        }}
-                                        className="bg-brand-primary/20 text-brand-primary px-4 rounded border border-brand-primary/50 hover:bg-brand-primary hover:text-white transition-colors text-xs font-bold"
-                                    >
-                                        Add Image
-                                    </button>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            id={`new-img-${artist.id}`}
+                                            className="flex-1 bg-black/20 border border-white/10 rounded px-3 py-1 text-gray-400 text-xs font-mono"
+                                            placeholder="Paste Image URL"
+                                            onChange={(e) => {
+                                                // Trigger re-render to show warning if needed
+                                                const warningEl = document.getElementById(`warning-${artist.id}`);
+                                                if (warningEl) {
+                                                    if (isDiscordLink(e.target.value)) warningEl.style.display = 'flex';
+                                                    else warningEl.style.display = 'none';
+                                                }
+                                            }}
+                                        />
+                                        <button 
+                                            onClick={() => {
+                                                const input = document.getElementById(`new-img-${artist.id}`) as HTMLInputElement;
+                                                if (input.value) {
+                                                    addImageToArtist(artistIdx, input.value);
+                                                    input.value = '';
+                                                    const warningEl = document.getElementById(`warning-${artist.id}`);
+                                                    if (warningEl) warningEl.style.display = 'none';
+                                                }
+                                            }}
+                                            className="bg-brand-primary/20 text-brand-primary px-4 rounded border border-brand-primary/50 hover:bg-brand-primary hover:text-white transition-colors text-xs font-bold"
+                                        >
+                                            Add Image
+                                        </button>
+                                    </div>
+                                    <div id={`warning-${artist.id}`} style={{ display: 'none' }}>
+                                        <div className="text-yellow-500 text-xs flex items-start gap-1">
+                                            <span>⚠️</span>
+                                            <span>Warning: Discord links expire after 24h.</span>
+                                        </div>
+                                    </div>
                                 </div>
                              </div>
                         </div>

@@ -5,6 +5,7 @@ import { TWITCH_CHANNEL_NAME, DISCORD_SERVER_ID } from '../constants';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useSchedule } from '../hooks/useSchedule';
 import DiscordWidget from '../components/DiscordWidget';
+import OptimizedImage from '../components/OptimizedImage';
 
 const Home: React.FC = () => {
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
@@ -65,11 +66,11 @@ const Home: React.FC = () => {
                     Stream <span className="text-brand-primary">Schedule</span>
                 </h2>
                 <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
-                    <img
-                        loading="lazy"
+                    <OptimizedImage
                         src={scheduleUrl}
                         alt="Urnisa's weekly stream schedule"
-                        className="rounded-lg w-full"
+                        className="rounded-lg w-full h-auto aspect-video md:aspect-auto"
+                        contain
                     />
                 </div>
             </div>

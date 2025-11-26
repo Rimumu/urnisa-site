@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
+import OptimizedImage from '../components/OptimizedImage';
 
 // Assets
 const PROFILE_IMAGE = "https://i.ibb.co/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png";
@@ -187,10 +188,11 @@ const About: React.FC = () => {
                     className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
                     onClick={() => setLightboxImage(null)}
                 >
-                    <img 
+                    <OptimizedImage 
                         src={lightboxImage} 
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                        className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-2xl"
                         alt="Full size artwork"
+                        contain
                     />
                     <button className="absolute top-6 right-6 text-white hover:text-brand-primary p-2">
                         <CloseIcon />
@@ -209,7 +211,7 @@ const About: React.FC = () => {
                 {/* LEFT PANEL: Main Profile */}
                 <div className="w-full md:w-[28rem] flex-shrink-0 bg-black/20 relative z-10 flex flex-col">
                     <div className="h-32 w-full relative overflow-hidden flex-shrink-0">
-                        <img 
+                        <OptimizedImage 
                             src={BANNER_IMAGE} 
                             alt="Banner" 
                             className="w-full h-full object-cover opacity-80 hover:scale-105 transition-transform duration-700"
@@ -219,8 +221,8 @@ const About: React.FC = () => {
 
                     <div className="px-6 pb-8 relative flex-1 flex flex-col">
                         <div className="relative -mt-16 mb-4 w-fit mx-auto group">
-                            <div className="w-28 h-28 rounded-full p-1 bg-[#121212] relative z-10">
-                                <img 
+                            <div className="w-28 h-28 rounded-full p-1 bg-[#121212] relative z-10 overflow-hidden">
+                                <OptimizedImage 
                                     src={PROFILE_IMAGE} 
                                     alt="PFP" 
                                     className="w-full h-full rounded-full object-cover border-2 border-brand-primary/50 group-hover:border-brand-primary transition-colors duration-300" 
@@ -342,7 +344,7 @@ const About: React.FC = () => {
                     `}
                 >
                     <div className="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar">
-                        {/* Sticky Header - Removed sticky per user request */}
+                        {/* Header */}
                         <div className="flex justify-between items-center bg-brand-secondary/60 backdrop-blur-2xl border-b border-white/10 px-6 py-4 md:px-8 md:py-5 shadow-sm">
                             <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-md truncate pr-4">
                                 {activeTab === 'about' && <span className="text-brand-primary">About Me</span>}
@@ -417,16 +419,22 @@ const About: React.FC = () => {
 
                                         return (
                                             <Wrapper key={credit.id} {...wrapperProps}>
-                                                {credit.image ? (
-                                                     <img src={credit.image} alt={credit.name} className="w-12 h-12 rounded-full object-cover shadow-lg" />
-                                                ) : (
-                                                    <div 
-                                                        className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg"
-                                                        style={{ backgroundColor: credit.color || '#e5383b' }}
-                                                    >
-                                                        {credit.initial || credit.name.charAt(0)}
-                                                    </div>
-                                                )}
+                                                <div className="w-12 h-12 flex-shrink-0">
+                                                    {credit.image ? (
+                                                        <OptimizedImage 
+                                                            src={credit.image} 
+                                                            alt={credit.name} 
+                                                            className="w-full h-full rounded-full object-cover shadow-lg"
+                                                        />
+                                                    ) : (
+                                                        <div 
+                                                            className="w-full h-full rounded-full flex items-center justify-center font-bold text-white text-xl shadow-lg"
+                                                            style={{ backgroundColor: credit.color || '#e5383b' }}
+                                                        >
+                                                            {credit.initial || credit.name.charAt(0)}
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <div>
                                                     <h4 className="font-bold text-white text-lg group-hover:text-brand-primary transition-colors">{credit.name}</h4>
                                                     <p className="text-sm text-gray-400">{credit.role}</p>
@@ -481,11 +489,10 @@ const About: React.FC = () => {
                                                         className="aspect-square rounded-lg overflow-hidden cursor-zoom-in relative group border border-white/10 hover:border-brand-primary/50 transition-colors bg-black/20"
                                                         onClick={() => setLightboxImage(img)}
                                                     >
-                                                        <img 
+                                                        <OptimizedImage 
                                                             src={img} 
                                                             alt={`Art by ${artist.artistName}`}
                                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                            loading="lazy"
                                                         />
                                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
                                                     </div>
