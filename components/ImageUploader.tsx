@@ -12,32 +12,67 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess, classNam
     const [error, setError] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Helper to resize and compress image before upload
+    // This turns a 5MB PNG into a ~200KB JPEG, preventing timeouts.
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    // Maximum dimensions for web display
+                    const MAX_WIDTH = 1280;
+                    const MAX_HEIGHT = 1280;
+                    
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Calculate new dimensions while maintaining aspect ratio
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0, width, height);
+                        // Convert to JPEG with 0.8 quality (good balance)
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        // Remove prefix to get raw base64
+                        resolve(dataUrl.split(',')[1]);
+                    } else {
+                        reject(new Error('Canvas context failed'));
+                    }
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
+        });
+    };
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        // Check file size (ImgBB Limit is 32MB, but let's limit to 8MB for Base64 sanity)
-        if (file.size > 8 * 1024 * 1024) {
-            setError('File too large. Max 8MB.');
-            return;
-        }
 
         setUploading(true);
         setError('');
 
         try {
-            // 1. Convert file to Base64
-            const base64String = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                    const result = reader.result as string;
-                    // Remove the "data:image/png;base64," prefix
-                    const base64 = result.split(',')[1]; 
-                    resolve(base64);
-                };
-                reader.onerror = error => reject(error);
-            });
+            // 1. Compress the image client-side
+            const base64String = await compressImage(file);
 
             // 2. Send to Backend Proxy
             const response = await fetch(`${API_BASE_URL}/api/upload`, {
@@ -52,13 +87,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess, classNam
 
             if (response.ok && data.success) {
                 // ImgBB returns the display url in data.data.url
+                // data.data.url is the direct link (e.g., https://i.ibb.co/...)
                 onUploadSuccess(data.data.url);
             } else {
                 setError('Upload failed. ' + (data.error?.message || 'Server Error.'));
                 console.error('Upload Error:', data);
             }
         } catch (err) {
-            setError('Network error during upload.');
+            setError('Network error or timeout. Try a smaller image.');
             console.error(err);
         } finally {
             setUploading(false);
@@ -95,7 +131,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess, classNam
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Uploading...
+                        Optimizing & Uploading...
                     </>
                 ) : (
                     <>
