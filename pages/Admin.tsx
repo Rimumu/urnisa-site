@@ -406,7 +406,6 @@ const Admin: React.FC = () => {
             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                 <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
                     <h2 className="text-2xl font-bold text-white">ℹ️ About Me Content</h2>
-                    <button onClick={() => handleSaveProfile('about')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded text-sm transition-colors">Save Changes</button>
                 </div>
                 <div className="space-y-4">
                     {localAbout.map((item, idx) => (
@@ -424,13 +423,15 @@ const Admin: React.FC = () => {
                     ))}
                     <button onClick={addAboutItem} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Section</button>
                 </div>
+                <div className="mt-6 flex justify-end pt-4 border-t border-white/5">
+                    <button onClick={() => handleSaveProfile('about')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">Save Changes</button>
+                </div>
             </div>
 
             {/* --- CREDITS EDITOR --- */}
             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                 <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
                     <h2 className="text-2xl font-bold text-white">⭐ Credits Content</h2>
-                    <button onClick={() => handleSaveProfile('credits')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded text-sm transition-colors">Save Changes</button>
                 </div>
                 <div className="space-y-4">
                     {localCredits.map((item, idx) => (
@@ -463,13 +464,15 @@ const Admin: React.FC = () => {
                     ))}
                     <button onClick={addCreditItem} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Credit</button>
                 </div>
+                <div className="mt-6 flex justify-end pt-4 border-t border-white/5">
+                    <button onClick={() => handleSaveProfile('credits')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">Save Changes</button>
+                </div>
             </div>
 
             {/* --- ART GALLERY EDITOR --- */}
             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                 <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
                     <h2 className="text-2xl font-bold text-white">🎨 Art Gallery Editor</h2>
-                    <button onClick={() => handleSaveProfile('artworks')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded text-sm transition-colors">Save Changes</button>
                 </div>
                 <div className="space-y-6">
                     {localArtworks.map((artist, artistIdx) => (
@@ -560,6 +563,9 @@ const Admin: React.FC = () => {
                         </div>
                     ))}
                     <button onClick={addArtist} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Artist Group</button>
+                </div>
+                <div className="mt-6 flex justify-end pt-4 border-t border-white/5">
+                    <button onClick={() => handleSaveProfile('artworks')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">Save Changes</button>
                 </div>
             </div>
         </div>
