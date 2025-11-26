@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from 'react';
+import { API_BASE_URL } from '../constants';
 
 interface ImageUploaderProps {
     onUploadSuccess: (url: string) => void;
@@ -11,39 +12,50 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess, classNam
     const [error, setError] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Access the API Key from environment variables
-    const API_KEY = (import.meta as any).env.VITE_IMGBB_API_KEY;
-
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!API_KEY) {
-            setError('Missing VITE_IMGBB_API_KEY in .env file');
+        // Check file size (ImgBB Limit is 32MB, but let's limit to 8MB for Base64 sanity)
+        if (file.size > 8 * 1024 * 1024) {
+            setError('File too large. Max 8MB.');
             return;
         }
 
         setUploading(true);
         setError('');
 
-        const formData = new FormData();
-        formData.append('image', file);
-
         try {
-            // Upload to ImgBB
-            const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+            // 1. Convert file to Base64
+            const base64String = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    const result = reader.result as string;
+                    // Remove the "data:image/png;base64," prefix
+                    const base64 = result.split(',')[1]; 
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+            });
+
+            // 2. Send to Backend Proxy
+            const response = await fetch(`${API_BASE_URL}/api/upload`, {
                 method: 'POST',
-                body: formData,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: base64String })
             });
 
             const data = await response.json();
 
-            if (data.success) {
+            if (response.ok && data.success) {
                 // ImgBB returns the display url in data.data.url
                 onUploadSuccess(data.data.url);
             } else {
-                setError('Upload failed. ' + (data.error?.message || 'Check API Key.'));
-                console.error('ImgBB Error:', data);
+                setError('Upload failed. ' + (data.error?.message || 'Server Error.'));
+                console.error('Upload Error:', data);
             }
         } catch (err) {
             setError('Network error during upload.');
