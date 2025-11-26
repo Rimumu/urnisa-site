@@ -4,28 +4,39 @@ import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 
-// --- HELPER: GOOGLE DRIVE CONVERTER ---
-// Converts standard drive sharing links to direct image URLs
-const convertGoogleDriveLink = (url: string): string => {
+// --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
+// Converts sharing links from common hosts into direct, permanent image URLs.
+const processImageUrl = (url: string): string => {
     if (!url) return '';
     const cleanUrl = url.trim();
-    
-    // Check if it's a google drive link
-    if (!cleanUrl.includes('drive.google.com') && !cleanUrl.includes('docs.google.com')) {
-        return cleanUrl;
+
+    // 1. Google Drive
+    // Converts /file/d/ID/view or ?id=ID into a direct thumbnail link
+    if (cleanUrl.includes('drive.google.com') || cleanUrl.includes('docs.google.com')) {
+        const idMatch = cleanUrl.match(/(?:\/file\/d\/|\/d\/|\?id=)([-\w]+)/);
+        const id = idMatch ? idMatch[1] : null;
+        if (id) {
+            // Use the thumbnail endpoint. It bypasses the 'download' header issues.
+            return `https://drive.google.com/thumbnail?id=${id}&sz=w4000`;
+        }
     }
-    
-    // Regex to extract the ID from various Drive URL formats
-    // Matches /file/d/ID/view, /d/ID/, ?id=ID
-    const idMatch = cleanUrl.match(/(?:\/file\/d\/|\/d\/|\?id=)([-\w]+)/);
-    const id = idMatch ? idMatch[1] : null;
-    
-    if (id) {
-        // Use the thumbnail endpoint with a large size (w4000) to get a high-res image.
-        // This is more reliable for <img> tags than 'uc?export=view' which often triggers 
-        // download headers or CORS issues.
-        return `https://drive.google.com/thumbnail?id=${id}&sz=w4000`;
+
+    // 2. Imgur
+    // Converts post links (imgur.com/ID) to direct image links (i.imgur.com/ID.png)
+    if (cleanUrl.includes('imgur.com')) {
+        // Already a direct link?
+        if (cleanUrl.includes('i.imgur.com')) return cleanUrl;
+
+        // Extract ID from imgur.com/ID or imgur.com/a/ID (though albums are tricky, we try the ID)
+        const parts = cleanUrl.split('/');
+        const lastPart = parts[parts.length - 1];
+        // Remove file extension if it accidentally exists in a non-direct link
+        const id = lastPart.split('.')[0];
+        
+        // Return direct PNG link (Imgur handles extension resolving usually)
+        return `https://i.imgur.com/${id}.png`;
     }
+
     return cleanUrl;
 };
 
@@ -34,13 +45,17 @@ const isDiscordLink = (url: string) => {
 };
 
 const LinkWarning: React.FC<{ url: string }> = ({ url }) => {
-    if (!url || !isDiscordLink(url)) return null;
-    return (
-        <div className="text-yellow-500 text-xs mt-1 flex items-start gap-1">
-            <span>⚠️</span>
-            <span>Warning: Discord links expire after 24h. Use Imgur, Google Drive, or another host for permanent images.</span>
-        </div>
-    );
+    if (!url) return null;
+    
+    if (isDiscordLink(url)) {
+        return (
+            <div className="text-red-400 text-xs mt-1 flex items-start gap-1 font-bold">
+                <span>⛔</span>
+                <span>Discord links expire after 24h. Please upload to Imgur or Google Drive.</span>
+            </div>
+        );
+    }
+    return null;
 };
 
 // --- RICH TEXT EDITOR COMPONENT ---
@@ -219,8 +234,8 @@ const Admin: React.FC = () => {
         setLoading(true);
         setScheduleStatus(null);
 
-        // Auto-convert Google Drive links before saving
-        const processedUrl = convertGoogleDriveLink(newScheduleUrl);
+        // Auto-convert Google Drive & Imgur links before saving
+        const processedUrl = processImageUrl(newScheduleUrl);
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/schedule`, {
@@ -295,9 +310,9 @@ const Admin: React.FC = () => {
         const updated = [...localCredits];
         let finalValue = value;
         
-        // Auto-convert Drive links for images
+        // Auto-convert Drive/Imgur links for images
         if (field === 'image') {
-            finalValue = convertGoogleDriveLink(value);
+            finalValue = processImageUrl(value);
         }
         
         // @ts-ignore
@@ -330,8 +345,8 @@ const Admin: React.FC = () => {
     };
     const addImageToArtist = (artistIndex: number, url: string) => {
         if (!url) return;
-        // Auto-convert Drive links
-        const processedUrl = convertGoogleDriveLink(url);
+        // Auto-convert Drive/Imgur links
+        const processedUrl = processImageUrl(url);
         
         const updated = [...localArtworks];
         updated[artistIndex].images.push(processedUrl);
@@ -373,11 +388,11 @@ const Admin: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white mb-4 border-b border-white/10 pb-2">📅 Stream Schedule</h2>
                 <form onSubmit={handleUpdateSchedule} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL</label>
+                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL (Imgur or Google Drive recommended)</label>
                         <input type="url" value={newScheduleUrl} onChange={(e) => setNewScheduleUrl(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none font-mono text-sm" required />
                         <LinkWarning url={newScheduleUrl} />
                     </div>
-                    {newScheduleUrl && <img src={convertGoogleDriveLink(newScheduleUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
+                    {newScheduleUrl && <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
                     <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">{loading ? 'Saving...' : 'Update Schedule'}</button>
                     {scheduleStatus && <span className={`ml-4 text-sm ${scheduleStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{scheduleStatus.message}</span>}
                 </form>
@@ -420,7 +435,7 @@ const Admin: React.FC = () => {
                             
                             <div className="space-y-2">
                                 <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white border border-white/20 overflow-hidden" style={{ backgroundColor: item.color }}>
-                                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : (item.initial || item.name.charAt(0))}
+                                    {item.image ? <img src={processImageUrl(item.image)} className="w-full h-full object-cover" /> : (item.initial || item.name.charAt(0))}
                                 </div>
                                 <input type="color" value={item.color} onChange={(e) => updateCreditItem(idx, 'color', e.target.value)} className="w-12 h-6 bg-transparent cursor-pointer" />
                             </div>
@@ -431,7 +446,7 @@ const Admin: React.FC = () => {
                                     <input type="text" placeholder="Role" value={item.role} onChange={(e) => updateCreditItem(idx, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-300 text-sm" />
                                 </div>
                                 <div className="w-full">
-                                    <input type="text" placeholder="Image URL" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                    <input type="text" placeholder="Image URL (Imgur/Drive)" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
                                     <LinkWarning url={item.image || ''} />
                                 </div>
                                 <div className="flex gap-2">
@@ -480,11 +495,11 @@ const Admin: React.FC = () => {
                              </div>
 
                              <div className="space-y-2">
-                                <label className="text-xs text-gray-500 uppercase">Artwork Images</label>
+                                <label className="text-xs text-gray-500 uppercase">Artwork Images (Imgur/Drive Recommended)</label>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                                     {artist.images.map((img, imgIdx) => (
                                         <div key={imgIdx} className="relative aspect-square bg-black/30 rounded overflow-hidden group/img">
-                                            <img src={img} className="w-full h-full object-cover" />
+                                            <img src={processImageUrl(img)} className="w-full h-full object-cover" />
                                             <button 
                                                 onClick={() => removeImageFromArtist(artistIdx, imgIdx)}
                                                 className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-red-400 font-bold transition-opacity"
@@ -526,9 +541,9 @@ const Admin: React.FC = () => {
                                         </button>
                                     </div>
                                     <div id={`warning-${artist.id}`} style={{ display: 'none' }}>
-                                        <div className="text-yellow-500 text-xs flex items-start gap-1">
-                                            <span>⚠️</span>
-                                            <span>Warning: Discord links expire after 24h.</span>
+                                        <div className="text-red-500 text-xs flex items-start gap-1 font-bold">
+                                            <span>⛔</span>
+                                            <span>Discord links expire after 24h. Use Imgur.</span>
                                         </div>
                                     </div>
                                 </div>
