@@ -75,6 +75,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess, classNam
             const base64String = await compressImage(file);
 
             // 2. Send to Backend Proxy
+            // The backend will route this to Cloudinary (Preferred) or ImgBB
             const response = await fetch(`${API_BASE_URL}/api/upload`, {
                 method: 'POST',
                 headers: {
@@ -86,9 +87,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadSuccess, classNam
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // ImgBB returns the display url in data.data.url
-                // data.data.url is the direct link (e.g., https://i.ibb.co/...)
-                onUploadSuccess(data.data.url);
+                // Compatible with both ImgBB (data.data.url) and our Cloudinary proxy (data.data.url)
+                if (data.data && data.data.url) {
+                    onUploadSuccess(data.data.url);
+                } else {
+                    setError('Upload successful but URL is missing from response.');
+                }
             } else {
                 setError('Upload failed. ' + (data.error?.message || 'Server Error.'));
                 console.error('Upload Error:', data);
