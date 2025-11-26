@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
@@ -215,6 +214,7 @@ const About: React.FC = () => {
                             src={BANNER_IMAGE} 
                             alt="Banner" 
                             className="w-full h-full object-cover opacity-80 hover:scale-105 transition-transform duration-700"
+                            priority
                         />
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
                     </div>
@@ -226,6 +226,7 @@ const About: React.FC = () => {
                                     src={PROFILE_IMAGE} 
                                     alt="PFP" 
                                     className="w-full h-full rounded-full object-cover border-2 border-brand-primary/50 group-hover:border-brand-primary transition-colors duration-300" 
+                                    priority
                                 />
                             </div>
                             <div className="absolute inset-0 rounded-full bg-brand-primary/40 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-0"></div>

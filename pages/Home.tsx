@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TwitchEmbed from '../components/TwitchEmbed';
 import { TWITCH_CHANNEL_NAME, DISCORD_SERVER_ID } from '../constants';
@@ -71,6 +70,7 @@ const Home: React.FC = () => {
                         alt="Urnisa's weekly stream schedule"
                         className="rounded-lg w-full h-auto aspect-video md:aspect-auto"
                         contain
+                        priority
                     />
                 </div>
             </div>
