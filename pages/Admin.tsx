@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
+import ImageUploader from '../components/ImageUploader';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
 // Converts sharing links from common hosts into direct, permanent image URLs.
@@ -388,8 +389,11 @@ const Admin: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white mb-4 border-b border-white/10 pb-2">📅 Stream Schedule</h2>
                 <form onSubmit={handleUpdateSchedule} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL (Imgur or Google Drive recommended)</label>
-                        <input type="url" value={newScheduleUrl} onChange={(e) => setNewScheduleUrl(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none font-mono text-sm" required />
+                        <label className="block text-sm font-bold text-gray-400 mb-1">Image URL</label>
+                        <div className="flex gap-2">
+                            <input type="url" value={newScheduleUrl} onChange={(e) => setNewScheduleUrl(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none font-mono text-sm" placeholder="Paste link or upload..." required />
+                            <ImageUploader onUploadSuccess={(url) => setNewScheduleUrl(url)} />
+                        </div>
                         <LinkWarning url={newScheduleUrl} />
                     </div>
                     {newScheduleUrl && <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
@@ -445,10 +449,11 @@ const Admin: React.FC = () => {
                                     <input type="text" placeholder="Name" value={item.name} onChange={(e) => updateCreditItem(idx, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm font-bold" />
                                     <input type="text" placeholder="Role" value={item.role} onChange={(e) => updateCreditItem(idx, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-300 text-sm" />
                                 </div>
-                                <div className="w-full">
-                                    <input type="text" placeholder="Image URL (Imgur/Drive)" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="w-full bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
-                                    <LinkWarning url={item.image || ''} />
+                                <div className="w-full flex gap-2">
+                                    <input type="text" placeholder="Image URL" value={item.image || ''} onChange={(e) => updateCreditItem(idx, 'image', e.target.value)} className="flex-1 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
+                                    <ImageUploader onUploadSuccess={(url) => updateCreditItem(idx, 'image', url)} />
                                 </div>
+                                <LinkWarning url={item.image || ''} />
                                 <div className="flex gap-2">
                                      <input type="text" placeholder="Link (Optional)" value={item.link || ''} onChange={(e) => updateCreditItem(idx, 'link', e.target.value)} className="flex-1 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs font-mono" />
                                      <input type="text" placeholder="Initial" value={item.initial || ''} onChange={(e) => updateCreditItem(idx, 'initial', e.target.value)} className="w-20 bg-black/20 border border-white/10 rounded px-2 py-1 text-gray-400 text-xs" maxLength={2} />
@@ -495,7 +500,7 @@ const Admin: React.FC = () => {
                              </div>
 
                              <div className="space-y-2">
-                                <label className="text-xs text-gray-500 uppercase">Artwork Images (Imgur/Drive Recommended)</label>
+                                <label className="text-xs text-gray-500 uppercase">Artwork Images (Imgur Uploads)</label>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                                     {artist.images.map((img, imgIdx) => (
                                         <div key={imgIdx} className="relative aspect-square bg-black/30 rounded overflow-hidden group/img">
@@ -515,14 +520,18 @@ const Admin: React.FC = () => {
                                             type="text" 
                                             id={`new-img-${artist.id}`}
                                             className="flex-1 bg-black/20 border border-white/10 rounded px-3 py-1 text-gray-400 text-xs font-mono"
-                                            placeholder="Paste Image URL"
+                                            placeholder="Paste URL or upload"
                                             onChange={(e) => {
-                                                // Trigger re-render to show warning if needed
                                                 const warningEl = document.getElementById(`warning-${artist.id}`);
                                                 if (warningEl) {
                                                     if (isDiscordLink(e.target.value)) warningEl.style.display = 'flex';
                                                     else warningEl.style.display = 'none';
                                                 }
+                                            }}
+                                        />
+                                        <ImageUploader 
+                                            onUploadSuccess={(url) => {
+                                                addImageToArtist(artistIdx, url);
                                             }}
                                         />
                                         <button 
@@ -537,7 +546,7 @@ const Admin: React.FC = () => {
                                             }}
                                             className="bg-brand-primary/20 text-brand-primary px-4 rounded border border-brand-primary/50 hover:bg-brand-primary hover:text-white transition-colors text-xs font-bold"
                                         >
-                                            Add Image
+                                            Add
                                         </button>
                                     </div>
                                     <div id={`warning-${artist.id}`} style={{ display: 'none' }}>
