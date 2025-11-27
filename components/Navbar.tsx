@@ -26,14 +26,14 @@ const NisathonDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) =
                     onClick={closeMenu}
                     className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
                 >
-                    📊 Dashboard
+                    Dashboard
                 </NavLink>
                 <NavLink 
                     to="/nisathon/wheel" 
                     onClick={closeMenu}
                     className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
                 >
-                    🎡 Spin The Wheel
+                    Wheel
                 </NavLink>
             </div>
         </div>
