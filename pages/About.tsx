@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
@@ -184,16 +185,19 @@ const About: React.FC = () => {
             {/* Lightbox */}
             {lightboxImage && (
                 <div 
-                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300"
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
                     onClick={() => setLightboxImage(null)}
                 >
-                    <OptimizedImage 
+                    <img 
                         src={lightboxImage} 
-                        className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-2xl"
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none"
                         alt="Full size artwork"
-                        contain
+                        onClick={(e) => e.stopPropagation()}
                     />
-                    <button className="absolute top-6 right-6 text-white hover:text-brand-primary p-2">
+                    <button 
+                        className="absolute top-4 right-4 text-white/70 hover:text-brand-primary p-2 bg-black/50 rounded-full transition-colors z-50"
+                        onClick={() => setLightboxImage(null)}
+                    >
                         <CloseIcon />
                     </button>
                 </div>
