@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Subathon from './pages/Subathon';
+import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
 import About from './pages/About';
 import Admin from './pages/Admin';
@@ -27,6 +28,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/nisathon" element={<Subathon />} />
+          <Route path="/nisathon/wheel" element={<Wheel />} />
           <Route path="/minecraft" element={<Minecraft />} />
           <Route path="/about" element={<About />} />
           <Route path="/admin" element={<Admin />} />

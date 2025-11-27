@@ -569,7 +569,7 @@ const Subathon: React.FC = () => {
             {showContributorsModal && <ContributorsModal onClose={() => setShowContributorsModal(false)} />}
             {showTopContributorsModal && <TopContributorsModal onClose={() => setShowTopContributorsModal(false)} />}
 
-            <div className="max-w-7xl mx-auto px-4 relative z-10 space-y-16">
+            <div className="max-w-7xl mx-auto px-4 relative z-10 space-y-12 animate-in fade-in duration-700">
                 
                 {/* 1. HEADER & TIMER */}
                 <div className="flex flex-col items-center justify-center space-y-10">
@@ -578,170 +578,171 @@ const Subathon: React.FC = () => {
                             BIRTHDAY <span className="text-brand-primary bg-clip-text text-transparent bg-gradient-to-br from-brand-primary to-red-400">UNCAPPED</span>
                         </h1>
                         <div className="inline-block bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
-                             <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Nisathon</h2>
+                             <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Dashboard</h2>
                         </div>
                     </div>
                     <Timer />
                 </div>
 
-                {/* 2. PROGRESS SECTION (WIDGET ONLY) */}
-                <div className="w-full">
-                    <NisaballWidget 
-                        currentSubs={currentSubs}
-                        currentBits={currentBits}
-                        currentDonations={currentDonations}
-                        totalNisaballs={totalNisaballs}
-                        nextGoal={nextGoal}
-                        nextGoalLabel={nextGoalLabel}
-                        nbFromSubs={nisaballsFromSubs}
-                        nbFromBits={nisaballsFromBits}
-                        nbFromDonations={nisaballsFromDonations}
-                        className="h-full"
-                    />
-                </div>
-
-                {/* 3. MAIN CONTENT SPLIT */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    
-                    {/* LEFT COLUMN: MILESTONE ROADMAP */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div className="flex items-center gap-6 mb-6 px-2">
-                            <h3 className="text-3xl font-black text-white tracking-tight">Goals Roadmap</h3>
-                            <div className="h-2 flex-1 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-brand-primary to-transparent w-full opacity-30"></div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 relative pl-4 md:pl-0">
-                            {/* Vertical Line Connector */}
-                            <div className="absolute left-[3.2rem] md:left-[3.25rem] top-8 bottom-8 w-[2px] bg-gradient-to-b from-brand-accent/50 via-white/10 to-transparent hidden md:block"></div>
-                            
-                            {processedMilestones.map((milestone, idx) => (
-                                <MilestoneItem key={idx} item={milestone} />
-                            ))}
-                        </div>
+                <div className="space-y-16">
+                    {/* 2. PROGRESS SECTION (WIDGET ONLY) */}
+                    <div className="w-full">
+                        <NisaballWidget 
+                            currentSubs={currentSubs}
+                            currentBits={currentBits}
+                            currentDonations={currentDonations}
+                            totalNisaballs={totalNisaballs}
+                            nextGoal={nextGoal}
+                            nextGoalLabel={nextGoalLabel}
+                            nbFromSubs={nisaballsFromSubs}
+                            nbFromBits={nisaballsFromBits}
+                            nbFromDonations={nisaballsFromDonations}
+                            className="h-full"
+                        />
                     </div>
 
-                    {/* RIGHT COLUMN: SIDEBAR INFO */}
-                    <div className="space-y-6 lg:sticky lg:top-24">
+                    {/* 3. MAIN CONTENT SPLIT */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                         
-                        {/* Top 3 Contributors */}
-                        <InfoCard 
-                            title="Top 3 Contributors" 
-                            className="group hover:ring-2 hover:ring-brand-accent/30"
-                            onClick={() => setShowTopContributorsModal(true)}
-                        >
-                            <div className="space-y-3 relative">
-                                {MOCK_TOP_CONTRIBUTORS.slice(0, 3).map((user) => {
-                                    let rankColor = "bg-white/5 text-gray-400";
-                                    let badgeColor = "";
-                                    if (user.rank === 1) { rankColor = "bg-brand-accent/20 text-brand-accent border-brand-accent/50"; badgeColor = "text-brand-accent"; }
-                                    if (user.rank === 2) { rankColor = "bg-gray-400/20 text-gray-300 border-gray-400/50"; badgeColor = "text-gray-300"; }
-                                    if (user.rank === 3) { rankColor = "bg-amber-700/20 text-amber-600 border-amber-700/50"; badgeColor = "text-amber-600"; }
-
-                                    return (
-                                        <div key={user.rank} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black border border-transparent ${rankColor}`}>
-                                                {user.rank <= 3 ? <TrophyIcon /> : user.rank}
-                                            </div>
-                                            <div className="flex-1 min-w-0 font-bold text-white truncate">
-                                                {user.user}
-                                            </div>
-                                            <div className="text-xs font-mono font-bold text-brand-primary bg-black/30 px-2 py-1 rounded">
-                                                {user.totalNisaballs} NB
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                <div className="pt-2 text-center">
-                                    <span className="text-xs font-bold text-gray-400 group-hover:text-brand-accent transition-colors flex items-center justify-center gap-1">
-                                        View Top 10 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-                                    </span>
+                        {/* LEFT COLUMN: MILESTONE ROADMAP */}
+                        <div className="lg:col-span-2 space-y-8">
+                            <div className="flex items-center gap-6 mb-6 px-2">
+                                <h3 className="text-3xl font-black text-white tracking-tight">Goals Roadmap</h3>
+                                <div className="h-2 flex-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-brand-primary to-transparent w-full opacity-30"></div>
                                 </div>
                             </div>
-                        </InfoCard>
 
-                        {/* Recent Contributor (Latest) */}
-                        <InfoCard 
-                            title="Latest Contribution" 
-                            className="group hover:ring-2 hover:ring-brand-primary/30"
-                            onClick={() => setShowContributorsModal(true)}
-                        >
-                            <div className="space-y-3 relative">
-                                {MOCK_CONTRIBUTORS.slice(0, 1).map((event) => (
-                                    <div key={event.id} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
-                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${getEventColor(event.type)}`}>
-                                            {getEventIcon(event.type)}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-baseline">
-                                                <span className="text-xs font-bold text-white truncate">{event.user}</span>
-                                                <span className="text-[10px] text-gray-500">{event.timestamp}</span>
+                            <div className="space-y-4 relative pl-4 md:pl-0">
+                                {/* Vertical Line Connector */}
+                                <div className="absolute left-[3.2rem] md:left-[3.25rem] top-8 bottom-8 w-[2px] bg-gradient-to-b from-brand-accent/50 via-white/10 to-transparent hidden md:block"></div>
+                                
+                                {processedMilestones.map((milestone, idx) => (
+                                    <MilestoneItem key={idx} item={milestone} />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN: SIDEBAR INFO */}
+                        <div className="space-y-6 lg:sticky lg:top-24">
+                            
+                            {/* Top 3 Contributors */}
+                            <InfoCard 
+                                title="Top 3 Contributors" 
+                                className="group hover:ring-2 hover:ring-brand-accent/30"
+                                onClick={() => setShowTopContributorsModal(true)}
+                            >
+                                <div className="space-y-3 relative">
+                                    {MOCK_TOP_CONTRIBUTORS.slice(0, 3).map((user) => {
+                                        let rankColor = "bg-white/5 text-gray-400";
+                                        let badgeColor = "";
+                                        if (user.rank === 1) { rankColor = "bg-brand-accent/20 text-brand-accent border-brand-accent/50"; badgeColor = "text-brand-accent"; }
+                                        if (user.rank === 2) { rankColor = "bg-gray-400/20 text-gray-300 border-gray-400/50"; badgeColor = "text-gray-300"; }
+                                        if (user.rank === 3) { rankColor = "bg-amber-700/20 text-amber-600 border-amber-700/50"; badgeColor = "text-amber-600"; }
+
+                                        return (
+                                            <div key={user.rank} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black border border-transparent ${rankColor}`}>
+                                                    {user.rank <= 3 ? <TrophyIcon /> : user.rank}
+                                                </div>
+                                                <div className="flex-1 min-w-0 font-bold text-white truncate">
+                                                    {user.user}
+                                                </div>
+                                                <div className="text-xs font-mono font-bold text-brand-primary bg-black/30 px-2 py-1 rounded">
+                                                    {user.totalNisaballs} NB
+                                                </div>
                                             </div>
-                                            <div className="text-[10px] font-bold text-brand-primary">{event.amount}</div>
-                                        </div>
+                                        );
+                                    })}
+                                    <div className="pt-2 text-center">
+                                        <span className="text-xs font-bold text-gray-400 group-hover:text-brand-accent transition-colors flex items-center justify-center gap-1">
+                                            View Top 10 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                                        </span>
                                     </div>
-                                ))}
-                                <div className="pt-2 text-center">
-                                    <span className="text-xs font-bold text-gray-400 group-hover:text-brand-primary transition-colors flex items-center justify-center gap-1">
-                                        See all history <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-                                    </span>
                                 </div>
-                            </div>
-                        </InfoCard>
+                            </InfoCard>
 
-                        {/* Nisaballs Currency (Moved Back to Sidebar) */}
-                        <InfoCard title="Nisaballs Currency">
-                            <ul className="space-y-4 font-sans text-sm flex-1">
-                                {CURRENCY_RATES.map((rate, idx) => (
-                                    <li key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                                        <span className="text-brand-accent font-bold">{rate.label}</span>
-                                        <span className="text-gray-500 font-bold text-lg">→</span>
-                                        <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">{rate.value}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <div className="mt-6 p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-center">
-                                <div className="text-brand-primary font-bold text-xs uppercase tracking-wider mb-2">Timer Add</div>
-                                <div className="text-white font-black text-lg">{TIMER_CONVERSION}</div>
-                            </div>
-                        </InfoCard>
-
-                        {/* Combined Rewards Card */}
-                        <InfoCard title="Event Rewards">
-                            {/* Top Rewards Section */}
-                            <div className="mb-6">
-                                <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Top 3 Supporters</h4>
-                                <div className="text-center mb-3 text-4xl drop-shadow-lg filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default">🌹</div>
-                                <ul className="space-y-2 text-gray-200">
-                                    {TOP_REWARDS.map((reward, idx) => (
-                                        <li key={idx} className="bg-black/20 py-2 rounded-xl border border-white/5 font-medium text-sm text-center">{reward}</li>
+                            {/* Recent Contributor (Latest) */}
+                            <InfoCard 
+                                title="Latest Contribution" 
+                                className="group hover:ring-2 hover:ring-brand-primary/30"
+                                onClick={() => setShowContributorsModal(true)}
+                            >
+                                <div className="space-y-3 relative">
+                                    {MOCK_CONTRIBUTORS.slice(0, 1).map((event) => (
+                                        <div key={event.id} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${getEventColor(event.type)}`}>
+                                                {getEventIcon(event.type)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-baseline">
+                                                    <span className="text-xs font-bold text-white truncate">{event.user}</span>
+                                                    <span className="text-[10px] text-gray-500">{event.timestamp}</span>
+                                                </div>
+                                                <div className="text-[10px] font-bold text-brand-primary">{event.amount}</div>
+                                            </div>
+                                        </div>
                                     ))}
-                                </ul>
-                            </div>
+                                    <div className="pt-2 text-center">
+                                        <span className="text-xs font-bold text-gray-400 group-hover:text-brand-primary transition-colors flex items-center justify-center gap-1">
+                                            See all history <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </InfoCard>
 
-                            {/* Divider */}
-                            <div className="h-px bg-white/10 my-6 flex items-center justify-center">
-                                <div className="w-2 h-2 rounded-full bg-white/20"></div>
-                            </div>
-
-                            {/* Personalised Rewards Section */}
-                            <div>
-                                <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Personalised Rewards</h4>
-                                <ul className="space-y-3 text-sm">
-                                    {PERSONALISED_REWARDS.map((item, idx) => (
-                                        <li key={idx} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5">
-                                            <span className="text-brand-accent font-bold font-mono bg-black/30 px-2 py-1 rounded-lg text-xs">{item.cost}</span>
-                                            <span className="text-gray-300 font-medium text-xs text-right">{item.reward}</span>
+                            {/* Nisaballs Currency (Moved Back to Sidebar) */}
+                            <InfoCard title="Nisaballs Currency">
+                                <ul className="space-y-4 font-sans text-sm flex-1">
+                                    {CURRENCY_RATES.map((rate, idx) => (
+                                        <li key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <span className="text-brand-accent font-bold">{rate.label}</span>
+                                            <span className="text-gray-500 font-bold text-lg">→</span>
+                                            <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">{rate.value}</span>
                                         </li>
                                     ))}
                                 </ul>
-                            </div>
-                        </InfoCard>
+                                <div className="mt-6 p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-center">
+                                    <div className="text-brand-primary font-bold text-xs uppercase tracking-wider mb-2">Timer Add</div>
+                                    <div className="text-white font-black text-lg">{TIMER_CONVERSION}</div>
+                                </div>
+                            </InfoCard>
 
+                            {/* Combined Rewards Card */}
+                            <InfoCard title="Event Rewards">
+                                {/* Top Rewards Section */}
+                                <div className="mb-6">
+                                    <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Top 3 Supporters</h4>
+                                    <div className="text-center mb-3 text-4xl drop-shadow-lg filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default">🌹</div>
+                                    <ul className="space-y-2 text-gray-200">
+                                        {TOP_REWARDS.map((reward, idx) => (
+                                            <li key={idx} className="bg-black/20 py-2 rounded-xl border border-white/5 font-medium text-sm text-center">{reward}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="h-px bg-white/10 my-6 flex items-center justify-center">
+                                    <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                                </div>
+
+                                {/* Personalised Rewards Section */}
+                                <div>
+                                    <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Personalised Rewards</h4>
+                                    <ul className="space-y-3 text-sm">
+                                        {PERSONALISED_REWARDS.map((item, idx) => (
+                                            <li key={idx} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <span className="text-brand-accent font-bold font-mono bg-black/30 px-2 py-1 rounded-lg text-xs">{item.cost}</span>
+                                                <span className="text-gray-300 font-medium text-xs text-right">{item.reward}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </InfoCard>
+
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
     );

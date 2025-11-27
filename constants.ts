@@ -105,3 +105,14 @@ export const DEFAULT_NISATHON_GOALS = [
     { count: 500, reward: "NSFW Twitter Post" },
     { count: 669, reward: "Top Secret Extended Goal", secret: true },
 ];
+
+export const DEFAULT_WHEEL_ITEMS = [
+    { label: "VIP Status", weight: 5 },
+    { label: "Timeout (10m)", weight: 15 },
+    { label: "Choose Game", weight: 5 },
+    { label: "Free Sub", weight: 10 },
+    { label: "Hydrate!", weight: 20 },
+    { label: "Posture Check", weight: 20 },
+    { label: "Karaoke Song", weight: 10 },
+    { label: "Nothing KEKW", weight: 15 },
+];

@@ -217,6 +217,7 @@ app.post('/api/goals', async (req, res) => {
     if (!goals) return res.status(400).json({ error: 'Missing goals data' });
 
     try {
+        console.log(`🎯 Updating Nisathon Goals (${goals.length} items)`);
         await Setting.findOneAndUpdate(
             { key: 'nisathon_goals' },
             { value: goals },
@@ -225,6 +226,45 @@ app.post('/api/goals', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error("Database Error (Update Goals):", error);
+        res.status(500).json({ error: 'Failed to update database' });
+    }
+});
+
+// --- SPIN WHEEL ENDPOINTS ---
+
+app.get('/api/wheel', async (req, res) => {
+    try {
+        if (mongoose.connection.readyState === 1) {
+            const wheel = await Setting.findOne({ key: 'wheel_items' });
+            if (wheel && wheel.value) {
+                return res.json({ items: wheel.value });
+            }
+        }
+        res.json({ items: null });
+    } catch (error) {
+        console.error("Database Error (Get Wheel):", error);
+        res.json({ items: null });
+    }
+});
+
+app.post('/api/wheel', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    const { items } = req.body;
+
+    if (!authHeader || authHeader !== ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    if (!items || !Array.isArray(items)) return res.status(400).json({ error: 'Missing or invalid items data' });
+
+    try {
+        await Setting.findOneAndUpdate(
+            { key: 'wheel_items' },
+            { value: items },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Database Error (Update Wheel):", error);
         res.status(500).json({ error: 'Failed to update database' });
     }
 });
@@ -391,23 +431,40 @@ app.get('/api/messages', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// --- SERVER START & KEEP-ALIVE ---
+
+// Start listening
+const server = app.listen(PORT, () => {
     console.log(`✅ Bot API Server running on port ${PORT}`);
+    console.log(`   - /api/schedule: ACTIVE`);
+    console.log(`   - /api/profile: ACTIVE`);
+    console.log(`   - /api/goals: ACTIVE`);
+    console.log(`   - /api/wheel: ACTIVE`);
+    console.log(`   - /api/upload: ACTIVE`);
+
+    // Start self-ping only after server is ready
+    startKeepAlive();
 });
 
 // --- SELF-PING / KEEP-ALIVE MECHANISM ---
 // This prevents Render's free tier from spinning down due to inactivity.
-const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const RENDER_EXTERNAL_URL = 'https://urnisa-bot.onrender.com';
 
-function keepAlive() {
-    console.log('⏰ Sending Keep-Alive ping...');
-    axios.get(RENDER_EXTERNAL_URL)
-        .then(() => console.log('✅ Keep-Alive ping successful.'))
-        .catch((err) => console.error(`⚠️ Keep-Alive ping failed: ${err.message}`));
+function startKeepAlive() {
+    console.log('⏰ Starting Keep-Alive timer...');
+    setInterval(() => {
+        console.log('⏰ Sending Keep-Alive ping...');
+        axios.get(RENDER_EXTERNAL_URL)
+            .then(() => console.log('✅ Keep-Alive ping successful.'))
+            .catch((err) => console.error(`⚠️ Keep-Alive ping failed: ${err.message}`));
+    }, KEEP_ALIVE_INTERVAL);
 }
 
-// Start the keep-alive timer
-setInterval(keepAlive, KEEP_ALIVE_INTERVAL);
-// Run once immediately to ensure it works
-keepAlive();
+// Global error handlers to prevent crash loops
+process.on('uncaughtException', (err) => {
+    console.error('❌ Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Unhandled Rejection:', reason);
+});

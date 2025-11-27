@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
+import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
@@ -199,6 +200,11 @@ const Admin: React.FC = () => {
     const [localGoals, setLocalGoals] = useState<NisathonGoal[]>([]);
     const [goalsStatus, setGoalsStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+    // Wheel Settings State
+    const { items: wheelItems, refetch: refetchWheel } = useWheelSettings();
+    const [localWheel, setLocalWheel] = useState<WheelItem[]>([]);
+    const [wheelStatus, setWheelStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
     // Init local state when data fetches
     useEffect(() => {
         setNewScheduleUrl(currentScheduleUrl);
@@ -213,6 +219,10 @@ const Admin: React.FC = () => {
     useEffect(() => {
         setLocalGoals(currentGoals);
     }, [currentGoals]);
+
+    useEffect(() => {
+        setLocalWheel(wheelItems);
+    }, [wheelItems]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -329,6 +339,32 @@ const Admin: React.FC = () => {
         }
     };
 
+    const handleSaveWheel = async () => {
+        setLoading(true);
+        setWheelStatus(null);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/wheel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password
+                },
+                body: JSON.stringify({ items: localWheel })
+            });
+            if (response.ok) {
+                setWheelStatus({ type: 'success', message: 'Wheel settings saved!' });
+                refetchWheel();
+            } else {
+                setWheelStatus({ type: 'error', message: 'Failed to save wheel settings.' });
+            }
+        } catch (error) {
+            setWheelStatus({ type: 'error', message: 'Network error.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Helper: About Content Editors
     const updateAboutItem = (index: number, field: keyof AboutItem, value: string) => {
         const updated = [...localAbout];
@@ -411,6 +447,21 @@ const Admin: React.FC = () => {
         setLocalGoals(updated);
     };
 
+    // Helper: Wheel Editors
+    const addWheelItem = () => {
+        setLocalWheel([...localWheel, { label: "New Reward", weight: 10 }]);
+    };
+    const removeWheelItem = (index: number) => {
+        setLocalWheel(localWheel.filter((_, i) => i !== index));
+    };
+    const updateWheelItem = (index: number, field: keyof WheelItem, value: any) => {
+        const updated = [...localWheel];
+        // @ts-ignore
+        updated[index] = { ...updated[index], [field]: value };
+        setLocalWheel(updated);
+    };
+    const totalWheelWeight = localWheel.reduce((acc, item) => acc + item.weight, 0);
+
     if (!isAuthenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -440,6 +491,11 @@ const Admin: React.FC = () => {
                     {goalsStatus.message}
                 </div>
             )}
+            {wheelStatus && (
+                 <div className={`fixed top-48 right-4 z-50 p-4 rounded-lg shadow-xl ${wheelStatus.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
+                    {wheelStatus.message}
+                </div>
+            )}
 
             {/* --- SCHEDULE --- */}
             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
@@ -454,9 +510,54 @@ const Admin: React.FC = () => {
                         <LinkWarning url={newScheduleUrl} />
                     </div>
                     {newScheduleUrl && <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-32 object-cover rounded-lg opacity-70 border border-white/10" onError={(e) => (e.currentTarget.style.display = 'none')} />}
-                    <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">{loading ? 'Saving...' : 'Update Schedule'}</button>
+                    <div className="mt-6 flex justify-end pt-4 border-t border-white/5">
+                         <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">{loading ? 'Saving...' : 'Update Schedule'}</button>
+                    </div>
                     {scheduleStatus && <span className={`ml-4 text-sm ${scheduleStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{scheduleStatus.message}</span>}
                 </form>
+            </div>
+
+            {/* --- WHEEL EDITOR --- */}
+            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                    <h2 className="text-2xl font-bold text-white">🎡 Spin Wheel Rewards</h2>
+                    <div className={`text-sm font-bold px-3 py-1 rounded-full ${totalWheelWeight === 100 ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                        Total Chance: {totalWheelWeight}%
+                    </div>
+                </div>
+                <div className="space-y-3">
+                    <div className="grid grid-cols-12 gap-2 text-xs font-bold text-gray-500 uppercase px-2">
+                        <div className="col-span-8">Reward Name</div>
+                        <div className="col-span-3 text-center">Win Chance (%)</div>
+                        <div className="col-span-1"></div>
+                    </div>
+                    {localWheel.map((item, idx) => (
+                        <div key={idx} className="bg-white/5 p-3 rounded-xl border border-white/5 flex gap-2 items-center group">
+                            <div className="col-span-8 flex-1">
+                                <input 
+                                    type="text" 
+                                    value={item.label} 
+                                    onChange={(e) => updateWheelItem(idx, 'label', e.target.value)} 
+                                    className="w-full bg-black/20 border border-white/10 rounded px-2 py-2 text-white font-bold"
+                                    placeholder="Reward Name"
+                                />
+                            </div>
+                            <div className="col-span-3 w-24">
+                                <input 
+                                    type="number" 
+                                    value={item.weight} 
+                                    onChange={(e) => updateWheelItem(idx, 'weight', parseInt(e.target.value) || 0)} 
+                                    className="w-full bg-black/20 border border-white/10 rounded px-2 py-2 text-white font-mono text-center font-bold"
+                                />
+                            </div>
+                            <button onClick={() => removeWheelItem(idx)} className="text-red-500 hover:text-red-400 p-2 opacity-50 group-hover:opacity-100 transition-opacity">🗑️</button>
+                        </div>
+                    ))}
+                    <button onClick={addWheelItem} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Reward</button>
+                </div>
+                <div className="mt-6 flex justify-end pt-4 border-t border-white/5">
+                    <button onClick={handleSaveWheel} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">Save Changes</button>
+                </div>
             </div>
 
             {/* --- NISATHON GOALS EDITOR --- */}
