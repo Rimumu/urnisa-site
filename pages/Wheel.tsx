@@ -30,7 +30,7 @@ const Wheel: React.FC = () => {
                 <div className="w-full max-w-4xl bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-full bg-rose-pattern opacity-5 pointer-events-none"></div>
                     <h2 className="text-4xl font-black text-center text-white mb-2 relative z-10">SPIN TO <span className="text-brand-accent">WIN</span></h2>
-                    <p className="text-center text-gray-400 mb-8 relative z-10">Test your luck and win amazing prizes!</p>
+                    <p className="text-center text-gray-400 mb-8 relative z-10">Spin and get some stuff!</p>
                     <SpinWheel />
                 </div>
             </div>

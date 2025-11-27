@@ -164,8 +164,8 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
             {/* Mobile Sub-menu for Nisathon */}
             <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
                 <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Nisathon Event</span>
-                <NavLink to="/nisathon" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>📊 Dashboard</NavLink>
-                <NavLink to="/nisathon/wheel" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>🎡 Spin Wheel</NavLink>
+                <NavLink to="/nisathon" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
+                <NavLink to="/nisathon/wheel" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Wheel</NavLink>
             </div>
 
             <NavLink to="/minecraft" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Minecraft</NavLink>
