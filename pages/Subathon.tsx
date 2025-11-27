@@ -1,26 +1,11 @@
 
 import React, { useState } from 'react';
 import OptimizedImage from '../components/OptimizedImage';
+import { useNisathonGoals } from '../hooks/useNisathonGoals';
 
 // --- DATA CONSTANTS ---
 
 const NISABALL_ICON = "https://res.cloudinary.com/dsencimjn/image/upload/v1764173339/1341377045602766868_fbuvnf.webp";
-
-const RAW_MILESTONES = [
-    { count: 1, reward: "Open Mic" },
-    { count: 5, reward: "Unlock New Emote" },
-    { count: 10, reward: "Change In-Game Name" },
-    { count: 25, reward: "Chat Changes Socials PFP" },
-    { count: 50, reward: "BDSM Test" },
-    { count: 75, reward: "Minecraft Server Opening" },
-    { count: 100, reward: "Karaoke & Dancing" },
-    { count: 150, reward: "18+ ASMR" },
-    { count: 200, reward: "NSFW Art Release" },
-    { count: 300, reward: "Nisa's Mom Stream" },
-    { count: 400, reward: "Maid Outfit Stream" },
-    { count: 500, reward: "NSFW Twitter Post" },
-    { count: 669, reward: "Top Secret Extended Goal", secret: true },
-];
 
 const CURRENCY_RATES = [
     { label: "$5 USD", value: "1 Nisaball" },
@@ -527,6 +512,7 @@ const TopContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
 const Subathon: React.FC = () => {
     const [showContributorsModal, setShowContributorsModal] = useState(false);
     const [showTopContributorsModal, setShowTopContributorsModal] = useState(false);
+    const { goals } = useNisathonGoals();
 
     // --- CENTRAL STATE ---
     const currentSubs = 135; // 67 NB
@@ -545,7 +531,7 @@ const Subathon: React.FC = () => {
     let nextGoal = 1000; 
     let nextGoalLabel = "All Goals Completed!";
 
-    const processedMilestones = RAW_MILESTONES.map(m => {
+    const processedMilestones = goals.map(m => {
         if (totalNisaballs >= m.count) {
             return { ...m, status: 'completed' as const };
         } else if (!nextActiveFound) {

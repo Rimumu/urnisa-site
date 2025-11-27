@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
+import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 import ImageUploader from '../components/ImageUploader';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
@@ -193,6 +194,11 @@ const Admin: React.FC = () => {
     const [localArtworks, setLocalArtworks] = useState<ArtistItem[]>([]);
     const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+    // Nisathon Goals State
+    const { goals: currentGoals, refetch: refetchGoals } = useNisathonGoals();
+    const [localGoals, setLocalGoals] = useState<NisathonGoal[]>([]);
+    const [goalsStatus, setGoalsStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
     // Init local state when data fetches
     useEffect(() => {
         setNewScheduleUrl(currentScheduleUrl);
@@ -203,6 +209,10 @@ const Admin: React.FC = () => {
         setLocalCredits(creditsContent);
         setLocalArtworks(artworksContent);
     }, [aboutContent, creditsContent, artworksContent]);
+
+    useEffect(() => {
+        setLocalGoals(currentGoals);
+    }, [currentGoals]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -293,6 +303,32 @@ const Admin: React.FC = () => {
         }
     };
 
+    const handleSaveGoals = async () => {
+        setLoading(true);
+        setGoalsStatus(null);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/goals`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password
+                },
+                body: JSON.stringify({ goals: localGoals })
+            });
+            if (response.ok) {
+                setGoalsStatus({ type: 'success', message: 'Nisathon Goals saved successfully!' });
+                refetchGoals();
+            } else {
+                setGoalsStatus({ type: 'error', message: 'Failed to save goals.' });
+            }
+        } catch (error) {
+            setGoalsStatus({ type: 'error', message: 'Network error.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Helper: About Content Editors
     const updateAboutItem = (index: number, field: keyof AboutItem, value: string) => {
         const updated = [...localAbout];
@@ -359,6 +395,22 @@ const Admin: React.FC = () => {
         setLocalArtworks(updated);
     };
 
+    // Helper: Nisathon Goals Editors
+    const addGoal = () => {
+        // Defaults to next multiple of 50
+        const maxCount = localGoals.length > 0 ? Math.max(...localGoals.map(g => g.count)) : 0;
+        setLocalGoals([...localGoals, { count: maxCount + 50, reward: "New Goal Reward", secret: false }]);
+    };
+    const removeGoal = (index: number) => {
+        setLocalGoals(localGoals.filter((_, i) => i !== index));
+    };
+    const updateGoal = (index: number, field: keyof NisathonGoal, value: any) => {
+        const updated = [...localGoals];
+        // @ts-ignore
+        updated[index] = { ...updated[index], [field]: value };
+        setLocalGoals(updated);
+    };
+
     if (!isAuthenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -383,6 +435,11 @@ const Admin: React.FC = () => {
                     {profileStatus.message}
                 </div>
             )}
+            {goalsStatus && (
+                 <div className={`fixed top-36 right-4 z-50 p-4 rounded-lg shadow-xl ${goalsStatus.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
+                    {goalsStatus.message}
+                </div>
+            )}
 
             {/* --- SCHEDULE --- */}
             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
@@ -400,6 +457,54 @@ const Admin: React.FC = () => {
                     <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">{loading ? 'Saving...' : 'Update Schedule'}</button>
                     {scheduleStatus && <span className={`ml-4 text-sm ${scheduleStatus.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>{scheduleStatus.message}</span>}
                 </form>
+            </div>
+
+            {/* --- NISATHON GOALS EDITOR --- */}
+            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                    <h2 className="text-2xl font-bold text-white">🎯 Nisathon Goals</h2>
+                </div>
+                <div className="space-y-3">
+                    <div className="grid grid-cols-12 gap-2 text-xs font-bold text-gray-500 uppercase px-2">
+                        <div className="col-span-2">Target</div>
+                        <div className="col-span-7">Reward Name</div>
+                        <div className="col-span-2 text-center">Secret?</div>
+                        <div className="col-span-1"></div>
+                    </div>
+                    {localGoals.map((goal, idx) => (
+                        <div key={idx} className="bg-white/5 p-3 rounded-xl border border-white/5 flex gap-2 items-center group">
+                            <div className="w-[15%]">
+                                <input 
+                                    type="number" 
+                                    value={goal.count} 
+                                    onChange={(e) => updateGoal(idx, 'count', parseInt(e.target.value))} 
+                                    className="w-full bg-black/20 border border-white/10 rounded px-2 py-2 text-white font-mono text-center font-bold"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <input 
+                                    type="text" 
+                                    value={goal.reward} 
+                                    onChange={(e) => updateGoal(idx, 'reward', e.target.value)} 
+                                    className="w-full bg-black/20 border border-white/10 rounded px-2 py-2 text-white"
+                                />
+                            </div>
+                            <div className="w-[10%] flex justify-center">
+                                <input 
+                                    type="checkbox" 
+                                    checked={goal.secret || false} 
+                                    onChange={(e) => updateGoal(idx, 'secret', e.target.checked)} 
+                                    className="w-5 h-5 rounded cursor-pointer accent-brand-accent"
+                                />
+                            </div>
+                            <button onClick={() => removeGoal(idx)} className="text-red-500 hover:text-red-400 p-2 opacity-50 group-hover:opacity-100 transition-opacity">🗑️</button>
+                        </div>
+                    ))}
+                    <button onClick={addGoal} className="w-full py-2 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-brand-primary/50 hover:text-brand-primary transition-colors">+ Add New Goal</button>
+                </div>
+                <div className="mt-6 flex justify-end pt-4 border-t border-white/5">
+                    <button onClick={handleSaveGoals} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">Save Changes</button>
+                </div>
             </div>
 
             {/* --- ABOUT ME EDITOR --- */}
