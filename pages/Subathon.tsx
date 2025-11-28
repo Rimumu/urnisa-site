@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import OptimizedImage from '../components/OptimizedImage';
 import { useNisathonGoals } from '../hooks/useNisathonGoals';
+import { useNisathonStats } from '../hooks/useNisathonStats';
 
 // --- DATA CONSTANTS ---
 
@@ -27,31 +28,22 @@ const PERSONALISED_REWARDS = [
     { cost: "10 NB", reward: "Small Sketch Drawing" },
 ];
 
-// --- MOCK CONTRIBUTORS DATA ---
+// --- MOCK CONTRIBUTORS DATA (Keep for now until backend supports listing) ---
 type EventType = 'sub' | 'gift' | 'bits' | 'donation';
 
 interface ContributorEvent {
     id: string;
     user: string;
     type: EventType;
-    amount: string; // e.g., "Tier 1", "5 Gifted", "500", "$50.00"
+    amount: string; 
     message?: string;
-    timestamp: string; // ISO string or relative time for mock
+    timestamp: string; 
 }
 
 const MOCK_CONTRIBUTORS: ContributorEvent[] = [
     { id: '1', user: 'Anony', type: 'gift', amount: '5 Subs', timestamp: 'Just now' },
     { id: '2', user: 'Balls69Prime', type: 'sub', amount: 'Prime', timestamp: '2 mins ago' },
     { id: '3', user: 'Fan2', type: 'donation', amount: '$50.00', message: 'Happy Birthday Nisa!', timestamp: '5 mins ago' },
-    { id: '4', user: 'BitsFan', type: 'bits', amount: '1000', timestamp: '8 mins ago' },
-    { id: '5', user: 'NewViewer', type: 'sub', amount: 'Tier 1', timestamp: '15 mins ago' },
-    { id: '6', user: 'OldTimer', type: 'sub', amount: '24 Months', timestamp: '22 mins ago' },
-    { id: '7', user: 'GifterSub', type: 'gift', amount: '20 Subs', timestamp: '30 mins ago' },
-    { id: '8', user: 'Bits100Fan', type: 'bits', amount: '100', timestamp: '45 mins ago' },
-    { id: '9', user: 'DonoFan', type: 'donation', amount: '$5.00', timestamp: '1 hour ago' },
-    { id: '10', user: 'Lurker', type: 'sub', amount: 'Tier 1', timestamp: '1 hour ago' },
-    { id: '11', user: 'HyperFan', type: 'bits', amount: '5000', message: 'HYPE HYPE', timestamp: '2 hours ago' },
-    { id: '12', user: 'BigDonor', type: 'donation', amount: '$100.00', timestamp: '3 hours ago' },
 ];
 
 interface TopContributor {
@@ -64,13 +56,6 @@ const MOCK_TOP_CONTRIBUTORS: TopContributor[] = [
     { rank: 1, user: "BigBalls", totalNisaballs: 500 },
     { rank: 2, user: "SimpLord", totalNisaballs: 350 },
     { rank: 3, user: "Idkfan", totalNisaballs: 210 },
-    { rank: 4, user: "User4", totalNisaballs: 150 },
-    { rank: 5, user: "Balls69", totalNisaballs: 95 },
-    { rank: 6, user: "GifterSub", totalNisaballs: 80 },
-    { rank: 7, user: "Lurker", totalNisaballs: 65 },
-    { rank: 8, user: "KEKW", totalNisaballs: 50 },
-    { rank: 9, user: "PogChamp", totalNisaballs: 45 },
-    { rank: 10, user: "Kappa", totalNisaballs: 30 },
 ];
 
 // --- ICONS & HELPERS ---
@@ -126,20 +111,48 @@ const CloseIcon = () => (
 
 const TrophyIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-brand-accent" viewBox="0 0 24 24" fill="currentColor">
-        <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+        <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.719 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
     </svg>
 );
 
 // --- COMPONENTS ---
 
-const Timer: React.FC = () => {
+const Timer: React.FC<{ endTime: string }> = ({ endTime }) => {
+    const [timeLeft, setTimeLeft] = useState("");
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const end = new Date(endTime).getTime();
+            const distance = end - now;
+
+            if (distance < 0) {
+                setTimeLeft("00:00:00");
+                return;
+            }
+
+            const hours = Math.floor((distance / (1000 * 60 * 60)));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Format with leading zeros
+            const h = hours < 10 ? "0" + hours : hours;
+            const m = minutes < 10 ? "0" + minutes : minutes;
+            const s = seconds < 10 ? "0" + seconds : seconds;
+
+            setTimeLeft(`${h}:${m}:${s}`);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [endTime]);
+
     return (
         <div className="relative group">
             <div className="absolute inset-0 bg-brand-primary/30 blur-3xl rounded-full group-hover:bg-brand-primary/40 transition-all duration-700"></div>
             <div className="relative bg-black/40 backdrop-blur-2xl border border-white/10 py-8 px-12 rounded-[3rem] text-center transform hover:scale-105 transition-transform duration-300 shadow-2xl">
                 <h3 className="text-brand-accent font-sans font-bold tracking-widest text-xs uppercase mb-1">Time Remaining</h3>
                 <div className="text-5xl md:text-7xl font-extrabold text-white font-sans tracking-tight drop-shadow-lg tabular-nums">
-                    10:25:42
+                    {timeLeft || "Loading..."}
                 </div>
             </div>
         </div>
@@ -220,7 +233,7 @@ const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, ra
 
             {/* Converted Value */}
             <div className="text-sm font-medium text-brand-accent mb-4 flex justify-between items-center bg-black/20 rounded-lg px-2 py-1">
-                <span>{nbAmount} NB</span>
+                <span>{nbAmount.toFixed(1)} NB</span>
                 <span className="text-[10px] text-gray-500 font-sans font-semibold">{contributionPercent.toFixed(0)}% Impact</span>
             </div>
 
@@ -266,7 +279,7 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
         >
             {/* Main Header / Combined Progress */}
             <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h2 className="text-3xl md:text-4xl font-extrabold font-sans text-white tracking-tight flex items-center gap-4">
                         <img 
                             src={NISABALL_ICON} 
@@ -275,8 +288,40 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
                         />
                         <span>NISABALL <span className="text-brand-accent">GOAL</span></span>
                     </h2>
-                    <div className={`w-10 h-10 rounded-full bg-white/5 flex items-center justify-center transform transition-all duration-300 text-brand-accent group-hover:bg-brand-accent group-hover:text-brand-bg ${expanded ? 'rotate-180' : 'rotate-0'}`}>
-                        <ChevronDownIcon className="w-6 h-6" />
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 md:gap-3 ml-auto" onClick={(e) => e.stopPropagation()}>
+                        <a
+                            href="https://twitch.tv/urnisa_"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-[#9146FF] hover:bg-[#772ce8] text-white text-xs md:text-sm font-bold py-2 px-3 md:px-4 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-purple-500/20 transition-all hover:scale-105 border border-white/10"
+                        >
+                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11.571 4.714h1.715v5.143H11.57zm4.714 0h1.715v5.143h-1.715zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L24 16.286V0zm16.286 15.428-3.428 3.429h-3.429l-3 3v-3H6.857V1.714h15.429v13.714z" />
+                            </svg>
+                            <span className="hidden sm:inline">Subscribe</span>
+                            <span className="sm:hidden">Sub</span>
+                        </a>
+                        <a
+                            href="https://streamelements.com/urnisa_/tip"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-[#3185FC] hover:bg-[#2064c9] text-white text-xs md:text-sm font-bold py-2 px-3 md:px-4 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-blue-500/20 transition-all hover:scale-105 border border-white/10"
+                        >
+                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="hidden sm:inline">Donate</span>
+                            <span className="sm:hidden">Tip</span>
+                        </a>
+
+                        <div 
+                            onClick={() => setExpanded(!expanded)}
+                            className={`w-10 h-10 ml-2 rounded-full bg-white/5 flex items-center justify-center transform transition-all duration-300 text-brand-accent group-hover:bg-brand-accent group-hover:text-brand-bg ${expanded ? 'rotate-180' : 'rotate-0'} cursor-pointer`}
+                        >
+                            <ChevronDownIcon className="w-6 h-6" />
+                        </div>
                     </div>
                 </div>
                 
@@ -416,7 +461,6 @@ const ContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     return (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-[#1a0b0e] w-full max-w-2xl max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
-                {/* Header */}
                 <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
                     <div>
                         <h2 className="text-2xl font-black text-white tracking-tight">Contribution History</h2>
@@ -426,8 +470,6 @@ const ContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                         <CloseIcon />
                     </button>
                 </div>
-
-                {/* List */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {MOCK_CONTRIBUTORS.map((event) => (
                         <div key={event.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
@@ -466,7 +508,6 @@ const TopContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     return (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-[#1a0b0e] w-full max-w-lg max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
-                {/* Header */}
                 <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
                     <div>
                         <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
@@ -478,8 +519,6 @@ const TopContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                         <CloseIcon />
                     </button>
                 </div>
-
-                {/* List */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {MOCK_TOP_CONTRIBUTORS.map((contributor) => {
                         let rankColor = "text-gray-400 border-gray-600/30";
@@ -513,18 +552,20 @@ const Subathon: React.FC = () => {
     const [showContributorsModal, setShowContributorsModal] = useState(false);
     const [showTopContributorsModal, setShowTopContributorsModal] = useState(false);
     const { goals } = useNisathonGoals();
+    const { stats, loading: statsLoading } = useNisathonStats();
 
     // --- CENTRAL STATE ---
-    const currentSubs = 135; // 67 NB
-    const currentBits = 4500; // 9 NB
-    const currentDonations = 50; // 10 NB
+    // Use stats from backend (polled every 5s)
+    const currentSubs = stats.currentSubs;
+    const currentBits = stats.currentBits;
+    const currentDonations = stats.currentDonations;
+    const totalNisaballs = stats.totalNisaballs;
 
-    // --- CALCULATIONS ---
-    const nisaballsFromSubs = Math.floor(currentSubs / 2);
-    const nisaballsFromDonations = Math.floor(currentDonations / 5);
-    const nisaballsFromBits = Math.floor(currentBits / 500);
-
-    const totalNisaballs = nisaballsFromSubs + nisaballsFromDonations + nisaballsFromBits; 
+    // --- BREAKDOWN CALCULATIONS FOR DISPLAY ---
+    // Calculate how much each category contributed to the total NB
+    const nbFromSubs = currentSubs * 0.5;
+    const nbFromBits = currentBits * 0.002;
+    const nbFromDonations = currentDonations * 0.2;
 
     // --- SYNC MILESTONE LOGIC ---
     let nextActiveFound = false;
@@ -560,12 +601,10 @@ const Subathon: React.FC = () => {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(229, 56, 59, 0.5); border-radius: 10px; }
             `}</style>
             
-            {/* Background Decorations */}
             <div className="absolute inset-0 bg-rose-pattern opacity-10 pointer-events-none z-0"></div>
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-            {/* Modals */}
             {showContributorsModal && <ContributorsModal onClose={() => setShowContributorsModal(false)} />}
             {showTopContributorsModal && <TopContributorsModal onClose={() => setShowTopContributorsModal(false)} />}
 
@@ -581,11 +620,12 @@ const Subathon: React.FC = () => {
                              <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Dashboard</h2>
                         </div>
                     </div>
-                    <Timer />
+                    {/* Use Live Timer from Backend */}
+                    <Timer endTime={stats.timerEndTime} />
                 </div>
 
                 <div className="space-y-16">
-                    {/* 2. PROGRESS SECTION (WIDGET ONLY) */}
+                    {/* 2. PROGRESS SECTION */}
                     <div className="w-full">
                         <NisaballWidget 
                             currentSubs={currentSubs}
@@ -594,9 +634,9 @@ const Subathon: React.FC = () => {
                             totalNisaballs={totalNisaballs}
                             nextGoal={nextGoal}
                             nextGoalLabel={nextGoalLabel}
-                            nbFromSubs={nisaballsFromSubs}
-                            nbFromBits={nisaballsFromBits}
-                            nbFromDonations={nisaballsFromDonations}
+                            nbFromSubs={nbFromSubs}
+                            nbFromBits={nbFromBits}
+                            nbFromDonations={nbFromDonations}
                             className="h-full"
                         />
                     </div>
@@ -604,7 +644,7 @@ const Subathon: React.FC = () => {
                     {/* 3. MAIN CONTENT SPLIT */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                         
-                        {/* LEFT COLUMN: MILESTONE ROADMAP */}
+                        {/* LEFT: ROADMAP */}
                         <div className="lg:col-span-2 space-y-8">
                             <div className="flex items-center gap-6 mb-6 px-2">
                                 <h3 className="text-3xl font-black text-white tracking-tight">Goals Roadmap</h3>
@@ -614,19 +654,16 @@ const Subathon: React.FC = () => {
                             </div>
 
                             <div className="space-y-4 relative pl-4 md:pl-0">
-                                {/* Vertical Line Connector */}
                                 <div className="absolute left-[3.2rem] md:left-[3.25rem] top-8 bottom-8 w-[2px] bg-gradient-to-b from-brand-accent/50 via-white/10 to-transparent hidden md:block"></div>
-                                
                                 {processedMilestones.map((milestone, idx) => (
                                     <MilestoneItem key={idx} item={milestone} />
                                 ))}
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: SIDEBAR INFO */}
+                        {/* RIGHT: SIDEBAR */}
                         <div className="space-y-6 lg:sticky lg:top-24">
                             
-                            {/* Top 3 Contributors */}
                             <InfoCard 
                                 title="Top 3 Contributors" 
                                 className="group hover:ring-2 hover:ring-brand-accent/30"
@@ -635,10 +672,9 @@ const Subathon: React.FC = () => {
                                 <div className="space-y-3 relative">
                                     {MOCK_TOP_CONTRIBUTORS.slice(0, 3).map((user) => {
                                         let rankColor = "bg-white/5 text-gray-400";
-                                        let badgeColor = "";
-                                        if (user.rank === 1) { rankColor = "bg-brand-accent/20 text-brand-accent border-brand-accent/50"; badgeColor = "text-brand-accent"; }
-                                        if (user.rank === 2) { rankColor = "bg-gray-400/20 text-gray-300 border-gray-400/50"; badgeColor = "text-gray-300"; }
-                                        if (user.rank === 3) { rankColor = "bg-amber-700/20 text-amber-600 border-amber-700/50"; badgeColor = "text-amber-600"; }
+                                        if (user.rank === 1) { rankColor = "bg-brand-accent/20 text-brand-accent border-brand-accent/50"; }
+                                        if (user.rank === 2) { rankColor = "bg-gray-400/20 text-gray-300 border-gray-400/50"; }
+                                        if (user.rank === 3) { rankColor = "bg-amber-700/20 text-amber-600 border-amber-700/50"; }
 
                                         return (
                                             <div key={user.rank} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
@@ -662,7 +698,6 @@ const Subathon: React.FC = () => {
                                 </div>
                             </InfoCard>
 
-                            {/* Recent Contributor (Latest) */}
                             <InfoCard 
                                 title="Latest Contribution" 
                                 className="group hover:ring-2 hover:ring-brand-primary/30"
@@ -691,7 +726,6 @@ const Subathon: React.FC = () => {
                                 </div>
                             </InfoCard>
 
-                            {/* Nisaballs Currency (Moved Back to Sidebar) */}
                             <InfoCard title="Nisaballs Currency">
                                 <ul className="space-y-4 font-sans text-sm flex-1">
                                     {CURRENCY_RATES.map((rate, idx) => (
@@ -708,9 +742,7 @@ const Subathon: React.FC = () => {
                                 </div>
                             </InfoCard>
 
-                            {/* Combined Rewards Card */}
                             <InfoCard title="Event Rewards">
-                                {/* Top Rewards Section */}
                                 <div className="mb-6">
                                     <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Top 3 Supporters</h4>
                                     <div className="text-center mb-3 text-4xl drop-shadow-lg filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default">🌹</div>
@@ -720,13 +752,9 @@ const Subathon: React.FC = () => {
                                         ))}
                                     </ul>
                                 </div>
-
-                                {/* Divider */}
                                 <div className="h-px bg-white/10 my-6 flex items-center justify-center">
                                     <div className="w-2 h-2 rounded-full bg-white/20"></div>
                                 </div>
-
-                                {/* Personalised Rewards Section */}
                                 <div>
                                     <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Personalised Rewards</h4>
                                     <ul className="space-y-3 text-sm">
