@@ -30,7 +30,7 @@ export const useNisathonStats = () => {
                 setStats(data);
             }
         } catch (error) {
-            console.error("Failed to fetch Nisathon stats", error);
+            // Silently fail to defaults if backend is unreachable
         } finally {
             setLoading(false);
         }

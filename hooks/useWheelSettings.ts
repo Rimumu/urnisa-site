@@ -21,7 +21,7 @@ export const useWheelSettings = () => {
                 }
             }
         } catch (error) {
-            console.error("Failed to fetch wheel settings", error);
+            // Silently fail to defaults if backend is unreachable
         } finally {
             setLoading(false);
         }

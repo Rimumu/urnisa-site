@@ -42,7 +42,7 @@ export const useProfileContent = () => {
                 if (data.artworks && data.artworks.length > 0) setArtworksContent(data.artworks);
             }
         } catch (error) {
-            console.error("Failed to fetch profile content", error);
+            // Silently fail to defaults if backend is unreachable
         } finally {
             setLoading(false);
         }
