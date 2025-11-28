@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../constants';
+import { DISCORD_API_URL } from '../constants';
 
 export interface DiscordMessage {
     id: string;
@@ -67,7 +67,8 @@ export const useDiscordChat = (channelId: string) => {
 
         const fetchMessages = async () => {
             setLoading(true);
-            const targetUrl = `${API_BASE_URL}/api/messages?channelId=${channelId}`;
+            // Use the specific Discord Service URL
+            const targetUrl = `${DISCORD_API_URL}/api/messages?channelId=${channelId}`;
             try {
                 // Debug log to see exactly where we are trying to connect
                 console.log(`Fetching chat from: ${targetUrl}`);

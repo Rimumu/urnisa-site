@@ -6,19 +6,26 @@ export const DISCORD_CHAT_CHANNEL_ID = '1336782147490549869';
 export const DEFAULT_SCHEDULE_URL = 'https://cdn.discordapp.com/attachments/1338254150479118347/1439859590152978443/3_am_17.png?ex=6921fbfd&is=6920aa7d&hm=926ad591d323ccc29cd9f7dc2e256de99d8f5dcc292aa3a883f565455844c977&';
 
 // --------------------------------------------------------------------------
-// IMPORTANT: REPLACE THE URL BELOW WITH YOUR ACTUAL RENDER APP URL
+// SERVICE CONFIGURATION
 // --------------------------------------------------------------------------
-const RENDER_URL = 'https://urnisa-bot.onrender.com';
 
-// Automatically use localhost for development, and Render for production.
-// Checks for localhost, 127.0.0.1, and common local network IPs (192.168.x.x).
 const hostname = window.location.hostname;
 const isLocal = 
     hostname === 'localhost' || 
     hostname === '127.0.0.1' || 
     hostname.startsWith('192.168.');
 
-export const API_BASE_URL = isLocal ? 'http://localhost:3001' : RENDER_URL;
+// 1. General Website Backend (Database, Nisathon, Admin)
+// Create a NEW Web Service on Render called 'urnisa-backend' for this.
+const BACKEND_PROD_URL = 'https://urnisa-backend.onrender.com';
+export const API_BASE_URL = isLocal ? 'http://localhost:3001' : BACKEND_PROD_URL;
+
+// 2. Discord Bot Service (Chat Preview)
+// This is your EXISTING service 'urnisa-bot'.
+const BOT_PROD_URL = 'https://urnisa-bot.onrender.com';
+// We assume if running locally, you might run the bot on port 3002, or just use prod for convenience
+export const DISCORD_API_URL = isLocal ? 'http://localhost:3002' : BOT_PROD_URL;
+
 
 // Configuration for grouping online members from the Discord Widget API.
 export const DISCORD_ROLES_CONFIG = [
