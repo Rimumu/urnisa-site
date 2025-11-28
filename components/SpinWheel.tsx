@@ -112,25 +112,19 @@ const SpinWheel: React.FC = () => {
             <div className="relative w-[340px] h-[340px] md:w-[600px] md:h-[600px]">
                 
                 {/* Pointer / Stopper */}
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-30 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-30 drop-shadow-md">
                      <svg width="60" height="70" viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg" className="transform origin-top">
-                        <defs>
-                            <linearGradient id="pointerGrad" x1="0" y1="0" x2="60" y2="70" gradientUnits="userSpaceOnUse">
-                                <stop offset="0" stopColor="#f7c548" />
-                                <stop offset="1" stopColor="#b4860b" />
-                            </linearGradient>
-                        </defs>
-                        <path d="M30 70C30 70 55 25 55 15C55 6.71573 43.8071 0 30 0C16.1929 0 5 6.71573 5 15C5 25 30 70 30 70Z" fill="url(#pointerGrad)" stroke="#3a1017" strokeWidth="3"/>
+                        <path d="M30 70C30 70 55 25 55 15C55 6.71573 43.8071 0 30 0C16.1929 0 5 6.71573 5 15C5 25 30 70 30 70Z" fill="#f7c548" stroke="#3a1017" strokeWidth="3"/>
                         <circle cx="30" cy="15" r="6" fill="#3a1017"/>
                      </svg>
                 </div>
 
                 {/* Decorative Outer Ring with Lights */}
-                <div className="absolute inset-[-24px] rounded-full bg-[#120507] border-[8px] border-[#3a1017] shadow-[0_0_50px_rgba(0,0,0,0.8)] z-0">
+                <div className="absolute inset-[-24px] rounded-full bg-[#120507] border-[8px] border-[#3a1017] shadow-xl z-0">
                     {Array.from({ length: lightsCount }).map((_, i) => (
                         <div 
                             key={i}
-                            className="absolute w-3 h-3 md:w-4 md:h-4 rounded-full bg-yellow-100 shadow-[0_0_15px_rgba(253,224,71,0.8)]"
+                            className="absolute w-3 h-3 md:w-4 md:h-4 rounded-full bg-yellow-100/80"
                             style={{
                                 top: '50%',
                                 left: '50%',
@@ -141,27 +135,22 @@ const SpinWheel: React.FC = () => {
                     ))}
                     <style>{`
                         @keyframes pulse {
-                            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 15px rgba(253,224,71,1); }
-                            50% { opacity: 0.3; transform: scale(0.8); box-shadow: 0 0 5px rgba(253,224,71,0.2); }
+                            0%, 100% { opacity: 0.8; transform: scale(1); }
+                            50% { opacity: 0.3; transform: scale(0.9); }
                         }
                     `}</style>
                 </div>
 
                 {/* The Wheel Container */}
-                <div className="absolute inset-0 rounded-full border-[10px] border-[#1a0b0e] overflow-hidden z-10 shadow-2xl bg-[#1a0b0e]">
+                <div className="absolute inset-0 rounded-full border-[10px] border-[#1a0b0e] overflow-hidden z-10 bg-[#1a0b0e]">
                     <svg 
                         viewBox="-500 -500 1000 1000" 
                         className="w-full h-full"
                         style={{ overflow: 'visible' }}
                     >
                         <defs>
-                            {/* Radial gradient to give the wheel a 3D spherical metallic look */}
-                            <radialGradient id="wheelShine">
-                                <stop offset="50%" stopColor="white" stopOpacity="0.05" />
-                                <stop offset="90%" stopColor="black" stopOpacity="0.4" />
-                            </radialGradient>
                             <filter id="textShadow">
-                                <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="rgba(0,0,0,0.8)" />
+                                <feDropShadow dx="1" dy="1" stdDeviation="1" floodColor="rgba(0,0,0,0.5)" />
                             </filter>
                         </defs>
 
@@ -193,7 +182,7 @@ const SpinWheel: React.FC = () => {
                                             stroke="#1a0b0e" 
                                             strokeWidth="4" 
                                         />
-                                        {/* Text Group: Rotated to center of slice, translated outwards to 300 (was 250) to avoid center button overlap */}
+                                        {/* Text Group: Rotated to center of slice, translated outwards to 300 to avoid center button overlap */}
                                         <g transform={`rotate(${rotateAngle}) translate(300, 0)`}>
                                             <text
                                                 x="0"
@@ -214,9 +203,6 @@ const SpinWheel: React.FC = () => {
                                     </g>
                                 );
                             })}
-                            
-                            {/* Overlay for 3D effect */}
-                            <circle cx="0" cy="0" r="500" fill="url(#wheelShine)" pointerEvents="none" />
                         </g>
                     </svg>
                 </div>
@@ -228,18 +214,17 @@ const SpinWheel: React.FC = () => {
                         disabled={isSpinning}
                         className={`
                             relative w-24 h-24 md:w-32 md:h-32 rounded-full 
-                            bg-gradient-to-br from-[#3a1017] to-[#1a0b0e]
+                            bg-[#1a0b0e]
                             border-[4px] border-[#f7c548]
-                            shadow-[0_0_30px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(0,0,0,0.5)]
                             flex items-center justify-center
+                            shadow-xl
                             group transition-all duration-300
                             ${isSpinning ? 'cursor-not-allowed opacity-90' : 'hover:scale-105 active:scale-95'}
                         `}
                     >
-                        <div className="absolute inset-2 rounded-full border border-white/10"></div>
                         <span className={`
                             font-black text-2xl md:text-3xl text-[#f7c548] tracking-widest
-                            drop-shadow-lg
+                            drop-shadow-sm
                             ${isSpinning ? '' : 'animate-pulse'}
                         `}>
                             SPIN
