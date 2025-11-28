@@ -18,13 +18,13 @@ const isLocal =
 // 1. General Website Backend (Database, Nisathon, Admin)
 // Create a NEW Web Service on Render called 'urnisa-backend' for this.
 const BACKEND_PROD_URL = 'https://urnisa-backend.onrender.com';
-export const API_BASE_URL = isLocal ? 'http://localhost:3001' : BACKEND_PROD_URL;
+// Use dynamic hostname so mobile testing (on 192.168.x.x) connects to the PC backend
+export const API_BASE_URL = isLocal ? `http://${hostname}:3001` : BACKEND_PROD_URL;
 
 // 2. Discord Bot Service (Chat Preview)
 // This is your EXISTING service 'urnisa-bot'.
 const BOT_PROD_URL = 'https://urnisa-bot.onrender.com';
-// We assume if running locally, you might run the bot on port 3002, or just use prod for convenience
-export const DISCORD_API_URL = isLocal ? 'http://localhost:3002' : BOT_PROD_URL;
+export const DISCORD_API_URL = isLocal ? `http://${hostname}:3002` : BOT_PROD_URL;
 
 
 // Configuration for grouping online members from the Discord Widget API.

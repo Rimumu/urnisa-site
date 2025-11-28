@@ -17,7 +17,8 @@ export const useSchedule = () => {
                     }
                 }
             } catch (error) {
-                console.error("Failed to fetch schedule, using default.", error);
+                // Silently fail to default schedule if backend is unreachable
+                // This prevents spamming "Failed to fetch" in console during dev/deploy
             } finally {
                 setLoading(false);
             }
