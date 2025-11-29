@@ -34,6 +34,9 @@ const Wheel: React.FC = () => {
     const [showLogin, setShowLogin] = useState(false);
     const [password, setPassword] = useState('');
     const [showHistory, setShowHistory] = useState(false);
+    
+    // Animation States for the Lock Modal
+    const [loginState, setLoginState] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle');
 
     // Current spinner is head of queue, OR if admin overrides (free spin)
     const currentSpinner = queue.length > 0 ? queue[0] : null;
@@ -64,6 +67,8 @@ const Wheel: React.FC = () => {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoginState('verifying');
+        
         try {
             const response = await fetch(`${API_BASE_URL}/api/verify`, {
                 method: 'POST',
@@ -71,13 +76,24 @@ const Wheel: React.FC = () => {
                 body: JSON.stringify({ password })
             });
             const data = await response.json();
+            
             if (response.ok && data.success) {
-                setIsAdmin(true);
-                setShowLogin(false);
+                setLoginState('success');
+                // Delay closing to show the "Unlock" animation
+                setTimeout(() => {
+                    setIsAdmin(true);
+                    setShowLogin(false);
+                    setPassword('');
+                    setLoginState('idle');
+                }, 1500);
             } else {
-                alert('Invalid password');
+                setLoginState('error');
+                setTimeout(() => setLoginState('idle'), 500); // Reset shake
             }
-        } catch (e) { alert('Connection error'); }
+        } catch (e) { 
+            setLoginState('error');
+            setTimeout(() => setLoginState('idle'), 500);
+        }
     };
 
     const handleSpinEnd = (reward: string) => {
@@ -94,6 +110,22 @@ const Wheel: React.FC = () => {
                     background-image: radial-gradient(#581c25 1.5px, transparent 1.5px);
                     background-size: 24px 24px;
                 }
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                    20%, 40%, 60%, 80% { transform: translateX(5px); }
+                }
+                .animate-shake {
+                    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+                }
+                @keyframes shackle-open {
+                    0% { transform: translateY(0); }
+                    40% { transform: translateY(-15px); }
+                    100% { transform: translateY(-15px) rotateY(45deg); transform-origin: 20% 100%; }
+                }
+                .animate-unlock .shackle {
+                    animation: shackle-open 0.8s forwards ease-out;
+                }
             `}</style>
             
             {/* Background Decorations */}
@@ -103,16 +135,85 @@ const Wheel: React.FC = () => {
 
             {showHistory && <HistoryModal onClose={() => setShowHistory(false)} history={history} />}
 
+            {/* UNLOCK MODAL */}
             {showLogin && (
-                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-                    <div className="bg-black/80 border border-white/10 p-6 rounded-2xl w-full max-w-sm">
-                        <h3 className="text-white font-bold mb-4">Unlock Wheel</h3>
-                        <form onSubmit={handleLogin} className="space-y-4">
-                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded p-2 text-white" placeholder="Password" />
-                            <div className="flex gap-2">
-                                <button type="button" onClick={() => setShowLogin(false)} className="flex-1 bg-gray-700 text-white p-2 rounded">Cancel</button>
-                                <button type="submit" className="flex-1 bg-brand-primary text-white p-2 rounded">Unlock</button>
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div 
+                        className={`
+                            relative w-full max-w-sm p-8 rounded-[3rem] 
+                            bg-gradient-to-b from-[#2a0f13] to-[#120507] 
+                            border-[2px] ${loginState === 'error' ? 'border-red-500' : loginState === 'success' ? 'border-green-500' : 'border-brand-accent/30'}
+                            shadow-[0_0_50px_rgba(0,0,0,0.5)] 
+                            flex flex-col items-center
+                            transition-colors duration-500
+                            ${loginState === 'error' ? 'animate-shake' : ''}
+                        `}
+                    >
+                        {/* Close Button */}
+                        <button 
+                            onClick={() => setShowLogin(false)}
+                            className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"
+                        >
+                            ✕
+                        </button>
+
+                        {/* Animated Lock SVG */}
+                        <div className={`mb-8 relative ${loginState === 'success' ? 'animate-unlock' : ''}`}>
+                            <div className={`absolute inset-0 blur-2xl rounded-full ${loginState === 'success' ? 'bg-green-500/30' : 'bg-brand-accent/10'}`}></div>
+                            <svg width="80" height="100" viewBox="0 0 80 100" className="relative z-10 drop-shadow-2xl">
+                                {/* Shackle */}
+                                <path 
+                                    className="shackle transition-colors duration-300"
+                                    d="M20 40 V25 A20 20 0 0 1 60 25 V40" 
+                                    fill="none" 
+                                    stroke={loginState === 'success' ? '#4ade80' : '#f7c548'} 
+                                    strokeWidth="8" 
+                                    strokeLinecap="round"
+                                />
+                                {/* Body */}
+                                <rect 
+                                    x="10" y="40" width="60" height="50" rx="8" 
+                                    fill={loginState === 'success' ? '#4ade80' : '#f7c548'}
+                                    className="transition-colors duration-300"
+                                />
+                                {/* Keyhole */}
+                                <circle cx="40" cy="65" r="6" fill="#120507" />
+                                <rect x="37" y="65" width="6" height="15" fill="#120507" />
+                            </svg>
+                        </div>
+
+                        <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-1">
+                            {loginState === 'success' ? 'Wheel Unlocked' : 'Unlock Wheel'}
+                        </h3>
+                        <p className="text-xs text-brand-accent/60 font-bold uppercase tracking-wider mb-6">
+                            {loginState === 'verifying' ? 'Verifying Key...' : 'Enter Key Code'}
+                        </p>
+
+                        <form onSubmit={handleLogin} className="w-full space-y-6">
+                            <div className="relative group">
+                                <input 
+                                    type="password" 
+                                    value={password} 
+                                    onChange={(e) => setPassword(e.target.value)} 
+                                    className="w-full bg-black/40 border-b-2 border-brand-accent/30 focus:border-brand-accent text-center text-white text-2xl font-bold tracking-[0.5em] py-3 outline-none transition-all placeholder:tracking-normal placeholder:text-sm placeholder:font-normal placeholder:text-gray-600" 
+                                    placeholder="••••••••"
+                                    autoFocus
+                                    disabled={loginState === 'success'}
+                                />
                             </div>
+                            
+                            <button 
+                                type="submit" 
+                                disabled={loginState !== 'idle'}
+                                className={`
+                                    w-full py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg transform transition-all active:scale-95
+                                    ${loginState === 'success' 
+                                        ? 'bg-green-500 text-black' 
+                                        : 'bg-gradient-to-r from-brand-primary to-brand-accent text-black hover:brightness-110'}
+                                `}
+                            >
+                                {loginState === 'success' ? 'Unlocked' : 'Unlock Wheel'}
+                            </button>
                         </form>
                     </div>
                 </div>
