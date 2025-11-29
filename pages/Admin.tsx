@@ -6,6 +6,7 @@ import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/u
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
+import { useNisathonStats } from '../hooks/useNisathonStats';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
 const processImageUrl = (url: string): string => {
@@ -194,6 +195,7 @@ const Admin: React.FC = () => {
     const [wheelStatus, setWheelStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // --- NISATHON MANAGER STATE ---
+    const { stats, refetch: refetchStats } = useNisathonStats();
     const [timerH, setTimerH] = useState(0);
     const [timerM, setTimerM] = useState(0);
     const [timerS, setTimerS] = useState(0);
@@ -345,6 +347,7 @@ const Admin: React.FC = () => {
             });
             if (response.ok) {
                 setManagerStatus({ type: 'success', message: 'Action executed successfully!' });
+                refetchStats(); // Refresh UI immediately
             } else {
                 setManagerStatus({ type: 'error', message: 'Action failed.' });
             }
@@ -359,6 +362,7 @@ const Admin: React.FC = () => {
     const handleAddTimer = () => apiCall('timer/add', { minutes: addM });
     const handlePauseTimer = () => apiCall('timer/pause', {});
     const handleSimulateEvent = () => apiCall('test-event', { type: testType, user: testUser, amount: testAmount });
+    const handleToggleDoubleTimer = () => apiCall('event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
 
     // --- CONTENT EDITORS HELPERS ---
     const updateAboutItem = (i: number, f: keyof AboutItem, v: string) => { const u = [...localAbout]; u[i] = { ...u[i], [f]: v }; setLocalAbout(u); };
@@ -444,6 +448,20 @@ const Admin: React.FC = () => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Nisathon Manager</h2>
                             
+                            {/* Active Event Toggle */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-xl font-bold text-brand-primary">Active Event</h3>
+                                    <p className="text-gray-400 text-sm">Double Timer Mode (2x time added for all subs/bits/donos)</p>
+                                </div>
+                                <button 
+                                    onClick={handleToggleDoubleTimer}
+                                    className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-purple-600 text-white animate-pulse' : 'bg-white/10 text-gray-400 hover:text-white'}`}
+                                >
+                                    {stats.activeEvent === 'DOUBLE_TIMER' ? 'Event ACTIVE' : 'Start Double Timer'}
+                                </button>
+                            </div>
+
                             {/* Timer Controls */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
