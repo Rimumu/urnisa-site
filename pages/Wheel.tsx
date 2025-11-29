@@ -106,12 +106,12 @@ const Wheel: React.FC = () => {
             {showLogin && (
                 <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
                     <div className="bg-black/80 border border-white/10 p-6 rounded-2xl w-full max-w-sm">
-                        <h3 className="text-white font-bold mb-4">Admin Access</h3>
+                        <h3 className="text-white font-bold mb-4">Unlock Wheel</h3>
                         <form onSubmit={handleLogin} className="space-y-4">
                             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/50 border border-white/10 rounded p-2 text-white" placeholder="Password" />
                             <div className="flex gap-2">
                                 <button type="button" onClick={() => setShowLogin(false)} className="flex-1 bg-gray-700 text-white p-2 rounded">Cancel</button>
-                                <button type="submit" className="flex-1 bg-brand-primary text-white p-2 rounded">Login</button>
+                                <button type="submit" className="flex-1 bg-brand-primary text-white p-2 rounded">Unlock</button>
                             </div>
                         </form>
                     </div>
