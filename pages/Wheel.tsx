@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import SpinWheel from '../components/SpinWheel';
-import { useWheelGame } from '../hooks/useWheelGame';
+import { useWheelGame, SpinQueueItem } from '../hooks/useWheelGame';
 import { API_BASE_URL } from '../constants';
 
 const LockIcon = () => (
@@ -43,6 +43,27 @@ const Wheel: React.FC = () => {
 
     // Current spinner is head of queue, OR if admin overrides (free spin)
     const currentSpinner = queue.length > 0 ? queue[0] : null;
+
+    // Group sequential spins for the same user
+    const groupedQueue = useMemo(() => {
+        const grouped: (SpinQueueItem & { count: number; totalNb: number })[] = [];
+        
+        queue.forEach((item) => {
+            const last = grouped[grouped.length - 1];
+            if (last && last.user === item.user) {
+                last.count += 1;
+                last.totalNb += item.nisaballs;
+            } else {
+                grouped.push({
+                    ...item,
+                    count: 1,
+                    totalNb: item.nisaballs
+                });
+            }
+        });
+        
+        return grouped;
+    }, [queue]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -160,16 +181,27 @@ const Wheel: React.FC = () => {
                                 Spin Queue ({queue.length})
                             </h3>
                             <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar max-h-[300px]">
-                                {queue.length === 0 ? (
+                                {groupedQueue.length === 0 ? (
                                     <div className="text-center text-gray-500 text-sm py-8 italic">Queue is empty</div>
                                 ) : (
-                                    queue.map((item, idx) => (
-                                        <div key={item._id} className={`flex items-center gap-3 p-3 rounded-xl border ${idx === 0 ? 'bg-brand-primary/20 border-brand-primary/50' : 'bg-white/5 border-white/5'}`}>
+                                    groupedQueue.map((item, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className={`flex items-center gap-3 p-3 rounded-xl border transition-colors group ${idx === 0 ? 'bg-brand-primary/20 border-brand-primary/50' : 'bg-white/5 border-white/5'}`}
+                                            title={`Total Donation: ${item.totalNb.toFixed(1)} NB`}
+                                        >
                                             <div className="font-mono text-xs font-bold text-gray-500 w-4">#{idx + 1}</div>
                                             <div className="font-bold text-white flex-1 truncate">{item.user}</div>
-                                            <div className="text-xs bg-black/30 px-2 py-1 rounded text-brand-accent font-mono">
-                                                {item.nisaballs.toFixed(0)} NB
-                                            </div>
+                                            
+                                            {item.count > 1 ? (
+                                                <div className="text-xs bg-brand-accent text-brand-bg font-black px-2 py-1 rounded shadow-sm">
+                                                    {item.count} SPINS
+                                                </div>
+                                            ) : (
+                                                <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                                                    1 Spin
+                                                </div>
+                                            )}
                                         </div>
                                     ))
                                 )}
