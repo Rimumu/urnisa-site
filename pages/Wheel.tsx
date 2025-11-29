@@ -44,15 +44,18 @@ const Wheel: React.FC = () => {
     // Current spinner is head of queue, OR if admin overrides (free spin)
     const currentSpinner = queue.length > 0 ? queue[0] : null;
 
-    // Group sequential spins for the same user
+    // Group sequential spins from the SAME transaction (sourceEventId)
+    // We do NOT group different transactions from the same user.
     const groupedQueue = useMemo(() => {
         const grouped: (SpinQueueItem & { count: number; totalNb: number })[] = [];
         
         queue.forEach((item) => {
             const last = grouped[grouped.length - 1];
-            if (last && last.user === item.user) {
+            // Only group if sourceEventId exists and matches.
+            // This implies they came from the same single donation event.
+            // Note: 'nisaballs' on the item is the Total amount of the transaction already, so we don't sum it.
+            if (last && item.sourceEventId && last.sourceEventId === item.sourceEventId) {
                 last.count += 1;
-                last.totalNb += item.nisaballs;
             } else {
                 grouped.push({
                     ...item,
@@ -188,20 +191,14 @@ const Wheel: React.FC = () => {
                                         <div 
                                             key={idx} 
                                             className={`flex items-center gap-3 p-3 rounded-xl border transition-colors group ${idx === 0 ? 'bg-brand-primary/20 border-brand-primary/50' : 'bg-white/5 border-white/5'}`}
-                                            title={`Total Donation: ${item.totalNb.toFixed(1)} NB`}
+                                            title={`Total Donation: ${item.totalNb ? item.totalNb.toFixed(1) : 'Unknown'} NB`}
                                         >
                                             <div className="font-mono text-xs font-bold text-gray-500 w-4">#{idx + 1}</div>
                                             <div className="font-bold text-white flex-1 truncate">{item.user}</div>
                                             
-                                            {item.count > 1 ? (
-                                                <div className="text-xs bg-brand-accent text-brand-bg font-black px-2 py-1 rounded shadow-sm">
-                                                    {item.count} SPINS
-                                                </div>
-                                            ) : (
-                                                <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                                                    1 Spin
-                                                </div>
-                                            )}
+                                            <div className="text-xs bg-brand-accent text-brand-bg font-black px-2 py-1 rounded shadow-sm">
+                                                {item.count}x
+                                            </div>
                                         </div>
                                     ))
                                 )}

@@ -7,6 +7,7 @@ export interface SpinQueueItem {
     user: string;
     nisaballs: number;
     createdAt: string;
+    sourceEventId?: string;
 }
 
 export interface SpinHistoryItem {
