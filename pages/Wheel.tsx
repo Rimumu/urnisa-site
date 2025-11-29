@@ -160,7 +160,13 @@ const Wheel: React.FC = () => {
                         {/* Animated Lock SVG */}
                         <div className={`mb-8 relative ${loginState === 'success' ? 'animate-unlock' : ''}`}>
                             <div className={`absolute inset-0 blur-2xl rounded-full ${loginState === 'success' ? 'bg-green-500/30' : 'bg-brand-accent/10'}`}></div>
-                            <svg width="80" height="100" viewBox="0 0 80 100" className="relative z-10 drop-shadow-2xl">
+                            <svg 
+                                width="80" 
+                                height="120" 
+                                viewBox="0 -20 80 120" 
+                                className="relative z-10 drop-shadow-2xl"
+                                style={{ overflow: 'visible' }}
+                            >
                                 {/* Shackle */}
                                 <path 
                                     className="shackle transition-colors duration-300"
