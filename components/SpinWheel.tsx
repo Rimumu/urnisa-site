@@ -10,7 +10,12 @@ const SEGMENT_COLORS = [
     '#3a1017', // brand-bg (Dark Burgundy)
 ];
 
-const SpinWheel: React.FC = () => {
+interface SpinWheelProps {
+    disabled?: boolean;
+    onSpinEnd?: (winnerLabel: string) => void;
+}
+
+const SpinWheel: React.FC<SpinWheelProps> = ({ disabled = false, onSpinEnd }) => {
     const { items, loading } = useWheelSettings();
     const [isSpinning, setIsSpinning] = useState(false);
     const [winner, setWinner] = useState<string | null>(null);
@@ -32,7 +37,7 @@ const SpinWheel: React.FC = () => {
     };
 
     const spin = () => {
-        if (isSpinning || items.length === 0) return;
+        if (isSpinning || items.length === 0 || disabled) return;
 
         setIsSpinning(true);
         setWinner(null);
@@ -50,11 +55,7 @@ const SpinWheel: React.FC = () => {
         const jitter = (Math.random() - 0.5) * segmentAngle * 0.8;
         
         // We want the winning segment to land at 270deg (12 o'clock/Top).
-        // Current Visual Angle = Rotation % 360.
-        // Target Angle logic: (WinningCenter + Rotation) % 360 = 270.
-        // So we need to add a delta such that it lands there.
         // Target Rotation (absolute) = 270 - (winningSegmentCenter + jitter).
-        
         const targetAngleLocal = 270 - (winningSegmentCenter + jitter);
         
         const currentRotation = rotationRef.current;
@@ -62,8 +63,6 @@ const SpinWheel: React.FC = () => {
         
         // Calculate minimal distance to reach targetAngleLocal from currentMod in clockwise direction
         let distance = targetAngleLocal - currentMod;
-        
-        // Ensure strictly positive distance (clockwise movement)
         while (distance < 0) {
             distance += 360;
         }
@@ -82,7 +81,9 @@ const SpinWheel: React.FC = () => {
 
         setTimeout(() => {
             setIsSpinning(false);
-            setWinner(items[winningIndex].label);
+            const wonLabel = items[winningIndex].label;
+            setWinner(wonLabel);
+            if (onSpinEnd) onSpinEnd(wonLabel);
         }, 6000); // Sync with transition duration
     };
 
@@ -162,7 +163,6 @@ const SpinWheel: React.FC = () => {
                                 const [endX, endY] = getCoordinatesForPercent(endAngle);
                                 const largeArcFlag = endAngle - startAngle > 0.5 ? 1 : 0;
                                 
-                                // Slice Path
                                 const pathData = [
                                     `M 0 0`,
                                     `L ${startX} ${startY}`,
@@ -170,7 +170,6 @@ const SpinWheel: React.FC = () => {
                                     `L 0 0`,
                                 ].join(' ');
 
-                                // Text Calculation
                                 const sliceAngle = 360 / items.length;
                                 const rotateAngle = (index * sliceAngle) + (sliceAngle / 2);
                                 
@@ -182,7 +181,6 @@ const SpinWheel: React.FC = () => {
                                             stroke="#1a0b0e" 
                                             strokeWidth="4" 
                                         />
-                                        {/* Text Group: Rotated to center of slice, translated outwards to 300 to avoid center button overlap */}
                                         <g transform={`rotate(${rotateAngle}) translate(300, 0)`}>
                                             <text
                                                 x="0"
@@ -196,7 +194,6 @@ const SpinWheel: React.FC = () => {
                                                 filter="url(#textShadow)"
                                                 style={{ letterSpacing: '0.05em' }}
                                             >
-                                                {/* Truncate text if too long */}
                                                 {item.label.length > 20 ? item.label.substring(0, 18) + '...' : item.label}
                                             </text>
                                         </g>
@@ -211,7 +208,7 @@ const SpinWheel: React.FC = () => {
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
                     <button
                         onClick={spin}
-                        disabled={isSpinning}
+                        disabled={isSpinning || disabled}
                         className={`
                             relative w-24 h-24 md:w-32 md:h-32 rounded-full 
                             bg-[#1a0b0e]
@@ -219,7 +216,7 @@ const SpinWheel: React.FC = () => {
                             flex items-center justify-center
                             shadow-xl
                             group transition-all duration-300
-                            ${isSpinning ? 'cursor-not-allowed opacity-90' : 'hover:scale-105 active:scale-95'}
+                            ${(isSpinning || disabled) ? 'cursor-not-allowed opacity-90' : 'hover:scale-105 active:scale-95'}
                         `}
                     >
                         <span className={`
@@ -227,7 +224,7 @@ const SpinWheel: React.FC = () => {
                             drop-shadow-sm
                             ${isSpinning ? '' : 'animate-pulse'}
                         `}>
-                            SPIN
+                            {isSpinning ? '...' : 'SPIN'}
                         </span>
                     </button>
                 </div>
