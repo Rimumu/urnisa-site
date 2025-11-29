@@ -172,7 +172,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'schedule' | 'event' | 'profile' | 'gallery'>('schedule');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'schedule' | 'event' | 'profile' | 'gallery'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -192,6 +192,16 @@ const Admin: React.FC = () => {
     const { items: wheelItems, refetch: refetchWheel } = useWheelSettings();
     const [localWheel, setLocalWheel] = useState<WheelItem[]>([]);
     const [wheelStatus, setWheelStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // --- NISATHON MANAGER STATE ---
+    const [timerH, setTimerH] = useState(0);
+    const [timerM, setTimerM] = useState(0);
+    const [timerS, setTimerS] = useState(0);
+    const [addM, setAddM] = useState(0);
+    const [testUser, setTestUser] = useState("AdminTest");
+    const [testType, setTestType] = useState("sub");
+    const [testAmount, setTestAmount] = useState("1");
+    const [managerStatus, setManagerStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -323,8 +333,34 @@ const Admin: React.FC = () => {
         }
     };
 
+    // --- NISATHON MANAGER HANDLERS ---
+    const apiCall = async (endpoint: string, body: any) => {
+        setLoading(true);
+        setManagerStatus(null);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/nisathon/${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                body: JSON.stringify(body)
+            });
+            if (response.ok) {
+                setManagerStatus({ type: 'success', message: 'Action executed successfully!' });
+            } else {
+                setManagerStatus({ type: 'error', message: 'Action failed.' });
+            }
+        } catch (error) {
+            setManagerStatus({ type: 'error', message: 'Network error.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSetTimer = () => apiCall('timer/set', { hours: timerH, minutes: timerM, seconds: timerS });
+    const handleAddTimer = () => apiCall('timer/add', { minutes: addM });
+    const handlePauseTimer = () => apiCall('timer/pause', {});
+    const handleSimulateEvent = () => apiCall('test-event', { type: testType, user: testUser, amount: testAmount });
+
     // --- CONTENT EDITORS HELPERS ---
-    // (Existing helper logic preserved for brevity)
     const updateAboutItem = (i: number, f: keyof AboutItem, v: string) => { const u = [...localAbout]; u[i] = { ...u[i], [f]: v }; setLocalAbout(u); };
     const addAboutItem = () => setLocalAbout([...localAbout, { id: Date.now().toString(), title: 'New Section', text: '' }]);
     const removeAboutItem = (i: number) => setLocalAbout(localAbout.filter((_, idx) => idx !== i));
@@ -374,11 +410,14 @@ const Admin: React.FC = () => {
                     <h1 className="text-xl font-extrabold text-white">Admin <span className="text-brand-primary">Panel</span></h1>
                 </div>
                 <nav className="p-4 space-y-2 flex md:block overflow-x-auto md:overflow-visible">
+                    <button onClick={() => setActiveTab('nisathon_mgr')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'nisathon_mgr' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                        <span>⏲️</span> Nisathon
+                    </button>
                     <button onClick={() => setActiveTab('schedule')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'schedule' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>📅</span> Schedule
                     </button>
                     <button onClick={() => setActiveTab('event')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'event' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>🎉</span> Event
+                        <span>🎉</span> Settings
                     </button>
                     <button onClick={() => setActiveTab('profile')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'profile' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>👤</span> Profile
@@ -394,11 +433,71 @@ const Admin: React.FC = () => {
                 <div className="max-w-4xl mx-auto space-y-8">
                     
                     {/* --- STATUS TOASTS --- */}
-                    {[profileStatus, goalsStatus, wheelStatus, scheduleStatus].map((status, i) => status && (
+                    {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus].map((status, i) => status && (
                          <div key={i} className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
                             {status.message}
                         </div>
                     ))}
+
+                    {/* --- NISATHON MANAGER TAB --- */}
+                    {activeTab === 'nisathon_mgr' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Nisathon Manager</h2>
+                            
+                            {/* Timer Controls */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                    <h3 className="text-xl font-bold text-brand-primary mb-4">Timer Control</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Set Timer (From Now)</label>
+                                            <div className="flex gap-2 mt-1">
+                                                <input type="number" placeholder="HH" className="w-1/3 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono text-center" onChange={(e) => setTimerH(parseInt(e.target.value)||0)} />
+                                                <input type="number" placeholder="MM" className="w-1/3 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono text-center" onChange={(e) => setTimerM(parseInt(e.target.value)||0)} />
+                                                <input type="number" placeholder="SS" className="w-1/3 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono text-center" onChange={(e) => setTimerS(parseInt(e.target.value)||0)} />
+                                            </div>
+                                            <button onClick={handleSetTimer} className="w-full mt-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold py-2 rounded-lg transition-colors">Set Countdown</button>
+                                        </div>
+                                        <div className="pt-4 border-t border-white/5">
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Add Time (Minutes)</label>
+                                            <div className="flex gap-2 mt-1">
+                                                <input type="number" placeholder="Minutes" className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono" onChange={(e) => setAddM(parseInt(e.target.value)||0)} />
+                                                <button onClick={handleAddTimer} className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 rounded-lg transition-colors">+</button>
+                                            </div>
+                                        </div>
+                                        <div className="pt-4 border-t border-white/5">
+                                            <button onClick={handlePauseTimer} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition-colors">⏯️ Pause / Resume Timer</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Simulation Controls */}
+                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                    <h3 className="text-xl font-bold text-brand-primary mb-4">Simulate Event</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Event Type</label>
+                                            <select className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white mt-1" onChange={(e) => setTestType(e.target.value)} value={testType}>
+                                                <option value="sub">Subscription</option>
+                                                <option value="gift">Gift Sub</option>
+                                                <option value="bits">Bits (Cheer)</option>
+                                                <option value="donation">Donation (Tip)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase">User Name</label>
+                                            <input type="text" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white mt-1" value={testUser} onChange={(e) => setTestUser(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Amount (Count / $)</label>
+                                            <input type="number" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white mt-1" value={testAmount} onChange={(e) => setTestAmount(e.target.value)} />
+                                        </div>
+                                        <button onClick={handleSimulateEvent} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">🚀 Trigger Event</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* --- SCHEDULE TAB --- */}
                     {activeTab === 'schedule' && (

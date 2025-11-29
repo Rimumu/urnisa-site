@@ -9,6 +9,22 @@ export interface NisathonStatsData {
     totalNisaballs: number;
     timerEndTime: string; // ISO String
     isPaused: boolean;
+    remainingTimeMs?: number;
+}
+
+export interface TopContributor {
+    rank: number;
+    user: string;
+    totalNisaballs: number;
+}
+
+export interface ContributorEvent {
+    _id: string;
+    user: string;
+    type: string;
+    amountDisplay: string;
+    message: string;
+    createdAt: string;
 }
 
 export const useNisathonStats = () => {
@@ -20,28 +36,36 @@ export const useNisathonStats = () => {
         timerEndTime: new Date().toISOString(),
         isPaused: false
     });
+    const [leaderboard, setLeaderboard] = useState<TopContributor[]>([]);
+    const [recentEvents, setRecentEvents] = useState<ContributorEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchStats = async () => {
+    const fetchAll = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/nisathon/stats`);
-            if (response.ok) {
-                const data = await response.json();
-                setStats(data);
-            }
+            // Fetch Stats
+            const statsRes = await fetch(`${API_BASE_URL}/api/nisathon/stats`);
+            if (statsRes.ok) setStats(await statsRes.json());
+
+            // Fetch Leaderboard
+            const lbRes = await fetch(`${API_BASE_URL}/api/nisathon/leaderboard`);
+            if (lbRes.ok) setLeaderboard(await lbRes.json());
+
+            // Fetch Recent
+            const recentRes = await fetch(`${API_BASE_URL}/api/nisathon/recent`);
+            if (recentRes.ok) setRecentEvents(await recentRes.json());
+
         } catch (error) {
-            // Silently fail to defaults if backend is unreachable
+            // Silently fail
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchStats();
-        // Poll every 5 seconds for near real-time updates
-        const interval = setInterval(fetchStats, 5000);
+        fetchAll();
+        const interval = setInterval(fetchAll, 5000);
         return () => clearInterval(interval);
     }, []);
 
-    return { stats, loading, refetch: fetchStats };
+    return { stats, leaderboard, recentEvents, loading, refetch: fetchAll };
 };

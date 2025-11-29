@@ -82,11 +82,20 @@ app.get('/api/messages', async (req, res) => {
     }
 });
 
-// Self-Ping to keep active
+// --- CROSS-PING KEEP ALIVE ---
+// We ping both ourselves AND the General Backend service.
 const SELF_URL = 'https://urnisa-bot.onrender.com';
+const BACKEND_URL = 'https://urnisa-backend.onrender.com';
+
 setInterval(() => {
+    // Ping Myself
     axios.get(SELF_URL).catch(() => {});
-}, 5 * 60 * 1000);
+    
+    // Ping Backend Service (Cross-ping)
+    axios.get(BACKEND_URL).catch(() => {});
+    
+    console.log("🤖 Keep-Alive Ping sent to Bot & Backend");
+}, 5 * 60 * 1000); // Every 5 minutes
 
 app.listen(PORT, () => {
     console.log(`🤖 Discord Bot Service running on port ${PORT}`);

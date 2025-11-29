@@ -28,54 +28,45 @@ const PERSONALISED_REWARDS = [
     { cost: "10 NB", reward: "Small Sketch Drawing" },
 ];
 
-// --- MOCK CONTRIBUTORS DATA (Keep for now until backend supports listing) ---
-type EventType = 'sub' | 'gift' | 'bits' | 'donation';
-
-interface ContributorEvent {
-    id: string;
-    user: string;
-    type: EventType;
-    amount: string; 
-    message?: string;
-    timestamp: string; 
-}
-
-const MOCK_CONTRIBUTORS: ContributorEvent[] = [
-    { id: '1', user: 'Anony', type: 'gift', amount: '5 Subs', timestamp: 'Just now' },
-    { id: '2', user: 'Balls69Prime', type: 'sub', amount: 'Prime', timestamp: '2 mins ago' },
-    { id: '3', user: 'Fan2', type: 'donation', amount: '$50.00', message: 'Happy Birthday Nisa!', timestamp: '5 mins ago' },
-];
-
-interface TopContributor {
-    rank: number;
-    user: string;
-    totalNisaballs: number;
-}
-
-const MOCK_TOP_CONTRIBUTORS: TopContributor[] = [
-    { rank: 1, user: "BigBalls", totalNisaballs: 500 },
-    { rank: 2, user: "SimpLord", totalNisaballs: 350 },
-    { rank: 3, user: "Idkfan", totalNisaballs: 210 },
-];
-
 // --- ICONS & HELPERS ---
 
-const getEventIcon = (type: EventType) => {
-    switch (type) {
-        case 'sub': return <span className="text-lg">⭐</span>;
+const getEventIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+        case 'sub':
+        case 'subscriber': return <span className="text-lg">⭐</span>;
         case 'gift': return <span className="text-lg">🎁</span>;
-        case 'bits': return <span className="text-lg">💎</span>;
-        case 'donation': return <span className="text-lg">💸</span>;
+        case 'bits': 
+        case 'cheer': return <span className="text-lg">💎</span>;
+        case 'donation': 
+        case 'tip': return <span className="text-lg">💸</span>;
+        default: return <span className="text-lg">✨</span>;
     }
 };
 
-const getEventColor = (type: EventType) => {
-    switch (type) {
-        case 'sub': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+const getEventColor = (type: string) => {
+    switch (type.toLowerCase()) {
+        case 'sub':
+        case 'subscriber': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
         case 'gift': return 'text-pink-400 bg-pink-500/10 border-pink-500/20';
-        case 'bits': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
-        case 'donation': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        case 'bits':
+        case 'cheer': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
+        case 'donation':
+        case 'tip': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        default: return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
     }
+};
+
+const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return "Just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return date.toLocaleDateString();
 };
 
 const CheckIcon = () => (
@@ -117,11 +108,16 @@ const TrophyIcon = () => (
 
 // --- COMPONENTS ---
 
-const Timer: React.FC<{ endTime: string }> = ({ endTime }) => {
+const Timer: React.FC<{ endTime: string; isPaused: boolean }> = ({ endTime, isPaused }) => {
     const [timeLeft, setTimeLeft] = useState("");
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        if (isPaused) {
+            setTimeLeft("PAUSED");
+            return;
+        }
+
+        const updateTimer = () => {
             const now = new Date().getTime();
             const end = new Date(endTime).getTime();
             const distance = end - now;
@@ -135,23 +131,24 @@ const Timer: React.FC<{ endTime: string }> = ({ endTime }) => {
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Format with leading zeros
             const h = hours < 10 ? "0" + hours : hours;
             const m = minutes < 10 ? "0" + minutes : minutes;
             const s = seconds < 10 ? "0" + seconds : seconds;
 
             setTimeLeft(`${h}:${m}:${s}`);
-        }, 1000);
+        };
 
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
-    }, [endTime]);
+    }, [endTime, isPaused]);
 
     return (
         <div className="relative group">
-            <div className="absolute inset-0 bg-brand-primary/30 blur-3xl rounded-full group-hover:bg-brand-primary/40 transition-all duration-700"></div>
+            <div className={`absolute inset-0 ${isPaused ? 'bg-gray-500/30' : 'bg-brand-primary/30'} blur-3xl rounded-full group-hover:bg-brand-primary/40 transition-all duration-700`}></div>
             <div className="relative bg-black/40 backdrop-blur-2xl border border-white/10 py-8 px-12 rounded-[3rem] text-center transform hover:scale-105 transition-transform duration-300 shadow-2xl">
                 <h3 className="text-brand-accent font-sans font-bold tracking-widest text-xs uppercase mb-1">Time Remaining</h3>
-                <div className="text-5xl md:text-7xl font-extrabold text-white font-sans tracking-tight drop-shadow-lg tabular-nums">
+                <div className={`text-5xl md:text-7xl font-extrabold text-white font-sans tracking-tight drop-shadow-lg tabular-nums ${isPaused ? 'opacity-50' : ''}`}>
                     {timeLeft || "Loading..."}
                 </div>
             </div>
@@ -172,7 +169,7 @@ interface ProgressBarProps {
 const ProgressBar: React.FC<ProgressBarProps> = ({ 
     label, current, max, color = "bg-brand-primary", icon, subLabel, size = 'sm' 
 }) => {
-    const percentage = Math.min((current / max) * 100, 100);
+    const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
     const heightClass = size === 'lg' ? 'h-8' : 'h-3';
     
     return (
@@ -336,8 +333,6 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
 
             {/* Expanded Breakdown */}
             <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mt-0 transition-all duration-500 ease-in-out overflow-hidden ${expanded ? 'max-h-[600px] opacity-100 pt-8 mt-6 border-t border-white/5' : 'max-h-0 opacity-0'}`}>
-                
-                {/* Subs Counter */}
                 <ContributionStat
                     label="Subscriptions"
                     rawCount={currentSubs}
@@ -347,8 +342,6 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
                     icon="⭐"
                     rate="2 Subs = 1 NB"
                 />
-
-                {/* Bits Counter */}
                 <ContributionStat
                     label="Cheered Bits"
                     rawCount={currentBits}
@@ -358,8 +351,6 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
                     icon="💎"
                     rate="500 Bits = 1 NB"
                 />
-
-                {/* Donations Counter */}
                 <ContributionStat
                     label="Donations"
                     rawCount={currentDonations}
@@ -370,10 +361,8 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
                     icon="💸"
                     rate="$5 USD = 1 NB"
                 />
-
             </div>
             
-            {/* Hint Text */}
             <div className={`absolute bottom-3 left-0 right-0 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest transition-opacity duration-300 ${expanded ? 'opacity-0' : 'opacity-60'}`}>
                 Tap to view details
             </div>
@@ -457,7 +446,7 @@ const InfoCard: React.FC<{ title: string; children: React.ReactNode; className?:
 
 // --- MODALS ---
 
-const ContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const ContributorsModal: React.FC<{ onClose: () => void; events: any[] }> = ({ onClose, events }) => {
     return (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-[#1a0b0e] w-full max-w-2xl max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
@@ -471,40 +460,41 @@ const ContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                    {MOCK_CONTRIBUTORS.map((event) => (
-                        <div key={event.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${getEventColor(event.type)}`}>
-                                {getEventIcon(event.type)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <span className="font-bold text-white truncate text-lg">{event.user}</span>
-                                    <span className="text-xs text-gray-500 font-mono">{event.timestamp}</span>
+                    {events.length === 0 ? (
+                        <div className="text-center text-gray-500 py-10">No events found yet.</div>
+                    ) : (
+                        events.map((event) => (
+                            <div key={event._id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${getEventColor(event.type)}`}>
+                                    {getEventIcon(event.type)}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${getEventColor(event.type).split(' ')[0]} bg-black/30`}>
-                                        {event.type}
-                                    </span>
-                                    <span className="text-sm font-bold text-gray-300">
-                                        {event.amount}
-                                    </span>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <span className="font-bold text-white truncate text-lg">{event.user}</span>
+                                        <span className="text-xs text-gray-500 font-mono">{formatTimeAgo(event.createdAt)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${getEventColor(event.type).split(' ')[0]} bg-black/30`}>
+                                            {event.type}
+                                        </span>
+                                        <span className="text-sm font-bold text-gray-300">
+                                            {event.amountDisplay}
+                                        </span>
+                                    </div>
+                                    {event.message && (
+                                        <p className="text-xs text-gray-400 mt-2 italic border-l-2 border-white/10 pl-2">"{event.message}"</p>
+                                    )}
                                 </div>
-                                {event.message && (
-                                    <p className="text-xs text-gray-400 mt-2 italic border-l-2 border-white/10 pl-2">"{event.message}"</p>
-                                )}
                             </div>
-                        </div>
-                    ))}
-                    <div className="text-center py-4 text-gray-500 text-sm">
-                        End of recent history
-                    </div>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
     );
 };
 
-const TopContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+const TopContributorsModal: React.FC<{ onClose: () => void; contributors: any[] }> = ({ onClose, contributors }) => {
     return (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-[#1a0b0e] w-full max-w-lg max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
@@ -520,27 +510,31 @@ const TopContributorsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                     </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                    {MOCK_TOP_CONTRIBUTORS.map((contributor) => {
-                        let rankColor = "text-gray-400 border-gray-600/30";
-                        if (contributor.rank === 1) rankColor = "text-brand-accent border-brand-accent/50 bg-brand-accent/10";
-                        if (contributor.rank === 2) rankColor = "text-gray-300 border-gray-400/50 bg-gray-400/10";
-                        if (contributor.rank === 3) rankColor = "text-amber-700 border-amber-700/50 bg-amber-700/10";
+                    {contributors.length === 0 ? (
+                        <div className="text-center text-gray-500 py-10">No data available.</div>
+                    ) : (
+                        contributors.map((contributor) => {
+                            let rankColor = "text-gray-400 border-gray-600/30";
+                            if (contributor.rank === 1) rankColor = "text-brand-accent border-brand-accent/50 bg-brand-accent/10";
+                            if (contributor.rank === 2) rankColor = "text-gray-300 border-gray-400/50 bg-gray-400/10";
+                            if (contributor.rank === 3) rankColor = "text-amber-700 border-amber-700/50 bg-amber-700/10";
 
-                        return (
-                            <div key={contributor.rank} className={`flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors ${contributor.rank <= 3 ? 'border-l-4' : ''}`}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg border ${rankColor}`}>
-                                    {contributor.rank}
+                            return (
+                                <div key={contributor.rank} className={`flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors ${contributor.rank <= 3 ? 'border-l-4' : ''}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg border ${rankColor}`}>
+                                        {contributor.rank}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-bold text-white text-lg">{contributor.user}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-mono font-bold text-brand-primary text-xl">{contributor.totalNisaballs}</div>
+                                        <div className="text-[10px] uppercase font-bold text-gray-500">Nisaballs</div>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <div className="font-bold text-white text-lg">{contributor.user}</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-mono font-bold text-brand-primary text-xl">{contributor.totalNisaballs}</div>
-                                    <div className="text-[10px] uppercase font-bold text-gray-500">Nisaballs</div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
             </div>
         </div>
@@ -552,17 +546,15 @@ const Subathon: React.FC = () => {
     const [showContributorsModal, setShowContributorsModal] = useState(false);
     const [showTopContributorsModal, setShowTopContributorsModal] = useState(false);
     const { goals } = useNisathonGoals();
-    const { stats, loading: statsLoading } = useNisathonStats();
+    const { stats, leaderboard, recentEvents } = useNisathonStats();
 
     // --- CENTRAL STATE ---
-    // Use stats from backend (polled every 5s)
     const currentSubs = stats.currentSubs;
     const currentBits = stats.currentBits;
     const currentDonations = stats.currentDonations;
     const totalNisaballs = stats.totalNisaballs;
 
-    // --- BREAKDOWN CALCULATIONS FOR DISPLAY ---
-    // Calculate how much each category contributed to the total NB
+    // --- BREAKDOWN CALCULATIONS ---
     const nbFromSubs = currentSubs * 0.5;
     const nbFromBits = currentBits * 0.002;
     const nbFromDonations = currentDonations * 0.2;
@@ -605,8 +597,8 @@ const Subathon: React.FC = () => {
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-            {showContributorsModal && <ContributorsModal onClose={() => setShowContributorsModal(false)} />}
-            {showTopContributorsModal && <TopContributorsModal onClose={() => setShowTopContributorsModal(false)} />}
+            {showContributorsModal && <ContributorsModal onClose={() => setShowContributorsModal(false)} events={recentEvents} />}
+            {showTopContributorsModal && <TopContributorsModal onClose={() => setShowTopContributorsModal(false)} contributors={leaderboard} />}
 
             <div className="max-w-7xl mx-auto px-4 relative z-10 space-y-12 animate-in fade-in duration-700">
                 
@@ -621,7 +613,7 @@ const Subathon: React.FC = () => {
                         </div>
                     </div>
                     {/* Use Live Timer from Backend */}
-                    <Timer endTime={stats.timerEndTime} />
+                    <Timer endTime={stats.timerEndTime} isPaused={stats.isPaused} />
                 </div>
 
                 <div className="space-y-16">
@@ -670,26 +662,30 @@ const Subathon: React.FC = () => {
                                 onClick={() => setShowTopContributorsModal(true)}
                             >
                                 <div className="space-y-3 relative">
-                                    {MOCK_TOP_CONTRIBUTORS.slice(0, 3).map((user) => {
-                                        let rankColor = "bg-white/5 text-gray-400";
-                                        if (user.rank === 1) { rankColor = "bg-brand-accent/20 text-brand-accent border-brand-accent/50"; }
-                                        if (user.rank === 2) { rankColor = "bg-gray-400/20 text-gray-300 border-gray-400/50"; }
-                                        if (user.rank === 3) { rankColor = "bg-amber-700/20 text-amber-600 border-amber-700/50"; }
+                                    {leaderboard.length === 0 ? (
+                                        <div className="text-center text-sm text-gray-500 py-2">No contributors yet</div>
+                                    ) : (
+                                        leaderboard.slice(0, 3).map((user) => {
+                                            let rankColor = "bg-white/5 text-gray-400";
+                                            if (user.rank === 1) { rankColor = "bg-brand-accent/20 text-brand-accent border-brand-accent/50"; }
+                                            if (user.rank === 2) { rankColor = "bg-gray-400/20 text-gray-300 border-gray-400/50"; }
+                                            if (user.rank === 3) { rankColor = "bg-amber-700/20 text-amber-600 border-amber-700/50"; }
 
-                                        return (
-                                            <div key={user.rank} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black border border-transparent ${rankColor}`}>
-                                                    {user.rank <= 3 ? <TrophyIcon /> : user.rank}
+                                            return (
+                                                <div key={user.rank} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black border border-transparent ${rankColor}`}>
+                                                        {user.rank <= 3 ? <TrophyIcon /> : user.rank}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 font-bold text-white truncate">
+                                                        {user.user}
+                                                    </div>
+                                                    <div className="text-xs font-mono font-bold text-brand-primary bg-black/30 px-2 py-1 rounded">
+                                                        {user.totalNisaballs} NB
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 min-w-0 font-bold text-white truncate">
-                                                    {user.user}
-                                                </div>
-                                                <div className="text-xs font-mono font-bold text-brand-primary bg-black/30 px-2 py-1 rounded">
-                                                    {user.totalNisaballs} NB
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })
+                                    )}
                                     <div className="pt-2 text-center">
                                         <span className="text-xs font-bold text-gray-400 group-hover:text-brand-accent transition-colors flex items-center justify-center gap-1">
                                             View Top 10 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
@@ -704,20 +700,24 @@ const Subathon: React.FC = () => {
                                 onClick={() => setShowContributorsModal(true)}
                             >
                                 <div className="space-y-3 relative">
-                                    {MOCK_CONTRIBUTORS.slice(0, 1).map((event) => (
-                                        <div key={event.id} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${getEventColor(event.type)}`}>
-                                                {getEventIcon(event.type)}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex justify-between items-baseline">
-                                                    <span className="text-xs font-bold text-white truncate">{event.user}</span>
-                                                    <span className="text-[10px] text-gray-500">{event.timestamp}</span>
+                                    {recentEvents.length === 0 ? (
+                                        <div className="text-center text-sm text-gray-500 py-2">No recent events</div>
+                                    ) : (
+                                        recentEvents.slice(0, 1).map((event) => (
+                                            <div key={event._id} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${getEventColor(event.type)}`}>
+                                                    {getEventIcon(event.type)}
                                                 </div>
-                                                <div className="text-[10px] font-bold text-brand-primary">{event.amount}</div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-baseline">
+                                                        <span className="text-xs font-bold text-white truncate">{event.user}</span>
+                                                        <span className="text-[10px] text-gray-500">{formatTimeAgo(event.createdAt)}</span>
+                                                    </div>
+                                                    <div className="text-[10px] font-bold text-brand-primary">{event.amountDisplay}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    )}
                                     <div className="pt-2 text-center">
                                         <span className="text-xs font-bold text-gray-400 group-hover:text-brand-primary transition-colors flex items-center justify-center gap-1">
                                             See all history <span className="transform group-hover:translate-x-1 transition-transform">→</span>
