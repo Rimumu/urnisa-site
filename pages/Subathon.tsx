@@ -108,12 +108,26 @@ const TrophyIcon = () => (
 
 // --- COMPONENTS ---
 
-const Timer: React.FC<{ endTime: string; isPaused: boolean }> = ({ endTime, isPaused }) => {
-    const [timeLeft, setTimeLeft] = useState("");
+const Timer: React.FC<{ endTime: string; isPaused: boolean; remainingTimeMs?: number }> = ({ endTime, isPaused, remainingTimeMs }) => {
+    const [timeLeft, setTimeLeft] = useState("00:00:00");
 
     useEffect(() => {
+        const formatTime = (ms: number) => {
+            if (ms < 0) return "00:00:00";
+            const hours = Math.floor((ms / (1000 * 60 * 60)));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+            const h = hours < 10 ? "0" + hours : hours;
+            const m = minutes < 10 ? "0" + minutes : minutes;
+            const s = seconds < 10 ? "0" + seconds : seconds;
+
+            return `${h}:${m}:${s}`;
+        };
+
         if (isPaused) {
-            setTimeLeft("PAUSED");
+            // When paused, display the static remaining time from the backend
+            setTimeLeft(formatTime(remainingTimeMs || 0));
             return;
         }
 
@@ -121,34 +135,27 @@ const Timer: React.FC<{ endTime: string; isPaused: boolean }> = ({ endTime, isPa
             const now = new Date().getTime();
             const end = new Date(endTime).getTime();
             const distance = end - now;
-
-            if (distance < 0) {
-                setTimeLeft("00:00:00");
-                return;
-            }
-
-            const hours = Math.floor((distance / (1000 * 60 * 60)));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            const h = hours < 10 ? "0" + hours : hours;
-            const m = minutes < 10 ? "0" + minutes : minutes;
-            const s = seconds < 10 ? "0" + seconds : seconds;
-
-            setTimeLeft(`${h}:${m}:${s}`);
+            setTimeLeft(formatTime(distance));
         };
 
         updateTimer();
         const interval = setInterval(updateTimer, 1000);
         return () => clearInterval(interval);
-    }, [endTime, isPaused]);
+    }, [endTime, isPaused, remainingTimeMs]);
 
     return (
         <div className="relative group">
-            <div className={`absolute inset-0 ${isPaused ? 'bg-gray-500/30' : 'bg-brand-primary/30'} blur-3xl rounded-full group-hover:bg-brand-primary/40 transition-all duration-700`}></div>
-            <div className="relative bg-black/40 backdrop-blur-2xl border border-white/10 py-8 px-12 rounded-[3rem] text-center transform hover:scale-105 transition-transform duration-300 shadow-2xl">
-                <h3 className="text-brand-accent font-sans font-bold tracking-widest text-xs uppercase mb-1">Time Remaining</h3>
-                <div className={`text-5xl md:text-7xl font-extrabold text-white font-sans tracking-tight drop-shadow-lg tabular-nums ${isPaused ? 'opacity-50' : ''}`}>
+            <div className={`absolute inset-0 ${isPaused ? 'bg-amber-500/20' : 'bg-brand-primary/30'} blur-3xl rounded-full group-hover:bg-brand-primary/40 transition-all duration-700`}></div>
+            <div className={`relative bg-black/40 backdrop-blur-2xl border ${isPaused ? 'border-amber-500/30' : 'border-white/10'} py-8 px-12 rounded-[3rem] text-center transform hover:scale-105 transition-transform duration-300 shadow-2xl`}>
+                
+                {isPaused && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-500 text-black font-black text-xs px-3 py-1 rounded-full uppercase tracking-widest border-2 border-white animate-pulse z-20 shadow-lg">
+                        Timer Paused
+                    </div>
+                )}
+
+                <h3 className={`${isPaused ? 'text-amber-500' : 'text-brand-accent'} font-sans font-bold tracking-widest text-xs uppercase mb-1`}>Time Remaining</h3>
+                <div className={`text-5xl md:text-7xl font-extrabold font-sans tracking-tight drop-shadow-lg tabular-nums transition-colors duration-300 ${isPaused ? 'text-amber-200 opacity-90' : 'text-white'}`}>
                     {timeLeft || "Loading..."}
                 </div>
             </div>
@@ -613,7 +620,7 @@ const Subathon: React.FC = () => {
                         </div>
                     </div>
                     {/* Use Live Timer from Backend */}
-                    <Timer endTime={stats.timerEndTime} isPaused={stats.isPaused} />
+                    <Timer endTime={stats.timerEndTime} isPaused={stats.isPaused} remainingTimeMs={stats.remainingTimeMs} />
                 </div>
 
                 <div className="space-y-16">
