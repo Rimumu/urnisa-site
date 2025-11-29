@@ -4,12 +4,6 @@ import SpinWheel from '../components/SpinWheel';
 import { useWheelGame, SpinQueueItem } from '../hooks/useWheelGame';
 import { API_BASE_URL } from '../constants';
 
-const LockIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-    </svg>
-);
-
 const HistoryModal: React.FC<{ onClose: () => void; history: any[] }> = ({ onClose, history }) => (
     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
         <div className="bg-[#1a0b0e] w-full max-w-lg max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
@@ -153,17 +147,9 @@ const Wheel: React.FC = () => {
                             <SpinWheel 
                                 disabled={!isAdmin} 
                                 onSpinEnd={handleSpinEnd} 
+                                onUnlockRequest={() => setShowLogin(true)}
                             />
                         </div>
-
-                        {/* Admin Toggle */}
-                        <button 
-                            onClick={() => setShowLogin(true)} 
-                            className={`absolute bottom-4 right-4 p-2 rounded-full transition-colors ${isAdmin ? 'text-green-500 bg-green-500/10' : 'text-gray-600 bg-black/20 hover:text-gray-400'}`}
-                            title="Admin Controls"
-                        >
-                            {isAdmin ? '🔓' : <LockIcon />}
-                        </button>
                     </div>
 
                     {/* SIDEBAR (Queue & Stats) */}
@@ -205,22 +191,22 @@ const Wheel: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Recent Wins Card */}
+                        {/* Recent Spins Card */}
                         <div 
                             onClick={() => setShowHistory(true)}
                             className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 cursor-pointer hover:border-brand-primary/30 transition-colors group"
                         >
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-brand-primary font-bold uppercase tracking-widest text-xs">Recent Wins</h3>
+                                <h3 className="text-brand-primary font-bold uppercase tracking-widest text-xs">Recent Spins</h3>
                                 <span className="text-xs text-gray-500 group-hover:text-white transition-colors">View All →</span>
                             </div>
                             <div className="space-y-3">
                                 {history.slice(0, 3).map((h) => (
                                     <div key={h._id} className="text-sm border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                                        <span className="font-bold text-white">{h.user}</span> won <span className="text-brand-accent font-bold">{h.reward}</span>
+                                        <span className="font-bold text-white">{h.user}</span> spun <span className="text-brand-accent font-bold">{h.reward}</span>
                                     </div>
                                 ))}
-                                {history.length === 0 && <div className="text-gray-500 text-xs text-center">No wins yet</div>}
+                                {history.length === 0 && <div className="text-gray-500 text-xs text-center">No spins yet</div>}
                             </div>
                         </div>
 
