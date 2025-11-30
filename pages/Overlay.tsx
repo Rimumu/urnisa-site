@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNisathonStats } from '../hooks/useNisathonStats';
 import { useWheelGame } from '../hooks/useWheelGame';
@@ -10,7 +11,8 @@ const Overlay: React.FC = () => {
 
     // --- TIMER STATE ---
     const [timeLeft, setTimeLeft] = useState("00:00:00");
-    const [addedTimeBubble, setAddedTimeBubble] = useState<{ text: string, id: number } | null>(null);
+    // Updated state to hold user info and display text
+    const [addedTimeBubble, setAddedTimeBubble] = useState<{ user: string, timeText: string, id: number } | null>(null);
     const prevEndTimeRef = useRef(stats.timerEndTime);
     
     // --- ANIMATION LOGIC ---
@@ -18,18 +20,41 @@ const Overlay: React.FC = () => {
         const currentEnd = new Date(stats.timerEndTime).getTime();
         const prevEnd = new Date(prevEndTimeRef.current).getTime();
 
-        // If time increased by more than 10 seconds (ignore small drifts), show bubble
-        if (currentEnd > prevEnd + 10000) {
+        // If time increased by more than 1 second (filter small drifts)
+        if (currentEnd > prevEnd + 1000) {
             const addedMs = currentEnd - prevEnd;
-            const addedMins = Math.round(addedMs / 60000);
-            if (addedMins > 0) {
-                setAddedTimeBubble({ text: `+${addedMins}m`, id: Date.now() });
-                // Auto-remove after animation
-                setTimeout(() => setAddedTimeBubble(null), 3000);
+            const addedSeconds = Math.round(addedMs / 1000);
+            
+            // Attempt to find the user responsible from recent events
+            // We look for the most recent event created within the last minute
+            let user = "Anonymous";
+            if (recentEvents.length > 0) {
+                const latestEvent = recentEvents[0];
+                const eventTime = new Date(latestEvent.createdAt).getTime();
+                const now = Date.now();
+                // If event is recent (< 60s), attribute it to them
+                if (Math.abs(now - eventTime) < 60000) {
+                    user = latestEvent.user;
+                }
+            }
+
+            // Format Time (e.g. +10m or +45s)
+            let timeText = "";
+            if (addedSeconds >= 60) {
+                const mins = Math.round(addedSeconds / 60);
+                timeText = `+${mins}m`;
+            } else {
+                timeText = `+${addedSeconds}s`;
+            }
+
+            if (addedSeconds > 0) {
+                setAddedTimeBubble({ user, timeText, id: Date.now() });
+                // Remove bubble after animation completes
+                setTimeout(() => setAddedTimeBubble(null), 4000);
             }
         }
         prevEndTimeRef.current = stats.timerEndTime;
-    }, [stats.timerEndTime]);
+    }, [stats.timerEndTime, recentEvents]);
 
     // Timer Ticker
     useEffect(() => {
@@ -76,14 +101,15 @@ const Overlay: React.FC = () => {
     return (
         <div className="w-screen h-screen overflow-hidden bg-transparent font-sans text-white p-10 flex flex-col justify-between">
             <style>{`
-                @keyframes floatUp {
-                    0% { transform: translateY(0) scale(0.8); opacity: 0; }
-                    20% { transform: translateY(-20px) scale(1.1); opacity: 1; }
-                    80% { transform: translateY(-60px) scale(1); opacity: 1; }
-                    100% { transform: translateY(-80px) scale(0.9); opacity: 0; }
+                @keyframes popInFloat {
+                    0% { transform: translate(0, 20px) scale(0.8); opacity: 0; }
+                    15% { transform: translate(0, 0) scale(1.05); opacity: 1; }
+                    25% { transform: translate(0, 0) scale(1); opacity: 1; }
+                    80% { transform: translate(0, 0) scale(1); opacity: 1; }
+                    100% { transform: translate(0, -30px) scale(0.9); opacity: 0; }
                 }
                 .bubble-anim {
-                    animation: floatUp 2s ease-out forwards;
+                    animation: popInFloat 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
                 }
                 .bubbly-text {
                     text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
@@ -96,7 +122,7 @@ const Overlay: React.FC = () => {
                 <div className="relative">
                     {/* Bubbly Background */}
                     <div className={`
-                        relative px-8 py-4 rounded-[40px] border-[6px] shadow-2xl transition-all duration-500
+                        relative px-8 py-4 rounded-[40px] border-[6px] shadow-2xl transition-all duration-500 z-20
                         ${isDoubleTimer 
                             ? 'bg-purple-600 border-purple-300 shadow-[0_0_30px_rgba(147,51,234,0.6)] scale-110' 
                             : 'bg-[#3a1017] border-[#f7c548]'}
@@ -117,11 +143,18 @@ const Overlay: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Floating Added Time Bubble */}
+                    {/* Floating Added Time Pill (User | Time) */}
                     {addedTimeBubble && (
-                        <div key={addedTimeBubble.id} className="absolute -right-16 top-0 bubble-anim z-30">
-                            <div className="bg-green-500 text-white font-black text-2xl px-4 py-2 rounded-full border-4 border-white shadow-lg transform rotate-12">
-                                {addedTimeBubble.text}
+                        <div key={addedTimeBubble.id} className="absolute left-[102%] top-6 bubble-anim z-10 whitespace-nowrap origin-left">
+                            <div className="flex items-center rounded-2xl overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border-2 border-white/20 ring-1 ring-black/40">
+                                {/* Username Side */}
+                                <div className="bg-[#18181b] px-5 py-3 flex items-center h-full border-r border-white/5">
+                                    <span className="font-extrabold text-white text-2xl tracking-tight">{addedTimeBubble.user}</span>
+                                </div>
+                                {/* Time Side */}
+                                <div className="bg-[#34d399] px-4 py-3 flex items-center h-full">
+                                    <span className="font-black text-[#064e3b] text-2xl tracking-tight">{addedTimeBubble.timeText}</span>
+                                </div>
                             </div>
                         </div>
                     )}
