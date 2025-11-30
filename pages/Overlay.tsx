@@ -154,8 +154,8 @@ const Overlay: React.FC = () => {
                                 </div>
                             )}
                             {stats.isPaused && (
-                                <div className="bg-amber-500 text-black px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-white shadow-[0_0_15px_rgba(245,158,11,0.6)] animate-pulse whitespace-nowrap">
-                                    ⛔ TIMER PAUSED ⛔
+                                <div className="bg-amber-500 text-white px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-white shadow-[0_0_15px_rgba(245,158,11,0.6)] animate-pulse whitespace-nowrap">
+                                    TIMER PAUSED
                                 </div>
                             )}
                         </div>
@@ -165,7 +165,7 @@ const Overlay: React.FC = () => {
                             <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-100' : 'text-rose-100'}`}>
                                 Time Remaining
                             </div>
-                            <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight ${stats.isPaused ? 'text-amber-300 animate-pulse' : 'text-white'}`}>
+                            <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight text-white ${stats.isPaused ? 'animate-pulse' : ''}`}>
                                 {timeLeft}
                             </div>
                         </div>
