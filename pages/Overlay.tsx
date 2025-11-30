@@ -49,8 +49,6 @@ const Overlay: React.FC = () => {
             const addedSeconds = Math.round(addedMs / 1000);
             
             // Attempt to find the user responsible from recent events.
-            // Since useNisathonStats updates both stats and recentEvents in parallel (Promise.all),
-            // this data should be consistent.
             let user = "Anonymous";
             if (recentEvents.length > 0) {
                 const latestEvent = recentEvents[0];
@@ -114,16 +112,26 @@ const Overlay: React.FC = () => {
         return () => clearInterval(interval);
     }, [stats.timerEndTime, stats.isPaused, stats.remainingTimeMs]);
 
-    // --- NEXT GOAL LOGIC ---
-    let nextGoal: NisathonGoal = { count: 1000, reward: "All Goals Done!" };
+    // --- GOAL TIMELINE LOGIC ---
     const currentNB = stats.totalNisaballs;
-    for (const g of goals) {
-        if (g.count > currentNB) {
-            nextGoal = g;
-            break;
-        }
-    }
-    const progressPercent = Math.min((currentNB / nextGoal.count) * 100, 100);
+    
+    // Find index of the first goal that is NOT yet completed
+    let activeGoalIndex = goals.findIndex(g => g.count > currentNB);
+    
+    // If all completed, stick to the last one
+    if (activeGoalIndex === -1 && goals.length > 0) activeGoalIndex = goals.length - 1;
+    // If no goals loaded yet
+    if (activeGoalIndex === -1) activeGoalIndex = 0;
+
+    const prevGoal = activeGoalIndex > 0 ? goals[activeGoalIndex - 1] : null;
+    const currentGoal = goals[activeGoalIndex] || { count: 100, reward: "Loading..." };
+    const nextGoal = (activeGoalIndex < goals.length - 1) ? goals[activeGoalIndex + 1] : null;
+
+    // Calculate Progress for Current Goal (Relative to previous goal)
+    const baseCount = prevGoal ? prevGoal.count : 0;
+    const range = currentGoal.count - baseCount;
+    const progressInStep = Math.max(0, currentNB - baseCount);
+    const progressPercent = range > 0 ? Math.min((progressInStep / range) * 100, 100) : 100;
 
     const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
 
@@ -217,26 +225,61 @@ const Overlay: React.FC = () => {
             {/* BOTTOM BAR: WIDGETS */}
             <div className="flex items-end gap-6 w-full">
                 
-                {/* 1. GOAL BAR */}
-                <div className="flex-1 bg-black/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-2xl">
-                    <div className="flex justify-between items-end mb-2 px-1">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Next Goal</span>
-                            <span className="text-xl font-black text-white leading-none">{nextGoal.secret ? "?? Secret ??" : nextGoal.reward}</span>
+                {/* 1. REVAMPED GOAL TIMELINE */}
+                <div className="flex-1 bg-black/60 backdrop-blur-xl rounded-3xl p-2 border border-white/10 shadow-2xl flex items-stretch gap-2">
+                    
+                    {/* PREVIOUS GOAL (Small, Dimmed) */}
+                    {prevGoal && (
+                        <div className="hidden lg:flex w-32 flex-col justify-center items-start px-4 py-2 rounded-2xl bg-white/5 border border-white/5 opacity-50 grayscale">
+                            <div className="text-[9px] font-bold uppercase text-gray-400 tracking-wider mb-1 flex items-center gap-1">
+                                <span>Completed</span>
+                                <span className="text-green-400 text-xs">✓</span>
+                            </div>
+                            <div className="text-xs font-bold text-gray-300 truncate w-full">{prevGoal.secret ? "Secret" : prevGoal.reward}</div>
+                            <div className="text-[10px] font-mono text-gray-500">{prevGoal.count} NB</div>
                         </div>
-                        <div className="text-right">
-                            <span className="text-2xl font-black text-brand-accent">{Math.floor(currentNB)}</span>
-                            <span className="text-xs font-bold text-gray-400"> / {nextGoal.count} NB</span>
+                    )}
+
+                    {/* CURRENT GOAL (Main Focus) */}
+                    <div className="flex-1 bg-gradient-to-r from-brand-bg to-black border border-brand-accent/30 rounded-2xl p-3 flex flex-col justify-center relative overflow-hidden group">
+                        <div className="relative z-10">
+                            <div className="flex justify-between items-end mb-2">
+                                <div>
+                                    <span className="text-[10px] font-black text-brand-accent uppercase tracking-widest flex items-center gap-1">
+                                        <span className="animate-pulse">▶</span> Current Goal
+                                    </span>
+                                    <div className="text-xl font-black text-white leading-none mt-0.5">
+                                        {currentGoal.secret ? <span className="text-brand-primary italic">?? Secret ??</span> : currentGoal.reward}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-black text-brand-accent font-mono">{Math.floor(currentNB)}</div>
+                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">/ {currentGoal.count} NB</div>
+                                </div>
+                            </div>
+                            {/* Progress Bar */}
+                            <div className="h-3 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
+                                <div 
+                                    className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-1000 ease-out relative shadow-[0_0_10px_rgba(229,56,59,0.5)]"
+                                    style={{ width: `${progressPercent}%` }}
+                                >
+                                    <div className="absolute inset-0 bg-white/20 animate-[shimmer_1.5s_infinite]"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="h-4 bg-black/50 rounded-full overflow-hidden border border-white/5 relative">
-                        <div 
-                            className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-1000 ease-out relative"
-                            style={{ width: `${progressPercent}%` }}
-                        >
-                            <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
+
+                    {/* NEXT GOAL (Small, Dimmed) */}
+                    {nextGoal && (
+                        <div className="hidden lg:flex w-32 flex-col justify-center items-end px-4 py-2 rounded-2xl bg-white/5 border border-white/5 opacity-60">
+                            <div className="text-[9px] font-bold uppercase text-gray-400 tracking-wider mb-1 flex items-center gap-1">
+                                <span className="text-xs">🔒</span>
+                                <span>Up Next</span>
+                            </div>
+                            <div className="text-xs font-bold text-gray-300 truncate w-full text-right">{nextGoal.secret ? "?? Secret ??" : nextGoal.reward}</div>
+                            <div className="text-[10px] font-mono text-gray-500">{nextGoal.count} NB</div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* 2. RECENT EVENT */}
