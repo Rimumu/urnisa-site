@@ -203,6 +203,7 @@ const Admin: React.FC = () => {
     const [testUser, setTestUser] = useState("AdminTest");
     const [testType, setTestType] = useState("sub");
     const [testAmount, setTestAmount] = useState("1");
+    const [testTier, setTestTier] = useState("1000"); // 1000 = Tier 1, 2000 = Tier 2, 3000 = Tier 3
     const [managerStatus, setManagerStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // --- EFFECTS ---
@@ -361,7 +362,7 @@ const Admin: React.FC = () => {
     const handleSetTimer = () => apiCall('timer/set', { hours: timerH, minutes: timerM, seconds: timerS });
     const handleAddTimer = () => apiCall('timer/add', { minutes: addM });
     const handlePauseTimer = () => apiCall('timer/pause', {});
-    const handleSimulateEvent = () => apiCall('test-event', { type: testType, user: testUser, amount: testAmount });
+    const handleSimulateEvent = () => apiCall('test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
     const handleToggleDoubleTimer = () => apiCall('event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
 
     // --- CONTENT EDITORS HELPERS ---
@@ -502,6 +503,18 @@ const Admin: React.FC = () => {
                                                 <option value="donation">Donation (Tip)</option>
                                             </select>
                                         </div>
+                                        {/* Tier Selector: Only show for Subs/Gifts */}
+                                        {(testType === 'sub' || testType === 'gift') && (
+                                            <div className="animate-in fade-in zoom-in duration-200">
+                                                <label className="text-xs font-bold text-gray-500 uppercase">Sub Tier</label>
+                                                <select className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white mt-1" onChange={(e) => setTestTier(e.target.value)} value={testTier}>
+                                                    <option value="1000">Tier 1 (0.5 NB)</option>
+                                                    <option value="2000">Tier 2 (1.0 NB)</option>
+                                                    <option value="3000">Tier 3 (2.0 NB)</option>
+                                                    <option value="prime">Prime (0.5 NB)</option>
+                                                </select>
+                                            </div>
+                                        )}
                                         <div>
                                             <label className="text-xs font-bold text-gray-500 uppercase">User Name</label>
                                             <input type="text" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white mt-1" value={testUser} onChange={(e) => setTestUser(e.target.value)} />
