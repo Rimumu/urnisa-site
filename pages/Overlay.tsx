@@ -75,10 +75,13 @@ const Overlay: React.FC = () => {
             const seconds = Math.floor((ms % (1000 * 60)) / 1000);
 
             const h = hours < 10 ? "0" + hours : hours;
+            // Support 3 digits if hours > 99, otherwise 2 digits
+            const hStr = hours >= 100 ? hours.toString() : (hours < 10 ? "0" + hours : hours);
+            
             const m = minutes < 10 ? "0" + minutes : minutes;
             const s = seconds < 10 ? "0" + seconds : seconds;
 
-            setTimeLeft(`${h}:${m}:${s}`);
+            setTimeLeft(`${hStr}:${m}:${s}`);
         };
         const interval = setInterval(updateTimer, 1000);
         updateTimer();
@@ -138,8 +141,9 @@ const Overlay: React.FC = () => {
                     )}
 
                     {/* Timer Widget */}
+                    {/* Fixed width/height added to prevent dynamic resizing jitter */}
                     <div className={`
-                        relative px-10 py-6 rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20
+                        relative w-[640px] h-[160px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center
                         ${isDoubleTimer 
                             ? 'bg-gradient-to-br from-purple-900 to-black border-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.6)] scale-105' 
                             : 'bg-gradient-to-br from-brand-bg to-black border-brand-accent shadow-[0_0_30px_rgba(247,197,72,0.3)]'}
@@ -150,11 +154,11 @@ const Overlay: React.FC = () => {
                             </div>
                         )}
                         
-                        <div className="text-center">
+                        <div className="text-center w-full">
                             <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-300' : 'text-brand-accent'}`}>
                                 Subathon Timer
                             </div>
-                            <div className={`text-7xl font-black tabular-nums bubbly-text tracking-tighter ${stats.isPaused ? 'text-amber-500 animate-pulse' : 'text-white'}`}>
+                            <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight ${stats.isPaused ? 'text-amber-500 animate-pulse' : 'text-white'}`}>
                                 {timeLeft}
                             </div>
                         </div>
