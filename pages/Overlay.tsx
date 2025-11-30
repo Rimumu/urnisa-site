@@ -24,11 +24,9 @@ const Overlay: React.FC = () => {
         let addedMs = 0;
 
         // 1. If currently PAUSED and was PAUSED: Check remainingTimeMs increase
-        // This allows bubbles to show up even if the timer is frozen (e.g. donation during pause)
         if (stats.isPaused && prevStats.isPaused) {
             const currentRemaining = stats.remainingTimeMs || 0;
             const prevRemaining = prevStats.remainingTimeMs || 0;
-            // Use 1000ms threshold to ignore tiny drifts
             if (currentRemaining > prevRemaining + 1000) {
                 addedMs = currentRemaining - prevRemaining;
             }
@@ -41,26 +39,20 @@ const Overlay: React.FC = () => {
                 addedMs = currentEnd - prevEnd;
             }
         }
-        // 3. Transitions (Paused <-> Running): 
-        // We explicitly do NOTHING here. This prevents the bubble from triggering 
-        // when the timerEndTime jumps due to the pause/resume calculation logic on the backend.
 
         if (addedMs > 0) {
             const addedSeconds = Math.round(addedMs / 1000);
             
-            // Attempt to find the user responsible from recent events.
             let user = "Anonymous";
             if (recentEvents.length > 0) {
                 const latestEvent = recentEvents[0];
                 const eventTime = new Date(latestEvent.createdAt).getTime();
                 const now = Date.now();
-                // If event is recent (< 60s), attribute it to them
                 if (Math.abs(now - eventTime) < 60000) {
                     user = latestEvent.user;
                 }
             }
 
-            // Format Time (e.g. +10m or +45s)
             let timeText = "";
             if (addedSeconds >= 60) {
                 const mins = Math.round(addedSeconds / 60);
@@ -69,14 +61,10 @@ const Overlay: React.FC = () => {
                 timeText = `+${addedSeconds}s`;
             }
 
-            // Trigger Bubble
             setAddedTimeBubble({ user, timeText, id: Date.now() });
-            
-            // Remove bubble after animation completes
             setTimeout(() => setAddedTimeBubble(null), 4000);
         }
         
-        // Update ref for next render
         prevStatsRef.current = stats;
     }, [stats, recentEvents]);
 
@@ -98,7 +86,6 @@ const Overlay: React.FC = () => {
             const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((ms % (1000 * 60)) / 1000);
 
-            // Handle 3+ digit hours
             const hStr = hours >= 100 ? hours.toString() : (hours < 10 ? "0" + hours : hours);
             const mStr = minutes < 10 ? "0" + minutes : minutes;
             const sStr = seconds < 10 ? "0" + seconds : seconds;
@@ -106,28 +93,39 @@ const Overlay: React.FC = () => {
             setTimeLeft(`${hStr}:${mStr}:${sStr}`);
         };
         
-        // Run update more frequently (100ms) for smoother UI response
         const interval = setInterval(updateTimer, 100);
         updateTimer();
         return () => clearInterval(interval);
     }, [stats.timerEndTime, stats.isPaused, stats.remainingTimeMs]);
 
-    // --- GOAL TIMELINE LOGIC ---
+    // --- GOAL LIST LOGIC ---
     const currentNB = stats.totalNisaballs;
     
     // Find index of the first goal that is NOT yet completed
     let activeGoalIndex = goals.findIndex(g => g.count > currentNB);
     
-    // If all completed, stick to the last one
     if (activeGoalIndex === -1 && goals.length > 0) activeGoalIndex = goals.length - 1;
-    // If no goals loaded yet
     if (activeGoalIndex === -1) activeGoalIndex = 0;
+
+    // Determine the window of goals to show (Previous, Current, Next)
+    // We want a sliding window of 3 items if possible.
+    let startIndex = activeGoalIndex - 1;
+    // Adjust start to show 3 items if possible
+    if (startIndex < 0) startIndex = 0;
+    if (startIndex + 3 > goals.length) startIndex = Math.max(0, goals.length - 3);
+
+    const visibleGoals = goals.slice(startIndex, startIndex + 3).map((g, i) => {
+        const actualIndex = startIndex + i;
+        let status = 'locked';
+        if (actualIndex < activeGoalIndex) status = 'completed';
+        else if (actualIndex === activeGoalIndex) status = 'active';
+        return { ...g, status };
+    });
 
     const prevGoal = activeGoalIndex > 0 ? goals[activeGoalIndex - 1] : null;
     const currentGoal = goals[activeGoalIndex] || { count: 100, reward: "Loading..." };
-    const nextGoal = (activeGoalIndex < goals.length - 1) ? goals[activeGoalIndex + 1] : null;
-
-    // Calculate Progress for Current Goal (Relative to previous goal)
+    
+    // Calculate Progress for Current Goal
     const baseCount = prevGoal ? prevGoal.count : 0;
     const range = currentGoal.count - baseCount;
     const progressInStep = Math.max(0, currentNB - baseCount);
@@ -154,7 +152,6 @@ const Overlay: React.FC = () => {
                 .gold-text-shadow {
                     text-shadow: 0px 2px 4px rgba(0,0,0,0.3);
                 }
-                /* Fire Pulse Animation for 2x Event Badge */
                 @keyframes fire-pulse {
                     0% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
                     50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 69, 0, 0.8); }
@@ -165,20 +162,16 @@ const Overlay: React.FC = () => {
                 }
             `}</style>
 
-            {/* TOP BAR: TIMER & EVENT */}
+            {/* TOP BAR: TIMER */}
             <div className="flex justify-center items-start gap-8 pt-12">
-                {/* TIMER CONTAINER */}
                 <div className="relative">
-                    
-                    {/* Floating Added Time Pill (Aligned Right Flush & Closer) */}
+                    {/* Time Added Bubble */}
                     {addedTimeBubble && (
                         <div key={addedTimeBubble.id} className="absolute right-0 -top-14 bubble-anim z-30 whitespace-nowrap">
                             <div className="flex items-center rounded-full overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border border-white/20 ring-1 ring-black/40 bg-black/80 backdrop-blur-xl">
-                                {/* Username Side */}
                                 <div className="bg-[#18181b] px-4 py-2 flex items-center h-full border-r border-white/10">
                                     <span className="font-bold text-white text-lg tracking-tight">{addedTimeBubble.user}</span>
                                 </div>
-                                {/* Time Side */}
                                 <div className="bg-[#34d399] px-3 py-2 flex items-center h-full">
                                     <span className="font-black text-[#064e3b] text-lg tracking-tight">{addedTimeBubble.timeText}</span>
                                 </div>
@@ -187,14 +180,12 @@ const Overlay: React.FC = () => {
                     )}
 
                     {/* Timer Widget */}
-                    {/* Fixed dimensions to prevent layout shifts */}
                     <div className={`
                         relative w-[640px] h-[160px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center
                         ${isDoubleTimer 
                             ? 'bg-gradient-to-br from-[#FFD700] via-[#E6C200] to-[#B8860B] border-[#FFF8DC] shadow-[0_0_60px_rgba(255,215,0,0.6)] scale-105' 
                             : 'bg-gradient-to-br from-[#9f1239] to-[#4c0519] border-[#fda4af] shadow-[0_0_30px_rgba(251,113,133,0.4)]'}
                     `}>
-                        {/* Status Badges Container (Stacks upwards if both exist) */}
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col-reverse items-center gap-2 w-full z-30">
                             {isDoubleTimer && (
                                 <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border border-white/80 fire-anim whitespace-nowrap gold-text-shadow">
@@ -209,11 +200,9 @@ const Overlay: React.FC = () => {
                         </div>
                         
                         <div className="text-center w-full">
-                            {/* Updated text color to text-rose-100 / white for better contrast on gold */}
                             <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-white gold-text-shadow' : 'text-rose-100'}`}>
                                 Time Remaining
                             </div>
-                            {/* Digits stay white but blink when paused */}
                             <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight text-white ${stats.isPaused ? 'animate-pulse' : ''} ${isDoubleTimer ? 'gold-text-shadow' : ''}`}>
                                 {timeLeft}
                             </div>
@@ -225,61 +214,74 @@ const Overlay: React.FC = () => {
             {/* BOTTOM BAR: WIDGETS */}
             <div className="flex items-end gap-6 w-full">
                 
-                {/* 1. REVAMPED GOAL TIMELINE */}
-                <div className="flex-1 bg-black/60 backdrop-blur-xl rounded-3xl p-2 border border-white/10 shadow-2xl flex items-stretch gap-2">
+                {/* 1. VERTICAL GOAL LIST (REVAMPED) */}
+                <div className="flex-1 max-w-[28rem] bg-black/60 backdrop-blur-xl rounded-3xl p-4 border border-white/10 shadow-2xl flex flex-col gap-4">
                     
-                    {/* PREVIOUS GOAL (Small, Dimmed) */}
-                    {prevGoal && (
-                        <div className="hidden lg:flex w-32 flex-col justify-center items-start px-4 py-2 rounded-2xl bg-white/5 border border-white/5 opacity-50 grayscale">
-                            <div className="text-[9px] font-bold uppercase text-gray-400 tracking-wider mb-1 flex items-center gap-1">
-                                <span>Completed</span>
-                                <span className="text-green-400 text-xs">✓</span>
-                            </div>
-                            <div className="text-xs font-bold text-gray-300 truncate w-full">{prevGoal.secret ? "Secret" : prevGoal.reward}</div>
-                            <div className="text-[10px] font-mono text-gray-500">{prevGoal.count} NB</div>
-                        </div>
-                    )}
+                    {/* Header */}
+                    <div className="flex justify-between items-baseline px-1 border-b border-white/5 pb-2">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Goal Roadmap</span>
+                        <span className="text-[10px] font-bold text-brand-primary font-mono">{Math.floor(currentNB)} NB Total</span>
+                    </div>
 
-                    {/* CURRENT GOAL (Main Focus) */}
-                    <div className="flex-1 bg-gradient-to-r from-brand-bg to-black border border-brand-accent/30 rounded-2xl p-3 flex flex-col justify-center relative overflow-hidden group">
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-end mb-2">
-                                <div>
-                                    <span className="text-[10px] font-black text-brand-accent uppercase tracking-widest flex items-center gap-1">
-                                        <span className="animate-pulse">▶</span> Current Goal
-                                    </span>
-                                    <div className="text-xl font-black text-white leading-none mt-0.5">
-                                        {currentGoal.secret ? <span className="text-brand-primary italic">?? Secret ??</span> : currentGoal.reward}
+                    {/* Goal Rows */}
+                    <div className="flex flex-col gap-2">
+                        {visibleGoals.map((goal, idx) => (
+                            <div 
+                                key={idx} 
+                                className={`
+                                    relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500
+                                    ${goal.status === 'active' 
+                                        ? 'bg-gradient-to-r from-brand-primary/20 to-black border-brand-primary/50 shadow-[0_0_15px_rgba(229,56,59,0.15)] scale-[1.02] z-10' 
+                                        : 'bg-black/40 border-white/5 opacity-60 grayscale-[0.5]'}
+                                `}
+                            >
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    {/* Indicator Dot */}
+                                    <div className={`
+                                        w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors duration-300
+                                        ${goal.status === 'completed' ? 'border-green-500 bg-green-500' : 
+                                          goal.status === 'active' ? 'border-brand-accent animate-pulse' : 'border-gray-600'}
+                                    `}>
+                                        {goal.status === 'completed' && (
+                                            <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        )}
                                     </div>
+                                    
+                                    {/* Label */}
+                                    <span className={`text-sm font-bold truncate transition-colors ${goal.status === 'active' ? 'text-white' : 'text-gray-400'}`}>
+                                        {goal.secret && goal.status !== 'completed' ? <span className="text-brand-accent tracking-wider italic">?? Secret ??</span> : goal.reward}
+                                    </span>
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-2xl font-black text-brand-accent font-mono">{Math.floor(currentNB)}</div>
-                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">/ {currentGoal.count} NB</div>
+
+                                {/* Count Pill */}
+                                <div className={`
+                                    px-2 py-1 rounded-md text-xs font-mono font-bold ml-2 shrink-0 transition-colors
+                                    ${goal.status === 'active' ? 'bg-brand-accent text-black' : 'bg-white/10 text-gray-500'}
+                                `}>
+                                    {goal.count}
                                 </div>
                             </div>
-                            {/* Progress Bar */}
-                            <div className="h-3 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
-                                <div 
-                                    className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-1000 ease-out relative shadow-[0_0_10px_rgba(229,56,59,0.5)]"
-                                    style={{ width: `${progressPercent}%` }}
-                                >
-                                    <div className="absolute inset-0 bg-white/20 animate-[shimmer_1.5s_infinite]"></div>
-                                </div>
+                        ))}
+                    </div>
+
+                    {/* Progress Bar (Bottom) */}
+                    <div className="space-y-1 mt-1">
+                        <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                            <div 
+                                className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-1000 ease-out relative"
+                                style={{ width: `${progressPercent}%` }}
+                            >
+                                <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
                             </div>
+                        </div>
+                        <div className="flex justify-between text-[9px] font-bold text-gray-500 uppercase px-1">
+                            <span>Current Progress</span>
+                            <span>{Math.floor(progressPercent)}%</span>
                         </div>
                     </div>
 
-                    {/* NEXT GOAL (Small, Dimmed) */}
-                    {nextGoal && (
-                        <div className="hidden lg:flex w-32 flex-col justify-center items-end px-4 py-2 rounded-2xl bg-white/5 border border-white/5 opacity-60">
-                            <div className="text-[9px] font-bold uppercase text-gray-400 tracking-wider mb-1 flex items-center gap-1">
-                                <span className="text-xs">🔒</span>
-                                <span>Up Next</span>
-                            </div>
-                            <div className="text-xs font-bold text-gray-300 truncate w-full text-right">{nextGoal.secret ? "?? Secret ??" : nextGoal.reward}</div>
-                            <div className="text-[10px] font-mono text-gray-500">{nextGoal.count} NB</div>
-                        </div>
-                    )}
                 </div>
 
                 {/* 2. RECENT EVENT */}
