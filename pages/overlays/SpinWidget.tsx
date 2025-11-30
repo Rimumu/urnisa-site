@@ -1,19 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWheelGame } from '../../hooks/useWheelGame';
 
 const SpinWidget: React.FC = () => {
     const { history: wheelHistory } = useWheelGame();
     const latest = wheelHistory[0];
+    const [timeAgo, setTimeAgo] = useState("Just now");
+
+    useEffect(() => {
+        if (!latest) return;
+        
+        const updateTime = () => {
+            const diff = Date.now() - new Date(latest.timestamp).getTime();
+            const seconds = Math.floor(diff / 1000);
+            
+            if (seconds < 60) setTimeAgo("Just now");
+            else if (seconds < 3600) setTimeAgo(`${Math.floor(seconds / 60)}m ago`);
+            else setTimeAgo(`${Math.floor(seconds / 3600)}h ago`);
+        };
+
+        updateTime();
+        const interval = setInterval(updateTime, 10000);
+        return () => clearInterval(interval);
+    }, [latest]);
 
     return (
         <div className="w-full h-full bg-transparent p-2 font-sans flex items-center justify-center">
             <style>{`
-                @keyframes slideUpFade {
-                    0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+                @keyframes elasticSlideUp {
+                    0% { opacity: 0; transform: translateY(40px) scale(0.9); }
+                    50% { opacity: 1; transform: translateY(-5px) scale(1.02); }
                     100% { opacity: 1; transform: translateY(0) scale(1); }
                 }
                 .animate-entry {
-                    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                    animation: elasticSlideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
                 }
             `}</style>
 
@@ -23,7 +42,10 @@ const SpinWidget: React.FC = () => {
                         🎡
                     </div>
                     <div className="flex-1 min-w-0 z-10">
-                        <div className="text-[10px] font-black text-[#fda4af] uppercase tracking-widest mb-0.5">Last Spin</div>
+                        <div className="flex justify-between items-center mb-0.5">
+                            <div className="text-[10px] font-black text-[#fda4af] uppercase tracking-widest">Last Spin</div>
+                            <div className="text-[10px] font-bold text-[#fda4af]/60">{timeAgo}</div>
+                        </div>
                         
                         {/* Key triggers re-render animation when spin ID changes */}
                         <div key={latest._id} className="animate-entry">

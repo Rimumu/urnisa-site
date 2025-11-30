@@ -27,12 +27,13 @@ const ActivityWidget: React.FC = () => {
     return (
         <div className="w-full h-full bg-transparent p-2 font-sans flex items-center justify-center">
             <style>{`
-                @keyframes slideUpFade {
-                    0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+                @keyframes elasticSlideUp {
+                    0% { opacity: 0; transform: translateY(40px) scale(0.9); }
+                    50% { opacity: 1; transform: translateY(-5px) scale(1.02); }
                     100% { opacity: 1; transform: translateY(0) scale(1); }
                 }
                 .animate-entry {
-                    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                    animation: elasticSlideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
                 }
             `}</style>
 

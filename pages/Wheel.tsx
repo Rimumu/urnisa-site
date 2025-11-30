@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import SpinWheel from '../components/SpinWheel';
 import { useWheelGame, SpinQueueItem } from '../hooks/useWheelGame';
@@ -31,6 +30,7 @@ const HistoryModal: React.FC<{ onClose: () => void; history: any[] }> = ({ onClo
 const Wheel: React.FC = () => {
     const { queue, history, completeSpin } = useWheelGame();
     const [isAdmin, setIsAdmin] = useState(false);
+    const [adminKey, setAdminKey] = useState(''); // Store the verified password here
     const [showLogin, setShowLogin] = useState(false);
     const [password, setPassword] = useState('');
     const [showHistory, setShowHistory] = useState(false);
@@ -42,15 +42,11 @@ const Wheel: React.FC = () => {
     const currentSpinner = queue.length > 0 ? queue[0] : null;
 
     // Group sequential spins from the SAME transaction (sourceEventId)
-    // We do NOT group different transactions from the same user.
     const groupedQueue = useMemo(() => {
         const grouped: (SpinQueueItem & { count: number; totalNb: number })[] = [];
         
         queue.forEach((item) => {
             const last = grouped[grouped.length - 1];
-            // Only group if sourceEventId exists and matches.
-            // This implies they came from the same single donation event.
-            // Note: 'nisaballs' on the item is the Total amount of the transaction already, so we don't sum it.
             if (last && item.sourceEventId && last.sourceEventId === item.sourceEventId) {
                 last.count += 1;
             } else {
@@ -79,11 +75,14 @@ const Wheel: React.FC = () => {
             
             if (response.ok && data.success) {
                 setLoginState('success');
+                // Store the valid password for later use in API calls
+                setAdminKey(password);
+                
                 // Delay closing to show the "Unlock" animation
                 setTimeout(() => {
                     setIsAdmin(true);
                     setShowLogin(false);
-                    setPassword('');
+                    setPassword(''); // Clear the input field for security
                     setLoginState('idle');
                 }, 1500);
             } else {
@@ -100,7 +99,8 @@ const Wheel: React.FC = () => {
         // If spinning from queue, complete queue item. Else generic free spin.
         const user = currentSpinner ? currentSpinner.user : "Admin Spin";
         const queueId = currentSpinner ? currentSpinner._id : undefined;
-        completeSpin(user, reward, queueId, password);
+        // Use the stored adminKey for authorization
+        completeSpin(user, reward, queueId, adminKey);
     };
 
     return (
