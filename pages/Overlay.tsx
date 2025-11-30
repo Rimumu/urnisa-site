@@ -13,20 +13,41 @@ const Overlay: React.FC = () => {
     const [timeLeft, setTimeLeft] = useState("00:00:00");
     // Updated state to hold user info and display text
     const [addedTimeBubble, setAddedTimeBubble] = useState<{ user: string, timeText: string, id: number } | null>(null);
-    const prevEndTimeRef = useRef(stats.timerEndTime);
+    
+    // Track previous stats to detect changes correctly (Pause vs Running)
+    const prevStatsRef = useRef(stats);
     
     // --- ANIMATION LOGIC ---
     useEffect(() => {
-        const currentEnd = new Date(stats.timerEndTime).getTime();
-        const prevEnd = new Date(prevEndTimeRef.current).getTime();
+        const prevStats = prevStatsRef.current;
+        let addedMs = 0;
 
-        // If time increased by more than 1 second (filter small drifts)
-        if (currentEnd > prevEnd + 1000) {
-            const addedMs = currentEnd - prevEnd;
+        // 1. If currently PAUSED and was PAUSED: Check remainingTimeMs increase
+        // This allows bubbles to show up even if the timer is frozen
+        if (stats.isPaused && prevStats.isPaused) {
+            const currentRemaining = stats.remainingTimeMs || 0;
+            const prevRemaining = prevStats.remainingTimeMs || 0;
+            // Use 1000ms threshold to ignore tiny drifts
+            if (currentRemaining > prevRemaining + 1000) {
+                addedMs = currentRemaining - prevRemaining;
+            }
+        }
+        // 2. If currently RUNNING and was RUNNING: Check timerEndTime increase
+        else if (!stats.isPaused && !prevStats.isPaused) {
+            const currentEnd = new Date(stats.timerEndTime).getTime();
+            const prevEnd = new Date(prevStats.timerEndTime).getTime();
+            if (currentEnd > prevEnd + 1000) {
+                addedMs = currentEnd - prevEnd;
+            }
+        }
+        // 3. Transitions (Paused <-> Running): 
+        // We explicitly do NOTHING here. This prevents the bubble from triggering 
+        // when the timerEndTime jumps due to the pause/resume calculation logic.
+
+        if (addedMs > 0) {
             const addedSeconds = Math.round(addedMs / 1000);
             
             // Attempt to find the user responsible from recent events
-            // We look for the most recent event created within the last minute
             let user = "Anonymous";
             if (recentEvents.length > 0) {
                 const latestEvent = recentEvents[0];
@@ -53,8 +74,10 @@ const Overlay: React.FC = () => {
                 setTimeout(() => setAddedTimeBubble(null), 4000);
             }
         }
-        prevEndTimeRef.current = stats.timerEndTime;
-    }, [stats.timerEndTime, recentEvents]);
+        
+        // Update ref for next render
+        prevStatsRef.current = stats;
+    }, [stats, recentEvents]);
 
     // Timer Ticker
     useEffect(() => {
@@ -165,6 +188,7 @@ const Overlay: React.FC = () => {
                             <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-100' : 'text-rose-100'}`}>
                                 Time Remaining
                             </div>
+                            {/* Digits stay white but blink when paused */}
                             <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight text-white ${stats.isPaused ? 'animate-pulse' : ''}`}>
                                 {timeLeft}
                             </div>
