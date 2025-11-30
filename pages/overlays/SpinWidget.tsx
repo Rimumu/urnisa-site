@@ -7,6 +7,16 @@ const SpinWidget: React.FC = () => {
 
     return (
         <div className="w-full h-full bg-transparent p-2 font-sans flex items-center justify-center">
+            <style>{`
+                @keyframes slideUpFade {
+                    0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                }
+                .animate-entry {
+                    animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+            `}</style>
+
             {latest ? (
                 <div className="w-full max-w-md relative flex items-center gap-4 p-4 rounded-2xl border border-[#fda4af] bg-gradient-to-r from-[#9f1239]/90 to-black/90 shadow-[0_0_20px_rgba(251,113,133,0.25)] overflow-hidden">
                     <div className="w-12 h-12 rounded-xl bg-black/40 border border-[#fda4af]/30 flex items-center justify-center text-2xl shrink-0 shadow-inner z-10">
@@ -16,7 +26,7 @@ const SpinWidget: React.FC = () => {
                         <div className="text-[10px] font-black text-[#fda4af] uppercase tracking-widest mb-0.5">Last Spin</div>
                         
                         {/* Key triggers re-render animation when spin ID changes */}
-                        <div key={latest._id} className="animate-in slide-in-from-bottom-4 fade-in duration-500">
+                        <div key={latest._id} className="animate-entry">
                             <div className="text-lg font-black text-white truncate leading-tight drop-shadow-md">{latest.user}</div>
                             <div className="text-xs font-bold text-rose-200 truncate">{latest.reward}</div>
                         </div>
