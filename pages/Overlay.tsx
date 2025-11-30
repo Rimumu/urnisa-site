@@ -144,16 +144,25 @@ const Overlay: React.FC = () => {
                         relative w-[640px] h-[160px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center
                         ${isDoubleTimer 
                             ? 'bg-gradient-to-br from-purple-900 to-black border-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.6)] scale-105' 
-                            : 'bg-gradient-to-br from-[#800f2f] to-[#3a1017] border-[#ff758c] shadow-[0_0_30px_rgba(255,117,140,0.4)]'}
+                            : 'bg-gradient-to-br from-[#9f1239] to-[#4c0519] border-[#fda4af] shadow-[0_0_30px_rgba(251,113,133,0.4)]'}
                     `}>
-                        {isDoubleTimer && (
-                            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-purple-500 text-white px-4 py-1 rounded-full font-black text-xs uppercase tracking-widest border border-white shadow-lg animate-pulse whitespace-nowrap z-20">
-                                2x Timer Event
-                            </div>
-                        )}
+                        {/* Status Badges Container (Stacks upwards if both exist) */}
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col-reverse items-center gap-2 w-full z-30">
+                            {isDoubleTimer && (
+                                <div className="bg-purple-500 text-white px-4 py-1 rounded-full font-black text-xs uppercase tracking-widest border border-white shadow-lg animate-pulse whitespace-nowrap">
+                                    2x Timer Event
+                                </div>
+                            )}
+                            {stats.isPaused && (
+                                <div className="bg-amber-500 text-black px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-white shadow-[0_0_15px_rgba(245,158,11,0.6)] animate-pulse whitespace-nowrap">
+                                    ⛔ TIMER PAUSED ⛔
+                                </div>
+                            )}
+                        </div>
                         
                         <div className="text-center w-full">
-                            <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-300' : 'text-[#ffb3c1]'}`}>
+                            {/* Updated text color to text-rose-100 / text-purple-100 for better contrast */}
+                            <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-100' : 'text-rose-100'}`}>
                                 Time Remaining
                             </div>
                             <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight ${stats.isPaused ? 'text-amber-300 animate-pulse' : 'text-white'}`}>
