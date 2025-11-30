@@ -277,34 +277,34 @@ const Overlay: React.FC = () => {
 
                 </div>
 
-                {/* 2. RECENT EVENT (Themed to match) */}
-                <div className="w-80 bg-gradient-to-b from-[#2a0a10]/90 to-black/90 backdrop-blur-xl rounded-3xl p-5 border border-[#fda4af]/30 shadow-xl flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl border border-white/10 shrink-0">
+                {/* 2. RECENT EVENT (Revamped) */}
+                <div className="w-80 relative flex items-center gap-4 p-4 rounded-2xl border border-[#fda4af] bg-gradient-to-r from-[#9f1239]/90 to-black/90 shadow-[0_0_20px_rgba(251,113,133,0.25)]">
+                    <div className="w-12 h-12 rounded-xl bg-black/40 border border-[#fda4af]/30 flex items-center justify-center text-2xl shrink-0 shadow-inner">
                         🔔
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-bold text-[#fda4af] uppercase tracking-wider mb-0.5">Latest Activity</div>
+                        <div className="text-[10px] font-black text-[#fda4af] uppercase tracking-widest mb-0.5">Latest Activity</div>
                         {recentEvents.length > 0 ? (
-                            <div>
-                                <div className="text-lg font-black text-white truncate leading-tight">{recentEvents[0].user}</div>
-                                <div className="text-xs font-bold text-gray-400 truncate">{recentEvents[0].amountDisplay}</div>
-                            </div>
+                            <>
+                                <div className="text-lg font-black text-white truncate leading-tight drop-shadow-md">{recentEvents[0].user}</div>
+                                <div className="text-xs font-bold text-rose-200 truncate">{recentEvents[0].amountDisplay}</div>
+                            </>
                         ) : (
-                            <div className="text-sm text-gray-500 italic">Waiting...</div>
+                            <div className="text-sm text-rose-200/50 italic">Waiting...</div>
                         )}
                     </div>
                 </div>
 
-                {/* 3. WHEEL WINNER (Themed to match) */}
+                {/* 3. WHEEL WINNER (Revamped) */}
                 {wheelHistory.length > 0 && (
-                    <div className="w-72 bg-gradient-to-b from-[#2a0a10]/90 to-black/90 backdrop-blur-xl rounded-3xl p-5 border border-[#fda4af]/30 shadow-xl flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#fda4af]/10 text-[#fda4af] rounded-full flex items-center justify-center text-2xl font-bold border border-[#fda4af]/30 shrink-0">
+                    <div className="w-72 relative flex items-center gap-4 p-4 rounded-2xl border border-[#fda4af] bg-gradient-to-r from-[#9f1239]/90 to-black/90 shadow-[0_0_20px_rgba(251,113,133,0.25)]">
+                        <div className="w-12 h-12 rounded-xl bg-black/40 border border-[#fda4af]/30 flex items-center justify-center text-2xl shrink-0 shadow-inner">
                             🎡
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-[#fda4af] uppercase tracking-wider mb-0.5">Last Spin</div>
-                            <div className="text-lg font-black text-white truncate leading-tight">{wheelHistory[0].user}</div>
-                            <div className="text-xs font-bold text-gray-400 truncate">Won: {wheelHistory[0].reward}</div>
+                            <div className="text-[10px] font-black text-[#fda4af] uppercase tracking-widest mb-0.5">Last Spin</div>
+                            <div className="text-lg font-black text-white truncate leading-tight drop-shadow-md">{wheelHistory[0].user}</div>
+                            <div className="text-xs font-bold text-rose-200 truncate">{wheelHistory[0].reward}</div>
                         </div>
                     </div>
                 )}
