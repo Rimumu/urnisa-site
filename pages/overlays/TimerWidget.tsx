@@ -7,6 +7,7 @@ const TimerWidget: React.FC = () => {
     const { stats, recentEvents } = useNisathonStats(1000);
     const [timeLeft, setTimeLeft] = useState("00:00:00");
     const [addedTimeBubble, setAddedTimeBubble] = useState<{ user: string, timeText: string, id: number } | null>(null);
+    const [timerBump, setTimerBump] = useState(false); // State for the bump animation
     const prevStatsRef = useRef(stats);
 
     // --- ANIMATION LOGIC ---
@@ -37,6 +38,10 @@ const TimerWidget: React.FC = () => {
             let timeText = addedSeconds >= 60 ? `+${Math.round(addedSeconds / 60)}m` : `+${addedSeconds}s`;
             setAddedTimeBubble({ user, timeText, id: Date.now() });
             setTimeout(() => setAddedTimeBubble(null), 4000);
+
+            // Trigger Timer Bump Animation
+            setTimerBump(true);
+            setTimeout(() => setTimerBump(false), 300);
         }
         prevStatsRef.current = stats;
     }, [stats, recentEvents]);
@@ -71,7 +76,6 @@ const TimerWidget: React.FC = () => {
     const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
 
     return (
-        // Changed layout: items-start + pt-28 ensures Timer is pushed down, leaving space at the top for the bubble
         <div className="w-full h-full flex items-start justify-center bg-transparent overflow-visible pt-28 font-sans">
             <style>{`
                 @keyframes popInFloat {
@@ -92,7 +96,7 @@ const TimerWidget: React.FC = () => {
             `}</style>
 
             <div className="relative">
-                {/* Bubble - Positioned relative to the container which has top padding now */}
+                {/* Bubble */}
                 {addedTimeBubble && (
                     <div key={addedTimeBubble.id} className="absolute right-0 -top-14 bubble-anim z-30 whitespace-nowrap">
                         <div className="flex items-center rounded-full overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border border-white/20 ring-1 ring-black/40 bg-black/80 backdrop-blur-xl">
@@ -130,7 +134,15 @@ const TimerWidget: React.FC = () => {
                         <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-white gold-text-shadow' : 'text-rose-100'}`}>
                             Time Remaining
                         </div>
-                        <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight text-white ${stats.isPaused ? 'animate-pulse' : ''} ${isDoubleTimer ? 'gold-text-shadow' : ''}`}>
+                        {/* ANIMATED DIGITS: Scale up and flash green when time is added */}
+                        <div 
+                            className={`
+                                text-8xl font-black tabular-nums bubbly-text tracking-tight transition-all duration-300 transform
+                                ${timerBump ? 'scale-110 text-green-300 text-shadow-lg' : 'scale-100 text-white'}
+                                ${stats.isPaused && !timerBump ? 'animate-pulse' : ''} 
+                                ${isDoubleTimer && !timerBump ? 'gold-text-shadow' : ''}
+                            `}
+                        >
                             {timeLeft}
                         </div>
                     </div>

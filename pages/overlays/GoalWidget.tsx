@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNisathonStats } from '../../hooks/useNisathonStats';
 import { useNisathonGoals } from '../../hooks/useNisathonGoals';
@@ -21,7 +20,7 @@ const GoalWidget: React.FC = () => {
         let status = 'locked';
         if (actualIndex < activeGoalIndex) status = 'completed';
         else if (actualIndex === activeGoalIndex) status = 'active';
-        return { ...g, status };
+        return { ...g, status, uniqueId: `${g.count}-${g.reward}` }; // Add unique ID for key
     });
 
     const prevGoal = activeGoalIndex > 0 ? goals[activeGoalIndex - 1] : null;
@@ -44,11 +43,12 @@ const GoalWidget: React.FC = () => {
             <div className="flex flex-col gap-3">
                 {/* Goal List */}
                 <div className="flex flex-col gap-2">
-                    {visibleGoals.map((goal, idx) => (
+                    {visibleGoals.map((goal) => (
                         <div 
-                            key={idx} 
+                            key={goal.uniqueId} // KEY IS CRITICAL FOR ANIMATION
                             className={`
-                                relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500 shadow-md
+                                relative flex items-center justify-between p-3 rounded-xl border transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-md
+                                animate-in fade-in slide-in-from-bottom-2
                                 ${goal.status === 'active' 
                                     ? 'bg-gradient-to-r from-[#9f1239]/90 to-black/90 border-[#fda4af] shadow-[0_0_15px_rgba(251,113,133,0.3)] scale-[1.02] z-10' 
                                     : 'bg-black/60 border-white/10 opacity-80'}
