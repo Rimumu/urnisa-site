@@ -211,7 +211,7 @@ const Overlay: React.FC = () => {
             {/* BOTTOM BAR: WIDGETS */}
             <div className="flex items-end gap-6 w-full">
                 
-                {/* 1. VERTICAL GOAL LIST (Minimal Design - No Box) */}
+                {/* 1. VERTICAL GOAL LIST (Minimal Design) */}
                 <div className="flex-1 max-w-[28rem] flex flex-col gap-3">
                     
                     {/* Goal Rows */}
@@ -220,7 +220,7 @@ const Overlay: React.FC = () => {
                             <div 
                                 key={idx} 
                                 className={`
-                                    relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500 shadow-lg backdrop-blur-md
+                                    relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500 shadow-md
                                     ${goal.status === 'active' 
                                         ? 'bg-gradient-to-r from-[#9f1239]/90 to-black/90 border-[#fda4af] shadow-[0_0_15px_rgba(251,113,133,0.3)] scale-[1.02] z-10' 
                                         : 'bg-black/60 border-white/10 opacity-80'}
@@ -257,14 +257,19 @@ const Overlay: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Progress Bar (Standalone with shimmer) */}
-                    <div className="w-full h-4 bg-black/60 rounded-full border border-[#fda4af]/50 overflow-hidden shadow-lg relative">
-                        <div 
-                            className="h-full bg-gradient-to-r from-[#e11d48] to-[#fda4af] transition-all duration-1000 ease-out relative"
-                            style={{ width: `${progressPercent}%` }}
-                        >
-                            <div className="absolute inset-0 bg-white/30 animate-[shimmer_1.5s_infinite]"></div>
+                    {/* Progress Bar with Counter */}
+                    <div className="flex items-center gap-3 mt-1">
+                        <div className="flex-1 h-4 bg-black/60 rounded-full border border-[#fda4af]/50 overflow-hidden shadow-lg relative">
+                            <div 
+                                className="h-full bg-gradient-to-r from-[#e11d48] to-[#fda4af] transition-all duration-700 ease-out relative"
+                                style={{ width: `${progressPercent}%` }}
+                            >
+                                <div className="absolute inset-0 bg-white/30 animate-[shimmer_1.5s_infinite]"></div>
+                            </div>
                         </div>
+                        <span className="text-xs font-bold font-mono text-[#fda4af] drop-shadow-md whitespace-nowrap">
+                            {Math.floor(currentNB)} / {currentGoal.count} NB
+                        </span>
                     </div>
 
                 </div>
