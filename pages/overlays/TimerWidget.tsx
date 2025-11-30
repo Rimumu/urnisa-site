@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNisathonStats } from '../../hooks/useNisathonStats';
 import { useNisathonGoals, NisathonGoal } from '../../hooks/useNisathonGoals';
@@ -72,7 +71,8 @@ const TimerWidget: React.FC = () => {
     const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
 
     return (
-        <div className="w-full h-full flex items-end justify-center bg-transparent overflow-visible p-4 font-sans">
+        // Changed layout: items-start + pt-28 ensures Timer is pushed down, leaving space at the top for the bubble
+        <div className="w-full h-full flex items-start justify-center bg-transparent overflow-visible pt-28 font-sans">
             <style>{`
                 @keyframes popInFloat {
                     0% { transform: translate(0, 10px) scale(0.8); opacity: 0; }
@@ -92,7 +92,7 @@ const TimerWidget: React.FC = () => {
             `}</style>
 
             <div className="relative">
-                {/* Bubble */}
+                {/* Bubble - Positioned relative to the container which has top padding now */}
                 {addedTimeBubble && (
                     <div key={addedTimeBubble.id} className="absolute right-0 -top-14 bubble-anim z-30 whitespace-nowrap">
                         <div className="flex items-center rounded-full overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border border-white/20 ring-1 ring-black/40 bg-black/80 backdrop-blur-xl">
