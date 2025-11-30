@@ -100,17 +100,11 @@ const Overlay: React.FC = () => {
 
     // --- GOAL LIST LOGIC ---
     const currentNB = stats.totalNisaballs;
-    
-    // Find index of the first goal that is NOT yet completed
     let activeGoalIndex = goals.findIndex(g => g.count > currentNB);
-    
     if (activeGoalIndex === -1 && goals.length > 0) activeGoalIndex = goals.length - 1;
     if (activeGoalIndex === -1) activeGoalIndex = 0;
 
-    // Determine the window of goals to show (Previous, Current, Next)
-    // We want a sliding window of 3 items if possible.
     let startIndex = activeGoalIndex - 1;
-    // Adjust start to show 3 items if possible
     if (startIndex < 0) startIndex = 0;
     if (startIndex + 3 > goals.length) startIndex = Math.max(0, goals.length - 3);
 
@@ -125,7 +119,6 @@ const Overlay: React.FC = () => {
     const prevGoal = activeGoalIndex > 0 ? goals[activeGoalIndex - 1] : null;
     const currentGoal = goals[activeGoalIndex] || { count: 100, reward: "Loading..." };
     
-    // Calculate Progress for Current Goal
     const baseCount = prevGoal ? prevGoal.count : 0;
     const range = currentGoal.count - baseCount;
     const progressInStep = Math.max(0, currentNB - baseCount);
@@ -159,6 +152,10 @@ const Overlay: React.FC = () => {
                 }
                 .fire-anim {
                     animation: fire-pulse 1.5s infinite ease-in-out;
+                }
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
                 }
             `}</style>
 
@@ -214,25 +211,19 @@ const Overlay: React.FC = () => {
             {/* BOTTOM BAR: WIDGETS */}
             <div className="flex items-end gap-6 w-full">
                 
-                {/* 1. VERTICAL GOAL LIST (REVAMPED) */}
-                <div className="flex-1 max-w-[28rem] bg-gradient-to-b from-[#4c0519]/90 to-black/90 backdrop-blur-xl rounded-3xl p-4 border border-[#fda4af]/40 shadow-[0_0_25px_rgba(159,18,57,0.3)] flex flex-col gap-4">
+                {/* 1. VERTICAL GOAL LIST (Minimal Design - No Box) */}
+                <div className="flex-1 max-w-[28rem] flex flex-col gap-3">
                     
-                    {/* Header */}
-                    <div className="flex justify-between items-baseline px-1 border-b border-[#fda4af]/20 pb-2">
-                        <span className="text-[10px] font-black text-[#fda4af] uppercase tracking-widest">Goal Roadmap</span>
-                        <span className="text-[10px] font-bold text-white font-mono">{Math.floor(currentNB)} NB Total</span>
-                    </div>
-
                     {/* Goal Rows */}
                     <div className="flex flex-col gap-2">
                         {visibleGoals.map((goal, idx) => (
                             <div 
                                 key={idx} 
                                 className={`
-                                    relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500
+                                    relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500 shadow-lg backdrop-blur-md
                                     ${goal.status === 'active' 
-                                        ? 'bg-gradient-to-r from-[#9f1239]/40 to-black/40 border-[#fda4af]/60 shadow-[0_0_15px_rgba(251,113,133,0.2)] scale-[1.02] z-10' 
-                                        : 'bg-black/20 border-[#fda4af]/10 opacity-70 grayscale-[0.3]'}
+                                        ? 'bg-gradient-to-r from-[#9f1239]/90 to-black/90 border-[#fda4af] shadow-[0_0_15px_rgba(251,113,133,0.3)] scale-[1.02] z-10' 
+                                        : 'bg-black/60 border-white/10 opacity-80'}
                                 `}
                             >
                                 <div className="flex items-center gap-3 overflow-hidden">
@@ -258,7 +249,7 @@ const Overlay: React.FC = () => {
                                 {/* Count Pill */}
                                 <div className={`
                                     px-2 py-1 rounded-md text-xs font-mono font-bold ml-2 shrink-0 transition-colors
-                                    ${goal.status === 'active' ? 'bg-[#fda4af] text-[#4c0519]' : 'bg-white/5 text-gray-500'}
+                                    ${goal.status === 'active' ? 'bg-[#fda4af] text-[#4c0519]' : 'bg-white/10 text-gray-500'}
                                 `}>
                                     {goal.count}
                                 </div>
@@ -266,25 +257,19 @@ const Overlay: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Progress Bar (Bottom) */}
-                    <div className="space-y-1 mt-1">
-                        <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-[#fda4af]/20">
-                            <div 
-                                className="h-full bg-gradient-to-r from-[#e11d48] to-[#fda4af] transition-all duration-1000 ease-out relative"
-                                style={{ width: `${progressPercent}%` }}
-                            >
-                                <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
-                            </div>
-                        </div>
-                        <div className="flex justify-between text-[9px] font-bold text-[#fda4af]/70 uppercase px-1">
-                            <span>Current Progress</span>
-                            <span>{Math.floor(progressPercent)}%</span>
+                    {/* Progress Bar (Standalone with shimmer) */}
+                    <div className="w-full h-4 bg-black/60 rounded-full border border-[#fda4af]/50 overflow-hidden shadow-lg relative">
+                        <div 
+                            className="h-full bg-gradient-to-r from-[#e11d48] to-[#fda4af] transition-all duration-1000 ease-out relative"
+                            style={{ width: `${progressPercent}%` }}
+                        >
+                            <div className="absolute inset-0 bg-white/30 animate-[shimmer_1.5s_infinite]"></div>
                         </div>
                     </div>
 
                 </div>
 
-                {/* 2. RECENT EVENT */}
+                {/* 2. RECENT EVENT (Themed to match) */}
                 <div className="w-80 bg-gradient-to-b from-[#2a0a10]/90 to-black/90 backdrop-blur-xl rounded-3xl p-5 border border-[#fda4af]/30 shadow-xl flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl border border-white/10 shrink-0">
                         🔔
@@ -302,7 +287,7 @@ const Overlay: React.FC = () => {
                     </div>
                 </div>
 
-                {/* 3. WHEEL WINNER */}
+                {/* 3. WHEEL WINNER (Themed to match) */}
                 {wheelHistory.length > 0 && (
                     <div className="w-72 bg-gradient-to-b from-[#2a0a10]/90 to-black/90 backdrop-blur-xl rounded-3xl p-5 border border-[#fda4af]/30 shadow-xl flex items-center gap-4">
                         <div className="w-12 h-12 bg-[#fda4af]/10 text-[#fda4af] rounded-full flex items-center justify-center text-2xl font-bold border border-[#fda4af]/30 shrink-0">
