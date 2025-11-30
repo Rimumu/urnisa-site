@@ -74,14 +74,12 @@ const Overlay: React.FC = () => {
             const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((ms % (1000 * 60)) / 1000);
 
-            const h = hours < 10 ? "0" + hours : hours;
-            // Support 3 digits if hours > 99, otherwise 2 digits
+            // Handle 3+ digit hours
             const hStr = hours >= 100 ? hours.toString() : (hours < 10 ? "0" + hours : hours);
-            
-            const m = minutes < 10 ? "0" + minutes : minutes;
-            const s = seconds < 10 ? "0" + seconds : seconds;
+            const mStr = minutes < 10 ? "0" + minutes : minutes;
+            const sStr = seconds < 10 ? "0" + seconds : seconds;
 
-            setTimeLeft(`${hStr}:${m}:${s}`);
+            setTimeLeft(`${hStr}:${mStr}:${sStr}`);
         };
         const interval = setInterval(updateTimer, 1000);
         updateTimer();
@@ -141,12 +139,12 @@ const Overlay: React.FC = () => {
                     )}
 
                     {/* Timer Widget */}
-                    {/* Fixed width/height added to prevent dynamic resizing jitter */}
+                    {/* Fixed dimensions to prevent layout shifts */}
                     <div className={`
                         relative w-[640px] h-[160px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center
                         ${isDoubleTimer 
                             ? 'bg-gradient-to-br from-purple-900 to-black border-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.6)] scale-105' 
-                            : 'bg-gradient-to-br from-brand-bg to-black border-brand-accent shadow-[0_0_30px_rgba(247,197,72,0.3)]'}
+                            : 'bg-gradient-to-br from-[#800f2f] to-[#3a1017] border-[#ff758c] shadow-[0_0_30px_rgba(255,117,140,0.4)]'}
                     `}>
                         {isDoubleTimer && (
                             <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-purple-500 text-white px-4 py-1 rounded-full font-black text-xs uppercase tracking-widest border border-white shadow-lg animate-pulse whitespace-nowrap z-20">
@@ -155,10 +153,10 @@ const Overlay: React.FC = () => {
                         )}
                         
                         <div className="text-center w-full">
-                            <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-300' : 'text-brand-accent'}`}>
-                                Subathon Timer
+                            <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-300' : 'text-[#ffb3c1]'}`}>
+                                Time Remaining
                             </div>
-                            <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight ${stats.isPaused ? 'text-amber-500 animate-pulse' : 'text-white'}`}>
+                            <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight ${stats.isPaused ? 'text-amber-300 animate-pulse' : 'text-white'}`}>
                                 {timeLeft}
                             </div>
                         </div>
