@@ -153,9 +153,9 @@ const Overlay: React.FC = () => {
                 .fire-anim {
                     animation: fire-pulse 1.5s infinite ease-in-out;
                 }
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(100%); }
+                @keyframes shine {
+                    0% { transform: translateX(-100%) skewX(-20deg); }
+                    100% { transform: translateX(200%) skewX(-20deg); }
                 }
             `}</style>
 
@@ -257,19 +257,22 @@ const Overlay: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* Progress Bar with Counter */}
+                    {/* Progress Bar with Boxed Counter */}
                     <div className="flex items-center gap-3 mt-1">
                         <div className="flex-1 h-4 bg-black/60 rounded-full border border-[#fda4af]/50 overflow-hidden shadow-lg relative">
                             <div 
-                                className="h-full bg-gradient-to-r from-[#e11d48] to-[#fda4af] transition-all duration-700 ease-out relative"
+                                className="h-full bg-gradient-to-r from-[#e11d48] to-[#fda4af] transition-all duration-700 ease-out relative overflow-hidden"
                                 style={{ width: `${progressPercent}%` }}
                             >
-                                <div className="absolute inset-0 bg-white/30 animate-[shimmer_1.5s_infinite]"></div>
+                                {/* Diagonal Shine Animation */}
+                                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shine_2s_infinite]"></div>
                             </div>
                         </div>
-                        <span className="text-xs font-bold font-mono text-[#fda4af] drop-shadow-md whitespace-nowrap">
-                            {Math.floor(currentNB)} / {currentGoal.count} NB
-                        </span>
+                        <div className="bg-black/40 border border-[#fda4af]/40 px-3 py-1 rounded-lg shadow-[0_0_10px_rgba(253,164,175,0.1)] backdrop-blur-sm">
+                            <span className="text-xs font-black font-mono text-[#fda4af] drop-shadow-sm whitespace-nowrap">
+                                {Math.floor(currentNB)} / {currentGoal.count} NB
+                            </span>
+                        </div>
                     </div>
 
                 </div>
