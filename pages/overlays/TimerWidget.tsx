@@ -41,7 +41,8 @@ const TimerWidget: React.FC = () => {
 
             // Trigger Timer Bump Animation
             setTimerBump(true);
-            setTimeout(() => setTimerBump(false), 300);
+            // Reset after 200ms to allow the CSS transition to play out and reverse smoothly
+            setTimeout(() => setTimerBump(false), 200);
         }
         prevStatsRef.current = stats;
     }, [stats, recentEvents]);
@@ -96,7 +97,7 @@ const TimerWidget: React.FC = () => {
             `}</style>
 
             <div className="relative">
-                {/* Bubble */}
+                {/* Bubble - Positioned relative to the container which has top padding now */}
                 {addedTimeBubble && (
                     <div key={addedTimeBubble.id} className="absolute right-0 -top-14 bubble-anim z-30 whitespace-nowrap">
                         <div className="flex items-center rounded-full overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border border-white/20 ring-1 ring-black/40 bg-black/80 backdrop-blur-xl">
@@ -137,8 +138,8 @@ const TimerWidget: React.FC = () => {
                         {/* ANIMATED DIGITS: Scale up and flash green when time is added */}
                         <div 
                             className={`
-                                text-8xl font-black tabular-nums bubbly-text tracking-tight transition-all duration-300 transform
-                                ${timerBump ? 'scale-110 text-green-300 text-shadow-lg' : 'scale-100 text-white'}
+                                text-8xl font-black tabular-nums bubbly-text tracking-tight transition-all duration-500 ease-out transform
+                                ${timerBump ? 'scale-105 text-[#4ade80] drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'scale-100 text-white'}
                                 ${stats.isPaused && !timerBump ? 'animate-pulse' : ''} 
                                 ${isDoubleTimer && !timerBump ? 'gold-text-shadow' : ''}
                             `}
