@@ -102,11 +102,11 @@ const Overlay: React.FC = () => {
         <div className="w-screen h-screen overflow-hidden bg-transparent font-sans text-white p-10 flex flex-col justify-between">
             <style>{`
                 @keyframes popInFloat {
-                    0% { transform: translate(-50%, 20px) scale(0.8); opacity: 0; }
-                    15% { transform: translate(-50%, 0) scale(1.05); opacity: 1; }
-                    25% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-                    80% { transform: translate(-50%, -10px) scale(1); opacity: 1; }
-                    100% { transform: translate(-50%, -40px) scale(0.9); opacity: 0; }
+                    0% { transform: translate(0, 20px) scale(0.8); opacity: 0; }
+                    15% { transform: translate(0, 0) scale(1.05); opacity: 1; }
+                    25% { transform: translate(0, 0) scale(1); opacity: 1; }
+                    80% { transform: translate(0, -10px) scale(1); opacity: 1; }
+                    100% { transform: translate(0, -40px) scale(0.9); opacity: 0; }
                 }
                 .bubble-anim {
                     animation: popInFloat 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -121,9 +121,9 @@ const Overlay: React.FC = () => {
                 {/* TIMER CONTAINER */}
                 <div className="relative">
                     
-                    {/* Floating Added Time Pill (Centered above timer) */}
+                    {/* Floating Added Time Pill (Aligned Top Right) */}
                     {addedTimeBubble && (
-                        <div key={addedTimeBubble.id} className="absolute left-1/2 -top-16 bubble-anim z-30 whitespace-nowrap">
+                        <div key={addedTimeBubble.id} className="absolute -right-6 -top-20 bubble-anim z-30 whitespace-nowrap">
                             <div className="flex items-center rounded-full overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border border-white/20 ring-1 ring-black/40 bg-black/80 backdrop-blur-xl">
                                 {/* Username Side */}
                                 <div className="bg-[#18181b] px-4 py-2 flex items-center h-full border-r border-white/10">
