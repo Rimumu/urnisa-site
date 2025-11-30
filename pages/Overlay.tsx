@@ -140,9 +140,17 @@ const Overlay: React.FC = () => {
                 .bubbly-text {
                     text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
                 }
-                /* Specific shadow for white text on gold background */
                 .gold-text-shadow {
-                    text-shadow: 0px 1px 3px rgba(0,0,0,0.4);
+                    text-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+                }
+                /* Fire Pulse Animation for 2x Event Badge */
+                @keyframes fire-pulse {
+                    0% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+                    50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 69, 0, 0.8); }
+                    100% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+                }
+                .fire-anim {
+                    animation: fire-pulse 1.5s infinite ease-in-out;
                 }
             `}</style>
 
@@ -172,14 +180,14 @@ const Overlay: React.FC = () => {
                     <div className={`
                         relative w-[640px] h-[160px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center
                         ${isDoubleTimer 
-                            ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600 border-yellow-200 shadow-[0_0_60px_rgba(234,179,8,0.7)] scale-105' 
+                            ? 'bg-gradient-to-br from-[#FFD700] via-[#E6C200] to-[#B8860B] border-[#FFF8DC] shadow-[0_0_60px_rgba(255,215,0,0.6)] scale-105' 
                             : 'bg-gradient-to-br from-[#9f1239] to-[#4c0519] border-[#fda4af] shadow-[0_0_30px_rgba(251,113,133,0.4)]'}
                     `}>
                         {/* Status Badges Container (Stacks upwards if both exist) */}
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col-reverse items-center gap-2 w-full z-30">
                             {isDoubleTimer && (
-                                <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border border-white/60 shadow-lg animate-pulse whitespace-nowrap gold-text-shadow">
-                                    ✨ 2x Timer Event ✨
+                                <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border border-white/80 fire-anim whitespace-nowrap gold-text-shadow">
+                                    🔥 2x Timer Event 🔥
                                 </div>
                             )}
                             {stats.isPaused && (
