@@ -5,7 +5,7 @@ import { useWheelGame } from '../hooks/useWheelGame';
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 
 const Overlay: React.FC = () => {
-    // Poll every 1000ms (1s) to minimize lag/glitching on pause
+    // Poll every 1000ms (1s) to minimize lag/glitching on pause/resume
     const { stats, leaderboard, recentEvents } = useNisathonStats(1000);
     const { history: wheelHistory } = useWheelGame();
     const { goals } = useNisathonGoals();
@@ -24,7 +24,7 @@ const Overlay: React.FC = () => {
         let addedMs = 0;
 
         // 1. If currently PAUSED and was PAUSED: Check remainingTimeMs increase
-        // This allows bubbles to show up even if the timer is frozen
+        // This allows bubbles to show up even if the timer is frozen (e.g. donation during pause)
         if (stats.isPaused && prevStats.isPaused) {
             const currentRemaining = stats.remainingTimeMs || 0;
             const prevRemaining = prevStats.remainingTimeMs || 0;
@@ -43,12 +43,14 @@ const Overlay: React.FC = () => {
         }
         // 3. Transitions (Paused <-> Running): 
         // We explicitly do NOTHING here. This prevents the bubble from triggering 
-        // when the timerEndTime jumps due to the pause/resume calculation logic.
+        // when the timerEndTime jumps due to the pause/resume calculation logic on the backend.
 
         if (addedMs > 0) {
             const addedSeconds = Math.round(addedMs / 1000);
             
-            // Attempt to find the user responsible from recent events
+            // Attempt to find the user responsible from recent events.
+            // Since useNisathonStats updates both stats and recentEvents in parallel (Promise.all),
+            // this data should be consistent.
             let user = "Anonymous";
             if (recentEvents.length > 0) {
                 const latestEvent = recentEvents[0];
@@ -69,11 +71,11 @@ const Overlay: React.FC = () => {
                 timeText = `+${addedSeconds}s`;
             }
 
-            if (addedSeconds > 0) {
-                setAddedTimeBubble({ user, timeText, id: Date.now() });
-                // Remove bubble after animation completes
-                setTimeout(() => setAddedTimeBubble(null), 4000);
-            }
+            // Trigger Bubble
+            setAddedTimeBubble({ user, timeText, id: Date.now() });
+            
+            // Remove bubble after animation completes
+            setTimeout(() => setAddedTimeBubble(null), 4000);
         }
         
         // Update ref for next render
@@ -105,6 +107,7 @@ const Overlay: React.FC = () => {
 
             setTimeLeft(`${hStr}:${mStr}:${sStr}`);
         };
+        
         // Run update more frequently (100ms) for smoother UI response
         const interval = setInterval(updateTimer, 100);
         updateTimer();

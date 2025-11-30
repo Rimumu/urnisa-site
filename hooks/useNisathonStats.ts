@@ -28,6 +28,7 @@ export interface ContributorEvent {
     createdAt: string;
 }
 
+// Accept pollInterval to allow components like Overlay to update faster (default 5s)
 export const useNisathonStats = (pollInterval = 5000) => {
     const [stats, setStats] = useState<NisathonStatsData>({
         currentSubs: 0,
@@ -44,20 +45,28 @@ export const useNisathonStats = (pollInterval = 5000) => {
 
     const fetchAll = async () => {
         try {
-            // Fetch Stats
-            const statsRes = await fetch(`${API_BASE_URL}/api/nisathon/stats`);
-            if (statsRes.ok) setStats(await statsRes.json());
+            // Fetch ALL data in parallel. 
+            // This is crucial. We need the new Timer Stats AND the new Recent Event (Username) 
+            // to arrive at the exact same time so the animation logic in Overlay sees them together.
+            const [statsRes, lbRes, recentRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/api/nisathon/stats`),
+                fetch(`${API_BASE_URL}/api/nisathon/leaderboard`),
+                fetch(`${API_BASE_URL}/api/nisathon/recent`)
+            ]);
 
-            // Fetch Leaderboard
-            const lbRes = await fetch(`${API_BASE_URL}/api/nisathon/leaderboard`);
-            if (lbRes.ok) setLeaderboard(await lbRes.json());
+            const newStats = statsRes.ok ? await statsRes.json() : null;
+            const newLb = lbRes.ok ? await lbRes.json() : null;
+            const newRecent = recentRes.ok ? await recentRes.json() : null;
 
-            // Fetch Recent
-            const recentRes = await fetch(`${API_BASE_URL}/api/nisathon/recent`);
-            if (recentRes.ok) setRecentEvents(await recentRes.json());
+            // Batch State Updates
+            // In React 18+, updates inside async functions are batched automatically, 
+            // ensuring the component re-renders once with all new data.
+            if (newStats) setStats(newStats);
+            if (newLb) setLeaderboard(newLb);
+            if (newRecent) setRecentEvents(newRecent);
 
         } catch (error) {
-            // Silently fail
+            // Silently fail to avoid console spam during polls
         } finally {
             setLoading(false);
         }
