@@ -140,6 +140,10 @@ const Overlay: React.FC = () => {
                 .bubbly-text {
                     text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
                 }
+                /* Specific shadow for white text on gold background */
+                .gold-text-shadow {
+                    text-shadow: 0px 1px 3px rgba(0,0,0,0.4);
+                }
             `}</style>
 
             {/* TOP BAR: TIMER & EVENT */}
@@ -168,14 +172,14 @@ const Overlay: React.FC = () => {
                     <div className={`
                         relative w-[640px] h-[160px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center
                         ${isDoubleTimer 
-                            ? 'bg-gradient-to-br from-[#854d0e] to-black border-[#fbbf24] shadow-[0_0_50px_rgba(251,191,36,0.6)] scale-105' 
+                            ? 'bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600 border-yellow-200 shadow-[0_0_60px_rgba(234,179,8,0.7)] scale-105' 
                             : 'bg-gradient-to-br from-[#9f1239] to-[#4c0519] border-[#fda4af] shadow-[0_0_30px_rgba(251,113,133,0.4)]'}
                     `}>
                         {/* Status Badges Container (Stacks upwards if both exist) */}
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col-reverse items-center gap-2 w-full z-30">
                             {isDoubleTimer && (
-                                <div className="bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-4 py-1 rounded-full font-black text-xs uppercase tracking-widest border border-white shadow-lg animate-pulse whitespace-nowrap">
-                                    2x Timer Event
+                                <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border border-white/60 shadow-lg animate-pulse whitespace-nowrap gold-text-shadow">
+                                    ✨ 2x Timer Event ✨
                                 </div>
                             )}
                             {stats.isPaused && (
@@ -186,12 +190,12 @@ const Overlay: React.FC = () => {
                         </div>
                         
                         <div className="text-center w-full">
-                            {/* Updated text color to text-rose-100 / text-yellow-100 for better contrast */}
-                            <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-yellow-100' : 'text-rose-100'}`}>
+                            {/* Updated text color to text-rose-100 / white for better contrast on gold */}
+                            <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-white gold-text-shadow' : 'text-rose-100'}`}>
                                 Time Remaining
                             </div>
                             {/* Digits stay white but blink when paused */}
-                            <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight text-white ${stats.isPaused ? 'animate-pulse' : ''}`}>
+                            <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight text-white ${stats.isPaused ? 'animate-pulse' : ''} ${isDoubleTimer ? 'gold-text-shadow' : ''}`}>
                                 {timeLeft}
                             </div>
                         </div>
