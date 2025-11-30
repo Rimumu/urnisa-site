@@ -102,14 +102,14 @@ const Overlay: React.FC = () => {
         <div className="w-screen h-screen overflow-hidden bg-transparent font-sans text-white p-10 flex flex-col justify-between">
             <style>{`
                 @keyframes popInFloat {
-                    0% { transform: translate(0, 20px) scale(0.8); opacity: 0; }
-                    15% { transform: translate(0, 0) scale(1.05); opacity: 1; }
-                    25% { transform: translate(0, 0) scale(1); opacity: 1; }
-                    80% { transform: translate(0, 0) scale(1); opacity: 1; }
-                    100% { transform: translate(0, -30px) scale(0.9); opacity: 0; }
+                    0% { transform: translate(-50%, 20px) scale(0.8); opacity: 0; }
+                    15% { transform: translate(-50%, 0) scale(1.05); opacity: 1; }
+                    25% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+                    80% { transform: translate(-50%, -10px) scale(1); opacity: 1; }
+                    100% { transform: translate(-50%, -40px) scale(0.9); opacity: 0; }
                 }
                 .bubble-anim {
-                    animation: popInFloat 3.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                    animation: popInFloat 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
                 }
                 .bubbly-text {
                     text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
@@ -117,47 +117,48 @@ const Overlay: React.FC = () => {
             `}</style>
 
             {/* TOP BAR: TIMER & EVENT */}
-            <div className="flex justify-center items-start gap-8">
+            <div className="flex justify-center items-start gap-8 pt-12">
                 {/* TIMER CONTAINER */}
                 <div className="relative">
-                    {/* Bubbly Background */}
-                    <div className={`
-                        relative px-8 py-4 rounded-[40px] border-[6px] shadow-2xl transition-all duration-500 z-20
-                        ${isDoubleTimer 
-                            ? 'bg-purple-600 border-purple-300 shadow-[0_0_30px_rgba(147,51,234,0.6)] scale-110' 
-                            : 'bg-[#3a1017] border-[#f7c548]'}
-                    `}>
-                        {isDoubleTimer && (
-                            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-purple-900 px-4 py-1 rounded-full font-black text-sm uppercase tracking-widest border-2 border-white shadow-lg animate-bounce whitespace-nowrap z-20">
-                                2x Timer Active!
-                            </div>
-                        )}
-                        
-                        <div className="text-center">
-                            <div className={`text-sm font-black uppercase tracking-[0.2em] mb-1 ${isDoubleTimer ? 'text-purple-200' : 'text-[#f7c548]'}`}>
-                                Subathon Timer
-                            </div>
-                            <div className={`text-6xl font-black tabular-nums bubbly-text ${stats.isPaused ? 'text-amber-400 animate-pulse' : 'text-white'}`}>
-                                {timeLeft}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Floating Added Time Pill (User | Time) */}
+                    
+                    {/* Floating Added Time Pill (Centered above timer) */}
                     {addedTimeBubble && (
-                        <div key={addedTimeBubble.id} className="absolute left-[102%] top-6 bubble-anim z-10 whitespace-nowrap origin-left">
-                            <div className="flex items-center rounded-2xl overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border-2 border-white/20 ring-1 ring-black/40">
+                        <div key={addedTimeBubble.id} className="absolute left-1/2 -top-16 bubble-anim z-30 whitespace-nowrap">
+                            <div className="flex items-center rounded-full overflow-hidden shadow-[0_10px_25px_rgba(0,0,0,0.6)] border border-white/20 ring-1 ring-black/40 bg-black/80 backdrop-blur-xl">
                                 {/* Username Side */}
-                                <div className="bg-[#18181b] px-5 py-3 flex items-center h-full border-r border-white/5">
-                                    <span className="font-extrabold text-white text-2xl tracking-tight">{addedTimeBubble.user}</span>
+                                <div className="bg-[#18181b] px-4 py-2 flex items-center h-full border-r border-white/10">
+                                    <span className="font-bold text-white text-lg tracking-tight">{addedTimeBubble.user}</span>
                                 </div>
                                 {/* Time Side */}
-                                <div className="bg-[#34d399] px-4 py-3 flex items-center h-full">
-                                    <span className="font-black text-[#064e3b] text-2xl tracking-tight">{addedTimeBubble.timeText}</span>
+                                <div className="bg-[#34d399] px-3 py-2 flex items-center h-full">
+                                    <span className="font-black text-[#064e3b] text-lg tracking-tight">{addedTimeBubble.timeText}</span>
                                 </div>
                             </div>
                         </div>
                     )}
+
+                    {/* Timer Widget */}
+                    <div className={`
+                        relative px-10 py-6 rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20
+                        ${isDoubleTimer 
+                            ? 'bg-gradient-to-br from-purple-900 to-black border-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.6)] scale-105' 
+                            : 'bg-gradient-to-br from-brand-bg to-black border-brand-accent shadow-[0_0_30px_rgba(247,197,72,0.3)]'}
+                    `}>
+                        {isDoubleTimer && (
+                            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-purple-500 text-white px-4 py-1 rounded-full font-black text-xs uppercase tracking-widest border border-white shadow-lg animate-pulse whitespace-nowrap z-20">
+                                2x Timer Event
+                            </div>
+                        )}
+                        
+                        <div className="text-center">
+                            <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-purple-300' : 'text-brand-accent'}`}>
+                                Subathon Timer
+                            </div>
+                            <div className={`text-7xl font-black tabular-nums bubbly-text tracking-tighter ${stats.isPaused ? 'text-amber-500 animate-pulse' : 'text-white'}`}>
+                                {timeLeft}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -165,18 +166,18 @@ const Overlay: React.FC = () => {
             <div className="flex items-end gap-6 w-full">
                 
                 {/* 1. GOAL BAR */}
-                <div className="flex-1 bg-black/60 backdrop-blur-md rounded-3xl p-4 border border-white/20 shadow-xl">
-                    <div className="flex justify-between items-end mb-2 px-2">
+                <div className="flex-1 bg-black/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-2xl">
+                    <div className="flex justify-between items-end mb-2 px-1">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Next Goal</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Next Goal</span>
                             <span className="text-xl font-black text-white leading-none">{nextGoal.secret ? "?? Secret ??" : nextGoal.reward}</span>
                         </div>
                         <div className="text-right">
                             <span className="text-2xl font-black text-brand-accent">{Math.floor(currentNB)}</span>
-                            <span className="text-sm font-bold text-gray-400"> / {nextGoal.count} NB</span>
+                            <span className="text-xs font-bold text-gray-400"> / {nextGoal.count} NB</span>
                         </div>
                     </div>
-                    <div className="h-6 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
+                    <div className="h-4 bg-black/50 rounded-full overflow-hidden border border-white/5 relative">
                         <div 
                             className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-1000 ease-out relative"
                             style={{ width: `${progressPercent}%` }}
@@ -187,16 +188,16 @@ const Overlay: React.FC = () => {
                 </div>
 
                 {/* 2. RECENT EVENT */}
-                <div className="w-80 bg-black/60 backdrop-blur-md rounded-3xl p-4 border border-white/20 shadow-xl flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl border border-white/10">
+                <div className="w-80 bg-black/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-2xl flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl border border-white/10 shrink-0">
                         🔔
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Latest Activity</div>
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Latest Activity</div>
                         {recentEvents.length > 0 ? (
                             <div>
-                                <div className="text-lg font-black text-white truncate">{recentEvents[0].user}</div>
-                                <div className="text-sm font-bold text-brand-primary truncate">{recentEvents[0].amountDisplay}</div>
+                                <div className="text-lg font-black text-white truncate leading-tight">{recentEvents[0].user}</div>
+                                <div className="text-xs font-bold text-brand-primary truncate">{recentEvents[0].amountDisplay}</div>
                             </div>
                         ) : (
                             <div className="text-sm text-gray-500 italic">Waiting...</div>
@@ -206,14 +207,14 @@ const Overlay: React.FC = () => {
 
                 {/* 3. WHEEL WINNER */}
                 {wheelHistory.length > 0 && (
-                    <div className="w-72 bg-gradient-to-br from-brand-bg to-black backdrop-blur-md rounded-3xl p-4 border border-brand-accent/30 shadow-xl flex items-center gap-4">
-                        <div className="w-12 h-12 bg-brand-accent text-black rounded-full flex items-center justify-center text-2xl font-bold border-2 border-white shadow-lg animate-pulse">
+                    <div className="w-72 bg-gradient-to-br from-[#1a0b0e] to-black backdrop-blur-xl rounded-3xl p-5 border border-brand-accent/20 shadow-2xl flex items-center gap-4">
+                        <div className="w-12 h-12 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center text-2xl font-bold border border-brand-accent/30 shrink-0">
                             🎡
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-xs font-bold text-brand-accent uppercase tracking-wider">Last Spin</div>
-                            <div className="text-lg font-black text-white truncate">{wheelHistory[0].user}</div>
-                            <div className="text-sm font-bold text-gray-300 truncate">Won: {wheelHistory[0].reward}</div>
+                            <div className="text-[10px] font-bold text-brand-accent uppercase tracking-wider mb-0.5">Last Spin</div>
+                            <div className="text-lg font-black text-white truncate leading-tight">{wheelHistory[0].user}</div>
+                            <div className="text-xs font-bold text-gray-400 truncate">Won: {wheelHistory[0].reward}</div>
                         </div>
                     </div>
                 )}
