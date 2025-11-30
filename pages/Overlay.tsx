@@ -215,12 +215,12 @@ const Overlay: React.FC = () => {
             <div className="flex items-end gap-6 w-full">
                 
                 {/* 1. VERTICAL GOAL LIST (REVAMPED) */}
-                <div className="flex-1 max-w-[28rem] bg-black/60 backdrop-blur-xl rounded-3xl p-4 border border-white/10 shadow-2xl flex flex-col gap-4">
+                <div className="flex-1 max-w-[28rem] bg-gradient-to-b from-[#4c0519]/90 to-black/90 backdrop-blur-xl rounded-3xl p-4 border border-[#fda4af]/40 shadow-[0_0_25px_rgba(159,18,57,0.3)] flex flex-col gap-4">
                     
                     {/* Header */}
-                    <div className="flex justify-between items-baseline px-1 border-b border-white/5 pb-2">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Goal Roadmap</span>
-                        <span className="text-[10px] font-bold text-brand-primary font-mono">{Math.floor(currentNB)} NB Total</span>
+                    <div className="flex justify-between items-baseline px-1 border-b border-[#fda4af]/20 pb-2">
+                        <span className="text-[10px] font-black text-[#fda4af] uppercase tracking-widest">Goal Roadmap</span>
+                        <span className="text-[10px] font-bold text-white font-mono">{Math.floor(currentNB)} NB Total</span>
                     </div>
 
                     {/* Goal Rows */}
@@ -231,8 +231,8 @@ const Overlay: React.FC = () => {
                                 className={`
                                     relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500
                                     ${goal.status === 'active' 
-                                        ? 'bg-gradient-to-r from-brand-primary/20 to-black border-brand-primary/50 shadow-[0_0_15px_rgba(229,56,59,0.15)] scale-[1.02] z-10' 
-                                        : 'bg-black/40 border-white/5 opacity-60 grayscale-[0.5]'}
+                                        ? 'bg-gradient-to-r from-[#9f1239]/40 to-black/40 border-[#fda4af]/60 shadow-[0_0_15px_rgba(251,113,133,0.2)] scale-[1.02] z-10' 
+                                        : 'bg-black/20 border-[#fda4af]/10 opacity-70 grayscale-[0.3]'}
                                 `}
                             >
                                 <div className="flex items-center gap-3 overflow-hidden">
@@ -240,7 +240,7 @@ const Overlay: React.FC = () => {
                                     <div className={`
                                         w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors duration-300
                                         ${goal.status === 'completed' ? 'border-green-500 bg-green-500' : 
-                                          goal.status === 'active' ? 'border-brand-accent animate-pulse' : 'border-gray-600'}
+                                          goal.status === 'active' ? 'border-[#fda4af] animate-pulse bg-[#fda4af]/20' : 'border-gray-600'}
                                     `}>
                                         {goal.status === 'completed' && (
                                             <svg className="w-2.5 h-2.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
@@ -250,15 +250,15 @@ const Overlay: React.FC = () => {
                                     </div>
                                     
                                     {/* Label */}
-                                    <span className={`text-sm font-bold truncate transition-colors ${goal.status === 'active' ? 'text-white' : 'text-gray-400'}`}>
-                                        {goal.secret && goal.status !== 'completed' ? <span className="text-brand-accent tracking-wider italic">?? Secret ??</span> : goal.reward}
+                                    <span className={`text-sm font-bold truncate transition-colors ${goal.status === 'active' ? 'text-white' : 'text-gray-300'}`}>
+                                        {goal.secret && goal.status !== 'completed' ? <span className="text-[#fda4af] tracking-wider italic">?? Secret ??</span> : goal.reward}
                                     </span>
                                 </div>
 
                                 {/* Count Pill */}
                                 <div className={`
                                     px-2 py-1 rounded-md text-xs font-mono font-bold ml-2 shrink-0 transition-colors
-                                    ${goal.status === 'active' ? 'bg-brand-accent text-black' : 'bg-white/10 text-gray-500'}
+                                    ${goal.status === 'active' ? 'bg-[#fda4af] text-[#4c0519]' : 'bg-white/5 text-gray-500'}
                                 `}>
                                     {goal.count}
                                 </div>
@@ -268,15 +268,15 @@ const Overlay: React.FC = () => {
 
                     {/* Progress Bar (Bottom) */}
                     <div className="space-y-1 mt-1">
-                        <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                        <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-[#fda4af]/20">
                             <div 
-                                className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-1000 ease-out relative"
+                                className="h-full bg-gradient-to-r from-[#e11d48] to-[#fda4af] transition-all duration-1000 ease-out relative"
                                 style={{ width: `${progressPercent}%` }}
                             >
                                 <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
                             </div>
                         </div>
-                        <div className="flex justify-between text-[9px] font-bold text-gray-500 uppercase px-1">
+                        <div className="flex justify-between text-[9px] font-bold text-[#fda4af]/70 uppercase px-1">
                             <span>Current Progress</span>
                             <span>{Math.floor(progressPercent)}%</span>
                         </div>
@@ -285,16 +285,16 @@ const Overlay: React.FC = () => {
                 </div>
 
                 {/* 2. RECENT EVENT */}
-                <div className="w-80 bg-black/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-2xl flex items-center gap-4">
+                <div className="w-80 bg-gradient-to-b from-[#2a0a10]/90 to-black/90 backdrop-blur-xl rounded-3xl p-5 border border-[#fda4af]/30 shadow-xl flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl border border-white/10 shrink-0">
                         🔔
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Latest Activity</div>
+                        <div className="text-[10px] font-bold text-[#fda4af] uppercase tracking-wider mb-0.5">Latest Activity</div>
                         {recentEvents.length > 0 ? (
                             <div>
                                 <div className="text-lg font-black text-white truncate leading-tight">{recentEvents[0].user}</div>
-                                <div className="text-xs font-bold text-brand-primary truncate">{recentEvents[0].amountDisplay}</div>
+                                <div className="text-xs font-bold text-gray-400 truncate">{recentEvents[0].amountDisplay}</div>
                             </div>
                         ) : (
                             <div className="text-sm text-gray-500 italic">Waiting...</div>
@@ -304,12 +304,12 @@ const Overlay: React.FC = () => {
 
                 {/* 3. WHEEL WINNER */}
                 {wheelHistory.length > 0 && (
-                    <div className="w-72 bg-gradient-to-br from-[#1a0b0e] to-black backdrop-blur-xl rounded-3xl p-5 border border-brand-accent/20 shadow-2xl flex items-center gap-4">
-                        <div className="w-12 h-12 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center text-2xl font-bold border border-brand-accent/30 shrink-0">
+                    <div className="w-72 bg-gradient-to-b from-[#2a0a10]/90 to-black/90 backdrop-blur-xl rounded-3xl p-5 border border-[#fda4af]/30 shadow-xl flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#fda4af]/10 text-[#fda4af] rounded-full flex items-center justify-center text-2xl font-bold border border-[#fda4af]/30 shrink-0">
                             🎡
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-brand-accent uppercase tracking-wider mb-0.5">Last Spin</div>
+                            <div className="text-[10px] font-bold text-[#fda4af] uppercase tracking-wider mb-0.5">Last Spin</div>
                             <div className="text-lg font-black text-white truncate leading-tight">{wheelHistory[0].user}</div>
                             <div className="text-xs font-bold text-gray-400 truncate">Won: {wheelHistory[0].reward}</div>
                         </div>
