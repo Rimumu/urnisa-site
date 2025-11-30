@@ -28,7 +28,7 @@ export interface ContributorEvent {
     createdAt: string;
 }
 
-export const useNisathonStats = () => {
+export const useNisathonStats = (pollInterval = 5000) => {
     const [stats, setStats] = useState<NisathonStatsData>({
         currentSubs: 0,
         currentBits: 0,
@@ -65,9 +65,9 @@ export const useNisathonStats = () => {
 
     useEffect(() => {
         fetchAll();
-        const interval = setInterval(fetchAll, 5000);
+        const interval = setInterval(fetchAll, pollInterval);
         return () => clearInterval(interval);
-    }, []);
+    }, [pollInterval]);
 
     return { stats, leaderboard, recentEvents, loading, refetch: fetchAll };
 };

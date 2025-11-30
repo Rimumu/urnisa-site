@@ -5,7 +5,8 @@ import { useWheelGame } from '../hooks/useWheelGame';
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 
 const Overlay: React.FC = () => {
-    const { stats, leaderboard, recentEvents } = useNisathonStats();
+    // Poll every 1000ms (1s) to minimize lag/glitching on pause
+    const { stats, leaderboard, recentEvents } = useNisathonStats(1000);
     const { history: wheelHistory } = useWheelGame();
     const { goals } = useNisathonGoals();
 
@@ -104,7 +105,8 @@ const Overlay: React.FC = () => {
 
             setTimeLeft(`${hStr}:${mStr}:${sStr}`);
         };
-        const interval = setInterval(updateTimer, 1000);
+        // Run update more frequently (100ms) for smoother UI response
+        const interval = setInterval(updateTimer, 100);
         updateTimer();
         return () => clearInterval(interval);
     }, [stats.timerEndTime, stats.isPaused, stats.remainingTimeMs]);
