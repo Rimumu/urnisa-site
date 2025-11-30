@@ -3,18 +3,23 @@ import { useNisathonStats } from '../../hooks/useNisathonStats';
 import { useNisathonGoals, NisathonGoal } from '../../hooks/useNisathonGoals';
 
 const TimerWidget: React.FC = () => {
-    // Poll every 1000ms for smooth updates
+    // Poll every 1000ms for smooth updates from server
     const { stats, recentEvents } = useNisathonStats(1000);
     const [timeLeft, setTimeLeft] = useState("00:00:00");
     const [addedTimeBubble, setAddedTimeBubble] = useState<{ user: string, timeText: string, id: number } | null>(null);
     const [timerBump, setTimerBump] = useState(false); // State for the bump animation
+    
+    // Refs for animation logic
     const prevStatsRef = useRef(stats);
+    const displayMsRef = useRef(0);
+    const initializedRef = useRef(false);
 
-    // --- ANIMATION LOGIC ---
+    // --- EVENT BUBBLE LOGIC ---
     useEffect(() => {
         const prevStats = prevStatsRef.current;
         let addedMs = 0;
 
+        // Detect Time Added (Pause aware)
         if (stats.isPaused && prevStats.isPaused) {
             const currentRemaining = stats.remainingTimeMs || 0;
             const prevRemaining = prevStats.remainingTimeMs || 0;
@@ -39,26 +44,56 @@ const TimerWidget: React.FC = () => {
             setAddedTimeBubble({ user, timeText, id: Date.now() });
             setTimeout(() => setAddedTimeBubble(null), 4000);
 
-            // Trigger Timer Bump Animation
+            // Trigger Bump/Glow
             setTimerBump(true);
-            // Reset after 200ms to allow the CSS transition to play out and reverse smoothly
-            setTimeout(() => setTimerBump(false), 200);
+            setTimeout(() => setTimerBump(false), 300);
         }
         prevStatsRef.current = stats;
     }, [stats, recentEvents]);
 
-    // --- TICKER ---
+    // --- SMOOTH TICKER ANIMATION ---
     useEffect(() => {
-        const updateTimer = () => {
-            let ms = 0;
-            if (stats.isPaused) ms = stats.remainingTimeMs || 0;
-            else {
-                const now = new Date().getTime();
+        let frameId: number;
+
+        const animate = () => {
+            // 1. Calculate the Real Target Time in MS
+            let targetMs = 0;
+            if (stats.isPaused) {
+                targetMs = stats.remainingTimeMs || 0;
+            } else {
+                const now = Date.now();
                 const end = new Date(stats.timerEndTime).getTime();
-                ms = end - now;
+                targetMs = Math.max(0, end - now);
             }
-            if (ms < 0) ms = 0;
-            
+
+            // 2. Initial Snap (on mount)
+            if (!initializedRef.current) {
+                displayMsRef.current = targetMs;
+                initializedRef.current = true;
+            }
+
+            // 3. Interpolation Logic
+            const diff = targetMs - displayMsRef.current;
+
+            if (diff > 1000) {
+                // If target is significantly ahead (Time Added), animate UP towards it.
+                // We move 10% of the difference per frame for a smooth "Zeno's paradox" ease-out.
+                // Minimum step of 100ms ensures it finishes reasonably fast even at the end.
+                const step = Math.max(diff * 0.1, 100); 
+                displayMsRef.current += step;
+                
+                // Snap if very close to avoid infinite micro-decimals
+                if (Math.abs(targetMs - displayMsRef.current) < 50) {
+                    displayMsRef.current = targetMs;
+                }
+            } else {
+                // If counting down (diff is negative or small), just snap to target.
+                // This ensures the countdown remains accurate to real-time.
+                displayMsRef.current = targetMs;
+            }
+
+            // 4. Format Output
+            const ms = Math.floor(displayMsRef.current);
             const hours = Math.floor((ms / (1000 * 60 * 60)));
             const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((ms % (1000 * 60)) / 1000);
@@ -68,10 +103,12 @@ const TimerWidget: React.FC = () => {
             const sStr = seconds < 10 ? "0" + seconds : seconds;
 
             setTimeLeft(`${hStr}:${mStr}:${sStr}`);
+
+            frameId = requestAnimationFrame(animate);
         };
-        const interval = setInterval(updateTimer, 100);
-        updateTimer();
-        return () => clearInterval(interval);
+
+        frameId = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(frameId);
     }, [stats.timerEndTime, stats.isPaused, stats.remainingTimeMs]);
 
     const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
