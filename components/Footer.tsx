@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629964/urnisamark_qq8lso.png";
@@ -14,7 +13,7 @@ const Footer: React.FC = () => {
           <img 
             src={TRADEMARK_IMAGE} 
             alt="Urnisa Trademark" 
-            className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity select-none" 
+            className="h-10 w-auto opacity-70 hover:opacity-100 transition-opacity select-none" 
           />
         </div>
       </div>
