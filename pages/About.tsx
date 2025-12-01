@@ -461,7 +461,7 @@ const About: React.FC = () => {
                                     <div className="mt-8 pt-6 border-t border-white/10 flex flex-col items-center gap-2 text-center">
                                         <p className="text-gray-500 text-xs">
                                             Built with React and Vite by Rimu<br/>
-                                            © {new Date().getFullYear()} Urnisa. All rights reserved.
+                                            © {new Date().getFullYear()} urnisa_ All rights reserved.
                                         </p>
                                         <img src={TRADEMARK_IMAGE} alt="TM" className="h-20 md:h-28 w-auto opacity-60 select-none" />
                                     </div>
@@ -515,7 +515,7 @@ const About: React.FC = () => {
             </div>
             
             <div className="mt-6 text-xs text-gray-600 font-mono animate-in fade-in delay-500 duration-1000">
-                EST. 2023 • urnisa
+                EST. 2023 • urnisa_
             </div>
         </div>
     );

@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
       */}
       <div className="container mx-auto py-4 px-4 flex flex-row justify-center items-center gap-4 relative">
         <p className="text-gray-400 text-sm text-center z-10 select-none">
-          &copy; {new Date().getFullYear()} urnisa. All Rights Reserved.
+          &copy; {new Date().getFullYear()} urnisa_ All Rights Reserved.
         </p>
         
         {/* 
