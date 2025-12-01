@@ -103,13 +103,12 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
               <NavLink to="/" onClick={handlePfpClick} className="text-white font-extrabold text-xl tracking-wider flex items-center gap-3">
                 <img
                   loading="lazy"
-                  src="https://i.ibb.co/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png"
-                  srcSet="https://i.ibb.co/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png 1x, https://i.ibb.co/7YjY2yr/profile-300w.png 2x"
+                  src="https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png"
                   alt="Urnisa's profile picture"
                   className="w-9 h-9 rounded-full object-cover border-2 border-brand-primary/80"
                 />
-                <span>
-                  urnisa
+                <span className="uppercase">
+                  URNISA
                 </span>
                 <div
                   className={`w-3 h-3 rounded-full transition-colors ${

@@ -4,7 +4,7 @@ import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
 
 // Assets
-const PROFILE_IMAGE = "https://i.ibb.co/XZnspyRV/b7587fee-97a4-4c4b-a046-b7ae4ec6650c-profile-image-70x70.png";
+const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png";
 const BANNER_IMAGE = "https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png";
 
 // Icons
