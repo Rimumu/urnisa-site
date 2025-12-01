@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
@@ -364,6 +363,19 @@ const Admin: React.FC = () => {
     const handlePauseTimer = () => apiCall('timer/pause', {});
     const handleSimulateEvent = () => apiCall('test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
     const handleToggleDoubleTimer = () => apiCall('event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
+    
+    // NEW HANDLERS FOR DATA MANAGEMENT
+    const handleResetData = () => {
+        if (confirm("⚠️ WARNING: This will WIPE ALL DATA (Events, Queue, History) and reset stats to zero. This cannot be undone. Are you sure?")) {
+            apiCall('reset', {});
+        }
+    };
+
+    const handleForceSync = () => {
+        if (confirm("This will force the server to fetch the last 24 hours of data from StreamElements. Existing events will be skipped (no duplicates). Continue?")) {
+            apiCall('sync', {});
+        }
+    };
 
     // --- CONTENT EDITORS HELPERS ---
     const updateAboutItem = (i: number, f: keyof AboutItem, v: string) => { const u = [...localAbout]; u[i] = { ...u[i], [f]: v }; setLocalAbout(u); };
@@ -461,6 +473,30 @@ const Admin: React.FC = () => {
                                 >
                                     {stats.activeEvent === 'DOUBLE_TIMER' ? 'Event ACTIVE' : 'Start Double Timer'}
                                 </button>
+                            </div>
+
+                            {/* Data Management Section (NEW) */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="text-xl font-bold text-brand-primary mb-4">Data Management</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <button 
+                                        onClick={handleForceSync}
+                                        disabled={loading}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2"
+                                    >
+                                        <span>🔄</span> Force Sync (Last 24h)
+                                    </button>
+                                    <button 
+                                        onClick={handleResetData}
+                                        disabled={loading}
+                                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2"
+                                    >
+                                        <span>⚠️</span> Reset All Data
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2 text-center">
+                                    "Force Sync" fetches missing events from StreamElements. "Reset" wipes everything to zero.
+                                </p>
                             </div>
 
                             {/* Timer Controls */}
