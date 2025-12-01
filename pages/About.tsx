@@ -6,6 +6,7 @@ import OptimizedImage from '../components/OptimizedImage';
 // Assets
 const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png";
 const BANNER_IMAGE = "https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png";
+const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629964/urnisamark_qq8lso.png";
 
 // Icons
 const CopyIcon = () => (
@@ -185,12 +186,12 @@ const About: React.FC = () => {
             {/* Lightbox */}
             {lightboxImage && (
                 <div 
-                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-300"
                     onClick={() => setLightboxImage(null)}
                 >
                     <img 
                         src={lightboxImage} 
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none"
+                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl select-none"
                         alt="Full size artwork"
                         onClick={(e) => e.stopPropagation()}
                     />
@@ -457,11 +458,12 @@ const About: React.FC = () => {
                                         <span>View Art Gallery</span>
                                     </button>
 
-                                    <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                                    <div className="mt-8 pt-6 border-t border-white/10 flex flex-col items-center gap-2 text-center">
                                         <p className="text-gray-500 text-xs">
                                             Built with React and Vite by Rimu<br/>
                                             © {new Date().getFullYear()} Urnisa. All rights reserved.
                                         </p>
+                                        <img src={TRADEMARK_IMAGE} alt="TM" className="h-5 w-auto opacity-50 select-none" />
                                     </div>
                                 </div>
                             )}
