@@ -6,7 +6,7 @@ import OptimizedImage from '../components/OptimizedImage';
 // Assets
 const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png";
 const BANNER_IMAGE = "https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png";
-const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629964/urnisamark_qq8lso.png";
+const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764631493/urnisamark_qq8lso.png";
 
 // Icons
 const CopyIcon = () => (

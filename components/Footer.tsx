@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629964/urnisamark_qq8lso.png";
+const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764631493/urnisamark_qq8lso.png";
 
 const Footer: React.FC = () => {
   return (
