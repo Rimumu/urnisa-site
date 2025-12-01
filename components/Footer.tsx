@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
           <img 
             src={TRADEMARK_IMAGE} 
             alt="Urnisa Trademark" 
-            className="h-16 md:h-20 w-auto opacity-80 hover:opacity-100 transition-opacity select-none" 
+            className="h-24 md:h-32 w-auto opacity-80 hover:opacity-100 transition-opacity select-none" 
           />
         </div>
       </div>

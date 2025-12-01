@@ -463,7 +463,7 @@ const About: React.FC = () => {
                                             Built with React and Vite by Rimu<br/>
                                             © {new Date().getFullYear()} Urnisa. All rights reserved.
                                         </p>
-                                        <img src={TRADEMARK_IMAGE} alt="TM" className="h-14 md:h-16 w-auto opacity-60 select-none" />
+                                        <img src={TRADEMARK_IMAGE} alt="TM" className="h-20 md:h-28 w-auto opacity-60 select-none" />
                                     </div>
                                 </div>
                             )}
