@@ -62,7 +62,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
   const pfpClickCount = useRef(0);
   const lastPfpClickTime = useRef(0);
 
-  const handlePfpClick = () => {
+  const handleLogoClick = () => {
     const now = Date.now();
     // Reset if clicks are more than 1 second apart to ensure they are "rapid"
     if (now - lastPfpClickTime.current > 1000) {
@@ -99,27 +99,40 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
       <nav className="bg-brand-secondary sticky top-0 z-50 shadow-lg shadow-black/30 border-b border-white/10">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <NavLink to="/" onClick={handlePfpClick} className="flex items-center gap-3">
-                <img
-                  loading="lazy"
-                  src="https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png"
-                  alt="Urnisa's profile picture"
-                  className="w-9 h-9 rounded-full object-cover border-2 border-brand-primary/80"
-                />
+            <div className="flex items-center gap-4">
+              {/* Logo Link to Twitch */}
+              <a 
+                href="https://twitch.tv/urnisa_" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={handleLogoClick} 
+                className="flex items-center hover:opacity-80 transition-opacity"
+              >
                 <img 
                     src="https://res.cloudinary.com/dsencimjn/image/upload/v1764649926/Logo_File_urnisa_vfqvqe.png" 
                     alt="URNISA" 
                     className="h-8 md:h-12 w-auto object-contain"
                 />
-                <div
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-500'
-                  }`}
-                  title={isLive ? 'Live' : 'Offline'}
-                ></div>
-              </NavLink>
+              </a>
+
+              {/* Live Status Indicator */}
+              <a
+                href="https://twitch.tv/urnisa_"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`
+                    px-2 py-1 rounded-md text-[10px] font-black tracking-widest uppercase text-white transition-all duration-300
+                    ${isLive 
+                        ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)] animate-pulse' 
+                        : 'bg-gray-600 opacity-80'
+                    }
+                `}
+                title={isLive ? 'Urnisa is LIVE!' : 'Urnisa is Offline'}
+              >
+                {isLive ? 'LIVE' : 'OFFLINE'}
+              </a>
             </div>
+
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
                 <NavLinks />
