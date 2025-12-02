@@ -404,7 +404,7 @@ const About: React.FC = () => {
                                     <div className="bg-white/5 p-6 rounded-xl border border-white/5">
                                         <h3 className="text-white font-bold text-lg mb-2">Community Support</h3>
                                         <p className="text-sm text-gray-400">
-                                            The best way to reach me for non-business stuff, suggestions, or just to say hi is through the <a href="https://discord.gg/urnisa" className="text-brand-primary hover:underline">Discord server</a> or on <a href="https://x.com/urnisa__" className="text-brand-primary hover:underline">X</a>!
+                                            The best way to reach me for non-business stuff/community, suggestions, or just to say hi is through the <a href="https://discord.gg/urnisa" className="text-brand-primary hover:underline">Discord server</a> or on <a href="https://x.com/urnisa__" className="text-brand-primary hover:underline">X</a>!
                                         </p>
                                     </div>
                                 </div>
