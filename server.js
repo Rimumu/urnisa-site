@@ -21,8 +21,6 @@ let ENV_CHANNEL_ID = process.env.STREAMELEMENTS_CHANNEL_ID || "";
 ENV_CHANNEL_ID = ENV_CHANNEL_ID.replace(/["']/g, "").trim();
 
 const TARGET_USERNAME = 'urnisa_';
-// Dynamic ID
-let ACTIVE_CHANNEL_ID = ENV_CHANNEL_ID; 
 
 // Image Hosting
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
@@ -109,6 +107,11 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
 
     // --- RULESET ---
     if (['subscriber', 'sub', 'resub', 'subscription'].includes(type)) {
+        // Skip Gift Recipients
+        if (!isManual && (message.includes('gift') || amount === 0)) {
+             return 0; 
+        }
+
         let tVal = 0.5;
         let tLbl = "Tier 1";
         const tStr = String(tier).toLowerCase();
@@ -119,10 +122,8 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         earnedNisaballs = tVal;
         amountDisplay = `${tLbl} Sub`;
         eventType = 'sub';
-        
         if (isNewEvent) stats.currentSubs += 1;
     } 
-    // NOTE: 'gift' type events from SE are often just the bulk message, handled below.
     else if (type === 'gift') {
         earnedNisaballs = 0.5 * amount;
         amountDisplay = `${amount} Gift Subs`;
@@ -140,7 +141,6 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         eventType = 'donation';
         if (isNewEvent) stats.currentDonations += amount;
     }
-    // FOLLOWER LOGIC
     else if (['follower', 'follow'].includes(type)) {
         earnedNisaballs = 0;
         amountDisplay = "New Follower";
@@ -157,9 +157,7 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
             if (!stats.isPaused) {
                 const now = Date.now();
                 const curEnd = new Date(stats.timerEndTime).getTime();
-                // If timer expired, start from now
-                const baseTime = curEnd < now ? now : curEnd;
-                stats.timerEndTime = new Date(baseTime + msAdd);
+                stats.timerEndTime = new Date(Math.max(now, curEnd) + msAdd);
             } else {
                 stats.remainingTimeMs += msAdd;
             }
@@ -198,7 +196,7 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
 };
 
 // ==========================================
-// 1. SOCKET (REAL-TIME)
+// 1. REAL-TIME SOCKET
 // ==========================================
 let socket = null;
 
@@ -233,18 +231,12 @@ const connectSocket = () => {
             const info = data.data;
             let amount = 1;
             let tier = '1000';
-            let type = data.type;
-            let username = info.username;
+            let type = data.type; 
 
             if (type === 'subscriber') {
                 tier = info.tier || '1000';
                 amount = info.amount || 1; 
-                // GIFT LOGIC FOR SOCKET
-                if (info.gifted) {
-                    username = info.sender; // Attribute to Sender
-                    // Don't skip, process as 'sub' but for sender.
-                    // NOTE: Socket sends individual gift events. We process them as +0.5 for sender.
-                }
+                if (info.gifted) { return; } 
             } else if (type === 'tip' || type === 'cheer') {
                 amount = info.amount;
             } else if (type === 'follow') {
@@ -253,21 +245,41 @@ const connectSocket = () => {
             }
 
             const providerId = data._id || `sock-${Date.now()}-${Math.random()}`;
-            await processEvent(stats, type, username, amount, info.message||"", providerId, tier);
+            await processEvent(stats, type, info.username, amount, info.message||"", providerId, tier);
             await stats.save();
         } catch (e) { console.error("Socket Error:", e); }
     });
 };
 
 // ==========================================
-// 2. REST POLLING & SYNC
+// 2. REST POLLING & RESOLVER
 // ==========================================
-const fetchAndProcess = async (channelId, label, stats, limit = 50, offset = 0) => {
-    if (!channelId) return false;
+
+// Resolve correct ID
+const resolveChannelId = async () => {
+    if (!SE_JWT) return null;
+    try {
+        const res = await axios.get(`https://api.streamelements.com/kappa/v2/channels/${TARGET_USERNAME}`, {
+             headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+        if (res.data && res.data._id) {
+            return res.data._id;
+        }
+    } catch (e) { }
+    // Fallback
+    try {
+        const me = await axios.get('https://api.streamelements.com/kappa/v2/channels/me', {
+            headers: { 'Authorization': `Bearer ${SE_JWT}` }
+        });
+        return me.data._id;
+    } catch (e) { return null; }
+};
+
+const fetchAndProcess = async (channelId, label, stats, limit = 25, offset = 0) => {
+    if (!channelId) return [];
     
     try {
         const url = `https://api.streamelements.com/kappa/v2/activities/${channelId}`;
-        
         const { data: activities } = await axios.get(url, {
             headers: { 
                 'Authorization': `Bearer ${SE_JWT}`,
@@ -278,160 +290,93 @@ const fetchAndProcess = async (channelId, label, stats, limit = 50, offset = 0) 
             timeout: 10000
         });
 
-        if (!activities || activities.length === 0) {
-            return false;
-        }
+        if (!activities || activities.length === 0) return [];
 
-        // Process Oldest to Newest if getting latest page, but if paging back, order matters differently.
-        // Standard sync: Oldest -> Newest.
-        activities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        
-        let changes = false;
-        for (const act of activities) {
-            let amt = 0;
-            let tier = '1000';
-            let type = act.type;
-            let username = act.data.username;
-            
-            if (['subscriber','sub','resub'].includes(act.type)) { 
-                amt = 1; 
-                tier = act.data.tier || '1000';
+        if (offset === 0) {
+            activities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            let changes = false;
+            for (const act of activities) {
+                let amt = 0;
+                let tier = '1000';
+                let type = act.type;
+                let username = act.data.username; 
                 
-                // GIFT LOGIC:
-                // If gifted, we attribute it to the SENDER.
-                // This handles "bulk gifts" by processing each individual gift sub for the sender.
-                if (act.data.gifted) {
-                    username = act.data.sender;
-                    // display text update? handled in processEvent by checking type
+                if (['subscriber','sub','resub'].includes(act.type)) { 
+                    amt = 1; 
+                    tier = act.data.tier || '1000';
+                    if (act.data.gifted) username = act.data.sender; 
                 }
-            }
-            else if (act.type === 'gift') {
-                // Some SE integrations send a summary "gift" event.
-                // To avoid double counting with individual sub-gifts, we MIGHT skip this if we trust the individuals.
-                // But often SE *only* sends individuals in activity feed.
-                // If we see a type='gift', it's usually distinct.
-                amt = act.data.amount || 1; 
-            }
-            else if (['cheer','tip'].includes(act.type)) {
-                amt = act.data.amount; 
-            }
-            else if (act.type === 'follow') { 
-                type = 'follower'; 
-                amt = 0; 
-            }
-            else continue;
+                else if (act.type === 'gift') {
+                    amt = act.data.amount || 1; 
+                }
+                else if (['cheer','tip'].includes(act.type)) {
+                    amt = act.data.amount; 
+                }
+                else if (act.type === 'follow') { 
+                    type = 'follower'; 
+                    amt = 0; 
+                }
+                else continue;
 
-            const added = await processEvent(stats, type, username, amt, act.data.message, act._id, tier);
-            if (added > 0 || type === 'follower') changes = true;
+                const added = await processEvent(stats, type, username, amt, act.data.message, act._id, tier);
+                if (added > 0 || type === 'follower') changes = true;
+            }
+            return changes;
         }
-        return changes;
+
+        return activities; // Return raw for rebuild
 
     } catch (e) {
-        if (e.response?.status === 401) console.error(`❌ [${label}] 401 Unauthorized.`);
-        else console.error(`❌ [${label}] Error: ${e.message}`);
-        return false;
+        return [];
     }
 };
 
-// Resolve correct ID for 'urnisa_'
-const resolveChannelId = async () => {
-    if (!SE_JWT) return null;
-    try {
-        const res = await axios.get(`https://api.streamelements.com/kappa/v2/channels/${TARGET_USERNAME}`, {
-             headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
-        if (res.data && res.data._id) {
-            ACTIVE_CHANNEL_ID = res.data._id;
-            console.log(`✅ RESOLVED ID: ${ACTIVE_CHANNEL_ID}`);
-            return ACTIVE_CHANNEL_ID;
-        }
-    } catch (e) { 
-        console.log("⚠️ Could not resolve alias. Using Configured/Token ID."); 
-    }
-    // Fallback to token owner
-    try {
-        const me = await axios.get('https://api.streamelements.com/kappa/v2/channels/me', {
-            headers: { 'Authorization': `Bearer ${SE_JWT}` }
-        });
-        return me.data._id;
-    } catch (e) { return null; }
-};
-
-// Full Rebuild Logic (The "Recount" Feature)
+// ==========================================
+// 3. REBUILD LOGIC
+// ==========================================
 const rebuildEverything = async () => {
-    if (!ACTIVE_CHANNEL_ID) return;
-    console.log("🔥 STARTING FULL REBUILD & RECOUNT...");
+    const resolvedId = await resolveChannelId() || ENV_CHANNEL_ID;
+    if (!resolvedId) return;
+    console.log(`🔥 STARTING REBUILD for ${resolvedId}...`);
 
-    // 1. Reset DB
     await NisathonEvent.deleteMany({});
     await SpinQueue.deleteMany({});
     await SpinHistory.deleteMany({});
     
-    // Reset Stats to initial state (3 hours default)
     let stats = await NisathonStats.findOne({ key: 'main' });
-    stats.currentSubs = 0;
-    stats.currentBits = 0;
-    stats.currentDonations = 0;
-    stats.totalNisaballs = 0;
-    stats.remainingTimeMs = 0;
-    stats.isPaused = false;
+    if (!stats) stats = await NisathonStats.create({ key: 'main' });
+    stats.currentSubs = 0; stats.currentBits = 0; stats.currentDonations = 0; stats.totalNisaballs = 0;
+    stats.remainingTimeMs = 0; stats.isPaused = false;
     stats.timerEndTime = new Date(Date.now() + 3 * 60 * 60 * 1000);
-    stats.lastActivityTime = new Date(0).toISOString(); // Reset cursor
+    stats.lastActivityTime = new Date(0).toISOString(); 
     await stats.save();
 
-    // 2. Fetch Deep History (1000 items / 10 pages)
-    // We fetch pages in reverse (oldest pages first would be ideal, but API is Limit/Offset from Newest)
-    // So we fetch all pages, combine them, then sort by date ascending.
     let allActivities = [];
-    const limit = 100; // Max per page
-    const pagesToFetch = 10; // 1000 items total
+    const limit = 100; 
+    const pagesToFetch = 10; 
 
     for (let i = 0; i < pagesToFetch; i++) {
-        const offset = i * limit;
-        console.log(`   -> Fetching Page ${i+1} (Offset ${offset})...`);
-        try {
-            const { data: acts } = await axios.get(`https://api.streamelements.com/kappa/v2/activities/${ACTIVE_CHANNEL_ID}`, {
-                headers: { 'Authorization': `Bearer ${SE_JWT}` },
-                params: { limit, offset }
-            });
-            if (acts && acts.length > 0) {
-                allActivities = allActivities.concat(acts);
-            } else {
-                break; // End of history
-            }
-        } catch (e) {
-            console.error("Rebuild Fetch Error:", e.message);
-            break;
-        }
+        const acts = await fetchAndProcess(resolvedId, "REBUILD", null, limit, i * limit);
+        if (Array.isArray(acts) && acts.length > 0) allActivities = allActivities.concat(acts);
+        else break;
     }
 
     console.log(`   -> Processing ${allActivities.length} historical events...`);
-
-    // 3. Process Chronologically
     allActivities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     for (const act of allActivities) {
-        let amt = 0;
-        let tier = '1000';
-        let type = act.type;
-        let username = act.data.username;
-        
+        let amt = 0, tier = '1000', type = act.type, user = act.data.username;
         if (['subscriber','sub','resub'].includes(act.type)) { 
-            amt = 1; 
-            tier = act.data.tier || '1000';
-            if (act.data.gifted) {
-                username = act.data.sender; // Fix attribution
-            }
+            amt = 1; tier = act.data.tier || '1000';
+            if (act.data.gifted) user = act.data.sender;
         }
         else if (act.type === 'gift') amt = act.data.amount || 1;
         else if (['cheer','tip'].includes(act.type)) amt = act.data.amount;
         else if (act.type === 'follow') { type = 'follower'; amt = 0; }
         else continue;
 
-        await processEvent(stats, type, username, amt, act.data.message, act._id, tier);
+        await processEvent(stats, type, user, amt, act.data.message, act._id, tier);
     }
-
-    // Update cursor to now
     stats.lastActivityTime = new Date().toISOString();
     await stats.save();
     console.log("✅ REBUILD COMPLETE.");
@@ -442,12 +387,12 @@ const runSync = async () => {
     try {
         let stats = await NisathonStats.findOne({ key: 'main' });
         if (!stats) stats = await NisathonStats.create({ key: 'main', timerEndTime: new Date(Date.now() + 3*3600000) });
-
-        let resolvedId = ACTIVE_CHANNEL_ID || await resolveChannelId();
-        if (resolvedId) {
-            await fetchAndProcess(resolvedId, "AUTO-ID", stats);
-            await stats.save();
-        }
+        let resolvedId = await resolveChannelId();
+        
+        let c1 = false, c2 = false;
+        if (resolvedId) c1 = await fetchAndProcess(resolvedId, "AUTO", stats);
+        if (ENV_CHANNEL_ID && ENV_CHANNEL_ID !== resolvedId) c2 = await fetchAndProcess(ENV_CHANNEL_ID, "ENV", stats);
+        if (c1 || c2) await stats.save();
     } catch (e) { console.error("Loop Error:", e); }
 };
 
@@ -456,17 +401,25 @@ const runSync = async () => {
 // ==========================================
 app.get('/', (req, res) => res.send('Backend OK'));
 
+// DEBUG
 app.get('/api/debug/se-latest', async (req, res) => {
-    if (!SE_JWT || !ACTIVE_CHANNEL_ID) return res.json({ error: "Config Missing" });
+    if (!SE_JWT || !ENV_CHANNEL_ID) return res.json({ error: "Missing Config" });
+    let targetId = ENV_CHANNEL_ID;
     try {
-        const response = await axios.get(`https://api.streamelements.com/kappa/v2/activities/${ACTIVE_CHANNEL_ID}`, {
+        const r = await axios.get(`https://api.streamelements.com/kappa/v2/channels/${TARGET_USERNAME}`, { headers: { 'Authorization': `Bearer ${SE_JWT}` } });
+        targetId = r.data._id;
+    } catch(e){}
+
+    try {
+        const response = await axios.get(`https://api.streamelements.com/kappa/v2/activities/${targetId}`, {
             headers: { Authorization: `Bearer ${SE_JWT}` },
             params: { limit: 25 }
         });
-        res.json({ configId: ACTIVE_CHANNEL_ID, data: response.data });
+        res.json({ configId: targetId, data: response.data });
     } catch (e) { res.json({ error: e.message }); }
 });
 
+// AUTH
 const auth = (req, res, next) => {
     if (req.headers.authorization !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
     next();
@@ -488,8 +441,9 @@ app.get('/api/nisathon/leaderboard', async (req, res) => {
     } catch { res.json([]); }
 });
 
-app.get('/api/nisathon/recent', async (req, res) => res.json(await NisathonEvent.find().sort({ createdAt: -1 }).limit(10)));
+app.get('/api/nisathon/recent', async (req, res) => res.json(await NisathonEvent.find().sort({ createdAt: -1 }).limit(50))); // Increased limit for admin log
 
+// MANUAL & TEST EVENTS
 app.post('/api/nisathon/test-event', auth, async (req, res) => {
     const stats = await NisathonStats.findOne({ key: 'main' });
     await processEvent(stats, req.body.type, req.body.user, parseFloat(req.body.amount), "Manual", null, req.body.tier, true);
@@ -497,6 +451,44 @@ app.post('/api/nisathon/test-event', auth, async (req, res) => {
     res.json({ success: true });
 });
 
+// DELETE EVENT (NEW)
+app.post('/api/nisathon/delete-event', auth, async (req, res) => {
+    const { id, revert } = req.body;
+    try {
+        const event = await NisathonEvent.findById(id);
+        if (!event) return res.status(404).json({ error: "Not Found" });
+
+        if (revert) {
+            const stats = await NisathonStats.findOne({ key: 'main' });
+            if (stats) {
+                // Revert counts roughly
+                if (event.type === 'sub') stats.currentSubs -= 1;
+                else if (event.type === 'gift') stats.currentSubs -= (event.nisaballAmount * 2); 
+                else if (event.type === 'bits') stats.currentBits -= (event.nisaballAmount * 500);
+                else if (event.type === 'donation') stats.currentDonations -= (event.nisaballAmount * 5);
+
+                stats.totalNisaballs = Math.max(0, roundOneDecimal(stats.totalNisaballs - event.nisaballAmount));
+                
+                // Revert Timer
+                const msToRemove = event.nisaballAmount * 10 * 60 * 1000;
+                if (stats.isPaused) {
+                    stats.remainingTimeMs = Math.max(0, stats.remainingTimeMs - msToRemove);
+                } else {
+                    const currentEnd = new Date(stats.timerEndTime).getTime();
+                    stats.timerEndTime = new Date(currentEnd - msToRemove);
+                }
+                await stats.save();
+            }
+        }
+
+        await SpinQueue.deleteMany({ sourceEventId: id });
+        await NisathonEvent.findByIdAndDelete(id);
+        
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// CONTROLS
 app.post('/api/nisathon/timer/set', auth, async (req, res) => {
     const stats = await NisathonStats.findOne({ key: 'main' });
     const ms = (req.body.hours*3600 + req.body.minutes*60 + req.body.seconds)*1000;
@@ -524,13 +516,6 @@ app.post('/api/nisathon/event', auth, async (req, res) => {
     await NisathonStats.findOneAndUpdate({ key: 'main' }, { activeEvent: req.body.activeEvent });
     res.json({ success: true });
 });
-
-// NEW: REBUILD ENDPOINT
-app.post('/api/nisathon/rebuild', auth, async (req, res) => {
-    rebuildEverything(); // Async, don't wait
-    res.json({ success: true, message: "Rebuild started" });
-});
-
 app.post('/api/nisathon/reset', auth, async (req, res) => {
     await NisathonEvent.deleteMany({}); await SpinQueue.deleteMany({}); await SpinHistory.deleteMany({});
     await NisathonStats.findOneAndUpdate({ key: 'main' }, { 
@@ -542,6 +527,10 @@ app.post('/api/nisathon/reset', auth, async (req, res) => {
 app.post('/api/nisathon/sync', auth, async (req, res) => {
     await runSync(true);
     res.json({ success: true });
+});
+app.post('/api/nisathon/rebuild', auth, async (req, res) => {
+    rebuildEverything();
+    res.json({ success: true, message: "Rebuild Started" });
 });
 
 // Wheel
@@ -635,10 +624,9 @@ if (MONGO_URI) {
                 await resolveChannelId();
                 connectSocket();
                 
-                console.log("🚀 Startup Sync...");
-                await runSync();
-                setInterval(() => runSync(), 30000);
-                
+                console.log("🚀 Startup Deep Sync...");
+                await runSync(true);
+                setInterval(() => runSync(false), 30000);
                 setInterval(() => { axios.get('https://urnisa-backend.onrender.com').catch(()=>{}) }, 300000);
             });
         })

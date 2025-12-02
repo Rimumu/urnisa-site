@@ -5,7 +5,7 @@ import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/u
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
-import { useNisathonStats } from '../hooks/useNisathonStats';
+import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
@@ -206,8 +206,11 @@ const Admin: React.FC = () => {
     const [testTier, setTestTier] = useState("1000"); // 1000 = Tier 1, 2000 = Tier 2, 3000 = Tier 3
     const [managerStatus, setManagerStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+    // --- NEW STATE FOR EVENT LOGS ---
+    const [recentEvents, setRecentEvents] = useState<ContributorEvent[]>([]);
+    const [confirmDelete, setConfirmDelete] = useState<{id: string, revert: boolean} | null>(null);
+
     // --- COUNTDOWN STATE ---
-    // We don't need the full hook data here, just endpoints, but let's setup inputs
     const [cdH, setCdH] = useState(0);
     const [cdM, setCdM] = useState(0);
     const [cdS, setCdS] = useState(0);
@@ -219,7 +222,7 @@ const Admin: React.FC = () => {
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
     const [confirmSync, setConfirmSync] = useState(false);
-    const [confirmRebuild, setConfirmRebuild] = useState(false); // NEW
+    const [confirmRebuild, setConfirmRebuild] = useState(false);
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -231,7 +234,22 @@ const Admin: React.FC = () => {
     useEffect(() => { setLocalGoals(currentGoals); }, [currentGoals]);
     useEffect(() => { setLocalWheel(wheelItems); }, [wheelItems]);
 
-    // Fetch Stream Status Override on auth
+    // Fetch Logs when on manager tab
+    const fetchEventLog = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/nisathon/recent`);
+            if(res.ok) setRecentEvents(await res.json());
+        } catch(e) {}
+    };
+
+    useEffect(() => {
+        if (isAuthenticated && activeTab === 'nisathon_mgr') {
+            fetchEventLog();
+            const interval = setInterval(fetchEventLog, 5000); // Refresh logs often
+            return () => clearInterval(interval);
+        }
+    }, [isAuthenticated, activeTab]);
+
     useEffect(() => {
         if (isAuthenticated) {
             fetch(`${API_BASE_URL}/api/stream-status`).then(r => r.json()).then(d => setStreamStatusOverride(d.override));
@@ -382,15 +400,16 @@ const Admin: React.FC = () => {
         setLoading(true);
         setManagerStatus(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, { // Changed to allow countdown endpoint which is not under nisathon/
+            const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': password },
                 body: JSON.stringify(body)
             });
             if (response.ok) {
                 setManagerStatus({ type: 'success', message: 'Action executed successfully!' });
-                // If nisathon action, refresh stats
                 if (endpoint.includes('nisathon')) refetchStats();
+                // Refresh log if needed
+                if (endpoint.includes('delete-event') || endpoint.includes('test-event') || endpoint.includes('rebuild')) fetchEventLog();
             } else {
                 setManagerStatus({ type: 'error', message: 'Action failed.' });
             }
@@ -401,53 +420,30 @@ const Admin: React.FC = () => {
         }
     };
 
-    // NISATHON HANDLERS
+    // HANDLERS
     const handleSetTimer = () => apiCall('nisathon/timer/set', { hours: timerH, minutes: timerM, seconds: timerS });
     const handleAddTimer = () => apiCall('nisathon/timer/add', { minutes: addM });
     const handlePauseTimer = () => apiCall('nisathon/timer/pause', {});
     const handleSimulateEvent = () => apiCall('nisathon/test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
     const handleToggleDoubleTimer = () => apiCall('nisathon/event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
     
-    // Reset with 2-step confirmation (Double Click Logic)
-    const handleResetData = () => {
-        if (confirmReset) {
-            apiCall('nisathon/reset', {});
-            setConfirmReset(false);
-        } else {
-            setConfirmReset(true);
-            setTimeout(() => setConfirmReset(false), 3000); // Reset state after 3s
-        }
+    const handleDeleteEvent = (id: string, revert: boolean) => {
+        apiCall('nisathon/delete-event', { id, revert });
+        setConfirmDelete(null);
     };
 
-    // Sync with 2-step confirmation (Double Click Logic)
-    const handleForceSync = () => {
-        if (confirmSync) {
-            apiCall('nisathon/sync', {}); // This calls runSync(true) on backend (Deep Sync)
-            setConfirmSync(false);
-        } else {
-            setConfirmSync(true);
-            setTimeout(() => setConfirmSync(false), 3000);
-        }
-    };
-    
-    // NEW: REBUILD HANDLER
-    const handleRebuild = () => {
-        if (confirmRebuild) {
-            apiCall('nisathon/rebuild', {});
-            setConfirmRebuild(false);
-        } else {
-            setConfirmRebuild(true);
-            setTimeout(() => setConfirmRebuild(false), 3000);
-        }
-    };
+    // CONFIRMATION LOGIC
+    const handleResetData = () => { if (confirmReset) { apiCall('nisathon/reset', {}); setConfirmReset(false); } else { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 3000); } };
+    const handleForceSync = () => { if (confirmSync) { apiCall('nisathon/sync', {}); setConfirmSync(false); } else { setConfirmSync(true); setTimeout(() => setConfirmSync(false), 3000); } };
+    const handleRebuild = () => { if (confirmRebuild) { apiCall('nisathon/rebuild', {}); setConfirmRebuild(false); } else { setConfirmRebuild(true); setTimeout(() => setConfirmRebuild(false), 3000); } };
 
-    // COUNTDOWN HANDLERS
+    // COUNTDOWN
     const handleCountdownSet = () => apiCall('countdown/set', { hours: cdH, minutes: cdM, seconds: cdS });
     const handleCountdownAdd = () => apiCall('countdown/add', { minutes: cdAddM });
     const handleCountdownPause = () => apiCall('countdown/pause', {});
     const handleCountdownReset = () => apiCall('countdown/reset', {});
 
-    // --- CONTENT EDITORS HELPERS ---
+    // --- HELPERS ---
     const updateAboutItem = (i: number, f: keyof AboutItem, v: string) => { const u = [...localAbout]; u[i] = { ...u[i], [f]: v }; setLocalAbout(u); };
     const addAboutItem = () => setLocalAbout([...localAbout, { id: Date.now().toString(), title: 'New Section', text: '' }]);
     const removeAboutItem = (i: number) => setLocalAbout(localAbout.filter((_, idx) => idx !== i));
@@ -605,6 +601,49 @@ const Admin: React.FC = () => {
                                 <p className="text-xs text-gray-500 mt-2 text-center">
                                     <strong>Force Sync:</strong> Checks recent history. <strong>Full Rebuild:</strong> Wipes & fetches last 1000 events (fixes timer/wheel). <strong>Reset:</strong> Deletes everything.
                                 </p>
+                            </div>
+
+                            {/* EVENT LOG (NEW) */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl max-h-96 overflow-y-auto">
+                                <h3 className="text-xl font-bold text-brand-primary mb-4">Recent Event Log (Corrections)</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left text-gray-400">
+                                        <thead className="text-xs text-gray-500 uppercase bg-black/20 sticky top-0">
+                                            <tr>
+                                                <th className="px-4 py-3">Time</th>
+                                                <th className="px-4 py-3">User</th>
+                                                <th className="px-4 py-3">Type</th>
+                                                <th className="px-4 py-3">Amount</th>
+                                                <th className="px-4 py-3">NB</th>
+                                                <th className="px-4 py-3 text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {recentEvents.map((evt) => (
+                                                <tr key={evt._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <td className="px-4 py-3">{new Date(evt.createdAt).toLocaleTimeString()}</td>
+                                                    <td className="px-4 py-3 font-bold text-white">{evt.user}</td>
+                                                    <td className="px-4 py-3 uppercase text-xs">{evt.type}</td>
+                                                    <td className="px-4 py-3">{evt.amountDisplay}</td>
+                                                    <td className="px-4 py-3 text-brand-accent font-mono">+{evt.nisaballAmount || 0}</td>
+                                                    <td className="px-4 py-3 text-right relative">
+                                                        {confirmDelete?.id === evt._id ? (
+                                                            <div className="flex items-center justify-end gap-2 absolute right-2 top-1 bg-[#1a0b0e] p-1 rounded border border-red-500 shadow-xl z-10">
+                                                                <span className="text-[10px] text-red-400 font-bold">Revert Stats?</span>
+                                                                <button onClick={() => handleDeleteEvent(evt._id, true)} className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded">Yes</button>
+                                                                <button onClick={() => handleDeleteEvent(evt._id, false)} className="bg-gray-600 hover:bg-gray-700 text-white text-xs px-2 py-1 rounded">No</button>
+                                                                <button onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-white px-1">✕</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-red-500 hover:text-red-400 hover:bg-red-500/10 p-2 rounded transition-colors" title="Delete Event">🗑️</button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {recentEvents.length === 0 && <tr><td colSpan={6} className="text-center py-4 italic">No events found</td></tr>}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             {/* Timer Controls */}
