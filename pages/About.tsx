@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
 
 // Assets
 const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png";
-const BANNER_IMAGE = "https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png";
+const BANNER_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764647084/with_Background_z8fi2l.jpg";
 const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764631493/urnisamark_qq8lso.png";
 
 // Icons
@@ -221,6 +220,7 @@ const About: React.FC = () => {
                             className="w-full h-full object-cover opacity-80 hover:scale-105 transition-transform duration-700"
                             priority
                         />
+                        {/* Fade-out effect at the bottom of the banner */}
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
                     </div>
 
