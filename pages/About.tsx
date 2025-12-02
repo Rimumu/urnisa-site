@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
 
 // Assets
-const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png";
+const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764677430/urnisapfp2_l3a3xx.png";
 const BANNER_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764647084/with_Background_z8fi2l.jpg";
 const TRADEMARK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764631493/urnisamark_qq8lso.png";
 
