@@ -99,19 +99,20 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              {/* Logo Link to Twitch */}
+              {/* Logo Link to Twitch with PFP and Text */}
               <a 
                 href="https://twitch.tv/urnisa_" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={handleLogoClick} 
-                className="flex items-center hover:opacity-80 transition-opacity"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
               >
                 <img 
-                    src="https://res.cloudinary.com/dsencimjn/image/upload/v1764649926/Logo_File_urnisa_vfqvqe.png" 
-                    alt="URNISA" 
-                    className="h-8 md:h-12 w-auto object-contain"
+                    src="https://res.cloudinary.com/dsencimjn/image/upload/v1764677430/urnisapfp2_l3a3xx.png" 
+                    alt="Urnisa" 
+                    className="h-10 w-10 rounded-full object-cover border-2 border-brand-primary/50 group-hover:border-brand-primary transition-colors"
                 />
+                <span className="text-white font-black text-xl tracking-widest">URNISA</span>
               </a>
 
               {/* Live Status Indicator */}
