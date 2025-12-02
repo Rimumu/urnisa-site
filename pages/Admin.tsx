@@ -219,6 +219,7 @@ const Admin: React.FC = () => {
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
     const [confirmSync, setConfirmSync] = useState(false);
+    const [confirmRebuild, setConfirmRebuild] = useState(false); // NEW
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -428,6 +429,17 @@ const Admin: React.FC = () => {
             setTimeout(() => setConfirmSync(false), 3000);
         }
     };
+    
+    // NEW: REBUILD HANDLER
+    const handleRebuild = () => {
+        if (confirmRebuild) {
+            apiCall('nisathon/rebuild', {});
+            setConfirmRebuild(false);
+        } else {
+            setConfirmRebuild(true);
+            setTimeout(() => setConfirmRebuild(false), 3000);
+        }
+    };
 
     // COUNTDOWN HANDLERS
     const handleCountdownSet = () => apiCall('countdown/set', { hours: cdH, minutes: cdM, seconds: cdS });
@@ -567,24 +579,31 @@ const Admin: React.FC = () => {
                             {/* Data Management Section */}
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="text-xl font-bold text-brand-primary mb-4">Data Management</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <button 
                                         onClick={handleForceSync}
                                         disabled={loading}
                                         className={`w-full font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 text-white ${confirmSync ? 'bg-amber-500 animate-pulse' : 'bg-blue-600 hover:bg-blue-700'}`}
                                     >
-                                        <span>🔄</span> {confirmSync ? "Confirm Sync?" : "Force Sync (Last 24h)"}
+                                        <span>🔄</span> {confirmSync ? "Confirm Sync?" : "Force Sync"}
+                                    </button>
+                                    <button 
+                                        onClick={handleRebuild}
+                                        disabled={loading}
+                                        className={`w-full font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 text-white ${confirmRebuild ? 'bg-purple-700 animate-pulse' : 'bg-purple-600 hover:bg-purple-700'}`}
+                                    >
+                                        <span>🔥</span> {confirmRebuild ? "REALLY REBUILD?" : "Full Rebuild"}
                                     </button>
                                     <button 
                                         onClick={handleResetData}
                                         disabled={loading}
                                         className={`w-full font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 text-white ${confirmReset ? 'bg-red-700 animate-pulse' : 'bg-red-600 hover:bg-red-700'}`}
                                     >
-                                        <span>⚠️</span> {confirmReset ? "CONFIRM WIPE?" : "Reset All Data"}
+                                        <span>⚠️</span> {confirmReset ? "WIPE ALL?" : "Reset Data"}
                                     </button>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2 text-center">
-                                    "Force Sync" fetches missing events from StreamElements. "Reset" wipes everything to zero.
+                                    <strong>Force Sync:</strong> Checks recent history. <strong>Full Rebuild:</strong> Wipes & fetches last 1000 events (fixes timer/wheel). <strong>Reset:</strong> Deletes everything.
                                 </p>
                             </div>
 
