@@ -39,6 +39,8 @@ const getEventIcon = (type: string) => {
         case 'cheer': return <span className="text-lg">💎</span>;
         case 'donation': 
         case 'tip': return <span className="text-lg">💸</span>;
+        case 'follower': 
+        case 'follow': return <span className="text-lg">💙</span>;
         default: return <span className="text-lg">✨</span>;
     }
 };
@@ -52,6 +54,8 @@ const getEventColor = (type: string) => {
         case 'cheer': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
         case 'donation':
         case 'tip': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        case 'follower': 
+        case 'follow': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
         default: return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
     }
 };
