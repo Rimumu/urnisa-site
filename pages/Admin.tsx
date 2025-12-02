@@ -216,6 +216,10 @@ const Admin: React.FC = () => {
     // --- STREAM STATUS STATE ---
     const [streamStatusOverride, setStreamStatusOverride] = useState<'auto' | 'live' | 'offline'>('auto');
 
+    // --- CONFIRMATION STATES ---
+    const [confirmReset, setConfirmReset] = useState(false);
+    const [confirmSync, setConfirmSync] = useState(false);
+
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
     useEffect(() => {
@@ -402,8 +406,28 @@ const Admin: React.FC = () => {
     const handlePauseTimer = () => apiCall('nisathon/timer/pause', {});
     const handleSimulateEvent = () => apiCall('nisathon/test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
     const handleToggleDoubleTimer = () => apiCall('nisathon/event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
-    const handleResetData = () => { if (confirm("⚠️ WARNING: This will WIPE ALL DATA (Events, Queue, History) and reset stats to zero. This cannot be undone. Are you sure?")) { apiCall('nisathon/reset', {}); } };
-    const handleForceSync = () => { if (confirm("This will force the server to fetch the last 24 hours of data from StreamElements. Existing events will be skipped (no duplicates). Continue?")) { apiCall('nisathon/sync', {}); } };
+    
+    // Reset with 2-step confirmation (Double Click Logic)
+    const handleResetData = () => {
+        if (confirmReset) {
+            apiCall('nisathon/reset', {});
+            setConfirmReset(false);
+        } else {
+            setConfirmReset(true);
+            setTimeout(() => setConfirmReset(false), 3000); // Reset state after 3s
+        }
+    };
+
+    // Sync with 2-step confirmation (Double Click Logic)
+    const handleForceSync = () => {
+        if (confirmSync) {
+            apiCall('nisathon/sync', {}); // This calls runSync(true) on backend (Deep Sync)
+            setConfirmSync(false);
+        } else {
+            setConfirmSync(true);
+            setTimeout(() => setConfirmSync(false), 3000);
+        }
+    };
 
     // COUNTDOWN HANDLERS
     const handleCountdownSet = () => apiCall('countdown/set', { hours: cdH, minutes: cdM, seconds: cdS });
@@ -547,16 +571,16 @@ const Admin: React.FC = () => {
                                     <button 
                                         onClick={handleForceSync}
                                         disabled={loading}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2"
+                                        className={`w-full font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 text-white ${confirmSync ? 'bg-amber-500 animate-pulse' : 'bg-blue-600 hover:bg-blue-700'}`}
                                     >
-                                        <span>🔄</span> Force Sync (Last 24h)
+                                        <span>🔄</span> {confirmSync ? "Confirm Sync?" : "Force Sync (Last 24h)"}
                                     </button>
                                     <button 
                                         onClick={handleResetData}
                                         disabled={loading}
-                                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2"
+                                        className={`w-full font-bold py-3 rounded-lg transition-colors shadow-lg flex items-center justify-center gap-2 text-white ${confirmReset ? 'bg-red-700 animate-pulse' : 'bg-red-600 hover:bg-red-700'}`}
                                     >
-                                        <span>⚠️</span> Reset All Data
+                                        <span>⚠️</span> {confirmReset ? "CONFIRM WIPE?" : "Reset All Data"}
                                     </button>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2 text-center">
