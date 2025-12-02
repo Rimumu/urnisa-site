@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -14,6 +13,7 @@ import TimerWidget from './pages/overlays/TimerWidget';
 import GoalWidget from './pages/overlays/GoalWidget';
 import ActivityWidget from './pages/overlays/ActivityWidget';
 import SpinWidget from './pages/overlays/SpinWidget';
+import CountdownWidget from './pages/overlays/CountdownWidget'; // NEW
 import InteractiveBackground from './components/InteractiveBackground';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -33,6 +33,7 @@ const App: React.FC = () => {
         <Route path="/overlay/goal" element={<GoalWidget />} />
         <Route path="/overlay/activity" element={<ActivityWidget />} />
         <Route path="/overlay/spin" element={<SpinWidget />} />
+        <Route path="/overlay/countdown" element={<CountdownWidget />} /> {/* NEW */}
         
         <Route path="*" element={
           <>

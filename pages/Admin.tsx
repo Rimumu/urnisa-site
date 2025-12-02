@@ -6,6 +6,7 @@ import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
 import { useNisathonStats } from '../hooks/useNisathonStats';
+import { useCountdown } from '../hooks/useCountdown';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
 const processImageUrl = (url: string): string => {
@@ -172,7 +173,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'schedule' | 'event' | 'profile' | 'gallery'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -204,6 +205,13 @@ const Admin: React.FC = () => {
     const [testAmount, setTestAmount] = useState("1");
     const [testTier, setTestTier] = useState("1000"); // 1000 = Tier 1, 2000 = Tier 2, 3000 = Tier 3
     const [managerStatus, setManagerStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    // --- COUNTDOWN STATE ---
+    // We don't need the full hook data here, just endpoints, but let's setup inputs
+    const [cdH, setCdH] = useState(0);
+    const [cdM, setCdM] = useState(0);
+    const [cdS, setCdS] = useState(0);
+    const [cdAddM, setCdAddM] = useState(0);
 
     // --- STREAM STATUS STATE ---
     const [streamStatusOverride, setStreamStatusOverride] = useState<'auto' | 'live' | 'offline'>('auto');
@@ -364,19 +372,20 @@ const Admin: React.FC = () => {
         }
     };
 
-    // --- NISATHON MANAGER HANDLERS ---
+    // --- GENERIC API CALL HANDLER ---
     const apiCall = async (endpoint: string, body: any) => {
         setLoading(true);
         setManagerStatus(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/nisathon/${endpoint}`, {
+            const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, { // Changed to allow countdown endpoint which is not under nisathon/
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': password },
                 body: JSON.stringify(body)
             });
             if (response.ok) {
                 setManagerStatus({ type: 'success', message: 'Action executed successfully!' });
-                refetchStats(); // Refresh UI immediately
+                // If nisathon action, refresh stats
+                if (endpoint.includes('nisathon')) refetchStats();
             } else {
                 setManagerStatus({ type: 'error', message: 'Action failed.' });
             }
@@ -387,24 +396,20 @@ const Admin: React.FC = () => {
         }
     };
 
-    const handleSetTimer = () => apiCall('timer/set', { hours: timerH, minutes: timerM, seconds: timerS });
-    const handleAddTimer = () => apiCall('timer/add', { minutes: addM });
-    const handlePauseTimer = () => apiCall('timer/pause', {});
-    const handleSimulateEvent = () => apiCall('test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
-    const handleToggleDoubleTimer = () => apiCall('event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
-    
-    // NEW HANDLERS FOR DATA MANAGEMENT
-    const handleResetData = () => {
-        if (confirm("⚠️ WARNING: This will WIPE ALL DATA (Events, Queue, History) and reset stats to zero. This cannot be undone. Are you sure?")) {
-            apiCall('reset', {});
-        }
-    };
+    // NISATHON HANDLERS
+    const handleSetTimer = () => apiCall('nisathon/timer/set', { hours: timerH, minutes: timerM, seconds: timerS });
+    const handleAddTimer = () => apiCall('nisathon/timer/add', { minutes: addM });
+    const handlePauseTimer = () => apiCall('nisathon/timer/pause', {});
+    const handleSimulateEvent = () => apiCall('nisathon/test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
+    const handleToggleDoubleTimer = () => apiCall('nisathon/event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
+    const handleResetData = () => { if (confirm("⚠️ WARNING: This will WIPE ALL DATA (Events, Queue, History) and reset stats to zero. This cannot be undone. Are you sure?")) { apiCall('nisathon/reset', {}); } };
+    const handleForceSync = () => { if (confirm("This will force the server to fetch the last 24 hours of data from StreamElements. Existing events will be skipped (no duplicates). Continue?")) { apiCall('nisathon/sync', {}); } };
 
-    const handleForceSync = () => {
-        if (confirm("This will force the server to fetch the last 24 hours of data from StreamElements. Existing events will be skipped (no duplicates). Continue?")) {
-            apiCall('sync', {});
-        }
-    };
+    // COUNTDOWN HANDLERS
+    const handleCountdownSet = () => apiCall('countdown/set', { hours: cdH, minutes: cdM, seconds: cdS });
+    const handleCountdownAdd = () => apiCall('countdown/add', { minutes: cdAddM });
+    const handleCountdownPause = () => apiCall('countdown/pause', {});
+    const handleCountdownReset = () => apiCall('countdown/reset', {});
 
     // --- CONTENT EDITORS HELPERS ---
     const updateAboutItem = (i: number, f: keyof AboutItem, v: string) => { const u = [...localAbout]; u[i] = { ...u[i], [f]: v }; setLocalAbout(u); };
@@ -458,6 +463,9 @@ const Admin: React.FC = () => {
                 <nav className="p-4 space-y-2 flex md:block overflow-x-auto md:overflow-visible">
                     <button onClick={() => setActiveTab('nisathon_mgr')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'nisathon_mgr' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>⏲️</span> Nisathon
+                    </button>
+                    <button onClick={() => setActiveTab('countdown')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'countdown' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                        <span>⏳</span> Countdown
                     </button>
                     <button onClick={() => setActiveTab('schedule')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'schedule' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>📅</span> Schedule
@@ -622,8 +630,39 @@ const Admin: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    
-                    {/* ... (Other tabs remain unchanged) ... */}
+
+                    {/* --- COUNTDOWN TAB --- */}
+                    {activeTab === 'countdown' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Simple Countdown</h2>
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="text-xl font-bold text-brand-primary mb-4">Timer Control</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Set Duration</label>
+                                        <div className="flex gap-2 mt-1">
+                                            <input type="number" placeholder="HH" className="w-1/3 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono text-center" onChange={(e) => setCdH(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="MM" className="w-1/3 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono text-center" onChange={(e) => setCdM(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="SS" className="w-1/3 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono text-center" onChange={(e) => setCdS(parseInt(e.target.value)||0)} />
+                                        </div>
+                                        <button onClick={handleCountdownSet} className="w-full mt-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold py-2 rounded-lg transition-colors">Set Timer</button>
+                                    </div>
+                                    <div className="pt-4 border-t border-white/5">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Add Time (Minutes)</label>
+                                        <div className="flex gap-2 mt-1">
+                                            <input type="number" placeholder="Minutes" className="flex-1 bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono" onChange={(e) => setCdAddM(parseInt(e.target.value)||0)} />
+                                            <button onClick={handleCountdownAdd} className="bg-green-600 hover:bg-green-700 text-white font-bold px-4 rounded-lg transition-colors">+</button>
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t border-white/5 flex gap-2">
+                                        <button onClick={handleCountdownPause} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition-colors">⏯️ Pause / Resume</button>
+                                        <button onClick={handleCountdownReset} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors">⏹️ Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* --- SCHEDULE TAB --- */}
                     {activeTab === 'schedule' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
