@@ -213,19 +213,24 @@ const About: React.FC = () => {
             >
                 {/* LEFT PANEL: Main Profile */}
                 <div className="w-full md:w-[28rem] flex-shrink-0 bg-black/20 relative z-10 flex flex-col">
-                    <div className="h-32 w-full relative overflow-hidden flex-shrink-0">
+                    <div 
+                        className="h-32 w-full relative overflow-hidden flex-shrink-0"
+                        style={{
+                            maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)',
+                            WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)'
+                        }}
+                    >
                         <OptimizedImage 
                             src={BANNER_IMAGE} 
                             alt="Banner" 
                             className="w-full h-full object-cover opacity-80 hover:scale-105 transition-transform duration-700"
                             priority
                         />
-                        {/* Fade-out effect at the bottom of the banner */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
                     </div>
 
                     <div className="px-6 pb-8 relative flex-1 flex flex-col">
-                        <div className="relative -mt-16 mb-4 w-fit mx-auto group">
+                        {/* PFP Section with z-20 to ensure it sits above any background bleed */}
+                        <div className="relative -mt-16 mb-4 w-fit mx-auto group z-20">
                             <div className="w-28 h-28 rounded-full p-1 bg-[#121212] relative z-10 overflow-hidden">
                                 <OptimizedImage 
                                     src={PROFILE_IMAGE} 
@@ -404,7 +409,7 @@ const About: React.FC = () => {
                                     <div className="bg-white/5 p-6 rounded-xl border border-white/5">
                                         <h3 className="text-white font-bold text-lg mb-2">Community Support</h3>
                                         <p className="text-sm text-gray-400">
-                                            The best way to reach me for non-business stuff/community, suggestions, or just to say hi is through the <a href="https://discord.gg/urnisa" className="text-brand-primary hover:underline">Discord server</a> or on <a href="https://x.com/urnisa__" className="text-brand-primary hover:underline">X</a>!
+                                            The best way to reach me for non-business stuff, suggestions, or just to say hi is through the <a href="https://discord.gg/urnisa" className="text-brand-primary hover:underline">Discord server</a> or on <a href="https://x.com/urnisa__" className="text-brand-primary hover:underline">X</a>!
                                         </p>
                                     </div>
                                 </div>
