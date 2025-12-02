@@ -205,6 +205,9 @@ const Admin: React.FC = () => {
     const [testTier, setTestTier] = useState("1000"); // 1000 = Tier 1, 2000 = Tier 2, 3000 = Tier 3
     const [managerStatus, setManagerStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+    // --- STREAM STATUS STATE ---
+    const [streamStatusOverride, setStreamStatusOverride] = useState<'auto' | 'live' | 'offline'>('auto');
+
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
     useEffect(() => {
@@ -214,6 +217,13 @@ const Admin: React.FC = () => {
     }, [aboutContent, creditsContent, artworksContent]);
     useEffect(() => { setLocalGoals(currentGoals); }, [currentGoals]);
     useEffect(() => { setLocalWheel(wheelItems); }, [wheelItems]);
+
+    // Fetch Stream Status Override on auth
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetch(`${API_BASE_URL}/api/stream-status`).then(r => r.json()).then(d => setStreamStatusOverride(d.override));
+        }
+    }, [isAuthenticated]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -330,6 +340,25 @@ const Admin: React.FC = () => {
             }
         } catch (error) {
             setWheelStatus({ type: 'error', message: 'Network error.' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSetStreamStatus = async (override: 'auto' | 'live' | 'offline') => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/stream-status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                body: JSON.stringify({ override })
+            });
+            if (response.ok) {
+                setStreamStatusOverride(override);
+                setManagerStatus({ type: 'success', message: `Stream Status set to ${override.toUpperCase()}` });
+            }
+        } catch (error) {
+            setManagerStatus({ type: 'error', message: 'Failed to update status.' });
         } finally {
             setLoading(false);
         }
@@ -460,6 +489,34 @@ const Admin: React.FC = () => {
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Nisathon Manager</h2>
+
+                            {/* Stream Status Override Section */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="text-xl font-bold text-brand-primary mb-4">Stream Status Override</h3>
+                                <div className="flex gap-3 p-2 bg-black/40 rounded-xl border border-white/5">
+                                    <button 
+                                        onClick={() => handleSetStreamStatus('auto')}
+                                        className={`flex-1 py-3 rounded-lg font-bold transition-all ${streamStatusOverride === 'auto' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        AUTO (Default)
+                                    </button>
+                                    <button 
+                                        onClick={() => handleSetStreamStatus('live')}
+                                        className={`flex-1 py-3 rounded-lg font-bold transition-all ${streamStatusOverride === 'live' ? 'bg-red-600 text-white shadow-lg animate-pulse' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        FORCE LIVE
+                                    </button>
+                                    <button 
+                                        onClick={() => handleSetStreamStatus('offline')}
+                                        className={`flex-1 py-3 rounded-lg font-bold transition-all ${streamStatusOverride === 'offline' ? 'bg-gray-600 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        FORCE OFFLINE
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2 text-center">
+                                    "Auto" uses Twitch API. "Force" overrides the status on the website navbar.
+                                </p>
+                            </div>
                             
                             {/* Active Event Toggle */}
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex items-center justify-between">
@@ -475,7 +532,7 @@ const Admin: React.FC = () => {
                                 </button>
                             </div>
 
-                            {/* Data Management Section (NEW) */}
+                            {/* Data Management Section */}
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="text-xl font-bold text-brand-primary mb-4">Data Management</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -528,7 +585,7 @@ const Admin: React.FC = () => {
 
                                 {/* Simulation Controls */}
                                 <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                    <h3 className="text-xl font-bold text-brand-primary mb-4">Simulate Event</h3>
+                                    <h3 className="text-xl font-bold text-brand-primary mb-4">Simulate/Manual Entry</h3>
                                     <div className="space-y-4">
                                         <div>
                                             <label className="text-xs font-bold text-gray-500 uppercase">Event Type</label>
@@ -565,7 +622,8 @@ const Admin: React.FC = () => {
                             </div>
                         </div>
                     )}
-
+                    
+                    {/* ... (Other tabs remain unchanged) ... */}
                     {/* --- SCHEDULE TAB --- */}
                     {activeTab === 'schedule' && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

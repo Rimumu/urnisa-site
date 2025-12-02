@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { TWITCH_CHANNEL_NAME } from '../constants';
+import { TWITCH_CHANNEL_NAME, API_BASE_URL } from '../constants';
 
 /**
  * A hook that fetches the real-time live status of the Twitch channel.
- * Uses the decapi.me API to check uptime, which avoids the need for 
- * server-side OAuth handling for a simple status check.
+ * It first checks the backend for a manual override.
+ * If set to 'auto', it uses the decapi.me API to check uptime.
  * 
  * @returns {boolean} A boolean indicating if the stream is live.
  */
@@ -13,9 +13,28 @@ export const useTwitchStatus = (): boolean => {
   const [isLive, setIsLive] = useState(false);
 
   const checkStatus = useCallback(async () => {
+    // 1. Check Backend Override first
+    try {
+        const overrideRes = await fetch(`${API_BASE_URL}/api/stream-status`);
+        if (overrideRes.ok) {
+            const { override } = await overrideRes.json();
+            if (override === 'live') { 
+                setIsLive(true); 
+                return; // Skip decapi check if overridden
+            }
+            if (override === 'offline') { 
+                setIsLive(false); 
+                return; // Skip decapi check if overridden
+            }
+            // If 'auto', proceed to normal check
+        }
+    } catch (e) {
+        // Ignore error and fall back to decapi
+    }
+
+    // 2. Fallback to decapi.me if no override or 'auto'
     try {
       // decapi.me returns the uptime if live, or "[channel] is offline" if not.
-      // This is a reliable way to check status from the frontend without CORS issues.
       const response = await fetch(`https://decapi.me/twitch/uptime/${TWITCH_CHANNEL_NAME}`);
       
       if (response.ok) {
@@ -27,7 +46,6 @@ export const useTwitchStatus = (): boolean => {
       }
     } catch (error) {
       console.error('Error fetching Twitch status:', error);
-      // We do not update state on error to prevent UI flickering
     }
   }, []);
 
