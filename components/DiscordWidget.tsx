@@ -10,8 +10,8 @@ interface DiscordWidgetProps {
 }
 
 // Hardcoded assets for the widget
-const BANNER_URL = "https://i.ibb.co/rG0Y03L0/1500x500-twitter-cover.png";
-const ICON_URL = "https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png";
+const BANNER_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1764647084/with_Background_z8fi2l.jpg";
+const ICON_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif";
 const CHANNEL_NAME = "₊˚ᰔ┊chill";
 
 // Helper for formatting file sizes
