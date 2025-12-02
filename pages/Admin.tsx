@@ -8,7 +8,7 @@ import ImageUploader from '../components/ImageUploader';
 import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
 
-// --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
+// ... (Existing Imports & Helpers remain the same, truncated for brevity but included in full file output)
 const processImageUrl = (url: string): string => {
     if (!url) return '';
     const cleanUrl = url.trim();
@@ -209,6 +209,7 @@ const Admin: React.FC = () => {
     // --- NEW STATE FOR EVENT LOGS ---
     const [recentEvents, setRecentEvents] = useState<ContributorEvent[]>([]);
     const [confirmDelete, setConfirmDelete] = useState<{id: string, revert: boolean} | null>(null);
+    const [filterType, setFilterType] = useState<string>('all'); // New Filter State
 
     // --- COUNTDOWN STATE ---
     const [cdH, setCdH] = useState(0);
@@ -237,6 +238,7 @@ const Admin: React.FC = () => {
     // Fetch Logs when on manager tab
     const fetchEventLog = async () => {
         try {
+            // Fetch 50 most recent events from backend
             const res = await fetch(`${API_BASE_URL}/api/nisathon/recent`);
             if(res.ok) setRecentEvents(await res.json());
         } catch(e) {}
@@ -468,6 +470,17 @@ const Admin: React.FC = () => {
     const updateWheelItem = (i: number, f: keyof WheelItem, v: any) => { const u = [...localWheel]; (u[i] as any)[f] = v; setLocalWheel(u); };
     const totalWheelWeight = localWheel.reduce((acc, item) => acc + item.weight, 0);
 
+    // FILTER LOGIC
+    const filteredEvents = recentEvents.filter(evt => {
+        if (filterType === 'all') return true;
+        if (filterType === 'sub') return evt.type === 'sub' || evt.type === 'subscriber';
+        if (filterType === 'gift') return evt.type === 'gift';
+        if (filterType === 'bits') return evt.type === 'bits' || evt.type === 'cheer';
+        if (filterType === 'dono') return evt.type === 'donation' || evt.type === 'tip';
+        if (filterType === 'follow') return evt.type === 'follower' || evt.type === 'follow';
+        return true;
+    });
+
     // --- RENDER ---
     if (!isAuthenticated) {
         return (
@@ -604,9 +617,25 @@ const Admin: React.FC = () => {
                             </div>
 
                             {/* EVENT LOG (NEW) */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl max-h-96 overflow-y-auto">
-                                <h3 className="text-xl font-bold text-brand-primary mb-4">Recent Event Log (Corrections)</h3>
-                                <div className="overflow-x-auto">
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl max-h-[500px] overflow-hidden flex flex-col">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-xl font-bold text-brand-primary">Recent Event Log (Corrections)</h3>
+                                    <div className="flex gap-2">
+                                        <select 
+                                            value={filterType} 
+                                            onChange={(e) => setFilterType(e.target.value)}
+                                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-1 text-xs text-white focus:border-brand-primary outline-none"
+                                        >
+                                            <option value="all">All Events</option>
+                                            <option value="sub">Subs</option>
+                                            <option value="gift">Gifts</option>
+                                            <option value="bits">Bits</option>
+                                            <option value="dono">Donations</option>
+                                            <option value="follow">Follows</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="overflow-y-auto flex-1 custom-scrollbar">
                                     <table className="w-full text-sm text-left text-gray-400">
                                         <thead className="text-xs text-gray-500 uppercase bg-black/20 sticky top-0">
                                             <tr>
@@ -619,28 +648,31 @@ const Admin: React.FC = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {recentEvents.map((evt) => (
-                                                <tr key={evt._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                    <td className="px-4 py-3">{new Date(evt.createdAt).toLocaleTimeString()}</td>
-                                                    <td className="px-4 py-3 font-bold text-white">{evt.user}</td>
-                                                    <td className="px-4 py-3 uppercase text-xs">{evt.type}</td>
-                                                    <td className="px-4 py-3">{evt.amountDisplay}</td>
-                                                    <td className="px-4 py-3 text-brand-accent font-mono">+{evt.nisaballAmount || 0}</td>
-                                                    <td className="px-4 py-3 text-right relative">
-                                                        {confirmDelete?.id === evt._id ? (
-                                                            <div className="flex items-center justify-end gap-2 absolute right-2 top-1 bg-[#1a0b0e] p-1 rounded border border-red-500 shadow-xl z-10">
-                                                                <span className="text-[10px] text-red-400 font-bold">Revert Stats?</span>
-                                                                <button onClick={() => handleDeleteEvent(evt._id, true)} className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded">Yes</button>
-                                                                <button onClick={() => handleDeleteEvent(evt._id, false)} className="bg-gray-600 hover:bg-gray-700 text-white text-xs px-2 py-1 rounded">No</button>
-                                                                <button onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-white px-1">✕</button>
-                                                            </div>
-                                                        ) : (
-                                                            <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-red-500 hover:text-red-400 hover:bg-red-500/10 p-2 rounded transition-colors" title="Delete Event">🗑️</button>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {recentEvents.length === 0 && <tr><td colSpan={6} className="text-center py-4 italic">No events found</td></tr>}
+                                            {filteredEvents.length === 0 ? (
+                                                <tr><td colSpan={6} className="text-center py-8 italic text-gray-600">No events match filter</td></tr>
+                                            ) : (
+                                                filteredEvents.map((evt) => (
+                                                    <tr key={evt._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                        <td className="px-4 py-3">{new Date(evt.createdAt).toLocaleTimeString()}</td>
+                                                        <td className="px-4 py-3 font-bold text-white">{evt.user}</td>
+                                                        <td className="px-4 py-3 uppercase text-xs">{evt.type}</td>
+                                                        <td className="px-4 py-3">{evt.amountDisplay}</td>
+                                                        <td className="px-4 py-3 text-brand-accent font-mono">+{evt.nisaballAmount || 0}</td>
+                                                        <td className="px-4 py-3 text-right relative">
+                                                            {confirmDelete?.id === evt._id ? (
+                                                                <div className="flex items-center justify-end gap-2 absolute right-2 top-1 bg-[#1a0b0e] p-1 rounded border border-red-500 shadow-xl z-10">
+                                                                    <span className="text-[10px] text-red-400 font-bold">Revert Stats?</span>
+                                                                    <button onClick={() => handleDeleteEvent(evt._id, true)} className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded">Yes</button>
+                                                                    <button onClick={() => handleDeleteEvent(evt._id, false)} className="bg-gray-600 hover:bg-gray-700 text-white text-xs px-2 py-1 rounded">No</button>
+                                                                    <button onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-white px-1">✕</button>
+                                                                </div>
+                                                            ) : (
+                                                                <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-red-500 hover:text-red-400 hover:bg-red-500/10 p-2 rounded transition-colors" title="Delete Event">🗑️</button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
