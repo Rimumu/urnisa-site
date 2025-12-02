@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
@@ -395,9 +396,9 @@ const About: React.FC = () => {
                                         <p className="text-sm text-gray-300 mb-4">For sponsorships, collaborations, and other professional matters.</p>
                                         
                                         <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg border border-white/10 backdrop-blur-sm">
-                                            <span className="text-white font-mono text-sm truncate mr-2">business email here</span>
+                                            <span className="text-white font-mono text-sm truncate mr-2">business@urnisa.live</span>
                                             <button 
-                                                onClick={() => { navigator.clipboard.writeText('business email here'); triggerToast("Copied email to clipboard!"); }}
+                                                onClick={() => { navigator.clipboard.writeText('business@urnisa.live'); triggerToast("Copied email to clipboard!"); }}
                                                 className="text-brand-primary hover:text-white transition-colors p-1"
                                                 title="Copy Email"
                                             >
