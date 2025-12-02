@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
@@ -261,8 +262,8 @@ const About: React.FC = () => {
                             {[
                                 { name: 'Twitch', url: 'https://twitch.tv/urnisa_', icon: 'https://cdn.simpleicons.org/twitch/9146FF' },
                                 { name: 'X', url: 'https://x.com/urnisa__', icon: 'https://cdn.simpleicons.org/x/white' },
-                                { name: 'Youtube', url: 'https://www.youtube.com/@urniisaa', icon: 'https://cdn.simpleicons.org/youtube/e5383b' },
-                                { name: 'TikTok', url: 'https://www.tiktok.com/@urnisa_ttv', icon: 'https://cdn.simpleicons.org/tiktok/white' },
+                                { name: 'Youtube', url: 'https://www.youtube.com/@urnisa_ttv', icon: 'https://cdn.simpleicons.org/youtube/e5383b' },
+                                { name: 'TikTok', url: 'https://www.tiktok.com/@urniisa', icon: 'https://cdn.simpleicons.org/tiktok/white' },
                             ].map((social) => (
                                 <a 
                                     key={social.name}
