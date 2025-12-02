@@ -17,7 +17,6 @@ const MONGO_URI = process.env.MONGO_URI;
 let SE_JWT = process.env.STREAMELEMENTS_JWT || "";
 SE_JWT = SE_JWT.replace(/^Bearer\s+/i, "").replace(/["']/g, "").trim();
 
-// We will try this ID, and also auto-resolve 'urnisa_'
 let ENV_CHANNEL_ID = process.env.STREAMELEMENTS_CHANNEL_ID || "";
 ENV_CHANNEL_ID = ENV_CHANNEL_ID.replace(/["']/g, "").trim();
 
@@ -62,12 +61,11 @@ const NisathonStats = mongoose.model('NisathonStats', new mongoose.Schema({
     lastActivityTime: { type: String, default: new Date().toISOString() }
 }));
 
-// NEW: Standalone Countdown Schema
 const CountdownStats = mongoose.model('CountdownStats', new mongoose.Schema({
     key: { type: String, default: 'main', unique: true },
     timerEndTime: { type: Date, default: Date.now },
     remainingTimeMs: { type: Number, default: 0 },
-    isPaused: { type: Boolean, default: true } // Paused by default
+    isPaused: { type: Boolean, default: true }
 }));
 
 const NisathonEvent = mongoose.model('NisathonEvent', new mongoose.Schema({
@@ -91,7 +89,7 @@ const SpinHistory = mongoose.model('SpinHistory', new mongoose.Schema({
 const roundOneDecimal = (num) => Math.round(num * 10) / 10;
 
 // ==========================================
-// CORE LOGIC (Nisathon)
+// CORE LOGIC
 // ==========================================
 
 const processEvent = async (stats, type, user, amount, message, providerId, tier = '1000', isManual = false) => {
@@ -148,11 +146,12 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
     // Update Stats & Timer
     if (isNewEvent) {
         stats.totalNisaballs = roundOneDecimal(stats.totalNisaballs + earnedNisaballs);
-        const mult = stats.activeEvent === 'DOUBLE_TIMER' ? 2 : 1;
-        const msAdd = earnedNisaballs * 10 * mult * 60000;
         
         if (earnedNisaballs > 0) {
-             if (!stats.isPaused) {
+            const mult = stats.activeEvent === 'DOUBLE_TIMER' ? 2 : 1;
+            const msAdd = earnedNisaballs * 10 * mult * 60000;
+            
+            if (!stats.isPaused) {
                 const now = Date.now();
                 const curEnd = new Date(stats.timerEndTime).getTime();
                 stats.timerEndTime = new Date(Math.max(now, curEnd) + msAdd);
@@ -202,7 +201,14 @@ const connectSocket = () => {
     if (!SE_JWT) { console.log("❌ [Socket] No JWT"); return; }
     
     console.log("🔌 [Socket] Connecting...");
-    socket = io('https://realtime.streamelements.com', { transports: ['websocket'] });
+    
+    // StreamElements uses Socket.IO v2. 
+    socket = io('https://realtime.streamelements.com', { 
+        transports: ['websocket'],
+        forceNew: true,
+        autoConnect: true,
+        reconnection: true
+    });
 
     socket.on('connect', () => {
         console.log('🔌 [Socket] Connected. Authenticating...');
@@ -240,7 +246,7 @@ const connectSocket = () => {
             } else if (type === 'tip' || type === 'cheer') {
                 amount = info.amount;
             } else if (type === 'follow') {
-                type = 'follower'; // Normalize
+                type = 'follower'; 
                 amount = 0;
             }
 
@@ -254,11 +260,12 @@ const connectSocket = () => {
 // ==========================================
 // 2. REST POLLING (METHOD 2)
 // ==========================================
-const fetchAndProcess = async (channelId, label, stats) => {
+const fetchAndProcess = async (channelId, label, stats, limit = 25) => {
     if (!channelId) return false;
     
     try {
         const url = `https://api.streamelements.com/kappa/v2/activities/${channelId}`;
+        if (limit > 25) console.log(`📡 [${label}] Backfilling ${limit} events...`);
         
         const { data: activities } = await axios.get(url, {
             headers: { 
@@ -266,7 +273,7 @@ const fetchAndProcess = async (channelId, label, stats) => {
                 'Accept': 'application/json',
                 'User-Agent': 'UrnisaBot/1.0' 
             },
-            params: { limit: 25 },
+            params: { limit },
             timeout: 10000
         });
 
@@ -289,7 +296,7 @@ const fetchAndProcess = async (channelId, label, stats) => {
             else continue;
 
             const added = await processEvent(stats, type, act.data.username, amt, act.data.message, act._id, tier);
-            if (added > 0) changes = true;
+            if (added > 0 || type === 'follower') changes = true;
         }
         return changes;
 
@@ -355,7 +362,7 @@ const syncSessionFallback = async (channelId, stats) => {
     }
 };
 
-const runSync = async () => {
+const runSync = async (forceDeep = false) => {
     if (mongoose.connection.readyState !== 1) return;
     if (!SE_JWT) return;
 
@@ -370,12 +377,14 @@ const runSync = async () => {
         } catch (e) {}
 
         let c1 = false, c2 = false;
+        const limit = forceDeep ? 100 : 25;
+
         if (resolvedId) {
-            c1 = await fetchAndProcess(resolvedId, "AUTO-ID", stats);
-            if (!c1) await syncSessionFallback(resolvedId, stats);
+            c1 = await fetchAndProcess(resolvedId, "AUTO-ID", stats, limit);
+            if (!c1 && forceDeep) await syncSessionFallback(resolvedId, stats);
         }
         if (ENV_CHANNEL_ID && ENV_CHANNEL_ID !== resolvedId) {
-            c2 = await fetchAndProcess(ENV_CHANNEL_ID, "ENV-ID", stats);
+            c2 = await fetchAndProcess(ENV_CHANNEL_ID, "ENV-ID", stats, limit);
         }
 
         if (c1 || c2) await stats.save();
