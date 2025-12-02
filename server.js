@@ -108,9 +108,11 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
 
     // --- RULESET ---
     if (['subscriber', 'sub', 'resub', 'subscription'].includes(type)) {
-        // If manual, trust it. If auto, check if it's a gift recipient we missed converting upstream.
-        // (Ideally upstream logic converts gifted subs to 'gift' type from sender before calling this)
-        
+        // Skip Recipient Events (trust bulk 'gift' event) unless manual
+        if (!isManual && (message.includes('gift') || amount === 0)) {
+             return 0; 
+        }
+
         let tVal = 0.5;
         let tLbl = "Tier 1";
         const tStr = String(tier).toLowerCase();
@@ -125,7 +127,7 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
     } 
     else if (type === 'gift') {
         earnedNisaballs = 0.5 * amount;
-        amountDisplay = `${amount} Gift Sub${amount > 1 ? 's' : ''}`;
+        amountDisplay = `${amount} Gift Subs`;
         if (isNewEvent) stats.currentSubs += amount;
     } 
     else if (['cheer', 'bits'].includes(type)) {
@@ -156,8 +158,7 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
             if (!stats.isPaused) {
                 const now = Date.now();
                 const curEnd = new Date(stats.timerEndTime).getTime();
-                const baseTime = curEnd < now ? now : curEnd;
-                stats.timerEndTime = new Date(baseTime + msAdd);
+                stats.timerEndTime = new Date(Math.max(now, curEnd) + msAdd);
             } else {
                 stats.remainingTimeMs += msAdd;
             }
@@ -182,34 +183,13 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         { upsert: true, new: true }
     );
 
-    // --- WHEEL LOGIC (CUMULATIVE) ---
-    if (earnedNisaballs > 0) {
-        // Calculate Total Nisaballs for this user across ALL events
-        const userStats = await NisathonEvent.aggregate([
-            { $match: { user: user } },
-            { $group: { _id: null, total: { $sum: "$nisaballAmount" } } }
-        ]);
-        const totalUserNB = userStats.length > 0 ? userStats[0].total : 0;
-        
-        // Calculate how many spins they SHOULD have
-        const spinsEarned = Math.floor(totalUserNB / 5);
-        
-        // Count how many they HAVE had (Queue + History)
-        const spinsInQueue = await SpinQueue.countDocuments({ user: user });
-        const spinsInHistory = await SpinHistory.countDocuments({ user: user });
-        const currentSpins = spinsInQueue + spinsInHistory;
-        
-        // Add missing spins
-        if (spinsEarned > currentSpins) {
-            const diff = spinsEarned - currentSpins;
-            console.log(`🎡 [Wheel] Adding ${diff} spins for ${user} (Total NB: ${totalUserNB})`);
-            for (let i = 0; i < diff; i++) {
-                await SpinQueue.create({ 
-                    user: user, 
-                    sourceEventId: res._id, 
-                    nisaballs: 5 // Nominal cost
-                });
-            }
+    // Wheel Logic (Single Transaction >= 5 NB)
+    // REMOVED CUMULATIVE LOGIC AS REQUESTED
+    if (isNewEvent && earnedNisaballs >= 5) {
+        const spins = Math.floor(earnedNisaballs / 5);
+        console.log(`🎡 Queueing ${spins} spins for ${user}`);
+        for (let i = 0; i < spins; i++) {
+            await SpinQueue.create({ user: user||'Anon', sourceEventId: res._id, nisaballs: earnedNisaballs });
         }
     }
     
@@ -227,6 +207,7 @@ const connectSocket = () => {
     
     console.log("🔌 [Socket] Connecting...");
     
+    // StreamElements uses Socket.IO v2. 
     socket = io('https://realtime.streamelements.com', { 
         transports: ['websocket'],
         forceNew: true,
@@ -243,12 +224,15 @@ const connectSocket = () => {
         console.log(`✅ [Socket] Authenticated! (Channel: ${data.channelId})`);
     });
 
+    socket.on('unauthorized', (data) => {
+        console.error('❌ [Socket] Auth Failed:', data);
+    });
+
     socket.on('event', async (data) => {
         if (!data || !data.type) return;
         if (!['subscriber', 'tip', 'cheer', 'follower', 'follow'].includes(data.type)) return;
 
         console.log(`⚡ [Socket] New Event: ${data.type}`);
-        
         try {
             const stats = await NisathonStats.findOne({ key: 'main' });
             if (!stats) return;
@@ -262,13 +246,11 @@ const connectSocket = () => {
             if (type === 'subscriber') {
                 tier = info.tier || '1000';
                 amount = info.amount || 1; 
-                
-                // GIFT LOGIC:
-                // If 'gifted' is true, attribute to sender and change type to 'gift'
+                // Convert gifted to 'gift' type and sender
                 if (info.gifted) {
                      type = 'gift';
                      username = info.sender;
-                     amount = 1; // Process as 1 gift
+                     amount = 1; 
                 }
             } else if (type === 'tip' || type === 'cheer') {
                 amount = info.amount;
@@ -285,7 +267,7 @@ const connectSocket = () => {
 };
 
 // ==========================================
-// 2. REST POLLING (METHOD 2)
+// 2. REST POLLING & RESOLVER
 // ==========================================
 const resolveChannelId = async () => {
     if (!SE_JWT) return null;
@@ -310,63 +292,54 @@ const fetchAndProcess = async (channelId, label, stats, limit = 25, offset = 0) 
     
     try {
         const url = `https://api.streamelements.com/kappa/v2/activities/${channelId}`;
-        
-        // Note: Added 'types' filter to get relevant data
         const { data: activities } = await axios.get(url, {
             headers: { 
                 'Authorization': `Bearer ${SE_JWT}`,
                 'Accept': 'application/json',
                 'User-Agent': 'UrnisaBot/1.0' 
             },
-            params: { limit, offset, types: 'subscriber,tip,cheer,follow' },
+            params: { limit, offset },
             timeout: 10000
         });
 
-        if (!activities || activities.length === 0) {
-            return false;
-        }
+        if (!activities || activities.length === 0) return [];
 
-        activities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        
-        let changes = false;
-        for (const act of activities) {
-            let amt = 0;
-            let tier = '1000';
-            let type = act.type;
-            let username = act.data.username;
-            
-            if (['subscriber','sub','resub'].includes(act.type)) { 
-                amt = 1; 
-                tier = act.data.tier || '1000';
-                // GIFT LOGIC
-                if (act.data.gifted) {
-                    username = act.data.sender;
-                    type = 'gift';
-                    amt = 1;
+        if (offset === 0) {
+            activities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            let changes = false;
+            for (const act of activities) {
+                let amt = 0;
+                let tier = '1000';
+                let type = act.type;
+                let username = act.data.username; 
+                
+                if (['subscriber','sub','resub'].includes(act.type)) { 
+                    amt = 1; 
+                    tier = act.data.tier || '1000';
+                    if (act.data.gifted) {
+                        username = act.data.sender;
+                        type = 'gift';
+                    }
                 }
-            }
-            else if (act.type === 'gift') {
-                amt = act.data.amount || 1; 
-            }
-            else if (['cheer','tip'].includes(act.type)) {
-                amt = act.data.amount; 
-            }
-            else if (act.type === 'follow') { 
-                type = 'follower'; 
-                amt = 0; 
-            }
-            else continue;
+                else if (act.type === 'gift') {
+                    amt = act.data.amount || 1; 
+                }
+                else if (['cheer','tip'].includes(act.type)) {
+                    amt = act.data.amount; 
+                }
+                else if (act.type === 'follow') { 
+                    type = 'follower'; 
+                    amt = 0; 
+                }
+                else continue;
 
-            const added = await processEvent(stats, type, username, amt, act.data.message, act._id, tier);
-            if (added > 0 || type === 'follower') changes = true;
+                const added = await processEvent(stats, type, username, amt, act.data.message, act._id, tier);
+                if (added > 0 || type === 'follower') changes = true;
+            }
+            return changes;
         }
-        return changes;
-
-    } catch (e) {
-        if (e.response?.status === 401) console.error(`❌ [${label}] 401 Unauthorized.`);
-        else console.error(`❌ [${label}] Error: ${e.message}`);
-        return false;
-    }
+        return activities;
+    } catch (e) { return []; }
 };
 
 const syncSessionFallback = async (channelId, stats) => {
@@ -465,7 +438,7 @@ const rebuildEverything = async () => {
             amt = 1; 
             tier = act.data.tier || '1000';
             if (act.data.gifted) {
-                user = act.data.sender; // Attribute to gifter
+                user = act.data.sender; 
                 type = 'gift';
             }
         }
