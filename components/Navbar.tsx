@@ -100,16 +100,18 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <NavLink to="/" onClick={handlePfpClick} className="text-white font-extrabold text-xl tracking-wider flex items-center gap-3">
+              <NavLink to="/" onClick={handlePfpClick} className="flex items-center gap-3">
                 <img
                   loading="lazy"
                   src="https://res.cloudinary.com/dsencimjn/image/upload/v1764629944/urnisapfp_irodss.png"
                   alt="Urnisa's profile picture"
                   className="w-9 h-9 rounded-full object-cover border-2 border-brand-primary/80"
                 />
-                <span className="uppercase">
-                  URNISA
-                </span>
+                <img 
+                    src="https://res.cloudinary.com/dsencimjn/image/upload/v1764649926/Logo_File_urnisa_vfqvqe.png" 
+                    alt="URNISA" 
+                    className="h-8 md:h-12 w-auto object-contain"
+                />
                 <div
                   className={`w-3 h-3 rounded-full transition-colors ${
                     isLive ? 'bg-red-500 animate-pulse' : 'bg-gray-500'
