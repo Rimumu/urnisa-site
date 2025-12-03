@@ -206,12 +206,10 @@ const Gacha: React.FC = () => {
 
     const triggerCut = () => {
         // Generate random physics for the top piece
-        // Rotate: -45 to +10 degrees
-        const randomRotate = Math.floor(Math.random() * 55) - 45; 
-        // X Move: -100px (Left) to +50px (Right)
-        const randomX = Math.floor(Math.random() * 150) - 100;
-        // Y Move: -120px to -180px (Up)
-        const randomY = -120 - Math.floor(Math.random() * 60);
+        // Less extreme ranges to prevent flying off screen
+        const randomRotate = (Math.random() * 30) - 15; // +/- 15 deg
+        const randomX = (Math.random() * 80) - 40; // +/- 40px
+        const randomY = -60 - (Math.random() * 60); // Up 60-120px
 
         setCutVisuals({
             rotate: randomRotate,
@@ -278,11 +276,6 @@ const Gacha: React.FC = () => {
                 }
                 .animate-fly-out {
                     animation: flyOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-                @keyframes flashWhite {
-                    0% { background-color: rgba(255,255,255,0); }
-                    10% { background-color: rgba(255,255,255,0.9); }
-                    100% { background-color: rgba(255,255,255,0); }
                 }
                 @keyframes shake {
                     0%, 100% { transform: rotate(0deg); }
@@ -442,11 +435,6 @@ const Gacha: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* FLASH OVERLAY (Triggers on cut) */}
-                                {isCut && (
-                                    <div className="absolute inset-0 z-40 pointer-events-none animate-[flashWhite_0.35s_ease-out_forwards] rounded-[2rem]"></div>
-                                )}
-
                                 {/* DISPENSING CARD (ANIMATED) */}
                                 {dispensingCard && (
                                     <div className="absolute inset-0 flex justify-center items-center z-30 pointer-events-none">
@@ -463,31 +451,41 @@ const Gacha: React.FC = () => {
                                     className={`
                                         absolute top-0 left-0 w-full h-[15%] z-20 
                                         rounded-t-[2rem] overflow-hidden bg-gradient-to-b
-                                        transition-all duration-700 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] origin-bottom-left border-t-4 border-x-4
+                                        transition-all duration-500 ease-out origin-bottom-left border-t-4 border-x-4
                                         ${selectedPack === 'lamb' ? 'from-red-500 to-red-600 border-white/20' : 'from-gray-800 to-gray-900 border-yellow-500/30'}
                                     `}
-                                    style={isCut ? {
-                                        transform: `rotate(${cutVisuals.rotate}deg) translate(${cutVisuals.x}px, ${cutVisuals.y}px)`,
-                                        opacity: 0
-                                    } : {}}
+                                    style={{
+                                        transform: isCut ? `translate(${cutVisuals.x}px, ${cutVisuals.y}px) rotate(${cutVisuals.rotate}deg)` : 'none',
+                                        opacity: isCut ? 0 : 1,
+                                        // Jagged tear effect using polygon clip-path
+                                        clipPath: 'polygon(0% 0%, 100% 0%, 100% 85%, 92% 100%, 84% 85%, 76% 100%, 68% 85%, 60% 100%, 52% 85%, 44% 100%, 36% 85%, 28% 100%, 20% 85%, 12% 100%, 4% 85%, 0% 100%)'
+                                    }}
                                 >
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                                     {/* Crimp */}
                                     <div className="absolute top-0 left-0 right-0 h-4 bg-black/20 border-b border-white/10"></div>
                                     
-                                    {/* Cut Edge (Bottom) */}
-                                    {isCut && <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/50 blur-[1px]"></div>}
+                                    {/* Torn Edge Highlight */}
+                                    <div className="absolute bottom-0 left-0 w-full h-2 bg-white/30 blur-[1px]"></div>
                                 </div>
 
                                 {/* BOTTOM HALF - 85% HEIGHT (Contains Main Art) */}
-                                <div className={`
-                                    absolute bottom-0 left-0 w-full h-[85%] z-20
-                                    rounded-b-[2rem] overflow-hidden bg-gradient-to-b border-b-4 border-x-4
-                                    transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-                                    ${selectedPack === 'lamb' ? 'from-red-600 to-red-800 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
-                                    ${isCut ? 'translate-y-1' : ''}
-                                `}>
+                                <div 
+                                    className={`
+                                        absolute bottom-0 left-0 w-full h-[85%] z-20
+                                        rounded-b-[2rem] overflow-hidden bg-gradient-to-b border-b-4 border-x-4
+                                        ${selectedPack === 'lamb' ? 'from-red-600 to-red-800 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
+                                    `}
+                                    style={{
+                                        // Matching jagged top edge (approximate inversion of top piece)
+                                        // The vertical points must be very small relative to this taller container
+                                        clipPath: 'polygon(0% 100%, 100% 100%, 100% 2.6%, 92% 0%, 84% 2.6%, 76% 0%, 68% 2.6%, 60% 0%, 52% 2.6%, 44% 0%, 36% 2.6%, 28% 0%, 20% 2.6%, 12% 0%, 4% 2.6%, 0% 0%)'
+                                    }}
+                                >
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
+                                    
+                                    {/* Torn Edge Highlight */}
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-white/20 blur-[1px]"></div>
                                     
                                     {/* Main Art */}
                                     <div className="absolute inset-0 flex items-center justify-center opacity-90 pb-8">
@@ -506,11 +504,7 @@ const Gacha: React.FC = () => {
                                     
                                     {/* Inner Shadow to simulate depth when open */}
                                     {isCut && (
-                                        <>
-                                            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/80 to-transparent"></div>
-                                            {/* Cut Edge (Top) */}
-                                            <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 blur-[1px]"></div>
-                                        </>
+                                        <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
                                     )}
                                 </div>
 
