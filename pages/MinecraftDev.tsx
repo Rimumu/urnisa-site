@@ -33,7 +33,7 @@ const CurseforgeLogo = () => (
 
 const MinecraftDev: React.FC = () => {
   const [copied, setCopied] = useState(false);
-  const SERVER_IP = "play.urnisa.live";
+  const SERVER_IP = "mc.urnisa.live";
   
   // Auth State
   const [user, setUser] = useState<UserData | null>(null);
@@ -576,7 +576,7 @@ const MinecraftDev: React.FC = () => {
                         { step: 1, title: "Download Modpack", desc: "Get the Cobblemon Academy modpack below." },
                         { step: 2, title: "Get Whitelisted", desc: "Apply below to get whitelisted to the server." },
                         { step: 3, title: "Launch Game", desc: "Launch Minecraft with the modpack and go to Multiplayer." },
-                        { step: 4, title: "Connect", desc: "Add server IP: play.urnisa.live" }
+                        { step: 4, title: "Connect", desc: `Add server IP: ${SERVER_IP}` }
                     ].map((item) => (
                         <div key={item.step} className="flex gap-6 items-start">
                             <div className="w-10 h-10 rounded-full bg-[#1f090c] border-2 border-brand-primary text-brand-primary font-black flex items-center justify-center shrink-0 z-10 shadow-lg">
