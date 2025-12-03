@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
 
 interface UserData {
@@ -537,30 +537,47 @@ const MinecraftDev: React.FC = () => {
         {/* Content Grid */}
         <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* Features Section */}
-            <div className="bg-black/30 backdrop-blur-lg border border-white/10 p-8 rounded-[2.5rem] shadow-xl flex flex-col h-full">
-                <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl">🌟</div>
-                    <h2 className="text-2xl font-bold text-white">Server Features</h2>
-                </div>
-                
-                <ul className="space-y-4">
-                    {[
-                        { title: "Cobblemon Mod", desc: "Experience Pokémon in Minecraft seamlessly." },
-                        { title: "Custom Starters", desc: "Choose from a unique selection of starter Pokémon." },
-                        { title: "Player Gyms", desc: "Challenge other players to become the champion." },
-                        { title: "Land Claiming", desc: "Protect your base and builds easily." },
-                        { title: "Cosmetics", desc: "Unlock hats, backpacks and trails!" }
-                    ].map((item, i) => (
-                        <li key={i} className="flex items-start gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className="w-6 h-6 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0 mt-0.5 text-xs font-bold">✓</div>
-                            <div>
-                                <div className="font-bold text-white">{item.title}</div>
-                                <div className="text-sm text-gray-400">{item.desc}</div>
-                            </div>
-                        </li>
-                    ))}
-                </ul>
+            {/* New Navigation Boxes */}
+            <div className="flex flex-col gap-6 h-full">
+                {/* Bingo Card */}
+                <Link to="/minecraft-dev/bingo" className="block flex-1 bg-black/30 backdrop-blur-lg border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group hover:border-brand-primary/50 hover:bg-black/40 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-2xl group-hover:bg-brand-primary/20 transition-colors pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                            🎫
+                        </div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-primary transition-colors">Bingo Card</h2>
+                    </div>
+                    
+                    <p className="text-gray-300 font-medium leading-relaxed">
+                        Complete your card by catching Pokémon, building structures, and participating in events to win amazing prizes!
+                    </p>
+
+                    <div className="mt-6 flex items-center text-[#60a5fa] font-bold text-sm uppercase tracking-wider group-hover:translate-x-2 transition-transform">
+                        View Card <span className="ml-2">→</span>
+                    </div>
+                </Link>
+
+                {/* Gacha Pack */}
+                <Link to="/minecraft-dev/gacha" className="block flex-1 bg-black/30 backdrop-blur-lg border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group hover:border-brand-accent/50 hover:bg-black/40 transition-all duration-300">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full blur-2xl group-hover:bg-brand-accent/20 transition-colors pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                    
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                            🥩
+                        </div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-accent transition-colors">Gacha Pack</h2>
+                    </div>
+                    
+                    <p className="text-gray-300 font-medium leading-relaxed">
+                        Slice up some lamb chop and wagyu packs and see if you will get flavorful rewards!
+                    </p>
+
+                    <div className="mt-6 flex items-center text-brand-accent font-bold text-sm uppercase tracking-wider group-hover:translate-x-2 transition-transform">
+                        Open Packs <span className="ml-2">→</span>
+                    </div>
+                </Link>
             </div>
 
             {/* How to Join Section - UPDATED */}
