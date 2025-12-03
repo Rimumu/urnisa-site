@@ -566,9 +566,9 @@ const MinecraftDev: React.FC = () => {
                 <div className="space-y-6 relative">
                     <div className="absolute left-[19px] top-8 bottom-8 w-0.5 bg-white/10 -z-10"></div>
                     {[
-                        { step: 1, title: "Download Modpack", desc: "Get the official modpack from CurseForge." },
-                        { step: 2, title: "Get Whitelisted", desc: "Apply below to get whitelisted to the server." }, // CHANGED
-                        { step: 3, title: "Launch Game", desc: "Open Minecraft and go to Multiplayer." },
+                        { step: 1, title: "Download Modpack", desc: "Get the Cobblemon Academy modpack below." },
+                        { step: 2, title: "Get Whitelisted", desc: "Apply below to get whitelisted to the server." },
+                        { step: 3, title: "Launch Game", desc: "Launch Minecraft with the modpack and go to Multiplayer." },
                         { step: 4, title: "Connect", desc: "Add server IP: play.urnisa.live" }
                     ].map((item) => (
                         <div key={item.step} className="flex gap-6 items-start">
