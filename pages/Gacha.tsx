@@ -105,6 +105,9 @@ const Gacha: React.FC = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [trail, setTrail] = useState<{x: number, y: number, id: number}[]>([]);
     
+    // Animation State for Randomness
+    const [cutVisuals, setCutVisuals] = useState({ rotate: -30, x: -50, y: -150 });
+
     // Dispensing Logic
     const [revealedCards, setRevealedCards] = useState<CardData[]>([]);
     const [dispensingCard, setDispensingCard] = useState<CardData | null>(null);
@@ -184,7 +187,6 @@ const Gacha: React.FC = () => {
         const dy = cutCoords.end.y - cutCoords.start.y;
         
         // 1. Check Horizontal Length (Must cover width of pack approx)
-        // Pack width is 300px. Let's require 200px projected width.
         if (Math.abs(dx) < 200) return;
 
         // 2. Check Flatness (Angle)
@@ -193,25 +195,30 @@ const Gacha: React.FC = () => {
         if (!isHorizontal) return;
 
         // 3. Check Vertical Position (The "Top" Requirement - Now 15%)
-        // SVG Offset is 200px. Pack Height is 420px.
-        // We want the cut around the 15% mark (where the visual split happens).
-        // 15% of 420 = 63px.
-        // Target Y relative to Pack Top: 40px to 90px (approx 10% to 20%).
-        // In SVG coords: 200 + 40 = 240, 200 + 90 = 290.
-        // Let's give a slightly generous window: 230 to 300.
-        
-        // Average Y of the cut
         const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
         
         if (avgY >= 230 && avgY <= 320) {
             triggerCut();
         } else {
-            // Visual feedback could be added here for "missed" cuts
             setCutCoords(null);
         }
     };
 
     const triggerCut = () => {
+        // Generate random physics for the top piece
+        // Rotate: -45 to +10 degrees
+        const randomRotate = Math.floor(Math.random() * 55) - 45; 
+        // X Move: -100px (Left) to +50px (Right)
+        const randomX = Math.floor(Math.random() * 150) - 100;
+        // Y Move: -120px to -180px (Up)
+        const randomY = -120 - Math.floor(Math.random() * 60);
+
+        setCutVisuals({
+            rotate: randomRotate,
+            x: randomX,
+            y: randomY
+        });
+
         setIsCut(true);
         setCutCoords(null);
     };
@@ -274,7 +281,7 @@ const Gacha: React.FC = () => {
                 }
                 @keyframes flashWhite {
                     0% { background-color: rgba(255,255,255,0); }
-                    10% { background-color: rgba(255,255,255,0.8); }
+                    10% { background-color: rgba(255,255,255,0.9); }
                     100% { background-color: rgba(255,255,255,0); }
                 }
                 @keyframes shake {
@@ -287,10 +294,14 @@ const Gacha: React.FC = () => {
                 }
             `}</style>
 
-            {/* Background Texture */}
-            <div className="absolute inset-0 bg-[#1a0b0e] z-0">
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50"></div>
+            {/* New Background: TCG Playmat Style */}
+            <div className="absolute inset-0 bg-[#0f0f11] z-0">
+                {/* Radial Gradient Spotlight */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#2a2a30_0%,_#0f0f11_70%)]"></div>
+                {/* Hex Pattern Texture */}
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
+                {/* Subtle Grid */}
+                <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
             </div>
 
             {/* Nav Back */}
@@ -433,7 +444,7 @@ const Gacha: React.FC = () => {
 
                                 {/* FLASH OVERLAY (Triggers on cut) */}
                                 {isCut && (
-                                    <div className="absolute inset-0 z-40 pointer-events-none animate-[flashWhite_0.3s_ease-out_forwards] rounded-[2rem]"></div>
+                                    <div className="absolute inset-0 z-40 pointer-events-none animate-[flashWhite_0.35s_ease-out_forwards] rounded-[2rem]"></div>
                                 )}
 
                                 {/* DISPENSING CARD (ANIMATED) */}
@@ -448,13 +459,18 @@ const Gacha: React.FC = () => {
                                 {/* --- PACK VISUALS (SPLITTABLE) --- */}
                                 
                                 {/* TOP HALF - 15% HEIGHT (No Text) */}
-                                <div className={`
-                                    absolute top-0 left-0 w-full h-[15%] z-20 
-                                    rounded-t-[2rem] overflow-hidden bg-gradient-to-b
-                                    transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-bottom-left border-t-4 border-x-4
-                                    ${selectedPack === 'lamb' ? 'from-red-500 to-red-600 border-white/20' : 'from-gray-800 to-gray-900 border-yellow-500/30'}
-                                    ${isCut ? '-rotate-[30deg] -translate-y-32 -translate-x-20' : ''}
-                                `}>
+                                <div 
+                                    className={`
+                                        absolute top-0 left-0 w-full h-[15%] z-20 
+                                        rounded-t-[2rem] overflow-hidden bg-gradient-to-b
+                                        transition-all duration-700 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] origin-bottom-left border-t-4 border-x-4
+                                        ${selectedPack === 'lamb' ? 'from-red-500 to-red-600 border-white/20' : 'from-gray-800 to-gray-900 border-yellow-500/30'}
+                                    `}
+                                    style={isCut ? {
+                                        transform: `rotate(${cutVisuals.rotate}deg) translate(${cutVisuals.x}px, ${cutVisuals.y}px)`,
+                                        opacity: 0
+                                    } : {}}
+                                >
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                                     {/* Crimp */}
                                     <div className="absolute top-0 left-0 right-0 h-4 bg-black/20 border-b border-white/10"></div>
