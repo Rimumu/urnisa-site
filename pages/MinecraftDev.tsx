@@ -18,9 +18,13 @@ const MinecraftDev: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  
+  // Modal States
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showUnlinkModal, setShowUnlinkModal] = useState(false);
+  
   const [mcInput, setMcInput] = useState('');
-  const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error' | 'conflict'>('idle');
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Load user from local storage on mount
@@ -82,7 +86,8 @@ const MinecraftDev: React.FC = () => {
       e.preventDefault();
       if (!user || !mcInput) return;
       
-      // Simple validation for Java Edition username (3-16 chars, alphanumeric + underscore)
+      setLinkStatus('idle');
+
       if (!/^[a-zA-Z0-9_]{3,16}$/.test(mcInput)) {
           setLinkStatus('error');
           return;
@@ -109,6 +114,8 @@ const MinecraftDev: React.FC = () => {
                   setShowLinkModal(false);
                   setLinkStatus('idle');
               }, 1500);
+          } else if (response.status === 409) {
+              setLinkStatus('conflict');
           } else {
               setLinkStatus('error');
           }
@@ -118,7 +125,7 @@ const MinecraftDev: React.FC = () => {
   };
 
   const handleUnlinkMinecraft = async () => {
-      if (!user || !confirm("Are you sure you want to unlink your Minecraft account?")) return;
+      if (!user) return;
 
       try {
           const response = await fetch(`${DISCORD_API_URL}/api/minecraft/link`, {
@@ -129,8 +136,9 @@ const MinecraftDev: React.FC = () => {
 
           if (response.ok) {
               const updatedUser = { ...user, minecraftUsername: null };
-              setUser(updatedUser as UserData); // Explicit cast to remove null type possibility
+              setUser(updatedUser as UserData);
               localStorage.setItem('urnisa_mc_user', JSON.stringify(updatedUser));
+              setShowUnlinkModal(false); // Close modal
               setMenuOpen(false);
           }
       } catch (e) {
@@ -193,7 +201,7 @@ const MinecraftDev: React.FC = () => {
                                             <span className="text-sm font-mono text-white">{user.minecraftUsername}</span>
                                         </div>
                                         <button 
-                                            onClick={handleUnlinkMinecraft}
+                                            onClick={() => { setShowUnlinkModal(true); setMenuOpen(false); }}
                                             className="text-[10px] text-red-400 hover:text-red-300 underline"
                                         >
                                             Unlink
@@ -229,9 +237,45 @@ const MinecraftDev: React.FC = () => {
             )}
         </div>
 
+        {/* UNLINK MODAL */}
+        {showUnlinkModal && (
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-[#1a0b0e] border border-white/10 p-0 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
+                    <div className="h-24 bg-gradient-to-br from-red-900/40 to-black relative overflow-hidden flex items-center justify-center">
+                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                         <div className="w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10 text-red-500">
+                            <span className="text-3xl">⚠️</span>
+                         </div>
+                    </div>
+
+                    <div className="px-8 pt-12 pb-8 text-center">
+                        <h2 className="text-2xl font-black text-white mb-2">Unlink Account?</h2>
+                        <p className="text-gray-400 text-sm mb-6">
+                            Are you sure you want to unlink <strong>{user?.minecraftUsername}</strong>? You will lose your whitelist status on the server.
+                        </p>
+                        
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setShowUnlinkModal(false)} 
+                                className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleUnlinkMinecraft}
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg text-sm"
+                            >
+                                Unlink
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
         {/* LINK MODAL */}
         {showLinkModal && (
-            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
                 <div className="bg-[#1a0b0e] border border-white/10 p-0 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
                     {/* Decor Header */}
                     <div className="h-24 bg-gradient-to-br from-brand-primary/20 to-black relative overflow-hidden flex items-center justify-center">
@@ -259,14 +303,18 @@ const MinecraftDev: React.FC = () => {
                                     <input 
                                         type="text" 
                                         value={mcInput}
-                                        onChange={(e) => setMcInput(e.target.value)}
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none font-mono transition-all placeholder:text-gray-600"
+                                        onChange={(e) => { setMcInput(e.target.value); setLinkStatus('idle'); }}
+                                        className={`
+                                            w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none font-mono transition-all placeholder:text-gray-600
+                                            ${linkStatus === 'conflict' ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-white/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary'}
+                                        `}
                                         placeholder="Notch"
                                         required
                                         autoFocus
                                     />
                                 </div>
                                 {linkStatus === 'error' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Failed to link. Invalid username.</p>}
+                                {linkStatus === 'conflict' && <p className="text-red-500 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> This minecraft username has been linked already!</p>}
                             </div>
                             
                             <div className="flex gap-3">
@@ -279,10 +327,13 @@ const MinecraftDev: React.FC = () => {
                                 </button>
                                 <button 
                                     type="submit" 
-                                    disabled={linkStatus === 'success'}
-                                    className={`flex-1 font-bold py-3 rounded-xl transition-all shadow-lg text-sm ${linkStatus === 'success' ? 'bg-green-600 text-white scale-105' : 'bg-green-600 hover:bg-green-500 text-white hover:scale-[1.02]'}`}
+                                    disabled={linkStatus === 'success' || linkStatus === 'conflict'}
+                                    className={`
+                                        flex-1 font-bold py-3 rounded-xl transition-all shadow-lg text-sm text-white
+                                        ${linkStatus === 'success' ? 'bg-green-600 scale-105' : linkStatus === 'conflict' ? 'bg-red-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}
+                                    `}
                                 >
-                                    {linkStatus === 'success' ? '✓ Linked!' : 'Link'}
+                                    {linkStatus === 'success' ? '✓ Linked!' : linkStatus === 'conflict' ? 'Taken ✕' : 'Link'}
                                 </button>
                             </div>
                         </form>
@@ -293,13 +344,13 @@ const MinecraftDev: React.FC = () => {
 
         {/* Hero Section */}
         <div className="flex flex-col items-center text-center space-y-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-16">
+            {/* ... (rest of the component remains the same) ... */}
             <div className="relative z-10">
                 <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight drop-shadow-2xl">
                     WELCOME TO <span className="text-brand-primary">URNISA</span> MINECRAFT
                     <br />
                     <span className="text-[#60a5fa] drop-shadow-[0_0_10px_rgba(96,165,250,0.5)]">COBBLEMON</span> SERVER
                 </h1>
-                {/* Decorative element behind title */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-brand-primary/5 blur-[60px] -z-10 rounded-full"></div>
             </div>
             
@@ -346,7 +397,6 @@ const MinecraftDev: React.FC = () => {
 
         {/* Content Grid */}
         <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-            
             {/* Features Section */}
             <div className="bg-black/30 backdrop-blur-lg border border-white/10 p-8 rounded-[2.5rem] shadow-xl flex flex-col h-full">
                 <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-4">

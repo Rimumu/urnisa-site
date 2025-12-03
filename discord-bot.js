@@ -32,7 +32,7 @@ const MinecraftLinkSchema = new mongoose.Schema({
     discordId: { type: String, required: true, unique: true },
     discordUsername: String,
     discordAvatar: String,
-    minecraftUsername: String,
+    minecraftUsername: { type: String, required: true, unique: true }, // Ensure MC username is unique across all links
     linkedAt: { type: Date, default: Date.now }
 });
 const MinecraftLink = mongoose.model('MinecraftLink', MinecraftLinkSchema);
@@ -146,18 +146,29 @@ app.post('/api/minecraft/link', async (req, res) => {
     if (mongoose.connection.readyState !== 1) return res.status(500).json({ error: "Database unavailable" });
 
     try {
+        // Check if this MC username is already linked to SOMEONE ELSE
+        const existingLink = await MinecraftLink.findOne({ minecraftUsername: new RegExp(`^${minecraftUsername}$`, 'i') });
+        
+        if (existingLink && existingLink.discordId !== discordId) {
+            return res.status(409).json({ error: "Username already linked to another account" });
+        }
+
         await MinecraftLink.findOneAndUpdate(
             { discordId },
             { 
                 discordUsername,
                 discordAvatar,
-                minecraftUsername,
+                minecraftUsername, // Mongoose unique index will also catch duplicates if regex check misses
                 linkedAt: new Date()
             },
             { upsert: true, new: true }
         );
         res.json({ success: true, minecraftUsername });
     } catch (error) {
+        // Handle Mongoose unique error (E11000)
+        if (error.code === 11000) {
+             return res.status(409).json({ error: "Username already linked" });
+        }
         res.status(500).json({ error: "Failed to save link" });
     }
 });
@@ -170,8 +181,6 @@ app.delete('/api/minecraft/link', async (req, res) => {
     if (mongoose.connection.readyState !== 1) return res.status(500).json({ error: "Database unavailable" });
 
     try {
-        // We remove the document entirely or just unset the MC username.
-        // Removing the document is cleaner if they want to fully unlink.
         await MinecraftLink.findOneAndDelete({ discordId });
         res.json({ success: true });
     } catch (error) {
