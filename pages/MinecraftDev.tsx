@@ -177,7 +177,9 @@ const MinecraftDev: React.FC = () => {
           const data = await response.json();
 
           if (response.ok) {
-              setWhitelistStatus({ type: 'success', msg: data.message });
+              setWhitelistStatus({ type: 'success', msg: data.message || "Application Sent! Pending Admin Approval." });
+          } else if (response.status === 409) {
+               setWhitelistStatus({ type: 'success', msg: "Application already pending!" });
           } else {
               setWhitelistStatus({ type: 'error', msg: data.error || "Application Failed" });
           }
@@ -286,39 +288,74 @@ const MinecraftDev: React.FC = () => {
                     onClick={loginRedirect}
                     className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all hover:scale-105"
                 >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 19.018 19.018 0 0 0-3.361 6.883 19.2 19.2 0 0 0-4.92 0C5.832 6.72 5.309 5.351 4.635 2.893a.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 .68 4.37a.075.075 0 0 0-.032.027C.533 9.046 1.583 13.578 4.53 18.16a.077.077 0 0 0 .084.011 19.73 19.73 0 0 0 5.995-3.016.077.077 0 0 0 .031-.102c-.613-.916-1.15-1.89-1.581-2.917a.075.075 0 0 1 .065-.105c1.204.573 2.58.892 4.004.892s2.8-.319 4.004-.892a.075.075 0 0 1 .065.105c-.43 1.027-.968 2.001-1.581 2.917a.077.077 0 0 0 .031.102 19.73 19.73 0 0 0 5.996 3.016.077.077 0 0 0 .084-.011c2.947-4.582 3.997-9.114 3.882-13.763a.076.076 0 0 0-.032-.027zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.947 2.419-2.157 2.419z"/></svg>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 19.018 19.018 0 0 0-3.361 6.883 19.2 19.2 0 0 0-4.92 0C5.832 6.72 5.309 5.351 4.635 2.893a.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 .68 4.37a.075.075 0 0 0-.032.027C.533 9.046 1.583 13.578 4.53 18.16a.077.077 0 0 0 .084.011 19.73 19.73 0 0 0 5.995-3.016.077.077 0 0 0 .031-.102c-.613-.916-1.15-1.89-1.581-2.917a.075.075 0 0 1 .065-.105c1.204.573 2.58.892 4.004.892s2.8-.319 4.004-.892a.075.075 0 0 1 .065.105c-.43 1.027-.968 2.001-1.581 2.917a.077.077 0 0 0 .031.102 19.73 19.73 0 0 0 5.996 3.016.077.077 0 0 0 .084-.011c2.947-4.582 3.997-9.114 3.882-13.763a.076.076 0 0 0-.032-.027zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419z"/></svg>
                     Login with Discord
                 </button>
             )}
         </div>
 
-        {/* LINK MODAL (Same as previous) */}
+        {/* LINK MODAL */}
         {showLinkModal && (
-             <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
                 <div className="bg-[#1a0b0e] border border-white/10 p-0 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
+                    {/* Decor Header */}
                     <div className="h-24 bg-gradient-to-br from-brand-primary/20 to-black relative overflow-hidden flex items-center justify-center">
                          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                          <div className="w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10">
                             <span className="text-3xl">🔗</span>
                          </div>
                     </div>
+
                     <div className="px-8 pt-12 pb-8 text-center">
                         <h2 className="text-2xl font-black text-white mb-2">Link Minecraft Account</h2>
                         <p className="text-gray-400 text-sm mb-6">Enter your Minecraft username to link:</p>
+                        
                         <form onSubmit={handleLinkSubmit} className="space-y-6 text-left">
                             <div>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <img src={mcInput ? `https://mc-heads.net/avatar/${mcInput}/20` : "https://mc-heads.net/avatar/Steve/20"} alt="" className="w-5 h-5 rounded-sm grayscale opacity-70" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                        <img 
+                                            src={mcInput ? `https://mc-heads.net/avatar/${mcInput}/20` : "https://mc-heads.net/avatar/Steve/20"} 
+                                            alt="" 
+                                            className="w-5 h-5 rounded-sm grayscale opacity-70 transition-all duration-300"
+                                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                                        />
                                     </div>
-                                    <input type="text" value={mcInput} onChange={(e) => { setMcInput(e.target.value); setLinkStatus('idle'); }} className={`w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none font-mono transition-all placeholder:text-gray-600 ${linkStatus === 'conflict' ? 'border-red-500' : 'border-white/10 focus:border-brand-primary'}`} placeholder="Notch" required autoFocus />
+                                    <input 
+                                        type="text" 
+                                        value={mcInput}
+                                        onChange={(e) => { setMcInput(e.target.value); setLinkStatus('idle'); }}
+                                        className={`
+                                            w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none font-mono transition-all placeholder:text-gray-600
+                                            ${linkStatus === 'conflict' ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-white/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary'}
+                                        `}
+                                        placeholder="Notch"
+                                        required
+                                        autoFocus
+                                    />
                                 </div>
-                                {linkStatus === 'error' && <p className="text-red-400 text-xs mt-2 font-bold">Failed to link. Invalid username.</p>}
-                                {linkStatus === 'conflict' && <p className="text-red-500 text-xs mt-2 font-bold">Username already linked!</p>}
+                                {linkStatus === 'error' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Failed to link. Invalid username.</p>}
+                                {linkStatus === 'conflict' && <p className="text-red-500 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> This minecraft username has been linked already!</p>}
                             </div>
+                            
                             <div className="flex gap-3">
-                                <button type="button" onClick={() => setShowLinkModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl text-sm">Cancel</button>
-                                <button type="submit" disabled={linkStatus === 'success' || linkStatus === 'conflict'} className={`flex-1 font-bold py-3 rounded-xl transition-all shadow-lg text-sm text-white ${linkStatus === 'success' ? 'bg-green-600' : linkStatus === 'conflict' ? 'bg-red-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500'}`}>{linkStatus === 'success' ? '✓ Linked!' : linkStatus === 'conflict' ? 'Taken ✕' : 'Link'}</button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowLinkModal(false)} 
+                                    className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={linkStatus === 'success' || linkStatus === 'conflict'}
+                                    className={`
+                                        flex-1 font-bold py-3 rounded-xl transition-all shadow-lg text-sm text-white
+                                        ${linkStatus === 'success' ? 'bg-green-600 scale-105' : linkStatus === 'conflict' ? 'bg-red-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}
+                                    `}
+                                >
+                                    {linkStatus === 'success' ? '✓ Linked!' : linkStatus === 'conflict' ? 'Taken ✕' : 'Link'}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -326,20 +363,36 @@ const MinecraftDev: React.FC = () => {
             </div>
         )}
 
-        {/* UNLINK MODAL (Same as previous) */}
+        {/* UNLINK MODAL */}
         {showUnlinkModal && (
-             <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
                 <div className="bg-[#1a0b0e] border border-white/10 p-0 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
                     <div className="h-24 bg-gradient-to-br from-red-900/40 to-black relative overflow-hidden flex items-center justify-center">
                          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-                         <div className="w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10 text-red-500"><span className="text-3xl">⚠️</span></div>
+                         <div className="w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10 text-red-500">
+                            <span className="text-3xl">⚠️</span>
+                         </div>
                     </div>
+
                     <div className="px-8 pt-12 pb-8 text-center">
                         <h2 className="text-2xl font-black text-white mb-2">Unlink Account?</h2>
-                        <p className="text-gray-400 text-sm mb-6">Are you sure you want to unlink <strong>{user?.minecraftUsername}</strong>? You will lose your whitelist status.</p>
+                        <p className="text-gray-400 text-sm mb-6">
+                            Are you sure you want to unlink <strong>{user?.minecraftUsername}</strong>? You will lose your whitelist status on the server.
+                        </p>
+                        
                         <div className="flex gap-3">
-                            <button onClick={() => setShowUnlinkModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl text-sm">Cancel</button>
-                            <button onClick={handleUnlinkMinecraft} className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-lg text-sm">Unlink</button>
+                            <button 
+                                onClick={() => setShowUnlinkModal(false)} 
+                                className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleUnlinkMinecraft}
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg text-sm"
+                            >
+                                Unlink
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -354,6 +407,7 @@ const MinecraftDev: React.FC = () => {
                     <br />
                     <span className="text-[#60a5fa] drop-shadow-[0_0_10px_rgba(96,165,250,0.5)]">COBBLEMON</span> SERVER
                 </h1>
+                {/* Decorative element behind title */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-brand-primary/5 blur-[60px] -z-10 rounded-full"></div>
             </div>
             
@@ -365,14 +419,35 @@ const MinecraftDev: React.FC = () => {
             <div className="w-full max-w-md px-4">
                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl mt-8 flex flex-col items-center gap-4 relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary via-[#60a5fa] to-brand-primary opacity-50"></div>
+                    
                     <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Server IP Address</div>
-                    <button onClick={handleCopy} className="relative flex items-center justify-between gap-4 bg-black/30 border border-white/10 hover:border-white/30 px-6 py-4 rounded-2xl w-full transition-all duration-300 group/btn hover:bg-white/5">
-                        <div className="flex flex-col items-start"><span className="font-mono text-xl md:text-2xl font-bold text-brand-accent tracking-wide group-hover/btn:text-white transition-colors">{SERVER_IP}</span></div>
-                        <div className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${copied ? 'bg-green-500 text-black scale-110' : 'bg-white/10 text-gray-400 group-hover/btn:bg-brand-primary group-hover/btn:text-white'}`}>
-                            {copied ? <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> : <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>}
+                    
+                    <button 
+                        onClick={handleCopy}
+                        className="relative flex items-center justify-between gap-4 bg-black/30 border border-white/10 hover:border-white/30 px-6 py-4 rounded-2xl w-full transition-all duration-300 group/btn hover:bg-white/5"
+                    >
+                        <div className="flex flex-col items-start">
+                             <span className="font-mono text-xl md:text-2xl font-bold text-brand-accent tracking-wide group-hover/btn:text-white transition-colors">
+                                {SERVER_IP}
+                            </span>
+                        </div>
+                        
+                        <div className={`
+                            flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300
+                            ${copied ? 'bg-green-500 text-black scale-110' : 'bg-white/10 text-gray-400 group-hover/btn:bg-brand-primary group-hover/btn:text-white'}
+                        `}>
+                            {copied ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            )}
                         </div>
                     </button>
-                    <div className="flex items-center gap-2 text-sm font-medium text-green-400 bg-green-500/10 px-4 py-1.5 rounded-full border border-green-500/20"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></span><span>Server Online</span></div>
+
+                    <div className="flex items-center gap-2 text-sm font-medium text-green-400 bg-green-500/10 px-4 py-1.5 rounded-full border border-green-500/20">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></span>
+                        <span>Server Online</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -386,9 +461,22 @@ const MinecraftDev: React.FC = () => {
                     <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl">🌟</div>
                     <h2 className="text-2xl font-bold text-white">Server Features</h2>
                 </div>
+                
                 <ul className="space-y-4">
-                    {[{ title: "Cobblemon Mod", desc: "Experience Pokémon in Minecraft seamlessly." }, { title: "Custom Starters", desc: "Choose from a unique selection of starter Pokémon." }, { title: "Player Gyms", desc: "Challenge other players to become the champion." }, { title: "Land Claiming", desc: "Protect your base and builds easily." }, { title: "Cosmetics", desc: "Unlock hats, backpacks and trails!" }].map((item, i) => (
-                        <li key={i} className="flex items-start gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors"><div className="w-6 h-6 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0 mt-0.5 text-xs font-bold">✓</div><div><div className="font-bold text-white">{item.title}</div><div className="text-sm text-gray-400">{item.desc}</div></div></li>
+                    {[
+                        { title: "Cobblemon Mod", desc: "Experience Pokémon in Minecraft seamlessly." },
+                        { title: "Custom Starters", desc: "Choose from a unique selection of starter Pokémon." },
+                        { title: "Player Gyms", desc: "Challenge other players to become the champion." },
+                        { title: "Land Claiming", desc: "Protect your base and builds easily." },
+                        { title: "Cosmetics", desc: "Unlock hats, backpacks and trails!" }
+                    ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+                            <div className="w-6 h-6 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary shrink-0 mt-0.5 text-xs font-bold">✓</div>
+                            <div>
+                                <div className="font-bold text-white">{item.title}</div>
+                                <div className="text-sm text-gray-400">{item.desc}</div>
+                            </div>
+                        </li>
                     ))}
                 </ul>
             </div>

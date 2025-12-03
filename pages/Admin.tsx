@@ -7,6 +7,7 @@ import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
 import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
+import { DISCORD_API_URL } from '../constants';
 
 // ... (Existing Imports & Helpers remain the same, truncated for brevity but included in full file output)
 const processImageUrl = (url: string): string => {
@@ -173,7 +174,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -220,6 +221,9 @@ const Admin: React.FC = () => {
     // --- STREAM STATUS STATE ---
     const [streamStatusOverride, setStreamStatusOverride] = useState<'auto' | 'live' | 'offline'>('auto');
 
+    // --- MINECRAFT WHITELIST STATE ---
+    const [whitelistApps, setWhitelistApps] = useState<any[]>([]);
+
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
     const [confirmSync, setConfirmSync] = useState(false);
@@ -244,10 +248,28 @@ const Admin: React.FC = () => {
         } catch(e) {}
     };
 
+    // Fetch Whitelist Apps
+    const fetchWhitelistApps = async () => {
+        try {
+            const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, {
+                headers: { Authorization: password } // Use admin password for auth
+            });
+            if (res.ok) setWhitelistApps(await res.json());
+        } catch (e) {}
+    };
+
     useEffect(() => {
         if (isAuthenticated && activeTab === 'nisathon_mgr') {
             fetchEventLog();
             const interval = setInterval(fetchEventLog, 5000); // Refresh logs often
+            return () => clearInterval(interval);
+        }
+    }, [isAuthenticated, activeTab]);
+
+    useEffect(() => {
+        if (isAuthenticated && activeTab === 'minecraft') {
+            fetchWhitelistApps();
+            const interval = setInterval(fetchWhitelistApps, 10000);
             return () => clearInterval(interval);
         }
     }, [isAuthenticated, activeTab]);
@@ -422,7 +444,7 @@ const Admin: React.FC = () => {
         }
     };
 
-    // HANDLERS
+    // NISATHON HANDLERS
     const handleSetTimer = () => apiCall('nisathon/timer/set', { hours: timerH, minutes: timerM, seconds: timerS });
     const handleAddTimer = () => apiCall('nisathon/timer/add', { minutes: addM });
     const handlePauseTimer = () => apiCall('nisathon/timer/pause', {});
@@ -444,6 +466,32 @@ const Admin: React.FC = () => {
     const handleCountdownAdd = () => apiCall('countdown/add', { minutes: cdAddM });
     const handleCountdownPause = () => apiCall('countdown/pause', {});
     const handleCountdownReset = () => apiCall('countdown/reset', {});
+
+    // MINECRAFT
+    const handleApproveApp = async (id: string) => {
+        setLoading(true);
+        try {
+            await fetch(`${DISCORD_API_URL}/api/admin/whitelist/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ id })
+            });
+            fetchWhitelistApps();
+        } catch(e){} finally { setLoading(false); }
+    };
+
+    const handleRejectApp = async (id: string) => {
+         if(!confirm("Reject this application?")) return;
+         setLoading(true);
+         try {
+             await fetch(`${DISCORD_API_URL}/api/admin/whitelist/reject`, {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json', Authorization: password },
+                 body: JSON.stringify({ id })
+             });
+             fetchWhitelistApps();
+         } catch(e){} finally { setLoading(false); }
+    };
 
     // --- HELPERS ---
     const updateAboutItem = (i: number, f: keyof AboutItem, v: string) => { const u = [...localAbout]; u[i] = { ...u[i], [f]: v }; setLocalAbout(u); };
@@ -523,6 +571,9 @@ const Admin: React.FC = () => {
                     </button>
                     <button onClick={() => setActiveTab('gallery')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'gallery' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>🎨</span> Gallery
+                    </button>
+                    <button onClick={() => setActiveTab('minecraft')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'minecraft' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                        <span>⛏️</span> Minecraft
                     </button>
                 </nav>
             </div>
@@ -1022,6 +1073,47 @@ const Admin: React.FC = () => {
                                 <div className="mt-6 flex justify-end pt-4 border-t border-white/5">
                                     <button onClick={() => handleSaveProfile('artworks')} disabled={loading} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">Save Gallery</button>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* --- MINECRAFT TAB --- */}
+                    {activeTab === 'minecraft' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Whitelist Applications</h2>
+                            
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                {whitelistApps.length === 0 ? (
+                                    <div className="text-center text-gray-500 py-10 italic">No pending applications.</div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {whitelistApps.map((app) => (
+                                            <div key={app._id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                                                <div className="flex items-center gap-4">
+                                                    <img src={app.discordAvatar} className="w-10 h-10 rounded-full" alt="Avatar" />
+                                                    <div>
+                                                        <div className="font-bold text-white">{app.discordUsername}</div>
+                                                        <div className="text-xs text-gray-400 font-mono">MC: <span className="text-green-400 font-bold">{app.minecraftUsername}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={() => handleApproveApp(app._id)}
+                                                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-colors"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleRejectApp(app._id)}
+                                                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-colors"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
