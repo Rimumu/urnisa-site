@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -183,18 +182,32 @@ const Gacha: React.FC = () => {
         if (!cutCoords) return;
         const dx = cutCoords.end.x - cutCoords.start.x;
         const dy = cutCoords.end.y - cutCoords.start.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Need a decent swipe length (> 100px)
-        if (distance > 100) {
-            // Calculate angle to ensure it's roughly horizontal (+/- 35 degrees)
-            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-            // Valid horizontal cuts are around 0 or 180 degrees
-            const isHorizontal = (Math.abs(angle) < 35) || (Math.abs(angle) > 145);
-            
-            if (isHorizontal) {
-                triggerCut();
-            }
+        // 1. Check Horizontal Length (Must cover width of pack approx)
+        // Pack width is 300px. Let's require 200px projected width.
+        if (Math.abs(dx) < 200) return;
+
+        // 2. Check Flatness (Angle)
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        const isHorizontal = (Math.abs(angle) < 30) || (Math.abs(angle) > 150);
+        if (!isHorizontal) return;
+
+        // 3. Check Vertical Position (The "Top" Requirement)
+        // SVG Offset is 200px. Pack Height is 420px.
+        // We want the cut around the 35% mark (where the visual split happens).
+        // 35% of 420 = 147px.
+        // Target Y relative to Pack Top: 100px to 200px (approx 25% to 45%).
+        // In SVG coords: 200 + 100 = 300, 200 + 200 = 400.
+        
+        // Average Y of the cut
+        const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
+        
+        if (avgY >= 300 && avgY <= 400) {
+            triggerCut();
+        } else {
+            // Visual feedback could be added here for "missed" cuts
+            // For now, just reset cut state so they can try again
+            setCutCoords(null);
         }
     };
 
@@ -420,6 +433,14 @@ const Gacha: React.FC = () => {
                                             style={{ opacity: 0.8 }}
                                         />
                                     </svg>
+                                )}
+
+                                {/* VISUAL GUIDE LINE (Top 35%) */}
+                                {!isCut && (
+                                    <div className="absolute top-[35%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/40 z-40 pointer-events-none flex items-center justify-between px-2 animate-pulse">
+                                        <span className="text-sm bg-black/60 rounded-full w-6 h-6 flex items-center justify-center transform -translate-y-1/2 shadow-lg">✂️</span>
+                                        <span className="text-sm bg-black/60 rounded-full w-6 h-6 flex items-center justify-center transform -translate-y-1/2 rotate-180 shadow-lg">✂️</span>
+                                    </div>
                                 )}
 
                                 {/* FLASH OVERLAY (Triggers on cut) */}
