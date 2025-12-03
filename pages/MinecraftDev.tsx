@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
@@ -21,6 +22,12 @@ const PowerIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
         <line x1="12" y1="2" x2="12" y2="12"></line>
+    </svg>
+);
+
+const CurseforgeLogo = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+        <path d="M7.19 2.5C6.11 2.76 5.11 3.2 4.22 3.78c-.76.5-1.52 1.14-2.11 1.77C1.45 6.3 1 7.21.75 8.16a10.63 10.63 0 0 0 .58 7.37c.56 1.34 1.46 2.52 2.62 3.44c1.16.92 2.52 1.57 3.97 1.88c1.45.31 2.96.31 4.41 0c1.39-.3 2.7-.92 3.83-1.8c.37-.28.72-.59 1.05-.92c-.27-.2-.55-.38-.83-.54c-.65-.36-1.41-.5-2.15-.4c-.74.1-1.42.48-1.89 1.05c-.47.57-.65 1.32-.48 2.05c.08.35.25.68.48.96c-1.36.42-2.8.53-4.21.32c-2.63-.39-4.99-1.92-6.3-4.1c-1.31-2.18-1.55-4.88-.65-7.25c.9-2.37 2.86-4.25 5.25-5.04c.59-.19 1.2-.31 1.82-.36c.62-.05 1.24.01 1.85.17c1.22.32 2.34.91 3.26 1.72c.46.4.87.86 1.23 1.36c.18.25.35.51.5.78c.07.13.14.27.2.4l-.56-.21c-1.28-.48-2.66-.66-4.01-.52c-.84.09-1.66.33-2.42.71c-1.52.76-2.69 2.05-3.23 3.65c-.54 1.6-.45 3.36.26 4.9c.71 1.54 1.95 2.78 3.51 3.46c1.56.68 3.33.74 4.93.16c1.6-.58 2.87-1.84 3.52-3.44c.65-1.6.61-3.39-.12-4.95c-.37-.78-.88-1.48-1.5-2.07c-.31-.29-.65-.55-1.01-.78c-.09-.06-.18-.11-.27-.16l.24.47c.21.42.38.86.51 1.31c.26.9.3 1.85.12 2.78c-.18.93-.58 1.8-1.16 2.54c-.58.74-1.33 1.31-2.19 1.66c-.86.35-1.81.47-2.73.35c-.92-.12-1.79-.47-2.52-1.01c-.73-.54-1.29-1.26-1.62-2.1c-.33-.84-.42-1.76-.26-2.66c.16-.9.56-1.73 1.15-2.42c.59-.69 1.36-1.21 2.23-1.5c.87-.29 1.81-.34 2.7-.15c.89.19 1.71.61 2.39 1.2c.68.59 1.2 1.33 1.51 2.18c.08.21.14.43.18.65l.59-.22c.6-.22 1.14-.58 1.59-1.04c.9-.92 1.48-2.1 1.64-3.37c.16-1.27-.12-2.56-.81-3.66c-.69-1.1-1.73-1.95-2.94-2.42c-1.21-.47-2.53-.55-3.79-.22z"/>
     </svg>
 );
 
@@ -583,7 +590,18 @@ const MinecraftDev: React.FC = () => {
                     ))}
                 </div>
 
-                <div className="mt-auto pt-8">
+                <div className="mt-auto pt-8 flex flex-col gap-3">
+                    {/* DOWNLOAD BUTTON */}
+                    <a 
+                        href="https://www.curseforge.com/minecraft/modpacks/cobblemon-academy" 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg bg-[#f16436] hover:bg-[#d6552a] hover:scale-[1.02] shadow-orange-500/20"
+                    >
+                        <CurseforgeLogo />
+                        Download Modpack
+                    </a>
+
                     {/* APPLY BUTTON */}
                     <button 
                         onClick={handleApplyWhitelist}
