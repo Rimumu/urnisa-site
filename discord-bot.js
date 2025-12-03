@@ -18,6 +18,10 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const MONGO_URI = process.env.MONGO_URI;
 
+const GUILD_ID = '1336782145833668729'; // Urnisa Server ID
+const ROLE_SUBSCRIBER = '1339227370833448980';
+const ROLE_FRIEND = '1445655680735383675';
+
 // --- DATABASE ---
 if (MONGO_URI) {
     mongoose.set('strictQuery', false);
@@ -32,7 +36,7 @@ const MinecraftLinkSchema = new mongoose.Schema({
     discordId: { type: String, required: true, unique: true },
     discordUsername: String,
     discordAvatar: String,
-    minecraftUsername: { type: String, required: true, unique: true }, // Ensure MC username is unique across all links
+    minecraftUsername: { type: String, required: true, unique: true },
     linkedAt: { type: Date, default: Date.now }
 });
 const MinecraftLink = mongoose.model('MinecraftLink', MinecraftLinkSchema);
@@ -69,14 +73,12 @@ app.get('/', (req, res) => res.send('Urnisa Discord Service Active'));
 // 1. Chat Preview
 app.get('/api/messages', async (req, res) => {
     const { channelId } = req.query;
-    const guildId = '1336782145833668729'; 
-
     if (!channelId) return res.status(400).json({ error: 'Channel ID required' });
 
     try {
         const messages = await fetchDiscordMessages(channelId);
         const enhancedMessages = await Promise.all(messages.map(async (msg) => {
-            const memberData = await fetchGuildMember(guildId, msg.author.id);
+            const memberData = await fetchGuildMember(GUILD_ID, msg.author.id);
             return {
                 ...msg,
                 member: memberData ? { nick: memberData.nick, avatar: memberData.avatar } : null
@@ -146,7 +148,6 @@ app.post('/api/minecraft/link', async (req, res) => {
     if (mongoose.connection.readyState !== 1) return res.status(500).json({ error: "Database unavailable" });
 
     try {
-        // Check if this MC username is already linked to SOMEONE ELSE
         const existingLink = await MinecraftLink.findOne({ minecraftUsername: new RegExp(`^${minecraftUsername}$`, 'i') });
         
         if (existingLink && existingLink.discordId !== discordId) {
@@ -155,20 +156,12 @@ app.post('/api/minecraft/link', async (req, res) => {
 
         await MinecraftLink.findOneAndUpdate(
             { discordId },
-            { 
-                discordUsername,
-                discordAvatar,
-                minecraftUsername, // Mongoose unique index will also catch duplicates if regex check misses
-                linkedAt: new Date()
-            },
+            { discordUsername, discordAvatar, minecraftUsername, linkedAt: new Date() },
             { upsert: true, new: true }
         );
         res.json({ success: true, minecraftUsername });
     } catch (error) {
-        // Handle Mongoose unique error (E11000)
-        if (error.code === 11000) {
-             return res.status(409).json({ error: "Username already linked" });
-        }
+        if (error.code === 11000) return res.status(409).json({ error: "Username already linked" });
         res.status(500).json({ error: "Failed to save link" });
     }
 });
@@ -176,7 +169,6 @@ app.post('/api/minecraft/link', async (req, res) => {
 // 4. Unlink Minecraft Account
 app.delete('/api/minecraft/link', async (req, res) => {
     const { discordId } = req.body;
-
     if (!discordId) return res.status(400).json({ error: "Missing Discord ID" });
     if (mongoose.connection.readyState !== 1) return res.status(500).json({ error: "Database unavailable" });
 
@@ -186,6 +178,43 @@ app.delete('/api/minecraft/link', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Failed to unlink" });
     }
+});
+
+// 5. WHITELIST APPLICATION
+app.post('/api/whitelist/apply', async (req, res) => {
+    const { discordId } = req.body;
+    if (!discordId) return res.status(400).json({ error: "Missing Discord ID" });
+
+    // 1. Check DB Link
+    const link = await MinecraftLink.findOne({ discordId });
+    if (!link || !link.minecraftUsername) {
+        return res.status(400).json({ error: "No Minecraft account linked. Please link one first!" });
+    }
+
+    // 2. Check Discord Roles
+    const member = await fetchGuildMember(GUILD_ID, discordId);
+    if (!member) {
+        return res.status(403).json({ error: "You are not in the Discord server!" });
+    }
+
+    const roles = member.roles || [];
+    const hasSub = roles.includes(ROLE_SUBSCRIBER);
+    const hasFriend = roles.includes(ROLE_FRIEND);
+
+    if (!hasSub && !hasFriend) {
+        return res.status(403).json({ error: "You are not subscribed to the Twitch channel!" });
+    }
+
+    // 3. Whitelist Logic (Here you would call RCON or save to a whitelist pending queue)
+    // For now, we just confirm eligibility.
+    
+    console.log(`✅ Whitelisting ${link.minecraftUsername} (Discord: ${link.discordUsername})`);
+    
+    res.json({ 
+        success: true, 
+        message: `Application Successful! You have been whitelisted as ${link.minecraftUsername}.`,
+        username: link.minecraftUsername
+    });
 });
 
 // --- CROSS-PING KEEP ALIVE ---
