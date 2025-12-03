@@ -494,7 +494,7 @@ const MinecraftDev: React.FC = () => {
             </div>
             
             <p className="text-gray-300 max-w-2xl text-lg md:text-xl px-4">
-                Embark on a journey where Pokémon meets Minecraft! Catch 'em all, build your dream home, and battle with friends in our cozy community server.
+                Embark on a journey with nisa and use your balls with her to catch some little gremlins. Well... some are big.
             </p>
 
             {/* Server IP Box */}
