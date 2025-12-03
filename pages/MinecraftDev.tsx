@@ -10,6 +10,13 @@ interface UserData {
     minecraftUsername?: string | null;
 }
 
+// Correct Discord Logo SVG Path
+const DiscordLogo = () => (
+    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 19.018 19.018 0 0 0-3.361 6.883 19.2 19.2 0 0 0-4.92 0C5.832 6.72 5.309 5.351 4.635 2.893a.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 .68 4.37a.075.075 0 0 0-.032.027C.533 9.046 1.583 13.578 4.53 18.16a.077.077 0 0 0 .084.011 19.73 19.73 0 0 0 5.995-3.016.077.077 0 0 0 .031-.102c-.613-.916-1.15-1.89-1.581-2.917a.075.075 0 0 1 .065-.105c1.204.573 2.58.892 4.004.892s2.8-.319 4.004-.892a.075.075 0 0 1 .065.105c-.43 1.027-.968 2.001-1.581 2.917a.077.077 0 0 0 .031.102 19.73 19.73 0 0 0 5.996 3.016.077.077 0 0 0 .084-.011c2.947-4.582 3.997-9.114 3.882-13.763a.076.076 0 0 0-.032-.027zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.947 2.419-2.157 2.419z"/>
+    </svg>
+);
+
 const MinecraftDev: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const SERVER_IP = "play.urnisa.live";
@@ -22,6 +29,10 @@ const MinecraftDev: React.FC = () => {
   // Modal States
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showUnlinkModal, setShowUnlinkModal] = useState(false);
+  
+  // New Alert Modals for Requirement Checks
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const [showMCAlert, setShowMCAlert] = useState(false);
   
   // Whitelist State
   const [applying, setApplying] = useState(false);
@@ -153,13 +164,13 @@ const MinecraftDev: React.FC = () => {
   const handleApplyWhitelist = async () => {
       // 1. Check Login
       if (!user) {
-          loginRedirect();
+          setShowLoginAlert(true); // Show Modal instead of redirect
           return;
       }
 
       // 2. Check Linked Account
       if (!user.minecraftUsername) {
-          setShowLinkModal(true);
+          setShowMCAlert(true); // Show Modal instead of opening link form
           return;
       }
 
@@ -212,6 +223,41 @@ const MinecraftDev: React.FC = () => {
             </div>
         )}
 
+        {/* REQUIREMENT ALERT: NO LOGIN */}
+        {showLoginAlert && (
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl text-center relative">
+                    <button onClick={() => setShowLoginAlert(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+                    <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-3xl border border-red-500/20">
+                        🔒
+                    </div>
+                    <h3 className="text-xl font-black text-white mb-2">Login Required</h3>
+                    <p className="text-gray-400 text-sm mb-6">You have not logged into a Discord account yet!</p>
+                    <button onClick={() => setShowLoginAlert(false)} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        )}
+
+        {/* REQUIREMENT ALERT: NO MINECRAFT */}
+        {showMCAlert && (
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl text-center relative">
+                    <button onClick={() => setShowMCAlert(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+                    <div className="w-16 h-16 bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl border border-amber-500/20">
+                        🔗
+                    </div>
+                    <h3 className="text-xl font-black text-white mb-2">Account Link Required</h3>
+                    <p className="text-gray-400 text-sm mb-6">You have not linked a Minecraft account yet!</p>
+                    <button onClick={() => setShowMCAlert(false)} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        )}
+
+
         {/* USER TOP BAR */}
         <div className="absolute top-0 right-0 p-4 z-50 flex justify-end w-full">
             {loading ? (
@@ -237,7 +283,7 @@ const MinecraftDev: React.FC = () => {
                         </div>
                         <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-white/20" />
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                     </button>
 
@@ -288,7 +334,7 @@ const MinecraftDev: React.FC = () => {
                     onClick={loginRedirect}
                     className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all hover:scale-105"
                 >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 19.018 19.018 0 0 0-3.361 6.883 19.2 19.2 0 0 0-4.92 0C5.832 6.72 5.309 5.351 4.635 2.893a.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 .68 4.37a.075.075 0 0 0-.032.027C.533 9.046 1.583 13.578 4.53 18.16a.077.077 0 0 0 .084.011 19.73 19.73 0 0 0 5.995-3.016.077.077 0 0 0 .031-.102c-.613-.916-1.15-1.89-1.581-2.917a.075.075 0 0 1 .065-.105c1.204.573 2.58.892 4.004.892s2.8-.319 4.004-.892a.075.075 0 0 1 .065.105c-.43 1.027-.968 2.001-1.581 2.917a.077.077 0 0 0 .031.102 19.73 19.73 0 0 0 5.996 3.016.077.077 0 0 0 .084-.011c2.947-4.582 3.997-9.114 3.882-13.763a.076.076 0 0 0-.032-.027zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419z"/></svg>
+                    <DiscordLogo />
                     Login with Discord
                 </button>
             )}
