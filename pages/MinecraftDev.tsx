@@ -231,37 +231,62 @@ const MinecraftDev: React.FC = () => {
 
         {/* LINK MODAL */}
         {showLinkModal && (
-            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-                <div className="bg-[#1a0b0e] border border-white/10 p-8 rounded-2xl w-full max-w-md shadow-2xl">
-                    <h2 className="text-2xl font-black text-white mb-2">Link Minecraft Account</h2>
-                    <p className="text-gray-400 text-sm mb-6">Enter your Java Edition username to whitelist yourself.</p>
-                    
-                    <form onSubmit={handleLinkSubmit} className="space-y-4">
-                        <div>
-                            <label className="text-xs font-bold text-brand-accent uppercase">Username</label>
-                            <input 
-                                type="text" 
-                                value={mcInput}
-                                onChange={(e) => setMcInput(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white mt-1 focus:border-brand-primary focus:outline-none font-mono"
-                                placeholder="Notch"
-                                required
-                                autoFocus
-                            />
-                            {linkStatus === 'error' && <p className="text-red-400 text-xs mt-1">Failed to link. Invalid username or server error.</p>}
-                        </div>
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-[#1a0b0e] border border-white/10 p-0 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
+                    {/* Decor Header */}
+                    <div className="h-24 bg-gradient-to-br from-brand-primary/20 to-black relative overflow-hidden flex items-center justify-center">
+                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                         <div className="w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10">
+                            <span className="text-3xl">🔗</span>
+                         </div>
+                    </div>
+
+                    <div className="px-8 pt-12 pb-8 text-center">
+                        <h2 className="text-2xl font-black text-white mb-2">Link Minecraft Account</h2>
+                        <p className="text-gray-400 text-sm mb-6">Enter your Minecraft username to link:</p>
                         
-                        <div className="flex gap-3 pt-2">
-                            <button type="button" onClick={() => setShowLinkModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-lg transition-colors">Cancel</button>
-                            <button 
-                                type="submit" 
-                                disabled={linkStatus === 'success'}
-                                className={`flex-1 font-bold py-3 rounded-lg transition-colors shadow-lg ${linkStatus === 'success' ? 'bg-green-600 text-white' : 'bg-brand-primary hover:bg-red-600 text-white'}`}
-                            >
-                                {linkStatus === 'success' ? 'Linked!' : 'Save Link'}
-                            </button>
-                        </div>
-                    </form>
+                        <form onSubmit={handleLinkSubmit} className="space-y-6 text-left">
+                            <div>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <img 
+                                            src={mcInput ? `https://mc-heads.net/avatar/${mcInput}/20` : "https://mc-heads.net/avatar/Steve/20"} 
+                                            alt="" 
+                                            className="w-5 h-5 rounded-sm grayscale opacity-70 transition-all duration-300"
+                                            onError={(e) => (e.currentTarget.style.display = 'none')}
+                                        />
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        value={mcInput}
+                                        onChange={(e) => setMcInput(e.target.value)}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:border-brand-primary focus:ring-1 focus:ring-brand-primary focus:outline-none font-mono transition-all placeholder:text-gray-600"
+                                        placeholder="Notch"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+                                {linkStatus === 'error' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Failed to link. Invalid username.</p>}
+                            </div>
+                            
+                            <div className="flex gap-3">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowLinkModal(false)} 
+                                    className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={linkStatus === 'success'}
+                                    className={`flex-1 font-bold py-3 rounded-xl transition-all shadow-lg text-sm ${linkStatus === 'success' ? 'bg-green-600 text-white scale-105' : 'bg-green-600 hover:bg-green-500 text-white hover:scale-[1.02]'}`}
+                                >
+                                    {linkStatus === 'success' ? '✓ Linked!' : 'Link'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         )}
