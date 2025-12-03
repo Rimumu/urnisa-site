@@ -10,14 +10,13 @@ interface UserData {
     minecraftUsername?: string | null;
 }
 
-// Corrected Discord Logo SVG Path (Standardized for 24x24)
+// Correct Discord Logo SVG Path
 const DiscordLogo = () => (
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.2 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08 0-.1c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09 0 .1c-.52.31-1.08.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.48-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12z"/>
+        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 19.018 19.018 0 0 0-3.361 6.883 19.2 19.2 0 0 0-4.92 0C5.832 6.72 5.309 5.351 4.635 2.893a.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 .68 4.37a.075.075 0 0 0-.032.027C.533 9.046 1.583 13.578 4.53 18.16a.077.077 0 0 0 .084.011 19.73 19.73 0 0 0 5.995-3.016.077.077 0 0 0 .031-.102c-.613-.916-1.15-1.89-1.581-2.917a.075.075 0 0 1 .065-.105c1.204.573 2.58.892 4.004.892s2.8-.319 4.004-.892a.075.075 0 0 1 .065.105c-.43 1.027-.968 2.001-1.581 2.917a.077.077 0 0 0 .031.102 19.73 19.73 0 0 0 5.996 3.016.077.077 0 0 0 .084-.011c2.947-4.582 3.997-9.114 3.882-13.763a.076.076 0 0 0-.032-.027zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.947 2.419-2.157 2.419z"/>
     </svg>
 );
 
-// Power Icon for Logout
 const PowerIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
@@ -41,6 +40,7 @@ const MinecraftDev: React.FC = () => {
   // New Alert Modals for Requirement Checks
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [showMCAlert, setShowMCAlert] = useState(false);
+  const [showSubAlert, setShowSubAlert] = useState(false); // NEW
   
   // Whitelist State
   const [applying, setApplying] = useState(false);
@@ -172,13 +172,13 @@ const MinecraftDev: React.FC = () => {
   const handleApplyWhitelist = async () => {
       // 1. Check Login
       if (!user) {
-          setShowLoginAlert(true); // Show Modal instead of redirect
+          setShowLoginAlert(true);
           return;
       }
 
       // 2. Check Linked Account
       if (!user.minecraftUsername) {
-          setShowMCAlert(true); // Show Modal instead of opening link form
+          setShowMCAlert(true);
           return;
       }
 
@@ -197,6 +197,9 @@ const MinecraftDev: React.FC = () => {
 
           if (response.ok) {
               setWhitelistStatus({ type: 'success', msg: data.message || "Application Sent! Pending Admin Approval." });
+          } else if (response.status === 403) {
+               // Explicitly show Modal for Role Failure
+               setShowSubAlert(true);
           } else if (response.status === 409) {
                setWhitelistStatus({ type: 'success', msg: "Application already pending!" });
           } else {
@@ -265,6 +268,23 @@ const MinecraftDev: React.FC = () => {
             </div>
         )}
 
+        {/* REQUIREMENT ALERT: NO SUB ROLE */}
+        {showSubAlert && (
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl text-center relative">
+                    <button onClick={() => setShowSubAlert(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+                    <div className="w-16 h-16 bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-400 text-3xl border border-purple-500/20">
+                        ⭐
+                    </div>
+                    <h3 className="text-xl font-black text-white mb-2">Subscription Required</h3>
+                    <p className="text-gray-400 text-sm mb-6">You are not subscribed to the twitch channel!</p>
+                    <button onClick={() => setShowSubAlert(false)} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        )}
+
 
         {/* USER TOP BAR */}
         <div className="absolute top-0 right-0 p-4 z-50 flex justify-end w-full">
@@ -291,7 +311,7 @@ const MinecraftDev: React.FC = () => {
                         </div>
                         <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-white/20" />
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                     </button>
 
@@ -577,7 +597,11 @@ const MinecraftDev: React.FC = () => {
                             <>Verifying Status...</>
                         ) : (
                             <>
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path>
+                                    <rect x="9" y="3" width="6" height="4" rx="2" ry="2"></rect>
+                                    <path d="M9 14l2 2 4-4"></path>
+                                </svg>
                                 Apply for Whitelist!
                             </>
                         )}
