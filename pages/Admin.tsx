@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
@@ -223,6 +224,7 @@ const Admin: React.FC = () => {
 
     // --- MINECRAFT WHITELIST STATE ---
     const [whitelistApps, setWhitelistApps] = useState<any[]>([]);
+    const [approvedApps, setApprovedApps] = useState<any[]>([]);
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -256,30 +258,35 @@ const Admin: React.FC = () => {
         }
     }, [isAuthenticated, activeTab]);
 
-    // Fetch Whitelist Apps - Wrapped in useCallback or defined inside effect to close over password
+    const fetchWhitelistData = useCallback(async () => {
+        try {
+            // Pending
+            const resPending = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, {
+                headers: { Authorization: password } 
+            });
+            if (resPending.ok) {
+                setWhitelistApps(await resPending.json());
+            }
+
+            // Approved
+            const resApproved = await fetch(`${DISCORD_API_URL}/api/admin/whitelist/approved`, {
+                headers: { Authorization: password }
+            });
+            if (resApproved.ok) {
+                setApprovedApps(await resApproved.json());
+            }
+        } catch (e) {}
+    }, [password]);
+
+    // Fetch Whitelist Apps
     useEffect(() => {
         let interval: number;
-        
-        const fetchWhitelistApps = async () => {
-            try {
-                const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, {
-                    headers: { Authorization: password } // Use admin password for auth
-                });
-                if (res.ok) {
-                    setWhitelistApps(await res.json());
-                } else {
-                    if(res.status === 401) console.error("Admin Auth Failed for Bot Service. Check ADMIN_PASSWORD in Bot Env Vars.");
-                }
-            } catch (e) {}
-        };
-
         if (isAuthenticated && activeTab === 'minecraft') {
-            fetchWhitelistApps();
-            interval = window.setInterval(fetchWhitelistApps, 10000);
+            fetchWhitelistData();
+            interval = window.setInterval(fetchWhitelistData, 10000);
         }
-        
         return () => { if(interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, password]); // Added password dependency
+    }, [isAuthenticated, activeTab, fetchWhitelistData]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -477,15 +484,11 @@ const Admin: React.FC = () => {
                 headers: { 'Content-Type': 'application/json', Authorization: password },
                 body: JSON.stringify({ id })
             });
-            // Manually refresh after action
-            const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, { headers: { Authorization: password } });
-            if(res.ok) setWhitelistApps(await res.json());
+            fetchWhitelistData();
         } catch(e){} finally { setLoading(false); }
     };
 
     const handleRejectApp = async (id: string) => {
-         // Use browser confirm, or implement custom confirmation state for safety
-         // Using simple confirm for brevity as requested in previous iteration
          const confirmed = window.confirm("Reject this application?");
          if(!confirmed) return;
          
@@ -496,10 +499,23 @@ const Admin: React.FC = () => {
                  headers: { 'Content-Type': 'application/json', Authorization: password },
                  body: JSON.stringify({ id })
              });
-             // Manually refresh after action
-             const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, { headers: { Authorization: password } });
-             if(res.ok) setWhitelistApps(await res.json());
+             fetchWhitelistData();
          } catch(e){} finally { setLoading(false); }
+    };
+
+    const handleRevokeApp = async (id: string, username: string) => {
+        const confirmed = window.confirm(`Remove ${username} from the whitelist? (Simulates RCON command)`);
+        if(!confirmed) return;
+
+        setLoading(true);
+        try {
+            await fetch(`${DISCORD_API_URL}/api/admin/whitelist/revoke`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ id })
+            });
+            fetchWhitelistData();
+        } catch(e){} finally { setLoading(false); }
     };
 
     // --- HELPERS ---
@@ -1091,38 +1107,74 @@ const Admin: React.FC = () => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Whitelist Applications</h2>
                             
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                {whitelistApps.length === 0 ? (
-                                    <div className="text-center text-gray-500 py-10 italic">No pending applications.</div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {whitelistApps.map((app) => (
-                                            <div key={app._id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
-                                                <div className="flex items-center gap-4">
-                                                    <img src={app.discordAvatar} className="w-10 h-10 rounded-full" alt="Avatar" />
-                                                    <div>
-                                                        <div className="font-bold text-white">{app.discordUsername}</div>
-                                                        <div className="text-xs text-gray-400 font-mono">MC: <span className="text-green-400 font-bold">{app.minecraftUsername}</span></div>
+                            <div className="grid grid-cols-1 gap-8">
+                                {/* PENDING APPS */}
+                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                    <h3 className="text-xl font-bold text-brand-primary mb-4">Pending Approval</h3>
+                                    {whitelistApps.length === 0 ? (
+                                        <div className="text-center text-gray-500 py-10 italic">No pending applications.</div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {whitelistApps.map((app) => (
+                                                <div key={app._id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                                                    <div className="flex items-center gap-4">
+                                                        <img src={app.discordAvatar} className="w-10 h-10 rounded-full" alt="Avatar" />
+                                                        <div>
+                                                            <div className="font-bold text-white">{app.discordUsername}</div>
+                                                            <div className="text-xs text-gray-400 font-mono">MC: <span className="text-green-400 font-bold">{app.minecraftUsername}</span></div>
+                                                            <div className="text-[10px] text-gray-500">{new Date(app.appliedAt).toLocaleString()}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button 
+                                                            onClick={() => handleApproveApp(app._id)}
+                                                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-colors"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleRejectApp(app._id)}
+                                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-colors"
+                                                        >
+                                                            Reject
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    <button 
-                                                        onClick={() => handleApproveApp(app._id)}
-                                                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-colors"
-                                                    >
-                                                        Approve
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleRejectApp(app._id)}
-                                                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-xs shadow-lg transition-colors"
-                                                    >
-                                                        Reject
-                                                    </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* APPROVED APPS */}
+                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                    <h3 className="text-xl font-bold text-green-500 mb-4">Whitelisted Players</h3>
+                                    {approvedApps.length === 0 ? (
+                                        <div className="text-center text-gray-500 py-10 italic">No whitelisted players found.</div>
+                                    ) : (
+                                        <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                            {approvedApps.map((app) => (
+                                                <div key={app._id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                                                    <div className="flex items-center gap-4">
+                                                        <img src={app.discordAvatar} className="w-10 h-10 rounded-full opacity-80" alt="Avatar" />
+                                                        <div>
+                                                            <div className="font-bold text-gray-200">{app.discordUsername}</div>
+                                                            <div className="text-xs text-gray-400 font-mono">MC: <span className="text-white font-bold">{app.minecraftUsername}</span></div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <button 
+                                                            onClick={() => handleRevokeApp(app._id, app.minecraftUsername)}
+                                                            className="bg-red-900/40 hover:bg-red-600 border border-red-500/30 text-red-200 hover:text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors"
+                                                            title="Remove from whitelist & delete application"
+                                                        >
+                                                            Revoke / Remove
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}

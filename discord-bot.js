@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -230,13 +231,20 @@ app.get('/api/admin/whitelist', auth, async (req, res) => {
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/admin/whitelist/approved', auth, async (req, res) => {
+    try {
+        const apps = await WhitelistApp.find({ status: 'approved' }).sort({ appliedAt: -1 });
+        res.json(apps);
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
     const { id } = req.body;
     try {
         const app = await WhitelistApp.findById(id);
         if (!app) return res.status(404).json({ error: "App not found" });
 
-        console.log(`✅ Approving: ${app.minecraftUsername}`);
+        console.log(`✅ [RCON SIMULATION] whitelist add ${app.minecraftUsername}`);
         
         app.status = 'approved';
         await app.save();
@@ -248,6 +256,19 @@ app.post('/api/admin/whitelist/reject', auth, async (req, res) => {
     const { id } = req.body;
     try {
         console.log(`❌ Rejecting app ID: ${id}`);
+        await WhitelistApp.findByIdAndDelete(id);
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
+    const { id } = req.body;
+    try {
+        const app = await WhitelistApp.findById(id);
+        if (!app) return res.status(404).json({ error: "App not found" });
+
+        console.log(`🔌 [RCON SIMULATION] whitelist remove ${app.minecraftUsername}`);
+        
         await WhitelistApp.findByIdAndDelete(id);
         res.json({ success: true });
     } catch(e) { res.status(500).json({ error: e.message }); }
