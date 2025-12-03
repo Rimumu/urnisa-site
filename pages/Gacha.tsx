@@ -22,7 +22,7 @@ const MOCK_CARDS: CardData[] = [
     { id: 2, name: "Rare Candy", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "Level up.", image: "https://archives.bulbagarden.net/media/upload/a/a2/Dream_Rare_Candy_Sprite.png" },
     { id: 3, name: "Miltank", type: 'Pokemon', subType: "Normal", rarity: 'Common', hp: 110, description: "Moo.", image: "https://img.pokemondb.net/artwork/large/miltank.jpg" },
     { id: 4, name: "Master Ball", type: 'Item', subType: "Ball", rarity: 'Ultra', description: "Catch anything.", image: "https://archives.bulbagarden.net/media/upload/9/95/Dream_Master_Ball_Sprite.png" },
-    { id: 5, name: "Shiny Bidoof", type: 'Pokemon', subType: "God", rarity: 'Legendary', hp: 999, description: "God.", image: "https://img.pokemondb.net/artwork/large/bidoof.jpg" },
+    { id: 5, name: "Mewtwo", type: 'Pokemon', subType: "Psychic", rarity: 'Legendary', hp: 150, description: "Genetic Pokemon.", image: "https://img.pokemondb.net/artwork/large/mewtwo.jpg" },
 ];
 
 // --- COMPONENTS ---
@@ -105,6 +105,10 @@ const Gacha: React.FC = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [trail, setTrail] = useState<{x: number, y: number, id: number}[]>([]);
     
+    // Dynamic Split Logic
+    // We store where the cut happened (0-100%) to visually split the pack at that exact line
+    const [cutYPercentage, setCutYPercentage] = useState(15); 
+    
     // Animation State for Randomness
     const [cutVisuals, setCutVisuals] = useState({ rotate: -30, x: -50, y: -150 });
 
@@ -134,6 +138,7 @@ const Gacha: React.FC = () => {
         setRevealedCards([]);
         setTrail([]);
         setCutCoords(null);
+        setCutYPercentage(15); // Default visual guide position
     };
 
     const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -194,22 +199,33 @@ const Gacha: React.FC = () => {
         const isHorizontal = (Math.abs(angle) < 30) || (Math.abs(angle) > 150);
         if (!isHorizontal) return;
 
-        // 3. Check Vertical Position (The "Top" Requirement - Now 15%)
+        // 3. Check Vertical Position (Validation + Real Time Calculation)
+        // SVG Offset is 200px. Pack Height is 420px.
+        // Pack starts at Y=200 in SVG coords.
         const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
         
-        if (avgY >= 230 && avgY <= 320) {
-            triggerCut();
+        // Calculate where the cut is relative to the pack (0px to 420px)
+        const relativeY = avgY - 200;
+        
+        // Calculate Percentage (0% is top, 100% is bottom)
+        const percentage = (relativeY / 420) * 100;
+
+        // Valid Zone: Between 10% and 40% (Top area, but not hitting cards)
+        if (percentage >= 10 && percentage <= 40) {
+            triggerCut(percentage);
         } else {
             setCutCoords(null);
         }
     };
 
-    const triggerCut = () => {
+    const triggerCut = (exactPercentage: number) => {
+        setCutYPercentage(exactPercentage);
+
         // Generate random physics for the top piece
         // Less extreme ranges to prevent flying off screen
-        const randomRotate = (Math.random() * 30) - 15; // +/- 15 deg
-        const randomX = (Math.random() * 80) - 40; // +/- 40px
-        const randomY = -60 - (Math.random() * 60); // Up 60-120px
+        const randomRotate = (Math.random() * 20) - 10; // +/- 10 deg
+        const randomX = (Math.random() * 60) - 30; // +/- 30px
+        const randomY = -80 - (Math.random() * 40); // Up 80-120px
 
         setCutVisuals({
             rotate: randomRotate,
@@ -255,6 +271,7 @@ const Gacha: React.FC = () => {
         setIsCut(false);
         setRevealedCards([]);
         setTrail([]);
+        setCutYPercentage(15);
     };
 
     return (
@@ -427,11 +444,11 @@ const Gacha: React.FC = () => {
                                     </svg>
                                 )}
 
-                                {/* VISUAL GUIDE LINE (Top 15%) */}
+                                {/* VISUAL GUIDE LINE (Dashed) - Indicates general cut area */}
                                 {!isCut && (
-                                    <div className="absolute top-[15%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/40 z-40 pointer-events-none flex items-center justify-between px-2 animate-pulse">
-                                        <span className="text-sm bg-black/60 rounded-full w-6 h-6 flex items-center justify-center transform -translate-y-1/2 shadow-lg">✂️</span>
-                                        <span className="text-sm bg-black/60 rounded-full w-6 h-6 flex items-center justify-center transform -translate-y-1/2 rotate-180 shadow-lg">✂️</span>
+                                    <div className="absolute top-[15%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/30 z-40 pointer-events-none flex items-center justify-between px-2 opacity-50">
+                                        <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2">✂️</span>
+                                        <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2 rotate-180">✂️</span>
                                     </div>
                                 )}
 
@@ -444,72 +461,92 @@ const Gacha: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- PACK VISUALS (SPLITTABLE) --- */}
+                                {/* --- PACK VISUALS (REAL-TIME SPLIT) --- */}
                                 
-                                {/* TOP HALF - 15% HEIGHT (No Text) */}
+                                {/* 
+                                    Instead of two predefined divs, we render the EXACT SAME pack content twice.
+                                    The Top Div is clipped to show only the top part (based on cutYPercentage).
+                                    The Bottom Div is clipped to show only the bottom part.
+                                */}
+
+                                {/* TOP HALF - DYNAMIC HEIGHT */}
                                 <div 
                                     className={`
-                                        absolute top-0 left-0 w-full h-[15%] z-20 
-                                        rounded-t-[2rem] overflow-hidden bg-gradient-to-b
-                                        transition-all duration-500 ease-out origin-bottom-left border-t-4 border-x-4
-                                        ${selectedPack === 'lamb' ? 'from-red-500 to-red-600 border-white/20' : 'from-gray-800 to-gray-900 border-yellow-500/30'}
+                                        absolute inset-0 z-20 
+                                        rounded-[2rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                        transition-all duration-500 ease-out origin-bottom-left
+                                        ${selectedPack === 'lamb' ? 'from-red-500 to-red-900 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
                                     `}
                                     style={{
+                                        // Dynamic Clip Path for Straight Cut
+                                        clipPath: `inset(0 0 ${100 - cutYPercentage}% 0)`,
                                         transform: isCut ? `translate(${cutVisuals.x}px, ${cutVisuals.y}px) rotate(${cutVisuals.rotate}deg)` : 'none',
                                         opacity: isCut ? 0 : 1,
-                                        // Jagged tear effect using polygon clip-path
-                                        clipPath: 'polygon(0% 0%, 100% 0%, 100% 85%, 92% 100%, 84% 85%, 76% 100%, 68% 85%, 60% 100%, 52% 85%, 44% 100%, 36% 85%, 28% 100%, 20% 85%, 12% 100%, 4% 85%, 0% 100%)'
-                                    }}
-                                >
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
-                                    {/* Crimp */}
-                                    <div className="absolute top-0 left-0 right-0 h-4 bg-black/20 border-b border-white/10"></div>
-                                    
-                                    {/* Torn Edge Highlight */}
-                                    <div className="absolute bottom-0 left-0 w-full h-2 bg-white/30 blur-[1px]"></div>
-                                </div>
-
-                                {/* BOTTOM HALF - 85% HEIGHT (Contains Main Art) */}
-                                <div 
-                                    className={`
-                                        absolute bottom-0 left-0 w-full h-[85%] z-20
-                                        rounded-b-[2rem] overflow-hidden bg-gradient-to-b border-b-4 border-x-4
-                                        ${selectedPack === 'lamb' ? 'from-red-600 to-red-800 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
-                                    `}
-                                    style={{
-                                        // Matching jagged top edge (approximate inversion of top piece)
-                                        // The vertical points must be very small relative to this taller container
-                                        clipPath: 'polygon(0% 100%, 100% 100%, 100% 2.6%, 92% 0%, 84% 2.6%, 76% 0%, 68% 2.6%, 60% 0%, 52% 2.6%, 44% 0%, 36% 2.6%, 28% 0%, 20% 2.6%, 12% 0%, 4% 2.6%, 0% 0%)'
                                     }}
                                 >
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                                     
-                                    {/* Torn Edge Highlight */}
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-white/20 blur-[1px]"></div>
-                                    
-                                    {/* Main Art */}
+                                    {/* Content (duplicated) */}
                                     <div className="absolute inset-0 flex items-center justify-center opacity-90 pb-8">
                                         <div className="text-[8rem]">{selectedPack === 'lamb' ? '🍖' : '🥩'}</div>
                                     </div>
-
-                                    {/* Label (Moved here to ensure visibility) */}
                                     <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
                                         <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600'}`}>
                                             {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                         </h2>
                                     </div>
 
-                                    {/* Crimp */}
+                                    {/* Crimp Top */}
+                                    <div className="absolute top-0 left-0 right-0 h-4 bg-black/20 border-b border-white/10"></div>
+                                    
+                                    {/* Cut Edge Highlight (Bottom of top piece) */}
+                                    <div className="absolute left-0 w-full h-1 bg-white/50 blur-[1px]" style={{ bottom: `${100 - cutYPercentage}%` }}></div>
+                                </div>
+
+                                {/* BOTTOM HALF - DYNAMIC HEIGHT */}
+                                <div 
+                                    className={`
+                                        absolute inset-0 z-10
+                                        rounded-[2rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                        ${selectedPack === 'lamb' ? 'from-red-500 to-red-900 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
+                                    `}
+                                    style={{
+                                        // Dynamic Clip Path for Straight Cut
+                                        clipPath: `inset(${cutYPercentage}% 0 0 0)`
+                                    }}
+                                >
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
+                                    
+                                    {/* Content (duplicated) */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-90 pb-8">
+                                        <div className="text-[8rem]">{selectedPack === 'lamb' ? '🍖' : '🥩'}</div>
+                                    </div>
+                                    <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
+                                        <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600'}`}>
+                                            {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
+                                        </h2>
+                                    </div>
+
+                                    {/* Crimp Bottom */}
                                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/20 border-t border-white/10"></div>
+                                    
+                                    {/* Cut Edge Highlight (Top of bottom piece) */}
+                                    <div className="absolute left-0 w-full h-1 bg-white/30 blur-[1px]" style={{ top: `${cutYPercentage}%` }}></div>
                                     
                                     {/* Inner Shadow to simulate depth when open */}
                                     {isCut && (
-                                        <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
+                                        <div className="absolute left-0 right-0 h-16 bg-gradient-to-b from-black/80 to-transparent pointer-events-none" style={{ top: `${cutYPercentage}%` }}></div>
                                     )}
                                 </div>
 
                                 {/* INNER GOLDEN GLOW (Behind split) */}
-                                <div className={`absolute inset-4 top-[15%] bg-yellow-400/30 blur-2xl z-10 transition-opacity duration-500 ${isCut ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className="absolute inset-4 bg-yellow-400/30 blur-2xl z-0 transition-opacity duration-500"
+                                     style={{ 
+                                         top: `${cutYPercentage}%`, 
+                                         height: '20%', 
+                                         opacity: isCut ? 1 : 0 
+                                     }}>
+                                </div>
 
                             </div>
                         </div>
