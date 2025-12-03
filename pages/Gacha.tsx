@@ -13,75 +13,82 @@ interface CardData {
     subType: string; // e.g. "Normal", "Tool", "Ball"
     rarity: 'Common' | 'Rare' | 'Legendary' | 'Ultra';
     image?: string;
-    description?: string;
-    hp?: number; // Just for visuals
+    description?: string; // Kept in interface but not used in UI
+    hp?: number; 
 }
 
 // --- MOCK DATA ---
 const MOCK_CARDS: CardData[] = [
-    { id: 1, name: "Wooloo", type: 'Pokemon', subType: "Normal", rarity: 'Common', hp: 60, description: "Its fleece is extremely fluffy. It can roll away from enemies.", image: "https://img.pokemondb.net/artwork/large/wooloo.jpg" },
-    { id: 2, name: "Rare Candy", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "Instantly raises the level of a single Pokémon by one.", image: "https://archives.bulbagarden.net/media/upload/a/a2/Dream_Rare_Candy_Sprite.png" },
-    { id: 3, name: "Miltank", type: 'Pokemon', subType: "Normal", rarity: 'Common', hp: 110, description: "Its milk is packed with nutrition, making it the ultimate beverage.", image: "https://img.pokemondb.net/artwork/large/miltank.jpg" },
-    { id: 4, name: "Master Ball", type: 'Item', subType: "Ball", rarity: 'Ultra', description: "The best Ball with the ultimate level of performance.", image: "https://archives.bulbagarden.net/media/upload/9/95/Dream_Master_Ball_Sprite.png" },
-    { id: 5, name: "Shiny Bidoof", type: 'Pokemon', subType: "God", rarity: 'Legendary', hp: 999, description: "The true creator of the universe in a humble form.", image: "https://img.pokemondb.net/artwork/large/bidoof.jpg" },
+    { id: 1, name: "Wooloo", type: 'Pokemon', subType: "Normal", rarity: 'Common', hp: 60, description: "Its fleece is extremely fluffy.", image: "https://img.pokemondb.net/artwork/large/wooloo.jpg" },
+    { id: 2, name: "Rare Candy", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "Level up.", image: "https://archives.bulbagarden.net/media/upload/a/a2/Dream_Rare_Candy_Sprite.png" },
+    { id: 3, name: "Miltank", type: 'Pokemon', subType: "Normal", rarity: 'Common', hp: 110, description: "Moo.", image: "https://img.pokemondb.net/artwork/large/miltank.jpg" },
+    { id: 4, name: "Master Ball", type: 'Item', subType: "Ball", rarity: 'Ultra', description: "Catch anything.", image: "https://archives.bulbagarden.net/media/upload/9/95/Dream_Master_Ball_Sprite.png" },
+    { id: 5, name: "Shiny Bidoof", type: 'Pokemon', subType: "God", rarity: 'Legendary', hp: 999, description: "God.", image: "https://img.pokemondb.net/artwork/large/bidoof.jpg" },
 ];
 
 // --- COMPONENTS ---
 
 const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, className = "" }) => {
     // Rarity styles
-    let borderClass = "border-gray-300";
-    let bgGradient = "bg-slate-100";
+    let borderClass = "border-gray-600";
+    let glowClass = "";
     let holoEffect = "";
+    let badgeColor = "bg-gray-700 text-gray-300";
 
-    if (card.rarity === 'Rare') {
+    if (card.rarity === 'Common') {
+        borderClass = "border-gray-400";
+    } else if (card.rarity === 'Rare') {
         borderClass = "border-blue-400";
-        bgGradient = "bg-slate-50";
-        holoEffect = "after:content-[''] after:absolute after:inset-0 after:bg-gradient-to-tr after:from-transparent after:via-white/30 after:to-transparent after:opacity-50 after:pointer-events-none";
-    } else if (card.rarity === 'Legendary' || card.rarity === 'Ultra') {
+        glowClass = "shadow-[0_0_15px_rgba(96,165,250,0.5)]";
+        badgeColor = "bg-blue-900/80 text-blue-200 border border-blue-500/30";
+        holoEffect = "after:content-[''] after:absolute after:inset-0 after:bg-gradient-to-tr after:from-transparent after:via-white/20 after:to-transparent after:opacity-50 after:pointer-events-none";
+    } else if (card.rarity === 'Ultra') {
+        borderClass = "border-purple-500";
+        glowClass = "shadow-[0_0_20px_rgba(168,85,247,0.6)]";
+        badgeColor = "bg-purple-900/80 text-purple-200 border border-purple-500/30";
+        holoEffect = "foil-holo"; 
+    } else if (card.rarity === 'Legendary') {
         borderClass = "border-yellow-400";
-        bgGradient = "bg-amber-50";
-        holoEffect = "foil-holo"; // Custom CSS class for rainbow shine
+        glowClass = "shadow-[0_0_25px_rgba(250,204,21,0.7)]";
+        badgeColor = "bg-yellow-900/80 text-yellow-200 border border-yellow-500/30";
+        holoEffect = "foil-holo"; 
     }
 
     return (
-        <div className={`relative w-48 h-72 rounded-xl p-2 shadow-2xl transition-all duration-500 select-none ${bgGradient} border-[6px] ${borderClass} ${className} group overflow-hidden`}>
-            {/* Holographic Overlay for high rarity */}
-            {card.rarity !== 'Common' && <div className={`absolute inset-0 z-20 pointer-events-none opacity-30 mix-blend-overlay ${holoEffect}`}></div>}
+        <div className={`relative w-48 h-72 rounded-xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
+            {/* Holographic Overlay */}
+            {card.rarity !== 'Common' && <div className={`absolute inset-0 z-20 pointer-events-none opacity-40 mix-blend-overlay ${holoEffect}`}></div>}
             
-            {/* Card Content Container */}
-            <div className="flex flex-col h-full w-full bg-opacity-90 relative z-10">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-1 px-1">
-                    <span className="font-bold text-xs text-gray-800 truncate">{card.name}</span>
-                    {card.type === 'Pokemon' && <span className="text-[10px] font-black text-red-600">{card.hp} HP</span>}
-                </div>
+            {/* Background Image / Art */}
+            <div className="absolute inset-0 bg-[#1a1a1a] z-0">
+                {/* Fallback pattern if image fails or while loading */}
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+                <img 
+                    src={card.image || `https://via.placeholder.com/300?text=${card.name}`} 
+                    alt={card.name}
+                    className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                />
+            </div>
 
-                {/* Image Area */}
-                <div className="w-full aspect-[4/3] bg-gradient-to-br from-gray-200 to-gray-300 rounded border-2 border-gray-400/50 shadow-inner overflow-hidden relative mb-2">
-                    <img 
-                        src={card.image || `https://via.placeholder.com/150?text=${card.name}`} 
-                        alt={card.name}
-                        className="w-full h-full object-contain p-2 hover:scale-110 transition-transform duration-700"
-                    />
-                </div>
+            {/* Gradient Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 z-10"></div>
 
-                {/* Info Bar */}
-                <div className="bg-gradient-to-r from-gray-300 to-gray-200 px-2 py-0.5 rounded-full text-[8px] font-bold text-gray-600 uppercase tracking-wider mb-2 shadow-sm text-center">
-                    {card.rarity} {card.type}
+            {/* Content - Bottom Aligned */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 z-30 flex flex-col items-center text-center">
+                <div className={`mb-2 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg ${badgeColor}`}>
+                    {card.rarity}
                 </div>
+                <h3 className="text-white font-black text-lg leading-none mb-1 drop-shadow-md tracking-wide">
+                    {card.name}
+                </h3>
+                <span className="text-[10px] text-gray-400 font-mono">
+                    {card.subType}
+                </span>
+            </div>
 
-                {/* Description */}
-                <div className="flex-1 bg-white/50 rounded border border-gray-200 p-1.5 overflow-hidden">
-                    <p className="text-[9px] text-gray-700 leading-tight font-serif italic">
-                        {card.description}
-                    </p>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-1 text-[8px] text-gray-400 font-mono text-center">
-                    {card.id}/150 • URNISA SET
-                </div>
+            {/* Top Right ID */}
+            <div className="absolute top-2 right-2 z-30 text-[8px] font-mono text-white/50 bg-black/50 px-1.5 rounded">
+                #{card.id.toString().padStart(3, '0')}
             </div>
         </div>
     );
@@ -102,6 +109,7 @@ const Gacha: React.FC = () => {
     // Dispensing Logic
     const [revealedCards, setRevealedCards] = useState<CardData[]>([]);
     const [dispensingCard, setDispensingCard] = useState<CardData | null>(null);
+    const [shakePack, setShakePack] = useState(false);
     
     const svgRef = useRef<SVGSVGElement>(null);
     const packRef = useRef<HTMLDivElement>(null);
@@ -110,7 +118,7 @@ const Gacha: React.FC = () => {
     useEffect(() => {
         if (trail.length === 0) return;
         const interval = setInterval(() => {
-            setTrail(prev => prev.filter(p => Date.now() - p.id < 200)); // Keep points for 200ms
+            setTrail(prev => prev.filter(p => Date.now() - p.id < 150)); // Faster fade out (150ms)
         }, 16);
         return () => clearInterval(interval);
     }, [trail]);
@@ -130,16 +138,21 @@ const Gacha: React.FC = () => {
         if (isCut) return;
         setIsDragging(true);
         const pt = getPoint(e);
-        if (pt) setCutCoords({ start: pt, end: pt });
+        if (pt) {
+            setCutCoords({ start: pt, end: pt });
+            setTrail([{ ...pt, id: Date.now() }]); // Start trail immediately
+        }
     };
 
     const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
+        // ONLY update trail if dragging
+        if (!isDragging) return;
+
         const pt = getPoint(e);
         if (pt) {
-            // Add to trail regardless of dragging for visual effect
             setTrail(prev => [...prev, { ...pt, id: Date.now() }]);
             
-            if (isDragging && cutCoords) {
+            if (cutCoords) {
                 setCutCoords(prev => prev ? { ...prev, end: pt } : null);
             }
         }
@@ -153,10 +166,7 @@ const Gacha: React.FC = () => {
     };
 
     const getPoint = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!packRef.current) return null;
-        // Coordinates relative to the VIEWPORT to draw fixed trail on screen, 
-        // but for cutting logic we need relative to pack.
-        // Let's use relative to SVG overlay which covers the pack container.
+        // Coordinates relative to the SVG overlay
         if (!svgRef.current) return null;
         
         const rect = svgRef.current.getBoundingClientRect();
@@ -175,12 +185,12 @@ const Gacha: React.FC = () => {
         const dy = cutCoords.end.y - cutCoords.start.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Need a decent swipe length
-        if (distance > 150) {
-            // Calculate angle to ensure it's roughly horizontal (+/- 45 degrees)
+        // Need a decent swipe length (> 100px)
+        if (distance > 100) {
+            // Calculate angle to ensure it's roughly horizontal (+/- 35 degrees)
             const angle = Math.atan2(dy, dx) * (180 / Math.PI);
             // Valid horizontal cuts are around 0 or 180 degrees
-            const isHorizontal = (Math.abs(angle) < 45) || (Math.abs(angle) > 135);
+            const isHorizontal = (Math.abs(angle) < 35) || (Math.abs(angle) > 145);
             
             if (isHorizontal) {
                 triggerCut();
@@ -190,7 +200,6 @@ const Gacha: React.FC = () => {
 
     const triggerCut = () => {
         setIsCut(true);
-        // Clean up visual state
         setCutCoords(null);
     };
 
@@ -198,20 +207,27 @@ const Gacha: React.FC = () => {
         if (!isCut || dispensingCard) return; // Wait for current animation
 
         if (revealedCards.length < 5) {
+            // Shake effect
+            setShakePack(true);
+            setTimeout(() => setShakePack(false), 300);
+
             const nextCard = MOCK_CARDS[revealedCards.length];
             
-            // 1. Trigger Fly-Out Animation (Temporary state)
-            setDispensingCard(nextCard);
-
-            // 2. After animation, add to list and clear temporary
+            // Delay dispense slightly to allow shake
             setTimeout(() => {
-                setRevealedCards(prev => [nextCard, ...prev]);
-                setDispensingCard(null);
-                
-                if (revealedCards.length + 1 === 5) {
-                    setTimeout(() => setStage('finished'), 1500);
-                }
-            }, 800); // Sync with CSS animation duration
+                // 1. Trigger Fly-Out Animation (Temporary state)
+                setDispensingCard(nextCard);
+
+                // 2. After animation, add to list and clear temporary
+                setTimeout(() => {
+                    setRevealedCards(prev => [nextCard, ...prev]);
+                    setDispensingCard(null);
+                    
+                    if (revealedCards.length + 1 === 5) {
+                        setTimeout(() => setStage('finished'), 1500);
+                    }
+                }, 800); // Sync with CSS animation duration
+            }, 100);
         }
     };
 
@@ -237,7 +253,7 @@ const Gacha: React.FC = () => {
                 }
                 @keyframes flyOut {
                     0% { transform: translateY(0) scale(0.1) rotateX(90deg); opacity: 0; }
-                    40% { transform: translateY(-300px) scale(1) rotateX(0deg) rotateZ(10deg); opacity: 1; z-index: 50; }
+                    40% { transform: translateY(-300px) scale(1) rotateX(0deg) rotateZ(5deg); opacity: 1; z-index: 50; }
                     100% { transform: translateY(1000px) scale(0.5); opacity: 0; } /* Fall "into" the grid */
                 }
                 .animate-fly-out {
@@ -247,6 +263,14 @@ const Gacha: React.FC = () => {
                     0% { background-color: rgba(255,255,255,0); }
                     10% { background-color: rgba(255,255,255,0.8); }
                     100% { background-color: rgba(255,255,255,0); }
+                }
+                @keyframes shake {
+                    0%, 100% { transform: rotate(0deg); }
+                    25% { transform: rotate(5deg); }
+                    75% { transform: rotate(-5deg); }
+                }
+                .animate-shake {
+                    animation: shake 0.3s ease-in-out;
                 }
             `}</style>
 
@@ -360,45 +384,47 @@ const Gacha: React.FC = () => {
                             {/* PACK ITSELF */}
                             <div 
                                 ref={packRef}
-                                className="relative w-[300px] h-[420px] cursor-pointer"
+                                className={`relative w-[300px] h-[420px] cursor-pointer ${shakePack ? 'animate-shake' : ''}`}
                                 onMouseDown={handleMouseDown}
                                 onTouchStart={handleMouseDown}
                                 onClick={handlePackClick}
                             >
-                                {/* SVG INTERACTION LAYER (ALWAYS ON TOP) */}
-                                <svg 
-                                    ref={svgRef}
-                                    className="absolute inset-[-200px] w-[calc(100%+400px)] h-[calc(100%+400px)] z-50 pointer-events-auto touch-none"
-                                    onMouseMove={handleMouseMove}
-                                    onMouseUp={handleMouseUp}
-                                    onMouseLeave={handleMouseUp}
-                                    onTouchMove={handleMouseMove}
-                                    onTouchEnd={handleMouseUp}
-                                >
-                                    <defs>
-                                        <filter id="glow">
-                                            <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
-                                            <feMerge>
-                                                <feMergeNode in="coloredBlur"/>
-                                                <feMergeNode in="SourceGraphic"/>
-                                            </feMerge>
-                                        </filter>
-                                    </defs>
-                                    <polyline 
-                                        points={trail.map(p => `${p.x},${p.y}`).join(' ')}
-                                        fill="none"
-                                        stroke="white"
-                                        strokeWidth="4"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        filter="url(#glow)"
-                                        style={{ opacity: 0.8 }}
-                                    />
-                                </svg>
+                                {/* SVG INTERACTION LAYER (ALWAYS ON TOP) - Only show if not cut yet */}
+                                {!isCut && (
+                                    <svg 
+                                        ref={svgRef}
+                                        className="absolute inset-[-200px] w-[calc(100%+400px)] h-[calc(100%+400px)] z-50 pointer-events-auto touch-none"
+                                        onMouseMove={handleMouseMove}
+                                        onMouseUp={handleMouseUp}
+                                        onMouseLeave={handleMouseUp}
+                                        onTouchMove={handleMouseMove}
+                                        onTouchEnd={handleMouseUp}
+                                    >
+                                        <defs>
+                                            <filter id="glow">
+                                                <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+                                                <feMerge>
+                                                    <feMergeNode in="coloredBlur"/>
+                                                    <feMergeNode in="SourceGraphic"/>
+                                                </feMerge>
+                                            </filter>
+                                        </defs>
+                                        <polyline 
+                                            points={trail.map(p => `${p.x},${p.y}`).join(' ')}
+                                            fill="none"
+                                            stroke="white"
+                                            strokeWidth="4"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            filter="url(#glow)"
+                                            style={{ opacity: 0.8 }}
+                                        />
+                                    </svg>
+                                )}
 
                                 {/* FLASH OVERLAY (Triggers on cut) */}
                                 {isCut && (
-                                    <div className="absolute inset-0 z-40 pointer-events-none animate-[flashWhite_0.5s_ease-out_forwards] rounded-[2rem]"></div>
+                                    <div className="absolute inset-0 z-40 pointer-events-none animate-[flashWhite_0.3s_ease-out_forwards] rounded-[2rem]"></div>
                                 )}
 
                                 {/* DISPENSING CARD (ANIMATED) */}
@@ -414,11 +440,11 @@ const Gacha: React.FC = () => {
                                 
                                 {/* TOP HALF */}
                                 <div className={`
-                                    absolute top-0 left-0 w-full h-[30%] z-20 
+                                    absolute top-0 left-0 w-full h-[35%] z-20 
                                     rounded-t-[2rem] overflow-hidden bg-gradient-to-b
-                                    transition-all duration-700 ease-out origin-bottom-left border-t-4 border-x-4
+                                    transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-bottom-left border-t-4 border-x-4
                                     ${selectedPack === 'lamb' ? 'from-red-500 to-red-600 border-white/20' : 'from-gray-800 to-gray-900 border-yellow-500/30'}
-                                    ${isCut ? '-rotate-[15deg] -translate-y-24 -translate-x-10 opacity-0' : ''}
+                                    ${isCut ? '-rotate-[30deg] -translate-y-32 -translate-x-20' : ''}
                                 `}>
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                                     {/* Crimp */}
@@ -427,20 +453,22 @@ const Gacha: React.FC = () => {
                                     <div className="absolute top-8 left-0 right-0 text-center font-black uppercase text-white/20 text-3xl tracking-tighter">
                                         {selectedPack}
                                     </div>
+                                    {/* Cut Edge (Bottom) */}
+                                    {isCut && <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/50 blur-[1px]"></div>}
                                 </div>
 
                                 {/* BOTTOM HALF (Container) */}
                                 <div className={`
-                                    absolute bottom-0 left-0 w-full h-[70%] z-20
+                                    absolute bottom-0 left-0 w-full h-[65%] z-20
                                     rounded-b-[2rem] overflow-hidden bg-gradient-to-b border-b-4 border-x-4
-                                    transition-all duration-700 ease-out
+                                    transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)]
                                     ${selectedPack === 'lamb' ? 'from-red-600 to-red-800 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
                                     ${isCut ? 'translate-y-4' : ''}
                                 `}>
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                                     
                                     {/* Main Art */}
-                                    <div className="absolute inset-0 flex items-center justify-center -mt-16 opacity-90">
+                                    <div className="absolute inset-0 flex items-center justify-center -mt-8 opacity-90">
                                         <div className="text-[8rem]">{selectedPack === 'lamb' ? '🍖' : '🥩'}</div>
                                     </div>
 
@@ -449,12 +477,16 @@ const Gacha: React.FC = () => {
                                     
                                     {/* Inner Shadow to simulate depth when open */}
                                     {isCut && (
-                                        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black/60 to-transparent"></div>
+                                        <>
+                                            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/80 to-transparent"></div>
+                                            {/* Cut Edge (Top) */}
+                                            <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 blur-[1px]"></div>
+                                        </>
                                     )}
                                 </div>
 
                                 {/* INNER GOLDEN GLOW (Behind split) */}
-                                <div className={`absolute inset-4 top-[30%] bg-yellow-400/20 blur-xl z-10 transition-opacity duration-500 ${isCut ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className={`absolute inset-4 top-[30%] bg-yellow-400/30 blur-2xl z-10 transition-opacity duration-500 ${isCut ? 'opacity-100' : 'opacity-0'}`}></div>
 
                             </div>
                         </div>
@@ -470,12 +502,12 @@ const Gacha: React.FC = () => {
                                         className="animate-in zoom-in-50 fade-in duration-500 slide-in-from-top-10"
                                         style={{ animationDelay: `${idx * 100}ms` }}
                                     >
-                                        <TradingCard card={card} className="w-40 h-60 hover:z-50 hover:scale-110" />
+                                        <TradingCard card={card} className="w-40 h-60 hover:z-50 hover:scale-110 cursor-pointer shadow-xl" />
                                     </div>
                                 ))}
                                 
                                 {revealedCards.length === 0 && stage !== 'finished' && (
-                                    <div className="w-full h-60 flex items-center justify-center border-2 border-dashed border-white/10 rounded-xl">
+                                    <div className="w-full h-60 flex items-center justify-center border-2 border-dashed border-white/10 rounded-xl bg-white/5">
                                         <p className="text-gray-600 font-mono text-sm">Cards will appear here...</p>
                                     </div>
                                 )}
