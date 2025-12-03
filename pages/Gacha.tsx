@@ -192,21 +192,21 @@ const Gacha: React.FC = () => {
         const isHorizontal = (Math.abs(angle) < 30) || (Math.abs(angle) > 150);
         if (!isHorizontal) return;
 
-        // 3. Check Vertical Position (The "Top" Requirement)
+        // 3. Check Vertical Position (The "Top" Requirement - Now 15%)
         // SVG Offset is 200px. Pack Height is 420px.
-        // We want the cut around the 35% mark (where the visual split happens).
-        // 35% of 420 = 147px.
-        // Target Y relative to Pack Top: 100px to 200px (approx 25% to 45%).
-        // In SVG coords: 200 + 100 = 300, 200 + 200 = 400.
+        // We want the cut around the 15% mark (where the visual split happens).
+        // 15% of 420 = 63px.
+        // Target Y relative to Pack Top: 40px to 90px (approx 10% to 20%).
+        // In SVG coords: 200 + 40 = 240, 200 + 90 = 290.
+        // Let's give a slightly generous window: 230 to 300.
         
         // Average Y of the cut
         const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
         
-        if (avgY >= 300 && avgY <= 400) {
+        if (avgY >= 230 && avgY <= 320) {
             triggerCut();
         } else {
             // Visual feedback could be added here for "missed" cuts
-            // For now, just reset cut state so they can try again
             setCutCoords(null);
         }
     };
@@ -376,20 +376,8 @@ const Gacha: React.FC = () => {
                 {(stage === 'cutting' || stage === 'dispensing' || stage === 'finished') && (
                     <div className="relative w-full max-w-4xl flex flex-col items-center">
                         
-                        {/* HEADER STATUS */}
-                        <div className="h-16 mb-4 flex items-center justify-center">
-                            {!isCut ? (
-                                <h2 className="text-2xl font-black uppercase tracking-[0.2em] animate-pulse text-white/80">
-                                    SWIPE TO OPEN &rarr;
-                                </h2>
-                            ) : stage !== 'finished' ? (
-                                <h2 className="text-xl font-bold uppercase tracking-widest text-brand-primary">
-                                    TAP PACK TO DISPENSE ({5 - revealedCards.length} LEFT)
-                                </h2>
-                            ) : (
-                                <h2 className="text-2xl font-black uppercase text-green-500">OPENING COMPLETE!</h2>
-                            )}
-                        </div>
+                        {/* HEADER - NOW EMPTY FOR SPACING, TEXT MOVED BELOW */}
+                        <div className="h-4 mb-4"></div>
 
                         {/* GAME AREA CONTAINER */}
                         <div className="relative h-[500px] w-full flex justify-center items-center perspective-1000">
@@ -435,9 +423,9 @@ const Gacha: React.FC = () => {
                                     </svg>
                                 )}
 
-                                {/* VISUAL GUIDE LINE (Top 35%) */}
+                                {/* VISUAL GUIDE LINE (Top 15%) */}
                                 {!isCut && (
-                                    <div className="absolute top-[35%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/40 z-40 pointer-events-none flex items-center justify-between px-2 animate-pulse">
+                                    <div className="absolute top-[15%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/40 z-40 pointer-events-none flex items-center justify-between px-2 animate-pulse">
                                         <span className="text-sm bg-black/60 rounded-full w-6 h-6 flex items-center justify-center transform -translate-y-1/2 shadow-lg">✂️</span>
                                         <span className="text-sm bg-black/60 rounded-full w-6 h-6 flex items-center justify-center transform -translate-y-1/2 rotate-180 shadow-lg">✂️</span>
                                     </div>
@@ -459,9 +447,9 @@ const Gacha: React.FC = () => {
 
                                 {/* --- PACK VISUALS (SPLITTABLE) --- */}
                                 
-                                {/* TOP HALF */}
+                                {/* TOP HALF - 15% HEIGHT (No Text) */}
                                 <div className={`
-                                    absolute top-0 left-0 w-full h-[35%] z-20 
+                                    absolute top-0 left-0 w-full h-[15%] z-20 
                                     rounded-t-[2rem] overflow-hidden bg-gradient-to-b
                                     transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] origin-bottom-left border-t-4 border-x-4
                                     ${selectedPack === 'lamb' ? 'from-red-500 to-red-600 border-white/20' : 'from-gray-800 to-gray-900 border-yellow-500/30'}
@@ -470,27 +458,31 @@ const Gacha: React.FC = () => {
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                                     {/* Crimp */}
                                     <div className="absolute top-0 left-0 right-0 h-4 bg-black/20 border-b border-white/10"></div>
-                                    {/* Label */}
-                                    <div className="absolute top-8 left-0 right-0 text-center font-black uppercase text-white/20 text-3xl tracking-tighter">
-                                        {selectedPack}
-                                    </div>
+                                    
                                     {/* Cut Edge (Bottom) */}
                                     {isCut && <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/50 blur-[1px]"></div>}
                                 </div>
 
-                                {/* BOTTOM HALF (Container) */}
+                                {/* BOTTOM HALF - 85% HEIGHT (Contains Main Art) */}
                                 <div className={`
-                                    absolute bottom-0 left-0 w-full h-[65%] z-20
+                                    absolute bottom-0 left-0 w-full h-[85%] z-20
                                     rounded-b-[2rem] overflow-hidden bg-gradient-to-b border-b-4 border-x-4
                                     transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)]
                                     ${selectedPack === 'lamb' ? 'from-red-600 to-red-800 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
-                                    ${isCut ? 'translate-y-4' : ''}
+                                    ${isCut ? 'translate-y-1' : ''}
                                 `}>
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
                                     
                                     {/* Main Art */}
-                                    <div className="absolute inset-0 flex items-center justify-center -mt-8 opacity-90">
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-90 pb-8">
                                         <div className="text-[8rem]">{selectedPack === 'lamb' ? '🍖' : '🥩'}</div>
+                                    </div>
+
+                                    {/* Label (Moved here to ensure visibility) */}
+                                    <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
+                                        <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600'}`}>
+                                            {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
+                                        </h2>
                                     </div>
 
                                     {/* Crimp */}
@@ -507,13 +499,34 @@ const Gacha: React.FC = () => {
                                 </div>
 
                                 {/* INNER GOLDEN GLOW (Behind split) */}
-                                <div className={`absolute inset-4 top-[30%] bg-yellow-400/30 blur-2xl z-10 transition-opacity duration-500 ${isCut ? 'opacity-100' : 'opacity-0'}`}></div>
+                                <div className={`absolute inset-4 top-[15%] bg-yellow-400/30 blur-2xl z-10 transition-opacity duration-500 ${isCut ? 'opacity-100' : 'opacity-0'}`}></div>
 
                             </div>
                         </div>
 
+                        {/* STATUS TEXT (MOVED BELOW PACK FOR VISIBILITY) */}
+                        <div className="mt-6 mb-4 h-12 flex items-center justify-center w-full relative z-30">
+                            {!isCut ? (
+                                <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 animate-pulse">
+                                    <h2 className="text-xl font-black uppercase tracking-[0.2em] text-white/90">
+                                        SWIPE TOP TO OPEN ✂️
+                                    </h2>
+                                </div>
+                            ) : stage !== 'finished' ? (
+                                <div className="bg-brand-primary/20 backdrop-blur-md px-6 py-2 rounded-full border border-brand-primary/50 animate-in fade-in zoom-in duration-300">
+                                    <h2 className="text-lg font-bold uppercase tracking-widest text-brand-primary">
+                                        TAP PACK TO DISPENSE ({5 - revealedCards.length} LEFT)
+                                    </h2>
+                                </div>
+                            ) : (
+                                <div className="bg-green-500/20 backdrop-blur-md px-6 py-2 rounded-full border border-green-500/50">
+                                    <h2 className="text-xl font-black uppercase text-green-400">OPENING COMPLETE!</h2>
+                                </div>
+                            )}
+                        </div>
+
                         {/* INVENTORY GRID (Cards Land Here) */}
-                        <div className="w-full max-w-5xl mt-8">
+                        <div className="w-full max-w-5xl mt-2">
                             <h3 className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-4 text-center">Revealed Cards</h3>
                             
                             <div className="flex flex-wrap justify-center gap-4 min-h-[320px]">
