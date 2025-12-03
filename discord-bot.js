@@ -16,7 +16,6 @@ if (DISCORD_BOT_TOKEN.startsWith("Bot ")) DISCORD_BOT_TOKEN = DISCORD_BOT_TOKEN.
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-// Note: Redirect URI is passed from frontend to match exact environment (local/prod)
 const MONGO_URI = process.env.MONGO_URI;
 
 // --- DATABASE ---
@@ -98,7 +97,6 @@ app.post('/api/auth/discord', async (req, res) => {
     }
 
     try {
-        // Exchange Code for Token
         const tokenResponse = await axios.post(
             'https://discord.com/api/oauth2/token',
             new URLSearchParams({
@@ -112,16 +110,13 @@ app.post('/api/auth/discord', async (req, res) => {
         );
 
         const { access_token } = tokenResponse.data;
-
-        // Fetch User Data
         const userResponse = await axios.get('https://discord.com/api/users/@me', {
             headers: { Authorization: `Bearer ${access_token}` }
         });
 
         const userData = userResponse.data;
-
-        // Check if user has already linked MC account
         let mcUsername = null;
+        
         if (mongoose.connection.readyState === 1) {
             const existing = await MinecraftLink.findOne({ discordId: userData.id });
             if (existing) mcUsername = existing.minecraftUsername;
@@ -164,6 +159,23 @@ app.post('/api/minecraft/link', async (req, res) => {
         res.json({ success: true, minecraftUsername });
     } catch (error) {
         res.status(500).json({ error: "Failed to save link" });
+    }
+});
+
+// 4. Unlink Minecraft Account
+app.delete('/api/minecraft/link', async (req, res) => {
+    const { discordId } = req.body;
+
+    if (!discordId) return res.status(400).json({ error: "Missing Discord ID" });
+    if (mongoose.connection.readyState !== 1) return res.status(500).json({ error: "Database unavailable" });
+
+    try {
+        // We remove the document entirely or just unset the MC username.
+        // Removing the document is cleaner if they want to fully unlink.
+        await MinecraftLink.findOneAndDelete({ discordId });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to unlink" });
     }
 });
 
