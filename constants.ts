@@ -24,7 +24,7 @@ export const DISCORD_API_URL = isLocal ? `http://${hostname}:3002` : BOT_PROD_UR
 
 // 3. Discord OAuth Configuration
 // Replace with your actual Client ID from Discord Developer Portal
-export const DISCORD_CLIENT_ID = "1336782145833668729"; // Using Server ID as placeholder, REPLACE WITH REAL CLIENT ID
+export const DISCORD_CLIENT_ID = "1381873499173421056"; // Using Server ID as placeholder, REPLACE WITH REAL CLIENT ID
 export const DISCORD_REDIRECT_URI = isLocal 
     ? `http://${hostname}:5173/minecraft-dev`
     : `https://www.urnisa.live/minecraft-dev`;
