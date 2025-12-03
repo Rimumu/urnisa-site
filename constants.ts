@@ -1,4 +1,3 @@
-
 export const TWITCH_CHANNEL_NAME = 'urnisa_';
 export const DISCORD_SERVER_ID = '1336782145833668729';
 export const DISCORD_INVITE_URL = 'https://discord.gg/urnisa';
@@ -16,15 +15,19 @@ const isLocal =
     hostname.startsWith('192.168.');
 
 // 1. General Website Backend (Database, Nisathon, Admin)
-// Create a NEW Web Service on Render called 'urnisa-backend' for this.
 const BACKEND_PROD_URL = 'https://urnisa-backend.onrender.com';
-// Use dynamic hostname so mobile testing (on 192.168.x.x) connects to the PC backend
 export const API_BASE_URL = isLocal ? `http://${hostname}:3001` : BACKEND_PROD_URL;
 
-// 2. Discord Bot Service (Chat Preview)
-// This is your EXISTING service 'urnisa-bot'.
+// 2. Discord Bot Service (Chat Preview + Auth)
 const BOT_PROD_URL = 'https://urnisa-bot.onrender.com';
 export const DISCORD_API_URL = isLocal ? `http://${hostname}:3002` : BOT_PROD_URL;
+
+// 3. Discord OAuth Configuration
+// Replace with your actual Client ID from Discord Developer Portal
+export const DISCORD_CLIENT_ID = "1336782145833668729"; // Using Server ID as placeholder, REPLACE WITH REAL CLIENT ID
+export const DISCORD_REDIRECT_URI = isLocal 
+    ? `http://${hostname}:5173/minecraft-dev`
+    : `https://www.urnisa.live/minecraft-dev`;
 
 
 // Configuration for grouping online members from the Discord Widget API.

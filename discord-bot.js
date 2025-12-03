@@ -1,7 +1,7 @@
-
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
@@ -10,17 +10,35 @@ const PORT = process.env.PORT || 3002;
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 
+// --- CONFIGURATION ---
 let DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN ? process.env.DISCORD_BOT_TOKEN.trim() : "";
 if (DISCORD_BOT_TOKEN.startsWith("Bot ")) DISCORD_BOT_TOKEN = DISCORD_BOT_TOKEN.substring(4).trim();
 
-// Logging to verify token presence (masked)
-if (!DISCORD_BOT_TOKEN) {
-    console.error("❌ ERROR: DISCORD_BOT_TOKEN is missing in Environment Variables!");
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+// Note: Redirect URI is passed from frontend to match exact environment (local/prod)
+const MONGO_URI = process.env.MONGO_URI;
+
+// --- DATABASE ---
+if (MONGO_URI) {
+    mongoose.set('strictQuery', false);
+    mongoose.connect(MONGO_URI)
+        .then(() => console.log("✅ [BotDB] MongoDB Connected"))
+        .catch(e => console.error("❌ [BotDB] Error:", e));
 } else {
-    console.log(`✅ Bot Token loaded (starts with: ${DISCORD_BOT_TOKEN.substring(0, 5)}...)`);
+    console.warn("⚠️ [BotDB] MONGO_URI missing. Account linking will not save.");
 }
 
-// Helper to fetch messages from Discord API
+const MinecraftLinkSchema = new mongoose.Schema({
+    discordId: { type: String, required: true, unique: true },
+    discordUsername: String,
+    discordAvatar: String,
+    minecraftUsername: String,
+    linkedAt: { type: Date, default: Date.now }
+});
+const MinecraftLink = mongoose.model('MinecraftLink', MinecraftLinkSchema);
+
+// --- CHAT PREVIEW LOGIC (EXISTING) ---
 const fetchDiscordMessages = async (channelId) => {
     if (!DISCORD_BOT_TOKEN) throw new Error("Missing Bot Token");
     try {
@@ -35,7 +53,6 @@ const fetchDiscordMessages = async (channelId) => {
     }
 };
 
-// Helper to fetch Guild Member details (Nickname, Avatar)
 const fetchGuildMember = async (guildId, userId) => {
     if (!DISCORD_BOT_TOKEN) return null;
     try {
@@ -43,59 +60,121 @@ const fetchGuildMember = async (guildId, userId) => {
             headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` }
         });
         return response.data;
-    } catch (error) {
-        return null; 
-    }
+    } catch (error) { return null; }
 };
 
-app.get('/', (req, res) => res.send('Urnisa Discord Bot Service is Running!'));
+// --- ROUTES ---
 
+app.get('/', (req, res) => res.send('Urnisa Discord Service Active'));
+
+// 1. Chat Preview
 app.get('/api/messages', async (req, res) => {
     const { channelId } = req.query;
-    const guildId = '1336782145833668729'; // STEAK HOUSE Server ID
+    const guildId = '1336782145833668729'; 
 
     if (!channelId) return res.status(400).json({ error: 'Channel ID required' });
 
     try {
         const messages = await fetchDiscordMessages(channelId);
-        
-        // Enhance messages with Guild Member data (Nicknames/Server Avatars)
         const enhancedMessages = await Promise.all(messages.map(async (msg) => {
             const memberData = await fetchGuildMember(guildId, msg.author.id);
-            
-            // If it's a reply, fetch the referenced author's member data too (optional but nice)
-            // For now, we just pass the raw reference data provided by Discord API
-            
             return {
                 ...msg,
-                member: memberData ? {
-                    nick: memberData.nick,
-                    avatar: memberData.avatar
-                } : null
+                member: memberData ? { nick: memberData.nick, avatar: memberData.avatar } : null
             };
         }));
-
-        // Reverse to show oldest first (top to bottom)
         res.json(enhancedMessages.reverse());
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
 });
 
+// 2. Discord OAuth Exchange
+app.post('/api/auth/discord', async (req, res) => {
+    const { code, redirectUri } = req.body;
+
+    if (!CLIENT_ID || !CLIENT_SECRET) {
+        return res.status(500).json({ error: "Server missing Discord Client Config" });
+    }
+
+    try {
+        // Exchange Code for Token
+        const tokenResponse = await axios.post(
+            'https://discord.com/api/oauth2/token',
+            new URLSearchParams({
+                client_id: CLIENT_ID,
+                client_secret: CLIENT_SECRET,
+                code,
+                grant_type: 'authorization_code',
+                redirect_uri: redirectUri,
+            }),
+            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        );
+
+        const { access_token } = tokenResponse.data;
+
+        // Fetch User Data
+        const userResponse = await axios.get('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+
+        const userData = userResponse.data;
+
+        // Check if user has already linked MC account
+        let mcUsername = null;
+        if (mongoose.connection.readyState === 1) {
+            const existing = await MinecraftLink.findOne({ discordId: userData.id });
+            if (existing) mcUsername = existing.minecraftUsername;
+        }
+
+        res.json({
+            id: userData.id,
+            username: userData.username,
+            global_name: userData.global_name,
+            avatar: userData.avatar 
+                ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` 
+                : `https://cdn.discordapp.com/embed/avatars/${userData.discriminator % 5}.png`,
+            minecraftUsername: mcUsername
+        });
+
+    } catch (error) {
+        console.error("OAuth Error:", error.response?.data || error.message);
+        res.status(400).json({ error: "Failed to authenticate with Discord" });
+    }
+});
+
+// 3. Link Minecraft Account
+app.post('/api/minecraft/link', async (req, res) => {
+    const { discordId, discordUsername, discordAvatar, minecraftUsername } = req.body;
+
+    if (!discordId || !minecraftUsername) return res.status(400).json({ error: "Missing fields" });
+    if (mongoose.connection.readyState !== 1) return res.status(500).json({ error: "Database unavailable" });
+
+    try {
+        await MinecraftLink.findOneAndUpdate(
+            { discordId },
+            { 
+                discordUsername,
+                discordAvatar,
+                minecraftUsername,
+                linkedAt: new Date()
+            },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true, minecraftUsername });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to save link" });
+    }
+});
+
 // --- CROSS-PING KEEP ALIVE ---
-// We ping both ourselves AND the General Backend service.
 const SELF_URL = 'https://urnisa-bot.onrender.com';
 const BACKEND_URL = 'https://urnisa-backend.onrender.com';
 
 setInterval(() => {
-    // Ping Myself
     axios.get(SELF_URL).catch(() => {});
-    
-    // Ping Backend Service (Cross-ping)
     axios.get(BACKEND_URL).catch(() => {});
-    
-    console.log("🤖 Keep-Alive Ping sent to Bot & Backend");
-}, 5 * 60 * 1000); // Every 5 minutes
+}, 5 * 60 * 1000);
 
 app.listen(PORT, () => {
     console.log(`🤖 Discord Bot Service running on port ${PORT}`);

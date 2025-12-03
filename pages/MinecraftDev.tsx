@@ -1,9 +1,109 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
 
-import React, { useState } from 'react';
+interface UserData {
+    id: string;
+    username: string;
+    global_name?: string;
+    avatar: string;
+    minecraftUsername?: string | null;
+}
 
 const MinecraftDev: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const SERVER_IP = "play.urnisa.live";
+  
+  // Auth State
+  const [user, setUser] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [mcInput, setMcInput] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Load user from local storage on mount
+  useEffect(() => {
+      const stored = localStorage.getItem('urnisa_mc_user');
+      if (stored) {
+          setUser(JSON.parse(stored));
+      }
+  }, []);
+
+  // Handle OAuth Code Callback
+  useEffect(() => {
+      const code = searchParams.get('code');
+      if (code && !user) {
+          handleDiscordLogin(code);
+      }
+  }, [searchParams]);
+
+  const handleDiscordLogin = async (code: string) => {
+      setLoading(true);
+      // Clean URL
+      window.history.replaceState({}, document.title, "/minecraft-dev");
+      
+      try {
+          const response = await fetch(`${DISCORD_API_URL}/api/auth/discord`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  code, 
+                  redirectUri: DISCORD_REDIRECT_URI 
+              })
+          });
+          
+          if (response.ok) {
+              const data = await response.json();
+              setUser(data);
+              localStorage.setItem('urnisa_mc_user', JSON.stringify(data));
+          } else {
+              console.error("Login failed");
+          }
+      } catch (e) {
+          console.error("Network error", e);
+      } finally {
+          setLoading(false);
+      }
+  };
+
+  const loginRedirect = () => {
+      const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+      window.location.href = url;
+  };
+
+  const logout = () => {
+      localStorage.removeItem('urnisa_mc_user');
+      setUser(null);
+      setMenuOpen(false);
+  };
+
+  const handleLinkSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!user || !mcInput) return;
+      
+      try {
+          const response = await fetch(`${DISCORD_API_URL}/api/minecraft/link`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  discordId: user.id,
+                  discordUsername: user.username,
+                  discordAvatar: user.avatar,
+                  minecraftUsername: mcInput
+              })
+          });
+          
+          if (response.ok) {
+              const updatedUser = { ...user, minecraftUsername: mcInput };
+              setUser(updatedUser);
+              localStorage.setItem('urnisa_mc_user', JSON.stringify(updatedUser));
+              setShowLinkModal(false);
+          }
+      } catch (e) {
+          console.error("Link failed", e);
+      }
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(SERVER_IP);
@@ -12,9 +112,93 @@ const MinecraftDev: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-12 font-sans text-white">
+    <div className="min-h-screen py-8 font-sans text-white relative">
+        
+        {/* USER TOP BAR */}
+        <div className="absolute top-0 right-0 p-4 z-50 flex justify-end w-full">
+            {loading ? (
+                <div className="bg-black/40 px-4 py-2 rounded-full border border-white/10 animate-pulse text-xs font-bold">
+                    Connecting to Discord...
+                </div>
+            ) : user ? (
+                <div className="relative">
+                    <button 
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        className="flex items-center gap-3 bg-black/60 hover:bg-black/80 border border-white/10 hover:border-brand-primary/50 px-4 py-2 rounded-full transition-all duration-300 shadow-lg group"
+                    >
+                        <div className="text-right hidden sm:block">
+                            <div className="text-xs font-bold text-white group-hover:text-brand-primary transition-colors">{user.global_name || user.username}</div>
+                            {user.minecraftUsername && <div className="text-[10px] text-gray-400 font-mono">{user.minecraftUsername}</div>}
+                        </div>
+                        <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-white/20" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+
+                    {/* Dropdown */}
+                    {menuOpen && (
+                        <div className="absolute right-0 mt-2 w-48 bg-[#1e1f22] rounded-xl shadow-xl border border-white/10 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                            <div className="px-4 py-3 border-b border-white/5">
+                                <p className="text-xs text-gray-400 uppercase font-bold">Logged in as</p>
+                                <p className="text-sm text-white truncate font-bold">@{user.username}</p>
+                            </div>
+                            <button 
+                                onClick={() => { setShowLinkModal(true); setMenuOpen(false); }}
+                                className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-brand-primary/10 hover:text-brand-primary transition-colors flex items-center gap-2"
+                            >
+                                <span>🎮</span> Link Minecraft
+                            </button>
+                            <button 
+                                onClick={logout}
+                                className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-2"
+                            >
+                                <span>🚪</span> Sign Out
+                            </button>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <button 
+                    onClick={loginRedirect}
+                    className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all hover:scale-105"
+                >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 19.018 19.018 0 0 0-3.361 6.883 19.2 19.2 0 0 0-4.92 0C5.832 6.72 5.309 5.351 4.635 2.893a.074.074 0 0 0-.079-.037A19.736 19.736 0 0 0 .68 4.37a.075.075 0 0 0-.032.027C.533 9.046 1.583 13.578 4.53 18.16a.077.077 0 0 0 .084.011 19.73 19.73 0 0 0 5.995-3.016.077.077 0 0 0 .031-.102c-.613-.916-1.15-1.89-1.581-2.917a.075.075 0 0 1 .065-.105c1.204.573 2.58.892 4.004.892s2.8-.319 4.004-.892a.075.075 0 0 1 .065.105c-.43 1.027-.968 2.001-1.581 2.917a.077.077 0 0 0 .031.102 19.73 19.73 0 0 0 5.996 3.016.077.077 0 0 0 .084-.011c2.947-4.582 3.997-9.114 3.882-13.763a.076.076 0 0 0-.032-.027zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.096 2.157 2.418 0 1.334-.947 2.419-2.157 2.419z"/></svg>
+                    Login with Discord
+                </button>
+            )}
+        </div>
+
+        {/* LINK MODAL */}
+        {showLinkModal && (
+            <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="bg-[#1a0b0e] border border-white/10 p-8 rounded-2xl w-full max-w-md shadow-2xl">
+                    <h2 className="text-2xl font-black text-white mb-2">Link Minecraft Account</h2>
+                    <p className="text-gray-400 text-sm mb-6">Enter your Java Edition username to whitelist yourself on the server.</p>
+                    
+                    <form onSubmit={handleLinkSubmit} className="space-y-4">
+                        <div>
+                            <label className="text-xs font-bold text-brand-accent uppercase">Username</label>
+                            <input 
+                                type="text" 
+                                value={mcInput}
+                                onChange={(e) => setMcInput(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white mt-1 focus:border-brand-primary focus:outline-none"
+                                placeholder="Notch"
+                                required
+                            />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={() => setShowLinkModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-lg transition-colors">Cancel</button>
+                            <button type="submit" className="flex-1 bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">Save Link</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
+
         {/* Hero Section */}
-        <div className="flex flex-col items-center text-center space-y-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex flex-col items-center text-center space-y-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-16">
             <div className="relative z-10">
                 <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight drop-shadow-2xl">
                     WELCOME TO <span className="text-brand-primary">URNISA</span> MINECRAFT
