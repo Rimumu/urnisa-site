@@ -210,8 +210,8 @@ const Gacha: React.FC = () => {
         // Calculate Percentage (0% is top, 100% is bottom)
         const percentage = (relativeY / 420) * 100;
 
-        // Valid Zone: STRICT 10% to 15%
-        if (percentage >= 10 && percentage <= 15) {
+        // Valid Zone: Between 10% and 40% (Top area, but not hitting cards)
+        if (percentage >= 10 && percentage <= 40) {
             triggerCut(percentage);
         } else {
             setCutCoords(null);
