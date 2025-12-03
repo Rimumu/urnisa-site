@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
@@ -9,7 +9,7 @@ import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
 import { DISCORD_API_URL } from '../constants';
 
-// ... (Existing Imports & Helpers remain the same, truncated for brevity but included in full file output)
+// --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
 const processImageUrl = (url: string): string => {
     if (!url) return '';
     const cleanUrl = url.trim();
@@ -248,16 +248,6 @@ const Admin: React.FC = () => {
         } catch(e) {}
     };
 
-    // Fetch Whitelist Apps
-    const fetchWhitelistApps = async () => {
-        try {
-            const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, {
-                headers: { Authorization: password } // Use admin password for auth
-            });
-            if (res.ok) setWhitelistApps(await res.json());
-        } catch (e) {}
-    };
-
     useEffect(() => {
         if (isAuthenticated && activeTab === 'nisathon_mgr') {
             fetchEventLog();
@@ -266,19 +256,30 @@ const Admin: React.FC = () => {
         }
     }, [isAuthenticated, activeTab]);
 
+    // Fetch Whitelist Apps - Wrapped in useCallback or defined inside effect to close over password
     useEffect(() => {
+        let interval: number;
+        
+        const fetchWhitelistApps = async () => {
+            try {
+                const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, {
+                    headers: { Authorization: password } // Use admin password for auth
+                });
+                if (res.ok) {
+                    setWhitelistApps(await res.json());
+                } else {
+                    if(res.status === 401) console.error("Admin Auth Failed for Bot Service. Check ADMIN_PASSWORD in Bot Env Vars.");
+                }
+            } catch (e) {}
+        };
+
         if (isAuthenticated && activeTab === 'minecraft') {
             fetchWhitelistApps();
-            const interval = setInterval(fetchWhitelistApps, 10000);
-            return () => clearInterval(interval);
+            interval = window.setInterval(fetchWhitelistApps, 10000);
         }
-    }, [isAuthenticated, activeTab]);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetch(`${API_BASE_URL}/api/stream-status`).then(r => r.json()).then(d => setStreamStatusOverride(d.override));
-        }
-    }, [isAuthenticated]);
+        
+        return () => { if(interval) clearInterval(interval); };
+    }, [isAuthenticated, activeTab, password]); // Added password dependency
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -461,13 +462,13 @@ const Admin: React.FC = () => {
     const handleForceSync = () => { if (confirmSync) { apiCall('nisathon/sync', {}); setConfirmSync(false); } else { setConfirmSync(true); setTimeout(() => setConfirmSync(false), 3000); } };
     const handleRebuild = () => { if (confirmRebuild) { apiCall('nisathon/rebuild', {}); setConfirmRebuild(false); } else { setConfirmRebuild(true); setTimeout(() => setConfirmRebuild(false), 3000); } };
 
-    // COUNTDOWN
+    // COUNTDOWN HANDLERS
     const handleCountdownSet = () => apiCall('countdown/set', { hours: cdH, minutes: cdM, seconds: cdS });
     const handleCountdownAdd = () => apiCall('countdown/add', { minutes: cdAddM });
     const handleCountdownPause = () => apiCall('countdown/pause', {});
     const handleCountdownReset = () => apiCall('countdown/reset', {});
-
-    // MINECRAFT
+    
+    // MINECRAFT HANDLERS
     const handleApproveApp = async (id: string) => {
         setLoading(true);
         try {
@@ -476,12 +477,18 @@ const Admin: React.FC = () => {
                 headers: { 'Content-Type': 'application/json', Authorization: password },
                 body: JSON.stringify({ id })
             });
-            fetchWhitelistApps();
+            // Manually refresh after action
+            const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, { headers: { Authorization: password } });
+            if(res.ok) setWhitelistApps(await res.json());
         } catch(e){} finally { setLoading(false); }
     };
 
     const handleRejectApp = async (id: string) => {
-         if(!confirm("Reject this application?")) return;
+         // Use browser confirm, or implement custom confirmation state for safety
+         // Using simple confirm for brevity as requested in previous iteration
+         const confirmed = window.confirm("Reject this application?");
+         if(!confirmed) return;
+         
          setLoading(true);
          try {
              await fetch(`${DISCORD_API_URL}/api/admin/whitelist/reject`, {
@@ -489,7 +496,9 @@ const Admin: React.FC = () => {
                  headers: { 'Content-Type': 'application/json', Authorization: password },
                  body: JSON.stringify({ id })
              });
-             fetchWhitelistApps();
+             // Manually refresh after action
+             const res = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, { headers: { Authorization: password } });
+             if(res.ok) setWhitelistApps(await res.json());
          } catch(e){} finally { setLoading(false); }
     };
 

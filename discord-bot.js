@@ -30,7 +30,7 @@ if (MONGO_URI) {
         .then(() => console.log("✅ [BotDB] MongoDB Connected"))
         .catch(e => console.error("❌ [BotDB] Error:", e));
 } else {
-    console.warn("⚠️ [BotDB] MONGO_URI missing.");
+    console.warn("⚠️ [BotDB] MONGO_URI missing. Account linking will not save.");
 }
 
 const MinecraftLinkSchema = new mongoose.Schema({
@@ -42,7 +42,7 @@ const MinecraftLinkSchema = new mongoose.Schema({
 });
 const MinecraftLink = mongoose.model('MinecraftLink', MinecraftLinkSchema);
 
-// NEW: Whitelist Application Schema
+// Whitelist Application Schema
 const WhitelistAppSchema = new mongoose.Schema({
     discordId: String,
     discordUsername: String,
@@ -208,19 +208,24 @@ app.post('/api/whitelist/apply', async (req, res) => {
         appliedAt: new Date()
     });
     
+    console.log(`📝 New Whitelist Application: ${link.minecraftUsername}`);
     res.json({ success: true, message: "Application Sent! Please wait for admin approval." });
 });
 
 // 5. ADMIN WHITELIST MANAGEMENT
 const auth = (req, res, next) => {
-    if (req.headers.authorization !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.headers.authorization !== ADMIN_PASSWORD) {
+        console.log(`❌ Admin Auth Failed: '${req.headers.authorization}' vs '${ADMIN_PASSWORD}'`);
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
     next();
 };
 
 app.get('/api/admin/whitelist', auth, async (req, res) => {
     try {
-        // Get all pending apps
+        console.log("🔍 Fetching Whitelist Apps...");
         const apps = await WhitelistApp.find({ status: 'pending' }).sort({ appliedAt: 1 });
+        console.log(`   Found ${apps.length} pending apps.`);
         res.json(apps);
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -231,8 +236,7 @@ app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
         const app = await WhitelistApp.findById(id);
         if (!app) return res.status(404).json({ error: "App not found" });
 
-        // HERE WE WOULD RUN RCON COMMAND
-        console.log(`[RCON] whitelist add ${app.minecraftUsername}`);
+        console.log(`✅ Approving: ${app.minecraftUsername}`);
         
         app.status = 'approved';
         await app.save();
@@ -243,6 +247,7 @@ app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
 app.post('/api/admin/whitelist/reject', auth, async (req, res) => {
     const { id } = req.body;
     try {
+        console.log(`❌ Rejecting app ID: ${id}`);
         await WhitelistApp.findByIdAndDelete(id);
         res.json({ success: true });
     } catch(e) { res.status(500).json({ error: e.message }); }
