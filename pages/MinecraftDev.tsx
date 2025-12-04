@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
@@ -539,45 +538,59 @@ const MinecraftDev: React.FC = () => {
             
             {/* New Navigation Boxes */}
             <div className="flex flex-col gap-6 h-full">
-                {/* Bingo Card */}
-                <Link to="/minecraft-dev/bingo" className="block flex-1 bg-black/30 backdrop-blur-lg border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group hover:border-brand-primary/50 hover:bg-black/40 transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-2xl group-hover:bg-brand-primary/20 transition-colors pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                {/* Bingo Card - DISABLED */}
+                <div className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-not-allowed opacity-70 grayscale">
+                    {/* Coming Soon Overlay */}
+                    <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
+                        <div className="bg-brand-primary text-white font-black text-xl uppercase px-6 py-2 rounded-full transform -rotate-12 border-2 border-white shadow-xl">
+                            Coming Soon
+                        </div>
+                    </div>
+
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                     
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                    <div className="flex items-center gap-4 mb-4 opacity-50">
+                        <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl shadow-inner">
                             🎫
                         </div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-primary transition-colors">Bingo Card</h2>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide">Bingo Card</h2>
                     </div>
                     
-                    <p className="text-gray-300 font-medium leading-relaxed">
+                    <p className="text-gray-500 font-medium leading-relaxed">
                         Complete your card by catching Pokémon, building structures, and participating in events to win amazing prizes!
                     </p>
 
-                    <div className="mt-6 flex items-center text-[#60a5fa] font-bold text-sm uppercase tracking-wider group-hover:translate-x-2 transition-transform">
+                    <div className="mt-6 flex items-center text-gray-600 font-bold text-sm uppercase tracking-wider">
                         View Card <span className="ml-2">→</span>
                     </div>
-                </Link>
+                </div>
 
-                {/* Gacha Pack */}
-                <Link to="/minecraft-dev/gacha" className="block flex-1 bg-black/30 backdrop-blur-lg border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group hover:border-brand-accent/50 hover:bg-black/40 transition-all duration-300">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full blur-2xl group-hover:bg-brand-accent/20 transition-colors pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                {/* Gacha Pack - DISABLED */}
+                <div className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-not-allowed opacity-70 grayscale">
+                    {/* Coming Soon Overlay */}
+                    <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
+                        <div className="bg-brand-accent text-brand-bg font-black text-xl uppercase px-6 py-2 rounded-full transform -rotate-12 border-2 border-brand-bg shadow-xl">
+                            Coming Soon
+                        </div>
+                    </div>
+
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                     
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                    <div className="flex items-center gap-4 mb-4 opacity-50">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner">
                             🥩
                         </div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-accent transition-colors">Gacha Pack</h2>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide">Gacha Pack</h2>
                     </div>
                     
-                    <p className="text-gray-300 font-medium leading-relaxed">
+                    <p className="text-gray-500 font-medium leading-relaxed">
                         Slice up some lamb chop and wagyu packs and see if you will get flavorful rewards!
                     </p>
 
-                    <div className="mt-6 flex items-center text-brand-accent font-bold text-sm uppercase tracking-wider group-hover:translate-x-2 transition-transform">
+                    <div className="mt-6 flex items-center text-gray-600 font-bold text-sm uppercase tracking-wider">
                         Open Packs <span className="ml-2">→</span>
                     </div>
-                </Link>
+                </div>
             </div>
 
             {/* How to Join Section - UPDATED */}
