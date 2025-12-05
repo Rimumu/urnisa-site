@@ -483,7 +483,7 @@ const Gacha: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen py-10 font-sans text-white relative overflow-hidden select-none">
+        <div className="min-h-screen py-4 font-sans text-white relative overflow-hidden select-none">
             {/* CSS & Backgrounds same as before */}
             <style>{`
                 .foil-holo {
@@ -529,45 +529,51 @@ const Gacha: React.FC = () => {
                 className="!absolute top-4 right-4"
             />
 
-            {/* HEADER: Back Button & Pack Counters (Reorganized Layout) */}
-            <div className="relative z-20 container mx-auto px-4 pt-24 pb-4 flex flex-col items-start gap-6">
-                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20">
+            {/* HEADER: Back Button & Pack Counters */}
+            <div className="relative z-20 container mx-auto px-4 pt-4 pb-2 flex flex-col items-start gap-4">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm">
                     <span>←</span> Back to Dashboard
                 </Link>
 
                 {user && (
-                    <div className="flex flex-wrap gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
-                        <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-2xl px-5 py-3 flex items-center gap-4 shadow-xl hover:scale-105 transition-transform cursor-default">
-                            <div className="text-2xl filter drop-shadow-md">🧬</div>
+                    <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
+                        {/* Lamb Counter */}
+                        <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group">
+                            <div className="bg-purple-500/20 p-1.5 rounded-full">
+                                <div className="text-xl filter drop-shadow-md group-hover:animate-pulse">🧬</div>
+                            </div>
                             <div className="flex flex-col">
-                                <div className="text-[10px] font-black text-purple-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
-                                <div className="text-2xl font-black text-white leading-none">{packs.lambPacks}</div>
+                                <div className="text-[9px] font-black text-purple-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
+                                <div className="text-lg font-black text-white leading-none">{packs.lambPacks}</div>
                             </div>
                         </div>
-                        <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-2xl px-5 py-3 flex items-center gap-4 shadow-xl hover:scale-105 transition-transform cursor-default">
-                            <div className="text-2xl filter drop-shadow-md">🫧</div>
+                        {/* Wagyu Counter */}
+                        <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group">
+                            <div className="bg-pink-500/20 p-1.5 rounded-full">
+                                <div className="text-xl filter drop-shadow-md group-hover:animate-pulse">🫧</div>
+                            </div>
                             <div className="flex flex-col">
-                                <div className="text-[10px] font-black text-pink-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
-                                <div className="text-2xl font-black text-white leading-none">{packs.wagyuPacks}</div>
+                                <div className="text-[9px] font-black text-pink-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
+                                <div className="text-lg font-black text-white leading-none">{packs.wagyuPacks}</div>
                             </div>
                         </div>
                     </div>
                 )}
             </div>
 
-            <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[80vh]">
+            <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[70vh]">
                 
                 {stage === 'selection' && (
-                    <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-4">
-                        <h1 className="text-4xl md:text-6xl font-black text-center mb-4 tracking-tighter drop-shadow-2xl">
+                    <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-2">
+                        <h1 className="text-4xl md:text-6xl font-black text-center mb-2 tracking-tighter drop-shadow-2xl">
                             BOOSTER <span className="text-brand-primary">SHOP</span>
                         </h1>
-                        <p className="text-center text-gray-400 mb-16 max-w-xl mx-auto">
+                        <p className="text-center text-gray-400 mb-8 max-w-xl mx-auto">
                             Choose your destiny. Will you clone the ultimate power or discover the mythical ancestor?
                         </p>
 
                         {/* Updated Grid with Disabled States */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 px-4 md:px-20">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 md:px-20">
                             {/* LAMB CHOP (MEWTWO) */}
                             <button 
                                 onClick={() => selectPack('lamb')}
