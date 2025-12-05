@@ -37,12 +37,13 @@ const LAMB_POOL: CardData[] = [
     { id: 101, name: "Electrode", type: 'Pokemon', subType: "Ball", rarity: 'Uncommon', hp: 60, description: "Explodes." },
     { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Uncommon', hp: 65, description: "Man-made code." },
 
-    // Common (5)
+    // Common (5 + Items)
     { id: 109, name: "Koffing", type: 'Pokemon', subType: "Gas", rarity: 'Common', hp: 40, description: "Toxic fumes." },
     { id: 81, name: "Magnemite", type: 'Pokemon', subType: "Magnet", rarity: 'Common', hp: 25, description: "Anti-gravity." },
     { id: 63, name: "Abra", type: 'Pokemon', subType: "Psi", rarity: 'Common', hp: 25, description: "Sleeps 18 hours." },
     { id: 41, name: "Zubat", type: 'Pokemon', subType: "Bat", rarity: 'Common', hp: 40, description: "Cave dweller." },
     { id: 100, name: "Voltorb", type: 'Pokemon', subType: "Ball", rarity: 'Common', hp: 40, description: "Looks like a ball." },
+    { id: 20001, name: "5x Bronze Coin", type: 'Item', subType: "Currency", rarity: 'Common', description: "Used for trading.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-copper.png" },
 ];
 
 // THEME: MEW (Mythic / Rare / Ancestor)
