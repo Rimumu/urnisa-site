@@ -258,16 +258,13 @@ const Gacha: React.FC = () => {
     const [cutCoords, setCutCoords] = useState<{ start: {x:number, y:number}, end: {x:number, y:number} } | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [trail, setTrail] = useState<{x: number, y: number, id: number}[]>([]);
-    const [cutYPercentage, setCutYPercentage] = useState(15); 
-    const [cutVisuals, setCutVisuals] = useState({ rotate: -30, x: -50, y: -150 });
-
+    
     // Dispensing Logic
     const [revealedCards, setRevealedCards] = useState<CardData[]>([]);
     const [dispensingCard, setDispensingCard] = useState<CardData | null>(null);
     const [shakePack, setShakePack] = useState(false);
     
     const svgRef = useRef<SVGSVGElement>(null);
-    const packRef = useRef<HTMLDivElement>(null);
 
     // --- AUTH EFFECTS ---
     useEffect(() => {
@@ -332,7 +329,6 @@ const Gacha: React.FC = () => {
         setRevealedCards([]);
         setTrail([]);
         setCutCoords(null);
-        setCutYPercentage(15);
     };
 
     const getPoint = (e: React.MouseEvent | React.TouchEvent) => {
@@ -420,6 +416,7 @@ const Gacha: React.FC = () => {
             if (picked.length <= i) picked.push(currentPool[0]); 
         }
 
+        // SAVE TO DB
         if (user) {
             fetch(`${API_BASE_URL}/api/gacha/save`, {
                 method: 'POST',
@@ -453,7 +450,7 @@ const Gacha: React.FC = () => {
                         </button>
                         {menuOpen && (
                             <div className="absolute right-0 mt-2 w-48 bg-[#1e1f22] rounded-xl shadow-xl border border-white/10 overflow-hidden z-50">
-                                <button onClick={() => setShowInventory(true)} className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 flex gap-2">
+                                <button onClick={() => { setShowInventory(true); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 flex gap-2">
                                     <BackpackIcon /> Inventory
                                 </button>
                                 <button onClick={logout} className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 flex gap-2 border-t border-white/5">
