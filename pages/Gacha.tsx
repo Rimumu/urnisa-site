@@ -74,11 +74,7 @@ const WAGYU_POOL: CardData[] = [
     // The Chase
     { id: 151, name: "Mew", type: 'Pokemon', subType: "Originator", rarity: 'Mythical', hp: 100, description: "The ancestor of all.", weight: 0 },
     
-    // Legendary (Weight: 3)
-    // Moving Arcanine to Legendary to fit the tier structure requested, or we can keep it as Ultra-Rare.
-    // For now, keeping original Ultra-Rares but giving them low weight.
-    
-    // Ultra-Rare (Weight: 5)
+    // Ultra-Rare Pokemon (Weight: 5)
     { id: 149, name: "Dragonite", type: 'Pokemon', subType: "Dragon", rarity: 'Ultra-Rare', hp: 150, description: "Marine guardian.", weight: 5 },
     { id: 94, name: "Gengar", type: 'Pokemon', subType: "Shadow", rarity: 'Ultra-Rare', hp: 130, description: "Hides in shadows.", weight: 5 },
     { id: 131, name: "Lapras", type: 'Pokemon', subType: "Transport", rarity: 'Ultra-Rare', hp: 190, description: "Gentle giant.", weight: 5 },
@@ -89,6 +85,17 @@ const WAGYU_POOL: CardData[] = [
     { id: 282, name: "Gardevoir", type: 'Pokemon', subType: "Embrace", rarity: 'Ultra-Rare', hp: 130, description: "Protects trainer.", weight: 5 },
     { id: 133, name: "Eevee", type: 'Pokemon', subType: "Evolution", rarity: 'Ultra-Rare', hp: 60, description: "Infinite potential.", weight: 5 },
     { id: 175, name: "Togepi", type: 'Pokemon', subType: "Spike Ball", rarity: 'Ultra-Rare', hp: 50, description: "Full of joy.", weight: 5 },
+
+    // Ultra-Rare Items (Weight: 5)
+    { id: 30018, name: "5x Ultra Ball", type: 'Item', subType: "Balls", rarity: 'Ultra-Rare', description: "High performance ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png", weight: 5 },
+    { id: 30019, name: "Exp. Candy XL", type: 'Item', subType: "Consumable", rarity: 'Ultra-Rare', description: "A huge sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-candy-xl.png", weight: 5 },
+    // IV Caps (Using Vitamin Sprites as proxies)
+    { id: 30020, name: "HP IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes HP IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hp-up.png", weight: 5 },
+    { id: 30021, name: "Atk IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Attack IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/protein.png", weight: 5 },
+    { id: 30022, name: "Def IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Defense IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/iron.png", weight: 5 },
+    { id: 30023, name: "Sp. Atk IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Sp. Atk IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/calcium.png", weight: 5 },
+    { id: 30024, name: "Sp. Def IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Sp. Def IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/zinc.png", weight: 5 },
+    { id: 30025, name: "Speed IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Speed IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/carbos.png", weight: 5 },
 
     // Rare Items (Weight: 50 - The "Common" of this pack)
     { id: 30011, name: "5x Silver Coin", type: 'Item', subType: "Currency", rarity: 'Rare', description: "Valuable currency.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-silver.png", weight: 50 },
@@ -426,7 +433,13 @@ const Gacha: React.FC = () => {
                 if (!nextCard) nextCard = currentPool[0]; 
             } else {
                 // RANDOM CARD (Exclude Chase Card to keep it special for the end)
-                const regularPool = currentPool.filter(c => c.name !== chaseName);
+                let regularPool = currentPool.filter(c => c.name !== chaseName);
+
+                // UNIQUE CONSTRAINT: Only 1 "IV Cap" per pack
+                const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
+                if (hasIVCap) {
+                    regularPool = regularPool.filter(c => c.subType !== 'IV Cap');
+                }
                 
                 // WEIGHTED SELECTION
                 const totalWeight = regularPool.reduce((sum, item) => sum + (item.weight || 10), 0);
