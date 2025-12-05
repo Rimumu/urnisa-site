@@ -212,7 +212,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
     };
 
     return (
-        <div className={`relative w-48 h-72 rounded-xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
+        <div className={`relative w-48 h-72 rounded-3xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
             {card.rarity !== 'Common' && <div className={`absolute inset-0 z-20 pointer-events-none opacity-40 mix-blend-overlay ${holoEffect}`}></div>}
             
             <div className="absolute inset-0 bg-[#1a1a1a] z-0">
@@ -245,7 +245,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 </span>
             </div>
 
-            <div className="absolute top-2 right-2 z-30 text-[8px] font-mono text-white/50 bg-black/50 px-1.5 rounded">
+            <div className="absolute top-2 right-2 z-30 text-[8px] font-mono text-white/50 bg-black/50 px-1.5 rounded-md">
                 #{card.id.toString().padStart(3, '0')}
             </div>
         </div>
@@ -529,26 +529,26 @@ const Gacha: React.FC = () => {
                 className="!absolute top-4 right-4"
             />
 
-            {/* HEADER: Back Button & Pack Counters (Reorganized to prevent overlap) */}
-            <div className="relative z-20 container mx-auto px-4 mb-4 pt-24 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+            {/* HEADER: Back Button & Pack Counters (Reorganized Layout) */}
+            <div className="relative z-20 container mx-auto px-4 pt-24 pb-4 flex flex-col items-start gap-6">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20">
                     <span>←</span> Back to Dashboard
                 </Link>
 
                 {user && (
-                    <div className="flex gap-3 animate-in fade-in slide-in-from-right-4 duration-500">
-                        <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
-                            <div className="text-xl">🧬</div>
-                            <div className="leading-none">
-                                <div className="text-[9px] font-bold text-purple-400 uppercase tracking-wider">Lamb Chop</div>
-                                <div className="text-lg font-black text-white">{packs.lambPacks}</div>
+                    <div className="flex flex-wrap gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
+                        <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-2xl px-5 py-3 flex items-center gap-4 shadow-xl hover:scale-105 transition-transform cursor-default">
+                            <div className="text-2xl filter drop-shadow-md">🧬</div>
+                            <div className="flex flex-col">
+                                <div className="text-[10px] font-black text-purple-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
+                                <div className="text-2xl font-black text-white leading-none">{packs.lambPacks}</div>
                             </div>
                         </div>
-                        <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
-                            <div className="text-xl">🫧</div>
-                            <div className="leading-none">
-                                <div className="text-[9px] font-bold text-pink-400 uppercase tracking-wider">Wagyu A5</div>
-                                <div className="text-lg font-black text-white">{packs.wagyuPacks}</div>
+                        <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-2xl px-5 py-3 flex items-center gap-4 shadow-xl hover:scale-105 transition-transform cursor-default">
+                            <div className="text-2xl filter drop-shadow-md">🫧</div>
+                            <div className="flex flex-col">
+                                <div className="text-[10px] font-black text-pink-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
+                                <div className="text-2xl font-black text-white leading-none">{packs.wagyuPacks}</div>
                             </div>
                         </div>
                     </div>
@@ -825,7 +825,7 @@ const Gacha: React.FC = () => {
                                 ))}
                                 
                                 {revealedCards.length === 0 && stage !== 'finished' && (
-                                    <div className="w-full h-60 flex items-center justify-center border-2 border-dashed border-white/10 rounded-xl bg-white/5">
+                                    <div className="w-full h-60 flex items-center justify-center border-2 border-dashed border-white/10 rounded-3xl bg-white/5">
                                         <p className="text-gray-600 font-mono text-sm">Cards will appear here...</p>
                                     </div>
                                 )}
