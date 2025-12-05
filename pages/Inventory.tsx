@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserProfile from '../components/UserProfile';
 import OptimizedImage from '../components/OptimizedImage';
-import { DISCORD_API_URL } from '../constants';
+import { DISCORD_API_URL, API_BASE_URL } from '../constants';
 
 interface InventoryItem {
     _id: string;
@@ -15,6 +15,85 @@ interface InventoryItem {
     claimed: boolean;
     receivedAt: string;
 }
+
+// --- CACHE ---
+const clientImageCache = new Map<string, boolean>();
+
+// Helper Component for consistent image logic
+const InventoryCardImage: React.FC<{ item: InventoryItem }> = ({ item }) => {
+    const [imgSrc, setImgSrc] = useState<string>("");
+
+    const getFormattedName = (name: string) => {
+        return name.toLowerCase()
+            .replace(/[.']/g, '')
+            .replace(/♀/g, '-f')
+            .replace(/♂/g, '-m')
+            .replace(/\s+/g, '-');
+    };
+
+    useEffect(() => {
+        const verifyImage = async () => {
+            if (item.image) {
+                setImgSrc(item.image);
+                return;
+            }
+
+            if (item.type === 'Item') {
+                 setImgSrc("https://via.placeholder.com/150?text=Item");
+                 return;
+            }
+
+            // Pokemon Logic
+            const cobbleName = getFormattedName(item.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.itemId}.png`;
+
+            if (clientImageCache.has(primaryUrl)) {
+                const isValid = clientImageCache.get(primaryUrl);
+                setImgSrc(isValid ? primaryUrl : fallback3d);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+                clientImageCache.set(primaryUrl, data.valid);
+
+                if (data.valid) {
+                    setImgSrc(primaryUrl);
+                } else {
+                    setImgSrc(fallback3d);
+                }
+            } catch (error) {
+                setImgSrc(primaryUrl);
+            }
+        };
+
+        verifyImage();
+    }, [item]);
+
+    const handleImageError = () => {
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.itemId}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.itemId}.png`);
+        } else if (imgSrc.includes('official-artwork')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.itemId}.png`);
+        } else {
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(item.name)}`);
+        }
+    };
+
+    return (
+        <OptimizedImage 
+            src={imgSrc} 
+            alt={item.name} 
+            className="w-full h-full object-contain drop-shadow-lg"
+            contain
+            onError={handleImageError}
+        />
+    );
+};
 
 const Inventory: React.FC = () => {
     const [items, setItems] = useState<InventoryItem[]>([]);
@@ -88,16 +167,6 @@ const Inventory: React.FC = () => {
         return true;
     });
 
-    // Helper to get image (reuse logic from Gacha if possible, or simple fallback)
-    const getItemImage = (item: InventoryItem) => {
-        if (item.image) return item.image;
-        if (item.type === 'Pokemon') {
-            // Simplified fallback for inventory list
-            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.itemId}.png`;
-        }
-        return "https://via.placeholder.com/150?text=?";
-    };
-
     if (!user) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -117,7 +186,7 @@ const Inventory: React.FC = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
                     <div>
-                        <Link to="/gacha" className="text-gray-400 hover:text-white mb-2 inline-block text-sm">← Back to Gacha</Link>
+                        <Link to="/minecraft/gacha" className="text-gray-400 hover:text-white mb-2 inline-block text-sm">← Back to Gacha</Link>
                         <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                             MY <span className="text-brand-primary">INVENTORY</span>
                         </h1>
@@ -159,12 +228,7 @@ const Inventory: React.FC = () => {
                                 `}
                             >
                                 <div className="aspect-square p-4 flex items-center justify-center bg-gradient-to-b from-transparent to-black/20">
-                                    <OptimizedImage 
-                                        src={getItemImage(item)} 
-                                        alt={item.name} 
-                                        className="w-full h-full object-contain drop-shadow-lg"
-                                        contain
-                                    />
+                                    <InventoryCardImage item={item} />
                                 </div>
                                 
                                 <div className="p-3 bg-black/60 border-t border-white/5">
