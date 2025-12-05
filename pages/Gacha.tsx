@@ -1,5 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import OptimizedImage from '../components/OptimizedImage';
 
 // --- TYPES ---
 type PackType = 'lamb' | 'wagyu' | null;
@@ -18,11 +20,54 @@ interface CardData {
 
 // --- MOCK DATA ---
 const MOCK_CARDS: CardData[] = [
-    { id: 1, name: "Wooloo", type: 'Pokemon', subType: "Normal", rarity: 'Common', hp: 60, description: "Its fleece is extremely fluffy.", image: "https://img.pokemondb.net/artwork/large/wooloo.jpg" },
-    { id: 2, name: "Rare Candy", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "Level up.", image: "https://archives.bulbagarden.net/media/upload/a/a2/Dream_Rare_Candy_Sprite.png" },
-    { id: 3, name: "Miltank", type: 'Pokemon', subType: "Normal", rarity: 'Common', hp: 110, description: "Moo.", image: "https://img.pokemondb.net/artwork/large/miltank.jpg" },
-    { id: 4, name: "Master Ball", type: 'Item', subType: "Ball", rarity: 'Ultra', description: "Catch anything.", image: "https://archives.bulbagarden.net/media/upload/9/95/Dream_Master_Ball_Sprite.png" },
-    { id: 5, name: "Mewtwo", type: 'Pokemon', subType: "Psychic", rarity: 'Legendary', hp: 150, description: "Genetic Pokemon.", image: "https://img.pokemondb.net/artwork/large/mewtwo.jpg" },
+    { 
+        id: 1, 
+        name: "Wooloo", 
+        type: 'Pokemon', 
+        subType: "Normal", 
+        rarity: 'Common', 
+        hp: 60, 
+        description: "Its fleece is extremely fluffy.", 
+        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/831.png" 
+    },
+    { 
+        id: 2, 
+        name: "Rare Candy", 
+        type: 'Item', 
+        subType: "Consumable", 
+        rarity: 'Rare', 
+        description: "Level up.", 
+        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png" 
+    },
+    { 
+        id: 3, 
+        name: "Miltank", 
+        type: 'Pokemon', 
+        subType: "Normal", 
+        rarity: 'Common', 
+        hp: 110, 
+        description: "Moo.", 
+        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/241.png" 
+    },
+    { 
+        id: 4, 
+        name: "Master Ball", 
+        type: 'Item', 
+        subType: "Ball", 
+        rarity: 'Ultra', 
+        description: "Catch anything.", 
+        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" 
+    },
+    { 
+        id: 5, 
+        name: "Mewtwo", 
+        type: 'Pokemon', 
+        subType: "Psychic", 
+        rarity: 'Legendary', 
+        hp: 150, 
+        description: "Genetic Pokemon.", 
+        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png" 
+    },
 ];
 
 // --- COMPONENTS ---
@@ -60,17 +105,22 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
             
             {/* Background Image / Art */}
             <div className="absolute inset-0 bg-[#1a1a1a] z-0">
-                {/* Fallback pattern if image fails or while loading */}
+                {/* Fallback pattern */}
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
-                <img 
-                    src={card.image || `https://via.placeholder.com/300?text=${card.name}`} 
-                    alt={card.name}
-                    className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
-                />
+                
+                {/* Main Artwork - Padded bottom to avoid text overlap */}
+                <div className="absolute inset-0 p-4 pb-20 flex items-center justify-center z-10">
+                    <OptimizedImage 
+                        src={card.image || `https://via.placeholder.com/300?text=${card.name}`} 
+                        alt={card.name}
+                        className="w-full h-full transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl"
+                        contain={true}
+                    />
+                </div>
             </div>
 
             {/* Gradient Overlay for Text Readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 z-10"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 z-10 pointer-events-none"></div>
 
             {/* Content - Bottom Aligned */}
             <div className="absolute bottom-0 left-0 right-0 p-3 z-30 flex flex-col items-center text-center">
