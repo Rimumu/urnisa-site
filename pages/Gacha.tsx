@@ -1,20 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
-import { API_BASE_URL, DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
-import InventoryModal from '../components/InventoryModal';
-
-// --- ICONS ---
-const DiscordLogo = () => (
-    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.2 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08 0-.1c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09 0 .1c-.52.31-1.08.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.48-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12z"/></svg>
-);
-const PowerIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-);
-const BackpackIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 11a7 7 0 0 1-7 7m0 0a7 7 0 0 1-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 0 1-3-3V5a3 3 0 1 1 6 0v6a3 3 0 0 1-3 3z"></path></svg>
-);
+import { API_BASE_URL } from '../constants';
 
 // --- TYPES ---
 type PackType = 'lamb' | 'wagyu' | null;
@@ -24,33 +12,35 @@ interface CardData {
     id: number;
     name: string;
     type: 'Pokemon' | 'Item';
-    subType: string;
+    subType: string; // e.g. "Genetic", "Mythical", "Normal"
     rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical';
     image?: string; 
     description?: string;
     hp?: number; 
-    weight?: number; 
-}
-
-interface UserData {
-    id: string;
-    username: string;
-    global_name?: string;
-    avatar: string;
-    minecraftUsername?: string | null;
+    weight?: number; // Higher number = more frequent
 }
 
 // --- DATA POOLS ---
+
+// THEME: MEWTWO (Genetic / Science / Lab)
 const LAMB_POOL: CardData[] = [
+    // The Chase (Now weigh 1, randomly obtainable)
     { id: 150, name: "Mewtwo", type: 'Pokemon', subType: "Artificial", rarity: 'Legendary', hp: 180, description: "A clone created by science.", weight: 1 },
+    
+    // Rares (Weight: 10)
     { id: 142, name: "Aerodactyl", type: 'Pokemon', subType: "Fossil", rarity: 'Rare', hp: 120, description: "Resurrected from amber.", weight: 10 },
     { id: 65, name: "Alakazam", type: 'Pokemon', subType: "Psi", rarity: 'Rare', hp: 55, description: "Brain power.", weight: 10 },
     { id: 30010, name: "2x Quick Ball", type: 'Item', subType: "Balls", rarity: 'Rare', description: "Catches fast.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/quick-ball.png", weight: 10 },
+    
+    // Uncommon Pokemon (Weight: 25)
     { id: 88, name: "Grimer", type: 'Pokemon', subType: "Sludge", rarity: 'Uncommon', hp: 80, description: "Bio-waste.", weight: 25 },
     { id: 93, name: "Haunter", type: 'Pokemon', subType: "Gas", rarity: 'Uncommon', hp: 45, description: "Licks you.", weight: 25 },
     { id: 64, name: "Kadabra", type: 'Pokemon', subType: "Psi", rarity: 'Uncommon', hp: 40, description: "Emit alpha waves.", weight: 25 },
     { id: 101, name: "Electrode", type: 'Pokemon', subType: "Ball", rarity: 'Uncommon', hp: 60, description: "Explodes.", weight: 25 },
     { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Uncommon', hp: 65, description: "Man-made code.", weight: 25 },
+
+    // Uncommon Items (Weight: 25)
+    // Fixed broken Exp Candy images with reliable alternatives
     { id: 30001, name: "Exp. Candy M", type: 'Item', subType: "Consumable", rarity: 'Uncommon', description: "A medium sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/stardust.png", weight: 25 },
     { id: 30002, name: "Super Potion", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Heals 60 HP.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/super-potion.png", weight: 25 },
     { id: 30003, name: "Awakening", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Wakes up Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/awakening.png", weight: 25 },
@@ -60,23 +50,35 @@ const LAMB_POOL: CardData[] = [
     { id: 30007, name: "3x Great Ball", type: 'Item', subType: "Balls", rarity: 'Uncommon', description: "Better catch rate.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png", weight: 25 },
     { id: 30008, name: "3x Safari Ball", type: 'Item', subType: "Balls", rarity: 'Uncommon', description: "Special camouflage ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/safari-ball.png", weight: 25 },
     { id: 30009, name: "2x Level Ball", type: 'Item', subType: "Balls", rarity: 'Uncommon', description: "Effective on lower levels.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/level-ball.png", weight: 25 },
+
+    // Common Pokemon (Weight: 15)
     { id: 109, name: "Koffing", type: 'Pokemon', subType: "Gas", rarity: 'Common', hp: 40, description: "Toxic fumes.", weight: 15 },
     { id: 81, name: "Magnemite", type: 'Pokemon', subType: "Magnet", rarity: 'Common', hp: 25, description: "Anti-gravity.", weight: 15 },
     { id: 63, name: "Abra", type: 'Pokemon', subType: "Psi", rarity: 'Common', hp: 25, description: "Sleeps 18 hours.", weight: 15 },
     { id: 41, name: "Zubat", type: 'Pokemon', subType: "Bat", rarity: 'Common', hp: 40, description: "Cave dweller.", weight: 15 },
     { id: 100, name: "Voltorb", type: 'Pokemon', subType: "Ball", rarity: 'Common', hp: 40, description: "Looks like a ball.", weight: 15 },
+
+    // Common Items 
     { id: 20001, name: "5x Bronze Coin", type: 'Item', subType: "Currency", rarity: 'Common', description: "Used for trading.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-copper.png", weight: 65 },
+    // Fixed images
     { id: 20002, name: "5x Exp. Candy XS", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A small sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tiny-mushroom.png", weight: 30 },
     { id: 20003, name: "2x Exp. Candy S", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/big-mushroom.png", weight: 30 },
     { id: 20004, name: "5x Pokeball", type: 'Item', subType: "Balls", rarity: 'Common', description: "Catches wild Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png", weight: 30 },
 ];
 
+// THEME: MEW (Mythic / Rare / Ancestor)
+// WAGYU A5: Only Rare, Ultra-Rare, Legendary, Mythic
 const WAGYU_POOL: CardData[] = [
+    // The Chase (Now weigh 1, randomly obtainable)
     { id: 151, name: "Mew", type: 'Pokemon', subType: "Originator", rarity: 'Mythical', hp: 100, description: "The ancestor of all.", weight: 1 },
+    
+    // Legendary Items (Weight: 3)
     { id: 30030, name: "Gold Coin", type: 'Item', subType: "Currency", rarity: 'Legendary', description: "A fortune.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-gold.png", weight: 3 },
     { id: 30031, name: "Shiny Upgrade", type: 'Item', subType: "Special", rarity: 'Legendary', description: "Makes a Pokemon shiny.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/shiny-charm.png", weight: 3 },
     { id: 30032, name: "Master Ball", type: 'Item', subType: "Balls", rarity: 'Legendary', description: "Catches without fail.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png", weight: 3 },
     { id: 30033, name: "1 TM Choice", type: 'Item', subType: "Technical Machine", rarity: 'Legendary', description: "Teach a move.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png", weight: 3 },
+
+    // Ultra-Rare Pokemon (Weight increased to 12 for higher chance)
     { id: 149, name: "Dragonite", type: 'Pokemon', subType: "Dragon", rarity: 'Ultra-Rare', hp: 150, description: "Marine guardian.", weight: 12 },
     { id: 94, name: "Gengar", type: 'Pokemon', subType: "Shadow", rarity: 'Ultra-Rare', hp: 130, description: "Hides in shadows.", weight: 12 },
     { id: 131, name: "Lapras", type: 'Pokemon', subType: "Transport", rarity: 'Ultra-Rare', hp: 190, description: "Gentle giant.", weight: 12 },
@@ -87,15 +89,22 @@ const WAGYU_POOL: CardData[] = [
     { id: 282, name: "Gardevoir", type: 'Pokemon', subType: "Embrace", rarity: 'Ultra-Rare', hp: 130, description: "Protects trainer.", weight: 12 },
     { id: 133, name: "Eevee", type: 'Pokemon', subType: "Evolution", rarity: 'Ultra-Rare', hp: 60, description: "Infinite potential.", weight: 12 },
     { id: 175, name: "Togepi", type: 'Pokemon', subType: "Spike Ball", rarity: 'Ultra-Rare', hp: 50, description: "Full of joy.", weight: 12 },
+
+    // Ultra-Rare Items (Weight increased to 12)
     { id: 30018, name: "5x Ultra Ball", type: 'Item', subType: "Balls", rarity: 'Ultra-Rare', description: "High performance ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png", weight: 12 },
+    // Fixed Image
     { id: 30019, name: "Exp. Candy XL", type: 'Item', subType: "Consumable", rarity: 'Ultra-Rare', description: "A huge sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/comet-shard.png", weight: 12 },
+    // IV Caps (Using Vitamin Sprites)
     { id: 30020, name: "HP IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes HP IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hp-up.png", weight: 12 },
     { id: 30021, name: "Atk IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Attack IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/protein.png", weight: 12 },
     { id: 30022, name: "Def IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Defense IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/iron.png", weight: 12 },
     { id: 30023, name: "Sp. Atk IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Sp. Atk IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/calcium.png", weight: 12 },
     { id: 30024, name: "Sp. Def IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Sp. Def IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/zinc.png", weight: 12 },
     { id: 30025, name: "Speed IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Speed IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/carbos.png", weight: 12 },
+
+    // Rare Items (Weight: 50 - The "Common" of this pack)
     { id: 30011, name: "5x Silver Coin", type: 'Item', subType: "Currency", rarity: 'Rare', description: "Valuable currency.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-silver.png", weight: 50 },
+    // Fixed Image
     { id: 30012, name: "2x Exp. Candy L", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "A large sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/star-piece.png", weight: 50 },
     { id: 30013, name: "Rare Candy", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "Levels up Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png", weight: 50 },
     { id: 30014, name: "Full Restore", type: 'Item', subType: "Medicine", rarity: 'Rare', description: "Fully heals HP & Status.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/full-restore.png", weight: 50 },
@@ -105,11 +114,13 @@ const WAGYU_POOL: CardData[] = [
 ];
 
 // --- CACHE ---
+// Persist validity results in memory during session to avoid redundant API calls
 const clientImageCache = new Map<string, boolean>();
 
 // --- COMPONENTS ---
 
 const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, className = "" }) => {
+    // Rarity styles
     let borderClass = "border-gray-600";
     let glowClass = "";
     let holoEffect = "";
@@ -128,11 +139,13 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         badgeColor = "bg-blue-900/80 text-blue-200 border border-blue-500/30";
         holoEffect = "after:content-[''] after:absolute after:inset-0 after:bg-gradient-to-tr after:from-transparent after:via-white/20 after:to-transparent after:opacity-50 after:pointer-events-none";
     } else if (card.rarity === 'Ultra-Rare') {
+        // Ultra-Rare is now Purple
         borderClass = "border-purple-500";
         glowClass = "shadow-[0_0_20px_rgba(168,85,247,0.6)]";
         badgeColor = "bg-purple-900/80 text-purple-200 border border-purple-500/30";
         holoEffect = "foil-holo"; 
     } else if (card.rarity === 'Legendary') {
+        // Legendary is now Yellow/Gold
         borderClass = "border-yellow-400";
         glowClass = "shadow-[0_0_30px_rgba(250,204,21,0.8)]";
         badgeColor = "bg-yellow-900/90 text-yellow-100 border border-yellow-400/50 shadow-[0_0_10px_#eab308]";
@@ -143,19 +156,23 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         glowClass = "shadow-[0_0_35px_rgba(244,114,182,0.9)] ring-2 ring-white/50";
         badgeColor = "bg-gradient-to-r from-pink-500 to-rose-500 text-white border border-white/50 shadow-[0_0_15px_#ec4899]";
         bgPattern = "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]";
-        holoEffect = "mythic-holo";
+        holoEffect = "mythic-holo"; // Custom class for rainbow effect
     }
 
+    // --- SMART IMAGE LOGIC ---
     const [imgSrc, setImgSrc] = useState<string>("");
 
     const getFormattedName = (name: string) => {
+        // Convert "Mr. Mime" -> "mr-mime", "Nidoran♀" -> "nidoran-f", etc.
         return name.toLowerCase()
-            .replace(/[.']/g, '')
+            .replace(/[.']/g, '') // remove dots and apostrophes
             .replace(/♀/g, '-f')
             .replace(/♂/g, '-m')
-            .replace(/\s+/g, '-');
+            .replace(/\s+/g, '-'); // spaces to hyphens
     };
 
+    // Use server-side checking to detect placeholder images by size
+    // WITH CLIENT-SIDE CACHING to speed up repeated pulls
     useEffect(() => {
         const verifyImage = async () => {
             if (card.image) {
@@ -167,6 +184,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
             const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`;
 
+            // 1. CHECK LOCAL CACHE
             if (clientImageCache.has(primaryUrl)) {
                 const isValid = clientImageCache.get(primaryUrl);
                 setImgSrc(isValid ? primaryUrl : fallback3d);
@@ -174,15 +192,22 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
             }
 
             try {
+                // Call our backend to check file size (avoiding CORS issues)
+                // If size > 2KB, we assume it's a valid sprite. If < 2KB, it's likely the question mark placeholder.
                 const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
                 const data = await response.json();
+
+                // 2. STORE IN CACHE
                 clientImageCache.set(primaryUrl, data.valid);
+
                 if (data.valid) {
                     setImgSrc(primaryUrl);
                 } else {
+                    console.log(`[Gacha] Placeholder detected via size check for ${card.name}, using 3D fallback.`);
                     setImgSrc(fallback3d);
                 }
             } catch (error) {
+                console.warn("[Gacha] Image check failed, defaulting to primary.", error);
                 setImgSrc(primaryUrl);
             }
         };
@@ -191,25 +216,42 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
     }, [card]);
 
     const handleImageError = () => {
+        // FALLBACK CHAIN (triggered if image loads 404, or if our pre-check failed logic)
+        
+        // 1. If Cobblemon Tools fails, go to PokeAPI Home (3D Render) - User Preferred Fallback
         if (imgSrc.includes('cobblemon.tools')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
-        } else if (imgSrc.includes('other/home')) {
+        } 
+        // 2. If Home Render fails, try Official Artwork (2D High Quality)
+        else if (imgSrc.includes('other/home')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.id}.png`);
-        } else if (imgSrc.includes('official-artwork')) {
+        } 
+        // 3. If Official Artwork fails, try Standard Pixel Sprite
+        else if (imgSrc.includes('official-artwork')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`);
-        } else {
+        } 
+        // 4. Final Fallback: Text Placeholder
+        else {
             setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(card.name)}`);
         }
     };
 
     return (
         <div className={`relative w-48 h-72 rounded-xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
+            {/* Holographic Overlay */}
             {card.rarity !== 'Common' && <div className={`absolute inset-0 z-20 pointer-events-none opacity-40 mix-blend-overlay ${holoEffect}`}></div>}
+            
+            {/* Background Image / Art */}
             <div className="absolute inset-0 bg-[#1a1a1a] z-0">
+                {/* Fallback pattern */}
                 <div className={`absolute inset-0 ${bgPattern} opacity-20`}></div>
+                
+                {/* Special Radial BG for high tiers */}
                 {(card.rarity === 'Legendary' || card.rarity === 'Mythical') && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
                 )}
+
+                {/* Main Artwork - Padded bottom to avoid text overlap */}
                 <div className="absolute inset-0 p-4 pb-20 flex items-center justify-center z-10">
                     <img 
                         src={imgSrc} 
@@ -220,7 +262,11 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                     />
                 </div>
             </div>
+
+            {/* Gradient Overlay for Text Readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 z-10 pointer-events-none"></div>
+
+            {/* Content - Bottom Aligned */}
             <div className="absolute bottom-0 left-0 right-0 p-3 z-30 flex flex-col items-center text-center">
                 <div className={`mb-2 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg ${badgeColor}`}>
                     {card.rarity}
@@ -232,6 +278,8 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                     {card.subType}
                 </span>
             </div>
+
+            {/* Top Right ID */}
             <div className="absolute top-2 right-2 z-30 text-[8px] font-mono text-white/50 bg-black/50 px-1.5 rounded">
                 #{card.id.toString().padStart(3, '0')}
             </div>
@@ -242,13 +290,6 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
 // --- MAIN PAGE ---
 
 const Gacha: React.FC = () => {
-    // Auth State
-    const [user, setUser] = useState<UserData | null>(null);
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [showInventory, setShowInventory] = useState(false);
-    const [searchParams] = useSearchParams();
-
-    // Game State
     const [stage, setStage] = useState<GameStage>('selection');
     const [selectedPack, setSelectedPack] = useState<PackType>(null);
     const [currentPool, setCurrentPool] = useState<CardData[]>([]);
@@ -259,58 +300,25 @@ const Gacha: React.FC = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [trail, setTrail] = useState<{x: number, y: number, id: number}[]>([]);
     
+    // Dynamic Split Logic
+    const [cutYPercentage, setCutYPercentage] = useState(15); 
+    
+    // Animation State for Randomness
+    const [cutVisuals, setCutVisuals] = useState({ rotate: -30, x: -50, y: -150 });
+
     // Dispensing Logic
     const [revealedCards, setRevealedCards] = useState<CardData[]>([]);
     const [dispensingCard, setDispensingCard] = useState<CardData | null>(null);
     const [shakePack, setShakePack] = useState(false);
     
     const svgRef = useRef<SVGSVGElement>(null);
-
-    // --- AUTH EFFECTS ---
-    useEffect(() => {
-        const stored = localStorage.getItem('urnisa_mc_user');
-        if (stored) setUser(JSON.parse(stored));
-    }, []);
-
-    useEffect(() => {
-        const code = searchParams.get('code');
-        if (code && !user) {
-            const handleDiscordLogin = async () => {
-                try {
-                    const response = await fetch(`${DISCORD_API_URL}/api/auth/discord`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code, redirectUri: window.location.origin + '/minecraft/gacha' })
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        setUser(data);
-                        localStorage.setItem('urnisa_mc_user', JSON.stringify(data));
-                        window.history.replaceState({}, document.title, "/minecraft/gacha");
-                    }
-                } catch (e) {}
-            };
-            handleDiscordLogin();
-        }
-    }, [searchParams]);
-
-    const loginRedirect = () => {
-        const uri = DISCORD_REDIRECT_URI; 
-        const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(uri)}&response_type=code&scope=identify`;
-        window.location.href = url;
-    };
-
-    const logout = () => {
-        localStorage.removeItem('urnisa_mc_user');
-        setUser(null);
-        setMenuOpen(false);
-    };
+    const packRef = useRef<HTMLDivElement>(null);
 
     // --- EFFECT: TRAIL FADING ---
     useEffect(() => {
         if (trail.length === 0) return;
         const interval = setInterval(() => {
-            setTrail(prev => prev.filter(p => Date.now() - p.id < 150)); 
+            setTrail(prev => prev.filter(p => Date.now() - p.id < 150)); // Faster fade out (150ms)
         }, 16);
         return () => clearInterval(interval);
     }, [trail]);
@@ -318,266 +326,483 @@ const Gacha: React.FC = () => {
     // --- HANDLERS ---
 
     const selectPack = (type: PackType) => {
-        if (!user) {
-            alert("Please login with Discord (top right) to open packs!");
-            return;
-        }
         setSelectedPack(type);
+        // Set the pool based on selection
         setCurrentPool(type === 'lamb' ? LAMB_POOL : WAGYU_POOL);
         setStage('cutting');
         setIsCut(false);
         setRevealedCards([]);
         setTrail([]);
         setCutCoords(null);
-    };
-
-    const getPoint = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!svgRef.current) return null;
-        const rect = svgRef.current.getBoundingClientRect();
-        let clientX = 0, clientY = 0;
-        
-        if ('touches' in e && e.touches.length > 0) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else if ('changedTouches' in e && e.changedTouches.length > 0) {
-             clientX = e.changedTouches[0].clientX;
-             clientY = e.changedTouches[0].clientY;
-        } else if ('clientX' in e) {
-            clientX = (e as React.MouseEvent).clientX;
-            clientY = (e as React.MouseEvent).clientY;
-        } else {
-            return null;
-        }
-
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
+        setCutYPercentage(15);
     };
 
     const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
         if (isCut) return;
         setIsDragging(true);
         const pt = getPoint(e);
-        if (pt) { setCutCoords({ start: pt, end: pt }); setTrail([{ ...pt, id: Date.now() }]); }
+        if (pt) {
+            setCutCoords({ start: pt, end: pt });
+            setTrail([{ ...pt, id: Date.now() }]);
+        }
     };
 
     const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
         if (!isDragging) return;
+
         const pt = getPoint(e);
         if (pt) {
             setTrail(prev => [...prev, { ...pt, id: Date.now() }]);
-            if (cutCoords) setCutCoords(prev => prev ? { ...prev, end: pt } : null);
+            
+            if (cutCoords) {
+                setCutCoords(prev => prev ? { ...prev, end: pt } : null);
+            }
         }
+    };
+
+    const handleMouseUp = () => {
+        if (isDragging && cutCoords) {
+            checkCut();
+        }
+        setIsDragging(false);
+    };
+
+    const getPoint = (e: React.MouseEvent | React.TouchEvent) => {
+        if (!svgRef.current) return null;
+        
+        const rect = svgRef.current.getBoundingClientRect();
+        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+        
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
     };
 
     const checkCut = () => {
         if (!cutCoords) return;
         const dx = cutCoords.end.x - cutCoords.start.x;
         const dy = cutCoords.end.y - cutCoords.start.y;
-        const length = Math.sqrt(dx * dx + dy * dy);
         
-        if (length > 100) {
-            triggerCut();
+        if (Math.abs(dx) < 200) return;
+
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        const isHorizontal = (Math.abs(angle) < 30) || (Math.abs(angle) > 150);
+        if (!isHorizontal) return;
+
+        const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
+        const relativeY = avgY - 200;
+        const percentage = (relativeY / 420) * 100;
+
+        if (percentage >= 10 && percentage <= 15) {
+            triggerCut(percentage);
         } else {
             setCutCoords(null);
-            setTrail([]);
         }
     };
 
-    const handleMouseUp = () => { 
-        if (isDragging) checkCut(); 
-        setIsDragging(false); 
-    };
+    const triggerCut = (exactPercentage: number) => {
+        setCutYPercentage(exactPercentage);
+        const randomRotate = (Math.random() * 20) - 10;
+        const randomX = (Math.random() * 60) - 30;
+        const randomY = -80 - (Math.random() * 40);
 
-    const triggerCut = () => {
+        setCutVisuals({
+            rotate: randomRotate,
+            x: randomX,
+            y: randomY
+        });
+
         setIsCut(true);
-        setTimeout(() => {
-            setStage('dispensing');
-            runDispenseSequence();
-        }, 800);
+        setCutCoords(null);
     };
 
-    const runDispenseSequence = async () => {
-        if (!currentPool.length) return;
+    const handlePackClick = () => {
+        if (!isCut || dispensingCard) return;
 
-        const picked: CardData[] = [];
-        const totalWeight = currentPool.reduce((sum, item) => sum + (item.weight || 0), 0);
-        
-        for(let i=0; i<5; i++) {
-            let r = Math.random() * totalWeight;
-            for(const card of currentPool) {
-                r -= (card.weight || 0);
-                if (r < 0) {
-                    picked.push(card);
+        if (revealedCards.length < 5) {
+            setShakePack(true);
+            setTimeout(() => setShakePack(false), 300);
+
+            // LOGIC: Select next card from pool
+            let eligiblePool = [...currentPool];
+
+            // REMOVED FORCED LOGIC: Wagyu A5 is now purely random weights.
+            // The increased weights in the pool definition handle the "higher chance" requirement.
+
+            // UNIQUE CONSTRAINT: Only 1 "IV Cap" per pack
+            const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
+            if (hasIVCap) {
+                eligiblePool = eligiblePool.filter(c => c.subType !== 'IV Cap');
+            }
+            
+            // WEIGHTED SELECTION
+            const totalWeight = eligiblePool.reduce((sum, item) => sum + (item.weight || 10), 0);
+            let randomNum = Math.random() * totalWeight;
+            let nextCard: CardData | undefined;
+            
+            for (const card of eligiblePool) {
+                const weight = card.weight || 10;
+                if (randomNum < weight) {
+                    nextCard = card;
                     break;
                 }
+                randomNum -= weight;
             }
-            if (picked.length <= i) picked.push(currentPool[0]); 
+            
+            // Fallback if empty pool or math error (shouldn't happen with correct data)
+            if (!nextCard) nextCard = eligiblePool[0] || currentPool[0];
+            
+            setTimeout(() => {
+                setDispensingCard(nextCard!);
+                setTimeout(() => {
+                    setRevealedCards(prev => [nextCard!, ...prev]);
+                    setDispensingCard(null);
+                    
+                    if (revealedCards.length + 1 === 5) {
+                        setTimeout(() => setStage('finished'), 1500);
+                    }
+                }, 800); 
+            }, 100);
         }
+    };
 
-        // SAVE TO DB (Integration Point)
-        if (user) {
-            fetch(`${API_BASE_URL}/api/gacha/save`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ discordId: user.id, cards: picked })
-            }).catch(console.error);
-        }
-
-        for (const card of picked) {
-            setShakePack(true);
-            await new Promise(r => setTimeout(r, 600));
-            setShakePack(false);
-            setDispensingCard(card);
-            await new Promise(r => setTimeout(r, 1200)); 
-            setRevealedCards(prev => [...prev, card]);
-            setDispensingCard(null);
-        }
-        
-        setStage('finished');
+    const resetGame = () => {
+        setStage('selection');
+        setSelectedPack(null);
+        setCurrentPool([]);
+        setIsCut(false);
+        setRevealedCards([]);
+        setTrail([]);
+        setCutYPercentage(15);
     };
 
     return (
-        <div className="min-h-screen py-8 font-sans text-white relative flex flex-col items-center">
-            {/* User Bar */}
-            <div className="absolute top-0 right-0 p-4 z-50 flex justify-end w-full">
-                {user ? (
-                    <div className="relative">
-                        <button onClick={() => setMenuOpen(!menuOpen)} className="flex items-center gap-3 bg-black/60 border border-white/10 px-4 py-2 rounded-full">
-                            <span className="font-bold text-sm">{user.username}</span>
-                            <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full" />
-                        </button>
-                        {menuOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-[#1e1f22] rounded-xl shadow-xl border border-white/10 overflow-hidden z-50">
-                                <button onClick={() => { setShowInventory(true); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 flex gap-2">
-                                    <BackpackIcon /> Inventory
-                                </button>
-                                <button onClick={logout} className="w-full text-left px-4 py-3 text-sm hover:bg-white/5 flex gap-2 border-t border-white/5">
-                                    <PowerIcon /> Logout
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <button onClick={loginRedirect} className="flex items-center gap-2 bg-[#5865F2] px-6 py-2 rounded-full font-bold shadow-lg">
-                        <DiscordLogo /> Login
-                    </button>
-                )}
+        <div className="min-h-screen py-10 font-sans text-white relative overflow-hidden select-none">
+            <style>{`
+                .foil-holo {
+                    background: linear-gradient(135deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 70%);
+                    background-size: 200% 200%;
+                    animation: holoSheen 3s infinite linear;
+                }
+                .mythic-holo {
+                    background: linear-gradient(115deg, transparent 20%, rgba(255,0,255,0.3) 40%, rgba(0,255,255,0.3) 60%, transparent 80%);
+                    background-size: 200% 200%;
+                    animation: holoSheen 2s infinite linear alternate;
+                }
+                @keyframes holoSheen {
+                    0% { background-position: 0% 0%; }
+                    100% { background-position: 200% 200%; }
+                }
+                @keyframes flyOut {
+                    0% { transform: translateY(0) scale(0.1) rotateX(90deg); opacity: 0; }
+                    40% { transform: translateY(-300px) scale(1) rotateX(0deg) rotateZ(5deg); opacity: 1; z-index: 50; }
+                    100% { transform: translateY(1000px) scale(0.5); opacity: 0; }
+                }
+                .animate-fly-out {
+                    animation: flyOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                @keyframes shake {
+                    0%, 100% { transform: rotate(0deg); }
+                    25% { transform: rotate(5deg); }
+                    75% { transform: rotate(-5deg); }
+                }
+                .animate-shake {
+                    animation: shake 0.3s ease-in-out;
+                }
+            `}</style>
+
+            <div className="absolute inset-0 bg-[#0f0f11] z-0">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#2a2a30_0%,_#0f0f11_70%)]"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
+                <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
             </div>
 
-            {showInventory && user && <InventoryModal discordId={user.id} onClose={() => setShowInventory(false)} />}
+            <div className="relative z-20 container mx-auto px-4 mb-8">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                    <span>←</span> Back to Dashboard
+                </Link>
+            </div>
 
-            {/* Stage: Selection */}
-            {stage === 'selection' && (
-                <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-in fade-in zoom-in duration-500">
-                    <h1 className="text-4xl font-black text-white drop-shadow-lg">Select A Pack</h1>
-                    <div className="flex flex-wrap justify-center gap-12">
-                        <button onClick={() => selectPack('lamb')} className="group relative w-64 h-96 bg-gradient-to-b from-[#2a0f13] to-black rounded-xl border border-white/10 shadow-2xl transition-transform hover:scale-105">
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                                <div className="text-6xl mb-4">🍖</div>
-                                <h2 className="text-2xl font-black text-white mb-2">LAMB CHOPS</h2>
-                                <p className="text-gray-400 text-sm">Common items and essential materials.</p>
-                            </div>
-                        </button>
-                        <button onClick={() => selectPack('wagyu')} className="group relative w-64 h-96 bg-gradient-to-b from-[#3a1017] to-black rounded-xl border-2 border-brand-accent/50 shadow-2xl transition-transform hover:scale-105 shadow-[0_0_30px_rgba(247,197,72,0.1)]">
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                                <div className="text-6xl mb-4">🥩</div>
-                                <h2 className="text-2xl font-black text-brand-accent mb-2">WAGYU A5</h2>
-                                <p className="text-brand-accent/70 text-sm">Premium rare cards and legendary drops.</p>
-                            </div>
-                        </button>
+            <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[80vh]">
+                
+                {stage === 'selection' && (
+                    <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-10">
+                        <h1 className="text-4xl md:text-6xl font-black text-center mb-4 tracking-tighter drop-shadow-2xl">
+                            BOOSTER <span className="text-brand-primary">SHOP</span>
+                        </h1>
+                        <p className="text-center text-gray-400 mb-16 max-w-xl mx-auto">
+                            Choose your destiny. Will you clone the ultimate power or discover the mythical ancestor?
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 px-4 md:px-20">
+                            {/* LAMB CHOP (MEWTWO) */}
+                            <button 
+                                onClick={() => selectPack('lamb')}
+                                className="group relative aspect-[3/4] rounded-[2rem] transition-transform duration-500 hover:scale-105 hover:-rotate-1"
+                            >
+                                <div className="absolute inset-0 bg-purple-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-900 to-black rounded-[2rem] border-[6px] border-purple-500/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                                    
+                                    {/* Tech Crimp */}
+                                    <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-purple-500/30 flex items-center justify-center space-x-1">
+                                        {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-purple-500/20 rounded-full"></div>)}
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-purple-500/30"></div>
+
+                                    {/* Art */}
+                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-purple-900/10 rounded-xl flex flex-col items-center justify-center border border-purple-500/20 backdrop-blur-sm">
+                                        <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🧬</div>
+                                        <div className="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Genetic Pack</div>
+                                    </div>
+
+                                    {/* Label */}
+                                    <div className="absolute bottom-16 left-0 right-0 text-center">
+                                        <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
+                                        <p className="text-purple-300 text-xs font-mono uppercase tracking-[0.2em] mt-1">Mewtwo Edition</p>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* WAGYU (MEW) */}
+                            <button 
+                                onClick={() => selectPack('wagyu')}
+                                className="group relative aspect-[3/4] rounded-[2rem] transition-transform duration-500 hover:scale-105 hover:rotate-1"
+                            >
+                                <div className="absolute inset-0 bg-pink-500 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                <div className="absolute inset-0 bg-gradient-to-b from-rose-400 via-pink-500 to-rose-900 rounded-[2rem] border-[6px] border-pink-300/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
+                                    
+                                    {/* Soft Crimp */}
+                                    <div className="absolute top-0 left-0 right-0 h-5 bg-white/10 border-b border-white/20"></div>
+                                    <div className="absolute bottom-0 left-0 right-0 h-5 bg-white/10 border-t border-white/20"></div>
+
+                                    {/* Art */}
+                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-pink-900/10 rounded-xl flex flex-col items-center justify-center border border-pink-300/20 backdrop-blur-sm">
+                                        <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🫧</div>
+                                        <div className="bg-pink-400 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Mythic Pack</div>
+                                    </div>
+
+                                    {/* Label */}
+                                    <div className="absolute bottom-16 left-0 right-0 text-center">
+                                        <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
+                                        <p className="text-pink-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Mew Edition</p>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Stage: Cutting */}
-            {stage === 'cutting' && (
-                <div className="flex flex-col items-center justify-center min-h-[80vh] relative w-full overflow-hidden">
-                    <h2 className="text-2xl font-bold mb-8 animate-pulse text-gray-300">Slice the Pack to Open!</h2>
-                    
-                    <div className="relative w-72 h-96 select-none cursor-crosshair touch-none"
-                         onMouseDown={handleMouseDown}
-                         onMouseMove={handleMouseMove}
-                         onMouseUp={handleMouseUp}
-                         onTouchStart={handleMouseDown}
-                         onTouchMove={handleMouseMove}
-                         onTouchEnd={handleMouseUp}
-                    >
-                        {/* Pack Top (Falls off) */}
-                        <div 
-                            className={`absolute top-0 left-0 w-full h-[15%] bg-gradient-to-b ${selectedPack === 'wagyu' ? 'from-brand-accent/80 to-brand-accent/60' : 'from-gray-700 to-gray-600'} rounded-t-xl z-20 transition-all duration-700 ease-in`}
-                            style={isCut ? { transform: `translate(-50px, 100px) rotate(-20deg)`, opacity: 0 } : {}}
-                        >
-                            <div className="absolute bottom-0 w-full h-1 bg-black/20"></div>
-                        </div>
-
-                        {/* Pack Body */}
-                        <div className={`absolute top-[15%] left-0 w-full h-[85%] rounded-b-xl shadow-2xl p-6 flex flex-col items-center justify-center text-center border-x-2 border-b-2 border-white/10 ${selectedPack === 'wagyu' ? 'bg-gradient-to-b from-[#3a1017] to-black' : 'bg-gradient-to-b from-[#2a0f13] to-black'}`}>
-                            <div className="text-6xl mb-4">{selectedPack === 'wagyu' ? '🥩' : '🍖'}</div>
-                            <h2 className={`text-3xl font-black ${selectedPack === 'wagyu' ? 'text-brand-accent' : 'text-white'}`}>{selectedPack === 'wagyu' ? 'WAGYU A5' : 'LAMB CHOPS'}</h2>
-                        </div>
-
-                        {/* SVG Overlay for drawing the cut line */}
-                        <svg ref={svgRef} className="absolute inset-0 w-full h-full pointer-events-none z-30">
-                            {trail.length > 1 && (
-                                <polyline 
-                                    points={trail.map(p => `${p.x},${p.y}`).join(' ')} 
-                                    fill="none" 
-                                    stroke="white" 
-                                    strokeWidth="4" 
-                                    strokeLinecap="round" 
-                                    className="drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
-                                />
+                {(stage === 'cutting' || stage === 'dispensing' || stage === 'finished') && (
+                    <div className="relative w-full max-w-4xl flex flex-col items-center">
+                        
+                        <div className="mb-8 h-12 flex items-center justify-center w-full relative z-30">
+                            {!isCut ? (
+                                <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 animate-pulse">
+                                    <h2 className="text-xl font-black uppercase tracking-[0.2em] text-white/90">
+                                        SWIPE TOP TO OPEN ✂️
+                                    </h2>
+                                </div>
+                            ) : stage !== 'finished' ? (
+                                <div className="bg-brand-primary/20 backdrop-blur-md px-6 py-2 rounded-full border border-brand-primary/50 animate-in fade-in zoom-in duration-300">
+                                    <h2 className="text-lg font-bold uppercase tracking-widest text-brand-primary">
+                                        TAP PACK TO REVEAL ({5 - revealedCards.length} LEFT)
+                                    </h2>
+                                </div>
+                            ) : (
+                                <div className="bg-green-500/20 backdrop-blur-md px-6 py-2 rounded-full border border-green-500/50">
+                                    <h2 className="text-xl font-black uppercase text-green-400">OPENING COMPLETE!</h2>
+                                </div>
                             )}
-                        </svg>
-                    </div>
-                </div>
-            )}
-
-            {/* Stage: Dispensing & Finished */}
-            {(stage === 'dispensing' || stage === 'finished') && (
-                <div className="flex flex-col items-center w-full min-h-[80vh] pt-10">
-                    {/* Pack Shaking Animation */}
-                    {stage === 'dispensing' && (
-                        <div className={`relative w-48 h-64 mb-12 ${shakePack ? 'animate-bounce' : ''}`}>
-                             <div className={`w-full h-full rounded-xl shadow-2xl flex items-center justify-center text-4xl border-2 border-white/20 ${selectedPack === 'wagyu' ? 'bg-[#3a1017]' : 'bg-[#2a0f13]'}`}>
-                                {selectedPack === 'wagyu' ? '🥩' : '🍖'}
-                             </div>
-                             {dispensingCard && (
-                                <div className="absolute top-0 left-0 w-full h-full animate-ping opacity-50 bg-white rounded-xl"></div>
-                             )}
                         </div>
-                    )}
 
-                    {/* Flying Card Overlay */}
-                    {dispensingCard && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
-                            <TradingCard card={dispensingCard} className="scale-150 shadow-2xl" />
-                        </div>
-                    )}
+                        <div className="relative h-[500px] w-full flex justify-center items-center perspective-1000">
+                            <div 
+                                ref={packRef}
+                                className={`relative w-[300px] h-[420px] cursor-pointer ${shakePack ? 'animate-shake' : ''}`}
+                                onMouseDown={handleMouseDown}
+                                onTouchStart={handleMouseDown}
+                                onClick={handlePackClick}
+                            >
+                                {!isCut && (
+                                    <svg 
+                                        ref={svgRef}
+                                        className="absolute inset-[-200px] w-[calc(100%+400px)] h-[calc(100%+400px)] z-50 pointer-events-auto touch-none"
+                                        onMouseMove={handleMouseMove}
+                                        onMouseUp={handleMouseUp}
+                                        onMouseLeave={handleMouseUp}
+                                        onTouchMove={handleMouseMove}
+                                        onTouchEnd={handleMouseUp}
+                                    >
+                                        <defs>
+                                            <filter id="glow">
+                                                <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
+                                                <feMerge>
+                                                    <feMergeNode in="coloredBlur"/>
+                                                    <feMergeNode in="SourceGraphic"/>
+                                                </feMerge>
+                                            </filter>
+                                        </defs>
+                                        <polyline 
+                                            points={trail.map(p => `${p.x},${p.y}`).join(' ')}
+                                            fill="none"
+                                            stroke="white"
+                                            strokeWidth="4"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            filter="url(#glow)"
+                                            style={{ opacity: 0.8 }}
+                                        />
+                                    </svg>
+                                )}
 
-                    {/* Revealed Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 p-4">
-                        {revealedCards.map((card, idx) => (
-                            <div key={idx} className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
-                                <TradingCard card={card} />
+                                {!isCut && (
+                                    <div className="absolute top-[15%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/30 z-40 pointer-events-none flex items-center justify-between px-2 opacity-50">
+                                        <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2">✂️</span>
+                                        <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2 rotate-180">✂️</span>
+                                    </div>
+                                )}
+
+                                {dispensingCard && (
+                                    <div className="absolute inset-0 flex justify-center items-center z-30 pointer-events-none">
+                                        <div className="animate-fly-out">
+                                            <TradingCard card={dispensingCard} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* --- TOP HALF (CUT) --- */}
+                                <div 
+                                    className={`
+                                        absolute inset-0 z-20 
+                                        rounded-[2rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                        transition-all duration-500 ease-out origin-bottom-left
+                                        ${selectedPack === 'lamb' 
+                                            ? 'from-indigo-900 via-purple-900 to-black border-purple-500/50' 
+                                            : 'from-rose-400 via-pink-500 to-rose-900 border-pink-300/50'}
+                                    `}
+                                    style={{
+                                        clipPath: `inset(0 0 ${100 - cutYPercentage}% 0)`,
+                                        transform: isCut ? `translate(${cutVisuals.x}px, ${cutVisuals.y}px) rotate(${cutVisuals.rotate}deg)` : 'none',
+                                        opacity: isCut ? 0 : 1,
+                                    }}
+                                >
+                                    <div className={`absolute inset-0 ${selectedPack === 'lamb' ? "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"} opacity-20`}></div>
+                                    
+                                    {/* Icon */}
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-90 pb-8 pt-12">
+                                        <div className={`text-[7rem] mb-2 ${selectedPack === 'lamb' ? 'filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)]'}`}>
+                                            {selectedPack === 'lamb' ? '🧬' : '🫧'}
+                                        </div>
+                                        <div className={`text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
+                                            {selectedPack === 'lamb' ? 'Genetic Pack' : 'Mythic Pack'}
+                                        </div>
+                                    </div>
+
+                                    {/* Text */}
+                                    <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
+                                        <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200'}`}>
+                                            {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
+                                        </h2>
+                                    </div>
+                                    <div className="absolute top-0 left-0 right-0 h-5 bg-black/20 border-b border-white/10"></div>
+                                    <div className="absolute left-0 w-full h-1 bg-white/50 blur-[1px]" style={{ bottom: `${100 - cutYPercentage}%` }}></div>
+                                </div>
+
+                                {/* --- BOTTOM HALF (BODY) --- */}
+                                <div 
+                                    className={`
+                                        absolute inset-0 z-10
+                                        rounded-[2rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                        ${selectedPack === 'lamb' 
+                                            ? 'from-indigo-900 via-purple-900 to-black border-purple-500/50' 
+                                            : 'from-rose-400 via-pink-500 to-rose-900 border-pink-300/50'}
+                                    `}
+                                    style={{
+                                        clipPath: `inset(${cutYPercentage}% 0 0 0)`
+                                    }}
+                                >
+                                    <div className={`absolute inset-0 ${selectedPack === 'lamb' ? "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"} opacity-20`}></div>
+                                    
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-90 pb-8 pt-12">
+                                        <div className={`text-[7rem] mb-2 ${selectedPack === 'lamb' ? 'filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)]'}`}>
+                                            {selectedPack === 'lamb' ? '🧬' : '🫧'}
+                                        </div>
+                                        <div className={`text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
+                                            {selectedPack === 'lamb' ? 'Genetic Pack' : 'Mythic Pack'}
+                                        </div>
+                                    </div>
+
+                                    <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
+                                        <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200'}`}>
+                                            {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
+                                        </h2>
+                                    </div>
+                                    <div className="absolute bottom-0 left-0 right-0 h-5 bg-black/20 border-t border-white/10"></div>
+                                    <div className="absolute left-0 w-full h-1 bg-white/30 blur-[1px]" style={{ top: `${cutYPercentage}%` }}></div>
+                                    
+                                    {isCut && (
+                                        <div className="absolute left-0 right-0 h-16 bg-gradient-to-b from-black/80 to-transparent pointer-events-none" style={{ top: `${cutYPercentage}%` }}></div>
+                                    )}
+                                </div>
+
+                                {/* INNER GLOW */}
+                                <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-purple-500/40' : 'bg-pink-400/40'}`}
+                                     style={{ 
+                                         top: `${cutYPercentage}%`, 
+                                         height: '20%', 
+                                         opacity: isCut ? 1 : 0 
+                                     }}>
+                                </div>
+
                             </div>
-                        ))}
-                    </div>
-
-                    {stage === 'finished' && (
-                        <div className="mt-12 flex gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                            <button onClick={() => setStage('selection')} className="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-all">
-                                Open Another
-                            </button>
-                            <button onClick={() => setShowInventory(true)} className="px-8 py-3 bg-brand-primary hover:bg-red-600 rounded-xl font-bold transition-all shadow-lg">
-                                View Inventory
-                            </button>
                         </div>
-                    )}
-                </div>
-            )}
+
+                        <div className="w-full max-w-5xl mt-2">
+                            <h3 className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-4 text-center">Revealed Cards</h3>
+                            
+                            <div className="flex flex-wrap justify-center gap-4 min-h-[320px]">
+                                {revealedCards.map((card, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        className="animate-in zoom-in-50 fade-in duration-500 slide-in-from-top-10"
+                                        style={{ animationDelay: `${idx * 100}ms` }}
+                                    >
+                                        <TradingCard card={card} className="w-40 h-60 hover:z-50 hover:scale-110 cursor-pointer shadow-xl" />
+                                    </div>
+                                ))}
+                                
+                                {revealedCards.length === 0 && stage !== 'finished' && (
+                                    <div className="w-full h-60 flex items-center justify-center border-2 border-dashed border-white/10 rounded-xl bg-white/5">
+                                        <p className="text-gray-600 font-mono text-sm">Cards will appear here...</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {stage === 'finished' && (
+                            <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col md:flex-row gap-4 mb-20">
+                                <button 
+                                    onClick={resetGame}
+                                    className="bg-brand-primary hover:bg-red-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform hover:scale-105 uppercase tracking-wider"
+                                >
+                                    Open Another Pack
+                                </button>
+                                <Link 
+                                    to="/minecraft"
+                                    className="bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-10 rounded-full transition-colors uppercase tracking-wider text-center"
+                                >
+                                    Back to Menu
+                                </Link>
+                            </div>
+                        )}
+
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
