@@ -154,11 +154,10 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         try {
             const img = e.currentTarget;
             
-            // NOTE: We need crossOrigin="anonymous" on the img tag for this to work
-            // If the server blocks CORS, the image load will fail, triggering onError,
-            // which handles the fallback automatically. This is a win-win.
+            // NOTE: We REMOVED crossOrigin="anonymous" to allow loading from non-CORS servers like cobblemon.tools
+            // However, this means `getImageData` will throw a SecurityError if the server doesn't support CORS.
+            // We catch this error to allow the image to display, even if we can't inspect pixels.
             
-            // Create an invisible canvas to inspect the image pixels
             const canvas = document.createElement('canvas');
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
@@ -168,8 +167,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 ctx.drawImage(img, 0, 0);
                 
                 // --- PIXEL CHECK HEURISTIC ---
-                // The "Question Mark" placeholder is typically a white circle with a grey question mark.
-                // We check a few key pixels to identify this specific image.
+                // Attempts to detect the specific "Question Mark" placeholder.
                 
                 const width = img.naturalWidth;
                 const height = img.naturalHeight;
@@ -180,9 +178,6 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 // 2. Top-Center Pixel (Should be White if it's the circle background)
                 const topPixel = ctx.getImageData(width / 2, height * 0.2, 1, 1).data;
 
-                // 3. Top-Left Corner Pixel (Should be Transparent in a normal sprite, but might be empty here too)
-                // Let's rely on the specific colors of the placeholder.
-                
                 // Check if Top Pixel is White-ish (r,g,b > 240)
                 const isWhite = topPixel[0] > 240 && topPixel[1] > 240 && topPixel[2] > 240;
                 
@@ -192,16 +187,13 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                                Math.abs(centerPixel[1] - centerPixel[2]) < 15;
 
                 if (isWhite && isGrey) {
-                    // Match detected! It's likely the question mark placeholder.
-                    // Force the fallback manually.
                     console.log(`[Gacha] Placeholder detected for ${card.name}, switching to fallback.`);
                     handleImageError();
                 }
             }
         } catch (error) {
-            // If we get a SecurityError (CORS), we can't inspect the image.
-            // However, this means the image loaded successfully. We assume it's valid.
-            // If the server blocked the request entirely due to CORS attribute, onError would have fired.
+            // SecurityError means CORS blocked pixel reading. 
+            // We ignore it and let the image display as-is to avoid broken images.
         }
     };
 
@@ -229,7 +221,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                         onError={handleImageError}
                         onLoad={handleImageLoad}
                         loading="lazy"
-                        crossOrigin="anonymous" // Essential for pixel inspection
+                        // Removed crossOrigin to fix loading on non-CORS servers
                     />
                 </div>
             </div>
