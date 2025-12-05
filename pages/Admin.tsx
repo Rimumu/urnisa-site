@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, DISCORD_API_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
@@ -8,7 +8,6 @@ import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
 import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
-import { DISCORD_API_URL } from '../constants';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
 const processImageUrl = (url: string): string => {
@@ -34,7 +33,6 @@ const processImageUrl = (url: string): string => {
     return cleanUrl;
 };
 
-// ... (Existing Helpers for Editor and Links remain unchanged) ...
 const isDiscordLink = (url: string) => {
     return url.includes('cdn.discordapp.com') || url.includes('media.discordapp.net');
 };
@@ -54,7 +52,6 @@ const LinkWarning: React.FC<{ url: string }> = ({ url }) => {
 };
 
 // --- RICH TEXT EDITOR COMPONENT ---
-// ... (Keeping existing RichTextEditor logic unchanged) ...
 const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const [activeFormats, setActiveFormats] = useState({
@@ -350,7 +347,6 @@ const Admin: React.FC = () => {
         }
     };
 
-    // ... (Keep existing update handlers) ...
     const handleUpdateSchedule = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -500,7 +496,6 @@ const Admin: React.FC = () => {
     };
 
     // --- GENERIC API CALL HANDLER ---
-    // ... (Keep generic handler)
     const apiCall = async (endpoint: string, body: any) => {
         setLoading(true);
         setManagerStatus(null);
@@ -692,14 +687,413 @@ const Admin: React.FC = () => {
                     {/* --- NISATHON MANAGER TAB --- */}
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            {/* ... existing content ... */}
-                            <h2 className="text-3xl font-black text-white">Nisathon Manager</h2>
-                            {/* ... existing timer controls ... */}
-                            {/* ... existing logs ... */}
+                            {/* Header Stats */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
+                                    <div className="text-xs text-gray-500 font-bold uppercase">Timer End</div>
+                                    <div className="text-lg font-mono text-white">{stats.isPaused ? "PAUSED" : new Date(stats.timerEndTime).toLocaleTimeString()}</div>
+                                </div>
+                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
+                                    <div className="text-xs text-gray-500 font-bold uppercase">Total NB</div>
+                                    <div className="text-2xl font-black text-brand-primary">{Math.floor(stats.totalNisaballs)}</div>
+                                </div>
+                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
+                                    <div className="text-xs text-gray-500 font-bold uppercase">Subs</div>
+                                    <div className="text-xl font-bold text-white">{stats.currentSubs}</div>
+                                </div>
+                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
+                                    <div className="text-xs text-gray-500 font-bold uppercase">Status</div>
+                                    <div className={`text-sm font-bold uppercase ${streamStatusOverride === 'live' ? 'text-green-500' : streamStatusOverride === 'offline' ? 'text-red-500' : 'text-gray-400'}`}>
+                                        {streamStatusOverride}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Timer Controls */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-bold text-white">Timer Control</h3>
+                                    <button 
+                                        onClick={handleToggleDoubleTimer}
+                                        className={`text-xs px-3 py-1 rounded-full font-bold border transition-colors ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400' : 'bg-transparent text-gray-500 border-gray-600'}`}
+                                    >
+                                        {stats.activeEvent === 'DOUBLE_TIMER' ? '🔥 2x Active' : 'Enable 2x Event'}
+                                    </button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <div className="flex gap-2">
+                                            <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={timerH} onChange={e => setTimerH(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={timerM} onChange={e => setTimerM(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={timerS} onChange={e => setTimerS(parseInt(e.target.value)||0)} />
+                                        </div>
+                                        <button onClick={handleSetTimer} className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg font-bold">Set Absolute Time</button>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <div className="flex gap-2">
+                                            <input type="number" placeholder="Minutes to Add/Sub" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={addM} onChange={e => setAddM(parseInt(e.target.value)||0)} />
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={handleAddTimer} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-bold">Add Time</button>
+                                            <button onClick={handlePauseTimer} className={`flex-1 py-2 rounded-lg font-bold text-white ${stats.isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-yellow-600 hover:bg-yellow-500'}`}>
+                                                {stats.isPaused ? 'RESUME' : 'PAUSE'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Manual Event Trigger */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4">Simulate Event</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    <input type="text" placeholder="Username" className="bg-black/40 border border-white/10 rounded-lg p-2 text-white" value={testUser} onChange={e => setTestUser(e.target.value)} />
+                                    <select className="bg-black/40 border border-white/10 rounded-lg p-2 text-white" value={testType} onChange={e => setTestType(e.target.value)}>
+                                        <option value="sub">Sub (Tier 1)</option>
+                                        <option value="gift">Gift Sub</option>
+                                        <option value="bits">Bits</option>
+                                        <option value="donation">Donation ($)</option>
+                                    </select>
+                                    <input type="number" placeholder="Amount" className="bg-black/40 border border-white/10 rounded-lg p-2 text-white" value={testAmount} onChange={e => setTestAmount(e.target.value)} />
+                                    <button onClick={handleSimulateEvent} className="bg-brand-primary hover:bg-red-600 text-white font-bold rounded-lg px-4">Trigger</button>
+                                </div>
+                            </div>
+
+                            {/* Stream Status Override */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4">Stream Status Override</h3>
+                                <div className="flex gap-4">
+                                    <button onClick={() => handleSetStreamStatus('auto')} className={`flex-1 py-3 rounded-xl font-bold border transition-colors ${streamStatusOverride === 'auto' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>AUTO (DecAPI)</button>
+                                    <button onClick={() => handleSetStreamStatus('live')} className={`flex-1 py-3 rounded-xl font-bold border transition-colors ${streamStatusOverride === 'live' ? 'bg-green-600 border-green-400 text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>FORCE LIVE</button>
+                                    <button onClick={() => handleSetStreamStatus('offline')} className={`flex-1 py-3 rounded-xl font-bold border transition-colors ${streamStatusOverride === 'offline' ? 'bg-red-600 border-red-400 text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>FORCE OFFLINE</button>
+                                </div>
+                            </div>
+
+                            {/* Event Logs */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="font-bold text-white">Recent Event Log</h3>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setFilterType('all')} className={`px-3 py-1 rounded text-xs font-bold ${filterType === 'all' ? 'bg-white text-black' : 'bg-white/10 text-gray-400'}`}>All</button>
+                                        <button onClick={() => setFilterType('sub')} className={`px-3 py-1 rounded text-xs font-bold ${filterType === 'sub' ? 'bg-purple-500 text-white' : 'bg-white/10 text-gray-400'}`}>Subs</button>
+                                        <button onClick={() => setFilterType('dono')} className={`px-3 py-1 rounded text-xs font-bold ${filterType === 'dono' ? 'bg-green-500 text-white' : 'bg-white/10 text-gray-400'}`}>$</button>
+                                    </div>
+                                </div>
+                                <div className="max-h-96 overflow-y-auto custom-scrollbar space-y-2">
+                                    {filteredEvents.map(evt => (
+                                        <div key={evt._id} className="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5 hover:bg-white/10">
+                                            <div>
+                                                <div className="text-sm font-bold text-white">{evt.user} <span className="text-gray-500 font-normal">({evt.type})</span></div>
+                                                <div className="text-xs text-gray-400">{evt.amountDisplay} • {new Date(evt.createdAt).toLocaleTimeString()}</div>
+                                            </div>
+                                            
+                                            {confirmDelete?.id === evt._id ? (
+                                                <div className="flex gap-2 animate-in fade-in slide-in-from-right">
+                                                    <button onClick={() => handleDeleteEvent(evt._id, true)} className="bg-red-600 text-white text-xs px-3 py-1 rounded font-bold hover:bg-red-700">Revert Stats & Delete</button>
+                                                    <button onClick={() => handleDeleteEvent(evt._id, false)} className="bg-gray-600 text-white text-xs px-3 py-1 rounded font-bold hover:bg-gray-700">Delete Only</button>
+                                                    <button onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-white px-2">✕</button>
+                                                </div>
+                                            ) : (
+                                                <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-red-500 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-colors">
+                                                    🗑️
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Danger Zone */}
+                            <div className="bg-red-900/10 border border-red-900/30 p-6 rounded-2xl">
+                                <h3 className="font-bold text-red-400 mb-4 uppercase tracking-widest text-xs">Danger Zone</h3>
+                                <div className="flex flex-wrap gap-4">
+                                    <button onClick={handleResetData} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmReset ? 'bg-red-600 w-full' : 'bg-red-900/40 hover:bg-red-900/60'}`}>
+                                        {confirmReset ? "CONFIRM RESET ALL DATA?" : "Reset Nisathon Data"}
+                                    </button>
+                                    <button onClick={handleForceSync} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmSync ? 'bg-blue-600' : 'bg-blue-900/40 hover:bg-blue-900/60'}`}>
+                                        {confirmSync ? "Confirm Force Sync?" : "Force Sync (StreamElements)"}
+                                    </button>
+                                    <button onClick={handleRebuild} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmRebuild ? 'bg-orange-600' : 'bg-orange-900/40 hover:bg-orange-900/60'}`}>
+                                        {confirmRebuild ? "Confirm Rebuild?" : "Rebuild from History"}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
-                    {/* ... (Other tabs kept same) ... */}
+                    {/* --- COUNTDOWN TAB --- */}
+                    {activeTab === 'countdown' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Standalone Countdown</h2>
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <label className="text-gray-400 text-xs uppercase font-bold">Set Time</label>
+                                        <div className="flex gap-2">
+                                            <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdH} onChange={e => setCdH(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdM} onChange={e => setCdM(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdS} onChange={e => setCdS(parseInt(e.target.value)||0)} />
+                                        </div>
+                                        <button onClick={handleCountdownSet} className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-lg font-bold">Set Countdown</button>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <label className="text-gray-400 text-xs uppercase font-bold">Quick Actions</label>
+                                        <input type="number" placeholder="Minutes to Add" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdAddM} onChange={e => setCdAddM(parseInt(e.target.value)||0)} />
+                                        <div className="flex gap-2">
+                                            <button onClick={handleCountdownAdd} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold">Add</button>
+                                            <button onClick={handleCountdownPause} className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-3 rounded-lg font-bold">Pause/Resume</button>
+                                            <button onClick={handleCountdownReset} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold">Reset</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- SCHEDULE TAB --- */}
+                    {activeTab === 'schedule' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Schedule Manager</h2>
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <form onSubmit={handleUpdateSchedule} className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-400 mb-2">Schedule Image URL</label>
+                                        <input 
+                                            type="text" 
+                                            value={newScheduleUrl} 
+                                            onChange={(e) => setNewScheduleUrl(e.target.value)} 
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors"
+                                            placeholder="https://..."
+                                        />
+                                        <LinkWarning url={newScheduleUrl} />
+                                    </div>
+                                    <ImageUploader onUploadSuccess={setNewScheduleUrl} />
+                                    
+                                    {newScheduleUrl && (
+                                        <div className="rounded-xl overflow-hidden border border-white/10">
+                                            <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-auto" />
+                                        </div>
+                                    )}
+                                    <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-8 rounded-xl transition-all">
+                                        Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- SETTINGS TAB (Goals & Wheel) --- */}
+                    {activeTab === 'event' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* Goals */}
+                            <div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-3xl font-black text-white">Goals Roadmap</h2>
+                                    <button onClick={handleSaveGoals} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Goals</button>
+                                </div>
+                                <div className="space-y-4">
+                                    {localGoals.map((goal, i) => (
+                                        <div key={i} className="flex gap-4 items-start bg-black/30 p-4 rounded-xl border border-white/5">
+                                            <div className="w-24 shrink-0">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500">NB Count</label>
+                                                <input type="number" value={goal.count} onChange={(e) => updateGoal(i, 'count', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-center font-mono" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500">Reward Description</label>
+                                                <input type="text" value={goal.reward} onChange={(e) => updateGoal(i, 'reward', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" />
+                                            </div>
+                                            <div className="w-20 shrink-0 flex flex-col items-center">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500 mb-2">Secret?</label>
+                                                <input type="checkbox" checked={goal.secret} onChange={(e) => updateGoal(i, 'secret', e.target.checked)} className="w-5 h-5 accent-brand-primary" />
+                                            </div>
+                                            <button onClick={() => removeGoal(i)} className="text-red-500 hover:text-red-400 mt-6 px-2">✕</button>
+                                        </div>
+                                    ))}
+                                    <button onClick={addGoal} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">+ Add Goal</button>
+                                </div>
+                            </div>
+
+                            {/* Wheel */}
+                            <div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-3xl font-black text-white">Wheel Items</h2>
+                                    <button onClick={handleSaveWheel} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Wheel</button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {localWheel.map((item, i) => (
+                                        <div key={i} className="flex gap-3 items-center bg-black/30 p-3 rounded-xl border border-white/5">
+                                            <div className="flex-1">
+                                                <input type="text" value={item.label} onChange={(e) => updateWheelItem(i, 'label', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" placeholder="Label" />
+                                            </div>
+                                            <div className="w-20">
+                                                <input type="number" value={item.weight} onChange={(e) => updateWheelItem(i, 'weight', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm text-center" placeholder="Weight" />
+                                            </div>
+                                            <span className="text-xs text-gray-500 font-mono w-12 text-right">{((item.weight / totalWheelWeight) * 100).toFixed(1)}%</span>
+                                            <button onClick={() => removeWheelItem(i)} className="text-red-500 hover:text-red-400 px-2">✕</button>
+                                        </div>
+                                    ))}
+                                    <button onClick={addWheelItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
+                                        <span>+ Add Item</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- PROFILE TAB --- */}
+                    {activeTab === 'profile' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* About Me */}
+                            <div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-3xl font-black text-white">About Me</h2>
+                                    <button onClick={() => handleSaveProfile('about')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save About</button>
+                                </div>
+                                <div className="space-y-6">
+                                    {localAbout.map((item, i) => (
+                                        <div key={item.id} className="bg-black/30 p-6 rounded-2xl border border-white/10">
+                                            <div className="flex justify-between mb-4">
+                                                <input 
+                                                    type="text" 
+                                                    value={item.title} 
+                                                    onChange={(e) => updateAboutItem(i, 'title', e.target.value)} 
+                                                    className="bg-transparent border-b border-white/10 text-xl font-bold text-white focus:border-brand-primary outline-none w-1/2" 
+                                                    placeholder="Section Title"
+                                                />
+                                                <button onClick={() => removeAboutItem(i)} className="text-red-500 hover:text-red-400 text-sm">Remove Section</button>
+                                            </div>
+                                            <RichTextEditor value={item.text} onChange={(val) => updateAboutItem(i, 'text', val)} />
+                                        </div>
+                                    ))}
+                                    <button onClick={addAboutItem} className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">+ Add Section</button>
+                                </div>
+                            </div>
+
+                            {/* Credits */}
+                            <div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-3xl font-black text-white">Credits</h2>
+                                    <button onClick={() => handleSaveProfile('credits')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Credits</button>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {localCredits.map((credit, i) => (
+                                        <div key={credit.id} className="bg-black/30 p-4 rounded-xl border border-white/10 flex flex-col md:flex-row gap-4 items-start">
+                                            <div className="flex-1 space-y-2 w-full">
+                                                <input type="text" value={credit.name} onChange={(e) => updateCreditItem(i, 'name', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" placeholder="Name" />
+                                                <input type="text" value={credit.role} onChange={(e) => updateCreditItem(i, 'role', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" placeholder="Role" />
+                                                <input type="text" value={credit.link} onChange={(e) => updateCreditItem(i, 'link', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-400 text-sm" placeholder="Link (Optional)" />
+                                            </div>
+                                            <div className="flex-1 space-y-2 w-full">
+                                                <input type="text" value={credit.image} onChange={(e) => updateCreditItem(i, 'image', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-gray-400 text-sm" placeholder="Image URL (Optional)" />
+                                                <LinkWarning url={credit.image || ''} />
+                                                <div className="flex gap-2">
+                                                    <input type="text" value={credit.initial} onChange={(e) => updateCreditItem(i, 'initial', e.target.value)} className="w-16 bg-black/40 border border-white/10 rounded p-2 text-center text-white" placeholder="Init" maxLength={1} />
+                                                    <input type="color" value={credit.color} onChange={(e) => updateCreditItem(i, 'color', e.target.value)} className="h-10 w-full bg-transparent cursor-pointer" />
+                                                </div>
+                                            </div>
+                                            <button onClick={() => removeCreditItem(i)} className="text-red-500 hover:text-red-400 self-center px-2">✕</button>
+                                        </div>
+                                    ))}
+                                    <button onClick={addCreditItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">+ Add Credit</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- GALLERY TAB --- */}
+                    {activeTab === 'gallery' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-3xl font-black text-white">Art Gallery</h2>
+                                <button onClick={() => handleSaveProfile('artworks')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Gallery</button>
+                            </div>
+                            
+                            <div className="space-y-8">
+                                {localArtworks.map((artist, ai) => (
+                                    <div key={artist.id} className="bg-black/30 p-6 rounded-2xl border border-white/10">
+                                        <div className="flex gap-4 mb-6">
+                                            <input type="text" value={artist.artistName} onChange={(e) => updateArtistName(ai, e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-white font-bold" placeholder="Artist Name" />
+                                            <input type="text" value={artist.artistLink} onChange={(e) => updateArtistLink(ai, e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-gray-300" placeholder="Social Link" />
+                                            <button onClick={() => removeArtist(ai)} className="bg-red-900/30 text-red-400 px-4 rounded-lg font-bold hover:bg-red-900/50">Delete Artist</button>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                            {artist.images.map((img, ii) => (
+                                                <div key={ii} className="relative group aspect-square rounded-lg overflow-hidden border border-white/10">
+                                                    <img src={img} alt="Art" className="w-full h-full object-cover" />
+                                                    <button onClick={() => removeImageFromArtist(ai, ii)} className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">✕</button>
+                                                </div>
+                                            ))}
+                                            <div className="aspect-square rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 transition-colors p-2">
+                                                <div className="text-xs mb-2">Add URL</div>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Paste Link" 
+                                                    className="w-full bg-black/50 border border-white/10 rounded p-1 text-xs text-center mb-2"
+                                                    onKeyDown={(e) => { if(e.key === 'Enter') { addImageToArtist(ai, e.currentTarget.value); e.currentTarget.value = ''; } }}
+                                                />
+                                                <div className="text-xs">or upload</div>
+                                                <ImageUploader onUploadSuccess={(url) => addImageToArtist(ai, url)} className="mt-1" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                <button onClick={addArtist} className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-lg font-bold">+ Add New Artist Collection</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- MINECRAFT TAB --- */}
+                    {activeTab === 'minecraft' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Minecraft Manager</h2>
+                            
+                            {/* Pending Applications */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Pending Whitelist ({whitelistApps.length})</h3>
+                                <div className="space-y-2">
+                                    {whitelistApps.length === 0 ? (
+                                        <p className="text-gray-500 italic">No pending applications.</p>
+                                    ) : (
+                                        whitelistApps.map(app => (
+                                            <div key={app._id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5">
+                                                <div className="flex items-center gap-4">
+                                                    <img src={app.discordAvatar} className="w-10 h-10 rounded-full bg-black" alt="" />
+                                                    <div>
+                                                        <div className="font-bold text-white">{app.discordUsername}</div>
+                                                        <div className="text-sm text-green-400 font-mono">{app.minecraftUsername}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => handleApproveApp(app._id)} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm">Approve</button>
+                                                    <button onClick={() => handleRejectApp(app._id)} className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm">Reject</button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Approved List */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Approved Users ({approvedApps.length})</h3>
+                                <div className="max-h-96 overflow-y-auto custom-scrollbar space-y-2">
+                                    {approvedApps.map(app => (
+                                        <div key={app._id} className="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-sm font-bold text-white">{app.discordUsername}</div>
+                                                <div className="text-xs text-gray-500">→</div>
+                                                <div className="text-sm font-mono text-gray-300">{app.minecraftUsername}</div>
+                                            </div>
+                                            <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-red-400 text-xs font-bold px-2 py-1 bg-red-900/10 rounded hover:bg-red-900/30">Revoke</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* --- CODES TAB --- */}
                     {activeTab === 'codes' && (

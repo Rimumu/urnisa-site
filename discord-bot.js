@@ -40,9 +40,9 @@ const WHITELIST_NOTIFY_CHANNEL = '1375823728717467788';
 // --- ITEM MAPPING ---
 // Map Gacha Item Names to RCON Commands / Minecraft IDs
 const ITEM_MAP = {
-    'Bronze Coin': 'cobblemon:relic_coin',
-    'Silver Coin': 'cobblemon:silver_coin', 
-    'Gold Coin': 'cobblemon:gold_coin',
+    'Bronze Coin': 'numismatic-overhaul:bronze_coin',
+    'Silver Coin': 'numismatic-overhaulsilver_coin', 
+    'Gold Coin': 'numismatic-overhaul:gold_coin',
     'Pokeball': 'cobblemon:poke_ball',
     'Great Ball': 'cobblemon:great_ball',
     'Ultra Ball': 'cobblemon:ultra_ball',
@@ -65,14 +65,14 @@ const ITEM_MAP = {
     'Awakening': 'cobblemon:awakening',
     'Ether': 'cobblemon:ether',
     'Elixir': 'cobblemon:elixir',
-    'HP IV Cap': 'cobblemon:hp_up',
-    'Atk IV Cap': 'cobblemon:protein',
-    'Def IV Cap': 'cobblemon:iron',
-    'Sp. Atk IV Cap': 'cobblemon:calcium',
-    'Sp. Def IV Cap': 'cobblemon:zinc',
-    'Speed IV Cap': 'cobblemon:carbos',
-    'Shiny Upgrade': 'cobblemon:shiny_stone',
-    '1 TM Choice': 'cobblemon:tm_case'
+    'HP IV Cap': 'cobblemon_utility:hpsilvercap',
+    'Atk IV Cap': 'cobblemon_utility:atksilvercap',
+    'Def IV Cap': 'cobblemon_utility:defsilvercap',
+    'Sp. Atk IV Cap': 'cobblemon_utility:spatksilvercap',
+    'Sp. Def IV Cap': 'cobblemon_utility:spdefsilvercap',
+    'Speed IV Cap': 'cobblemon_utility:speedsilvercap',
+    'Shiny Upgrade': 'cobblemon_utility:shinycard',
+    '1 TM Choice': "lever[custom_name='{\"text\":\"TM Choice\"}',lore=['{\"text\":\"Get a TM of your choice! Redeem this to Rimu!\"}']]"
 };
 
 // --- HELPER: RCON SENDER WITH RETRY ---
