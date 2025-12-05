@@ -63,6 +63,10 @@ const WAGYU_POOL: CardData[] = [
     { id: 175, name: "Togepi", type: 'Pokemon', subType: "Spike Ball", rarity: 'Ultra-Rare', hp: 50, description: "Full of joy." },
 ];
 
+// --- CACHE ---
+// Persist validity results in memory during session to avoid redundant API calls
+const clientImageCache = new Map<string, boolean>();
+
 // --- COMPONENTS ---
 
 const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, className = "" }) => {
@@ -118,6 +122,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
     };
 
     // Use server-side checking to detect placeholder images by size
+    // WITH CLIENT-SIDE CACHING to speed up repeated pulls
     useEffect(() => {
         const verifyImage = async () => {
             if (card.image) {
@@ -129,11 +134,21 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
             const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`;
 
+            // 1. CHECK LOCAL CACHE
+            if (clientImageCache.has(primaryUrl)) {
+                const isValid = clientImageCache.get(primaryUrl);
+                setImgSrc(isValid ? primaryUrl : fallback3d);
+                return;
+            }
+
             try {
                 // Call our backend to check file size (avoiding CORS issues)
                 // If size > 2KB, we assume it's a valid sprite. If < 2KB, it's likely the question mark placeholder.
                 const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
                 const data = await response.json();
+
+                // 2. STORE IN CACHE
+                clientImageCache.set(primaryUrl, data.valid);
 
                 if (data.valid) {
                     setImgSrc(primaryUrl);
