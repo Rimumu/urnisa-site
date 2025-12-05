@@ -597,18 +597,26 @@ const Gacha: React.FC = () => {
                                     </div>
                                     <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-purple-500/30"></div>
 
-                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-purple-900/10 rounded-[2rem] flex flex-col items-center justify-center border border-purple-500/20 backdrop-blur-sm">
-                                        <img src={MEWTWO_IMAGE} alt="Mewtwo" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500 mb-4" />
-                                        <div className="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Genetic Pack</div>
+                                    {/* Badge at Top */}
+                                    <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
+                                        <div className="bg-purple-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            Genetic Pack
+                                        </div>
                                     </div>
 
-                                    <div className="absolute bottom-16 left-0 right-0 text-center">
+                                    {/* Image in Center */}
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                                        <img src={MEWTWO_IMAGE} alt="Mewtwo" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500" />
+                                    </div>
+
+                                    {/* Text at Bottom */}
+                                    <div className="absolute bottom-12 left-0 right-0 text-center z-30">
                                         <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
                                         <p className="text-purple-300 text-xs font-mono uppercase tracking-[0.2em] mt-1">Mewtwo Edition</p>
                                     </div>
 
                                     {packs.lambPacks === 0 && (
-                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-40">
                                             <div className="bg-red-900/80 border border-red-500 text-white px-4 py-2 rounded-xl font-bold uppercase tracking-widest rotate-12 shadow-2xl">
                                                 Out of Stock
                                             </div>
@@ -633,18 +641,26 @@ const Gacha: React.FC = () => {
                                     <div className="absolute top-0 left-0 right-0 h-5 bg-white/10 border-b border-white/20"></div>
                                     <div className="absolute bottom-0 left-0 right-0 h-5 bg-white/10 border-t border-white/20"></div>
 
-                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-pink-900/10 rounded-[2rem] flex flex-col items-center justify-center border border-pink-300/20 backdrop-blur-sm">
-                                        <img src={MEW_IMAGE} alt="Mew" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500 mb-4" />
-                                        <div className="bg-pink-400 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Mythic Pack</div>
+                                    {/* Badge at Top */}
+                                    <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
+                                        <div className="bg-pink-400 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            Mythic Pack
+                                        </div>
                                     </div>
 
-                                    <div className="absolute bottom-16 left-0 right-0 text-center">
+                                    {/* Image in Center */}
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                                        <img src={MEW_IMAGE} alt="Mew" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500" />
+                                    </div>
+
+                                    {/* Text at Bottom */}
+                                    <div className="absolute bottom-12 left-0 right-0 text-center z-30">
                                         <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
                                         <p className="text-pink-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Mew Edition</p>
                                     </div>
 
                                     {packs.wagyuPacks === 0 && (
-                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-40">
                                             <div className="bg-red-900/80 border border-red-500 text-white px-4 py-2 rounded-xl font-bold uppercase tracking-widest -rotate-12 shadow-2xl">
                                                 Out of Stock
                                             </div>
@@ -753,19 +769,23 @@ const Gacha: React.FC = () => {
                                     <div className={`absolute inset-0 ${selectedPack === 'lamb' ? "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"} opacity-20`}></div>
                                     
                                     {/* Icon */}
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-90 pb-8 pt-12">
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
                                         <img 
                                             src={selectedPack === 'lamb' ? MEWTWO_IMAGE : MEW_IMAGE} 
                                             alt="Pack Icon"
-                                            className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] mb-4"
+                                            className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                                         />
-                                        <div className={`text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
+                                    </div>
+
+                                    {/* Badge */}
+                                    <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
+                                        <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
                                             {selectedPack === 'lamb' ? 'Genetic Pack' : 'Mythic Pack'}
                                         </div>
                                     </div>
 
                                     {/* Text */}
-                                    <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
+                                    <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none z-30">
                                         <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200'}`}>
                                             {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                         </h2>
@@ -789,18 +809,22 @@ const Gacha: React.FC = () => {
                                 >
                                     <div className={`absolute inset-0 ${selectedPack === 'lamb' ? "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"} opacity-20`}></div>
                                     
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-90 pb-8 pt-12">
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
                                         <img 
                                             src={selectedPack === 'lamb' ? MEWTWO_IMAGE : MEW_IMAGE} 
                                             alt="Pack Icon"
-                                            className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] mb-4"
+                                            className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                                         />
-                                        <div className={`text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
+                                    </div>
+
+                                    {/* Badge */}
+                                    <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
+                                        <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
                                             {selectedPack === 'lamb' ? 'Genetic Pack' : 'Mythic Pack'}
                                         </div>
                                     </div>
 
-                                    <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none">
+                                    <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none z-30">
                                         <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200'}`}>
                                             {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                         </h2>
