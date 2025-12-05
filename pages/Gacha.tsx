@@ -27,43 +27,44 @@ const LAMB_POOL: CardData[] = [
     // The Chase (Guaranteed at end, excluded from random pulls via logic)
     { id: 150, name: "Mewtwo", type: 'Pokemon', subType: "Artificial", rarity: 'Legendary', hp: 180, description: "A clone created by science.", weight: 0 },
     
-    // Rares (Weight: 10 - Increased from 5)
-    { id: 142, name: "Aerodactyl", type: 'Pokemon', subType: "Fossil", rarity: 'Rare', hp: 120, description: "Resurrected from amber.", weight: 10 },
-    { id: 65, name: "Alakazam", type: 'Pokemon', subType: "Psi", rarity: 'Rare', hp: 55, description: "Brain power.", weight: 10 },
+    // Rares (Weight: 15 - Increased from 10)
+    { id: 142, name: "Aerodactyl", type: 'Pokemon', subType: "Fossil", rarity: 'Rare', hp: 120, description: "Resurrected from amber.", weight: 15 },
+    { id: 65, name: "Alakazam", type: 'Pokemon', subType: "Psi", rarity: 'Rare', hp: 55, description: "Brain power.", weight: 15 },
     
-    // Uncommon Pokemon (Weight: 25 - Increased from 15)
-    { id: 88, name: "Grimer", type: 'Pokemon', subType: "Sludge", rarity: 'Uncommon', hp: 80, description: "Bio-waste.", weight: 25 },
-    { id: 93, name: "Haunter", type: 'Pokemon', subType: "Gas", rarity: 'Uncommon', hp: 45, description: "Licks you.", weight: 25 },
-    { id: 64, name: "Kadabra", type: 'Pokemon', subType: "Psi", rarity: 'Uncommon', hp: 40, description: "Emit alpha waves.", weight: 25 },
-    { id: 101, name: "Electrode", type: 'Pokemon', subType: "Ball", rarity: 'Uncommon', hp: 60, description: "Explodes.", weight: 25 },
-    { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Uncommon', hp: 65, description: "Man-made code.", weight: 25 },
+    // Uncommon Pokemon (Weight: 30 - Increased from 25)
+    { id: 88, name: "Grimer", type: 'Pokemon', subType: "Sludge", rarity: 'Uncommon', hp: 80, description: "Bio-waste.", weight: 30 },
+    { id: 93, name: "Haunter", type: 'Pokemon', subType: "Gas", rarity: 'Uncommon', hp: 45, description: "Licks you.", weight: 30 },
+    { id: 64, name: "Kadabra", type: 'Pokemon', subType: "Psi", rarity: 'Uncommon', hp: 40, description: "Emit alpha waves.", weight: 30 },
+    { id: 101, name: "Electrode", type: 'Pokemon', subType: "Ball", rarity: 'Uncommon', hp: 60, description: "Explodes.", weight: 30 },
+    { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Uncommon', hp: 65, description: "Man-made code.", weight: 30 },
 
-    // Uncommon Items (Weight: 25 - Added & Balanced)
-    { id: 30001, name: "Exp. Candy M", type: 'Item', subType: "Consumable", rarity: 'Uncommon', description: "A medium sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-candy-m.png", weight: 25 },
-    { id: 30002, name: "Super Potion", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Heals 60 HP.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/super-potion.png", weight: 25 },
-    { id: 30003, name: "Awakening", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Wakes up Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/awakening.png", weight: 25 },
-    { id: 30004, name: "Antidote", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Cures poison.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/antidote.png", weight: 25 },
-    { id: 30005, name: "Ether", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Restores 10 PP.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ether.png", weight: 25 },
-    { id: 30006, name: "Elixir", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Restores 10 PP to all.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/elixir.png", weight: 25 },
-    { id: 30007, name: "3x Great Ball", type: 'Item', subType: "Tool", rarity: 'Uncommon', description: "Better catch rate.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png", weight: 25 },
-    { id: 30008, name: "3x Safari Ball", type: 'Item', subType: "Tool", rarity: 'Uncommon', description: "Special camouflage ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/safari-ball.png", weight: 25 },
-    { id: 30009, name: "2x Level Ball", type: 'Item', subType: "Tool", rarity: 'Uncommon', description: "Effective on lower levels.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/level-ball.png", weight: 25 },
+    // Uncommon Items (Weight: 30 - Increased from 25)
+    // Updated Images to reliable Pokesprite repo
+    { id: 30001, name: "Exp. Candy M", type: 'Item', subType: "Consumable", rarity: 'Uncommon', description: "A medium sweet treat.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/exp-candy-m.png", weight: 30 },
+    { id: 30002, name: "Super Potion", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Heals 60 HP.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/super-potion.png", weight: 30 },
+    { id: 30003, name: "Awakening", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Wakes up Pokemon.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/awakening.png", weight: 30 },
+    { id: 30004, name: "Antidote", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Cures poison.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/antidote.png", weight: 30 },
+    { id: 30005, name: "Ether", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Restores 10 PP.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/ether.png", weight: 30 },
+    { id: 30006, name: "Elixir", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Restores 10 PP to all.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/elixir.png", weight: 30 },
+    { id: 30007, name: "3x Great Ball", type: 'Item', subType: "Tool", rarity: 'Uncommon', description: "Better catch rate.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/ball/great.png", weight: 30 },
+    { id: 30008, name: "3x Safari Ball", type: 'Item', subType: "Tool", rarity: 'Uncommon', description: "Special camouflage ball.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/ball/safari.png", weight: 30 },
+    { id: 30009, name: "2x Level Ball", type: 'Item', subType: "Tool", rarity: 'Uncommon', description: "Effective on lower levels.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/ball/level.png", weight: 30 },
 
-    // Common Pokemon (Weight: 20 - Decreased from 30)
-    { id: 109, name: "Koffing", type: 'Pokemon', subType: "Gas", rarity: 'Common', hp: 40, description: "Toxic fumes.", weight: 20 },
-    { id: 81, name: "Magnemite", type: 'Pokemon', subType: "Magnet", rarity: 'Common', hp: 25, description: "Anti-gravity.", weight: 20 },
-    { id: 63, name: "Abra", type: 'Pokemon', subType: "Psi", rarity: 'Common', hp: 25, description: "Sleeps 18 hours.", weight: 20 },
-    { id: 41, name: "Zubat", type: 'Pokemon', subType: "Bat", rarity: 'Common', hp: 40, description: "Cave dweller.", weight: 20 },
-    { id: 100, name: "Voltorb", type: 'Pokemon', subType: "Ball", rarity: 'Common', hp: 40, description: "Looks like a ball.", weight: 20 },
+    // Common Pokemon (Weight: 15 - Decreased from 20)
+    { id: 109, name: "Koffing", type: 'Pokemon', subType: "Gas", rarity: 'Common', hp: 40, description: "Toxic fumes.", weight: 15 },
+    { id: 81, name: "Magnemite", type: 'Pokemon', subType: "Magnet", rarity: 'Common', hp: 25, description: "Anti-gravity.", weight: 15 },
+    { id: 63, name: "Abra", type: 'Pokemon', subType: "Psi", rarity: 'Common', hp: 25, description: "Sleeps 18 hours.", weight: 15 },
+    { id: 41, name: "Zubat", type: 'Pokemon', subType: "Bat", rarity: 'Common', hp: 40, description: "Cave dweller.", weight: 15 },
+    { id: 100, name: "Voltorb", type: 'Pokemon', subType: "Ball", rarity: 'Common', hp: 40, description: "Looks like a ball.", weight: 15 },
 
-    // Common Items (Weight: Lowered to balance pool)
-    // Bronze Coin (90 - Decreased from 150)
-    { id: 20001, name: "5x Bronze Coin", type: 'Item', subType: "Currency", rarity: 'Common', description: "Used for trading.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-copper.png", weight: 90 },
+    // Common Items (Weight: Lowered significantly)
+    // Bronze Coin (50 - Decreased from 90)
+    { id: 20001, name: "5x Bronze Coin", type: 'Item', subType: "Currency", rarity: 'Common', description: "Used for trading.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/valuable/relic-copper.png", weight: 50 },
     
-    // Other Common Items (Weight 30-40 - Decreased from 50-60)
-    { id: 20002, name: "5x Exp. Candy XS", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A small sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-candy-xs.png", weight: 35 },
-    { id: 20003, name: "2x Exp. Candy S", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-candy-s.png", weight: 35 },
-    { id: 20004, name: "5x Pokeball", type: 'Item', subType: "Tool", rarity: 'Common', description: "Catches wild Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png", weight: 40 },
+    // Other Common Items (Weight 30 - Decreased from 35/40)
+    { id: 20002, name: "5x Exp. Candy XS", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A small sweet treat.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/exp-candy-xs.png", weight: 30 },
+    { id: 20003, name: "2x Exp. Candy S", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A sweet treat.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/medicine/exp-candy-s.png", weight: 30 },
+    { id: 20004, name: "5x Pokeball", type: 'Item', subType: "Tool", rarity: 'Common', description: "Catches wild Pokemon.", image: "https://raw.githubusercontent.com/msikma/pokesprite/master/items/ball/poke.png", weight: 30 },
 ];
 
 // THEME: MEW (Mythic / Rare / Ancestor)
