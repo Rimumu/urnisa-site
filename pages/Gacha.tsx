@@ -23,7 +23,7 @@ interface CardData {
 // THEME: MEWTWO (Genetic / Science / Lab)
 const LAMB_POOL: CardData[] = [
     // The Chase (Guaranteed at end)
-    { id: 150, name: "Mewtwo", type: 'Pokemon', subType: "Genetic", rarity: 'Legendary', hp: 180, description: "A clone created by science." },
+    { id: 150, name: "Mewtwo", type: 'Pokemon', subType: "Artificial", rarity: 'Legendary', hp: 180, description: "A clone created by science." },
     
     // Rares (2) - Replaced Ditto with Aerodactyl
     { id: 142, name: "Aerodactyl", type: 'Pokemon', subType: "Fossil", rarity: 'Rare', hp: 120, description: "Resurrected from amber." },
@@ -47,7 +47,7 @@ const LAMB_POOL: CardData[] = [
 // THEME: MEW (Mythic / Rare / Ancestor)
 const WAGYU_POOL: CardData[] = [
     // The Chase (Guaranteed at end)
-    { id: 151, name: "Mew", type: 'Pokemon', subType: "New Species", rarity: 'Mythical', hp: 100, description: "The ancestor of all." },
+    { id: 151, name: "Mew", type: 'Pokemon', subType: "Originator", rarity: 'Mythical', hp: 100, description: "The ancestor of all." },
     
     // Ultra-Rare (10) - Renamed from Ultra/Epic
     { id: 149, name: "Dragonite", type: 'Pokemon', subType: "Dragon", rarity: 'Ultra-Rare', hp: 150, description: "Marine guardian." },
@@ -111,16 +111,23 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         if (card.image) {
             setImgSrc(card.image);
         } else {
-            // Default to Cobblemon Tools Sprite
-            setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${card.name.toLowerCase()}/sprite.png`);
+            // Default to PokeAPI Official Artwork (High Quality)
+            // This is more reliable than fan-wikis which often return placeholders/question marks
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.id}.png`);
         }
     }, [card]);
 
     const handleImageError = () => {
-        if (imgSrc.includes('cobblemon.tools')) {
+        // Fallback Chain
+        if (imgSrc.includes('official-artwork')) {
+            // 1. Try 'Home' render (High Quality 3D-ish)
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            // 2. Try Standard Sprite (Pixel Art) - Very Reliable
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`);
         } else {
-            setImgSrc(`https://via.placeholder.com/300?text=${card.name}`);
+            // 3. Final Fallback - Placeholder with text
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(card.name)}`);
         }
     };
 
