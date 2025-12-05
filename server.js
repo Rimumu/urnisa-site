@@ -99,7 +99,7 @@ const SpinHistory = mongoose.model('SpinHistory', new mongoose.Schema({
     user: String, reward: String, timestamp: { type: Date, default: Date.now }
 }));
 
-// --- INVENTORY & MC SCHEMAS ---
+// --- NEW INVENTORY SCHEMAS ---
 const InventoryItemSchema = new mongoose.Schema({
     discordId: { type: String, required: true },
     cardId: Number,
@@ -112,7 +112,7 @@ const InventoryItemSchema = new mongoose.Schema({
     claimedAt: Date,
     createdAt: { type: Date, default: Date.now }
 });
-// Use existing or create new model
+// Use existing if defined (hot reload safety)
 const InventoryItem = mongoose.models.InventoryItem || mongoose.model('InventoryItem', InventoryItemSchema);
 
 const MinecraftLinkSchema = new mongoose.Schema({
@@ -122,7 +122,6 @@ const MinecraftLinkSchema = new mongoose.Schema({
     minecraftUsername: { type: String, required: true, unique: true },
     linkedAt: { type: Date, default: Date.now }
 });
-// Use existing or create new model
 const MinecraftLink = mongoose.models.MinecraftLink || mongoose.model('MinecraftLink', MinecraftLinkSchema);
 
 const roundOneDecimal = (num) => Math.round(num * 10) / 10;
@@ -133,7 +132,7 @@ const roundOneDecimal = (num) => Math.round(num * 10) / 10;
 const sendRconCommand = async (command) => {
     if (!Rcon || !RCON_HOST || !RCON_PASSWORD) {
         console.log(`🔔 [RCON SIMULATION] ${command}`);
-        return true; // Simulate success
+        return true; 
     }
 
     const rcon = new Rcon({
@@ -156,34 +155,27 @@ const sendRconCommand = async (command) => {
 };
 
 const getRconCommand = (username, item) => {
-    // Sanitize
     const safeUser = username.replace(/[^a-zA-Z0-9_]/g, '');
     
     if (item.type === 'Pokemon') {
-        // Example: pokesgive <player> <pokemon> [args]
         const pokeName = item.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        let args = "";
-        if (item.rarity === 'Legendary' || item.rarity === 'Mythical') {
-            args = "lvl=50"; 
-        } else {
-            args = "lvl=15";
-        }
+        let args = "lvl=15";
+        if (item.rarity === 'Legendary' || item.rarity === 'Mythical') args = "lvl=50"; 
         return `pokesgive ${safeUser} ${pokeName} ${args}`;
     } 
     else if (item.type === 'Item') {
         let count = 1;
         let cleanName = item.name.toLowerCase();
         
-        // Extract count if present (e.g. "5x ")
         const countMatch = cleanName.match(/^(\d+)x\s/);
         if (countMatch) {
             count = parseInt(countMatch[1]);
             cleanName = cleanName.replace(/^\d+x\s/, '');
         }
 
-        // Map names to IDs
-        let itemId = "minecraft:stone"; // Fallback
+        let itemId = "minecraft:stone"; 
         
+        // Basic Item Mapping
         if (cleanName.includes("coin")) itemId = "cobblemon:relic_coin";
         if (cleanName.includes("bronze coin")) itemId = "cobblemon:copper_nugget"; 
         if (cleanName.includes("silver coin")) itemId = "cobblemon:iron_nugget"; 
@@ -210,13 +202,12 @@ const getRconCommand = (username, item) => {
         if (cleanName.includes("antidote")) itemId = "cobblemon:antidote";
         if (cleanName.includes("awakening")) itemId = "cobblemon:awakening";
         
-        if (cleanName.includes("ball")) {
-            itemId = "cobblemon:" + cleanName.replace(/\s/g, '_');
-        }
+        if (cleanName.includes("ball")) itemId = "cobblemon:" + cleanName.replace(/\s/g, '_');
         
         if (cleanName.includes("rare candy")) itemId = "cobblemon:rare_candy";
         if (cleanName.includes("shiny upgrade")) itemId = "cobblemon:shiny_charm"; 
         if (cleanName.includes("tm choice")) itemId = "cobblemon:tm_normal"; 
+        if (cleanName.includes("master ball")) itemId = "cobblemon:master_ball";
         
         if (cleanName.includes("hp iv cap")) itemId = "cobblemon:hp_up";
         if (cleanName.includes("atk iv cap")) itemId = "cobblemon:protein";
@@ -227,7 +218,6 @@ const getRconCommand = (username, item) => {
 
         return `give ${safeUser} ${itemId} ${count}`;
     }
-    
     return `say User ${safeUser} claimed ${item.name} but command failed logic.`;
 };
 
@@ -244,9 +234,15 @@ const processBufferedGift = async (sender, data) => {
         const providerId = `bulk-gift-${Date.now()}-${sender}`;
         await processEvent(stats, 'gift', sender, data.count, `Gifted ${data.count} subs`, providerId, data.tier);
         await stats.save();
-    } catch (e) { console.error("Gift Buffer Error:", e); }
+    } catch (e) {
+        console.error("Gift Buffer Error:", e);
+    }
     delete giftBuffer[sender];
 };
+
+// ==========================================
+// CORE LOGIC
+// ==========================================
 
 const processEvent = async (stats, type, user, amount, message, providerId, tier = '1000', isManual = false) => {
     let isNewEvent = true;
@@ -416,11 +412,15 @@ const connectSocket = () => {
 const resolveChannelId = async () => {
     if (!SE_JWT) return null;
     try {
-        const res = await axios.get(`https://api.streamelements.com/kappa/v2/channels/${TARGET_USERNAME}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const res = await axios.get(`https://api.streamelements.com/kappa/v2/channels/${TARGET_USERNAME}`, {
+             headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
         if (res.data && res.data._id) return res.data._id;
     } catch (e) { }
     try {
-        const me = await axios.get('https://api.streamelements.com/kappa/v2/channels/me', { headers: { 'Authorization': `Bearer ${SE_JWT}` } });
+        const me = await axios.get('https://api.streamelements.com/kappa/v2/channels/me', {
+            headers: { 'Authorization': `Bearer ${SE_JWT}` }
+        });
         return me.data._id;
     } catch (e) { return null; }
 };
@@ -449,7 +449,10 @@ const fetchAndProcess = async (channelId, label, stats, limit = 25, offset = 0) 
                 if (['subscriber','sub','resub'].includes(act.type)) { 
                     amt = 1; 
                     tier = act.data.tier || '1000';
-                    if (act.data.gifted) { username = act.data.sender; type = 'gift'; }
+                    if (act.data.gifted) {
+                        username = act.data.sender;
+                        type = 'gift';
+                    }
                 }
                 else if (act.type === 'gift') amt = act.data.amount || 1; 
                 else if (['cheer','tip'].includes(act.type)) amt = act.data.amount; 
@@ -740,7 +743,7 @@ app.post('/api/upload', async (req, res) => {
     return res.status(500).send();
 });
 
-// --- INVENTORY API ROUTES ---
+// --- INVENTORY API ---
 
 // Save Gacha Pulls
 app.post('/api/gacha/save', async (req, res) => {
@@ -808,11 +811,10 @@ app.post('/api/inventory/claim', async (req, res) => {
             await item.save();
             res.json({ success: true, message: `Sent ${item.name} to ${link.minecraftUsername}` });
         } else {
-            res.status(500).json({ error: "RCON Connection Failed. Server might be offline." });
+            res.status(500).json({ error: "RCON Failed. Server offline?" });
         }
 
     } catch (e) {
-        console.error("Claim Error:", e);
         res.status(500).json({ error: e.message });
     }
 });

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL, DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
 import InventoryModal from '../components/InventoryModal';
@@ -416,7 +416,7 @@ const Gacha: React.FC = () => {
             if (picked.length <= i) picked.push(currentPool[0]); 
         }
 
-        // SAVE TO DB
+        // SAVE TO DB (Integration Point)
         if (user) {
             fetch(`${API_BASE_URL}/api/gacha/save`, {
                 method: 'POST',
