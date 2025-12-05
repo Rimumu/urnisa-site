@@ -476,7 +476,7 @@ const Gacha: React.FC = () => {
 
             <UserProfile 
                 onUserChange={setUser} 
-                className="absolute top-4 right-4"
+                className="!absolute top-4 right-4"
             />
 
             <div className="relative z-20 container mx-auto px-4 mb-8 pt-16">

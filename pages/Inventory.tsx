@@ -169,7 +169,7 @@ const Inventory: React.FC = () => {
 
     if (!user) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
                 <div className="bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-3xl text-center max-w-md w-full">
                     <h1 className="text-3xl font-bold text-white mb-4">Inventory Locked</h1>
                     <p className="text-gray-400 mb-8">You must log in with Discord to view your inventory.</p>
@@ -180,8 +180,8 @@ const Inventory: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4 font-sans">
-            <UserProfile className="absolute top-4 right-4" />
+        <div className="min-h-screen pt-24 pb-12 px-4 font-sans relative">
+            <UserProfile className="!absolute top-4 right-4" />
             
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
