@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const mongoose = require('mongoose');
+const crypto = require('crypto'); // Added for code generation
 let Rcon;
 try {
     Rcon = require('rcon-client').Rcon;
@@ -153,6 +154,26 @@ const InventoryItemSchema = new mongoose.Schema({
     receivedAt: { type: Date, default: Date.now }
 });
 const InventoryItem = mongoose.model('InventoryItem', InventoryItemSchema);
+
+// User Pack Wallet Schema
+const UserPackSchema = new mongoose.Schema({
+    discordId: { type: String, required: true, unique: true },
+    lambPacks: { type: Number, default: 0 },
+    wagyuPacks: { type: Number, default: 0 },
+    updatedAt: { type: Date, default: Date.now }
+});
+const UserPack = mongoose.model('UserPack', UserPackSchema);
+
+// Redemption Code Schema
+const RedemptionCodeSchema = new mongoose.Schema({
+    code: { type: String, required: true, unique: true },
+    type: { type: String, required: true }, // 'lamb' or 'wagyu'
+    isRedeemed: { type: Boolean, default: false },
+    redeemedBy: { type: String, default: null }, // discordId
+    redeemedAt: Date,
+    createdAt: { type: Date, default: Date.now }
+});
+const RedemptionCode = mongoose.model('RedemptionCode', RedemptionCodeSchema);
 
 
 // --- CHAT PREVIEW LOGIC ---
@@ -313,7 +334,7 @@ app.post('/api/whitelist/apply', async (req, res) => {
     res.json({ success: true, message: "Application Sent! Please wait for admin approval." });
 });
 
-// 5. ADMIN WHITELIST MANAGEMENT
+// 5. ADMIN WHITELIST & CODE MANAGEMENT
 const auth = (req, res, next) => {
     if (req.headers.authorization !== ADMIN_PASSWORD) {
         console.log(`❌ Admin Auth Failed: '${req.headers.authorization}' vs '${ADMIN_PASSWORD}'`);
@@ -401,9 +422,102 @@ app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- INVENTORY & GACHA API ---
+// --- CODE GENERATION (Admin) ---
+app.post('/api/admin/codes/generate', auth, async (req, res) => {
+    const { type, amount = 1 } = req.body; // type: 'lamb' or 'wagyu'
+    if (!type || !['lamb', 'wagyu'].includes(type)) return res.status(400).json({ error: "Invalid type" });
 
-// 1. Save Gacha Results
+    try {
+        const codes = [];
+        for (let i = 0; i < amount; i++) {
+            const raw = crypto.randomBytes(4).toString('hex').toUpperCase();
+            const codeStr = `${type.toUpperCase()}-${raw}`;
+            codes.push({ code: codeStr, type });
+        }
+        await RedemptionCode.insertMany(codes);
+        res.json({ success: true, codes: codes.map(c => c.code) });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to generate codes" });
+    }
+});
+
+// --- INVENTORY, PACKS & GACHA API ---
+
+// 1. Fetch User Pack Balance
+app.get('/api/packs', async (req, res) => {
+    const { discordId } = req.query;
+    if (!discordId) return res.status(400).json({ error: "Discord ID required" });
+
+    try {
+        let wallet = await UserPack.findOne({ discordId });
+        if (!wallet) wallet = { lambPacks: 0, wagyuPacks: 0 }; // Default
+        res.json(wallet);
+    } catch (e) {
+        res.status(500).json({ error: "Fetch failed" });
+    }
+});
+
+// 2. Use/Deduct Pack (Used by Gacha Page before opening)
+app.post('/api/packs/use', async (req, res) => {
+    const { discordId, type } = req.body;
+    if (!discordId || !type) return res.status(400).json({ error: "Missing data" });
+
+    try {
+        const wallet = await UserPack.findOne({ discordId });
+        if (!wallet) return res.status(404).json({ error: "No wallet found" });
+
+        if (type === 'lamb') {
+            if (wallet.lambPacks < 1) return res.status(403).json({ error: "Not enough packs" });
+            wallet.lambPacks -= 1;
+        } else if (type === 'wagyu') {
+            if (wallet.wagyuPacks < 1) return res.status(403).json({ error: "Not enough packs" });
+            wallet.wagyuPacks -= 1;
+        } else {
+            return res.status(400).json({ error: "Invalid pack type" });
+        }
+
+        await wallet.save();
+        res.json({ success: true, remaining: type === 'lamb' ? wallet.lambPacks : wallet.wagyuPacks });
+    } catch (e) {
+        res.status(500).json({ error: "Transaction failed" });
+    }
+});
+
+// 3. Redeem Code
+app.post('/api/codes/redeem', async (req, res) => {
+    const { discordId, code } = req.body;
+    if (!discordId || !code) return res.status(400).json({ error: "Missing data" });
+
+    try {
+        const codeRecord = await RedemptionCode.findOne({ code: code.trim().toUpperCase() });
+        
+        if (!codeRecord) return res.status(404).json({ error: "Invalid code" });
+        if (codeRecord.isRedeemed) return res.status(409).json({ error: "Code already redeemed" });
+
+        // Update Code Status
+        codeRecord.isRedeemed = true;
+        codeRecord.redeemedBy = discordId;
+        codeRecord.redeemedAt = new Date();
+        await codeRecord.save();
+
+        // Add Pack to User Wallet
+        const wallet = await UserPack.findOneAndUpdate(
+            { discordId },
+            { 
+                $setOnInsert: { discordId }, 
+                $inc: { [codeRecord.type === 'lamb' ? 'lambPacks' : 'wagyuPacks']: 1 }
+            },
+            { upsert: true, new: true }
+        );
+
+        res.json({ success: true, type: codeRecord.type, wallet });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Redemption failed" });
+    }
+});
+
+// 4. Save Gacha Results
 app.post('/api/inventory/save', async (req, res) => {
     const { discordId, items } = req.body;
     if (!discordId || !items || !Array.isArray(items)) return res.status(400).json({ error: "Invalid data" });
@@ -422,6 +536,11 @@ app.post('/api/inventory/save', async (req, res) => {
 
         await InventoryItem.insertMany(newItems);
         console.log(`📦 Saved ${items.length} items for user ${discordId}`);
+        
+        // Also deduct pack here? No, separate call in frontend is safer for animation flow, 
+        // OR handle atomic transaction. For simplicity, we rely on the `/api/packs/use` call 
+        // made at the START of the gacha sequence to ensure they pay before they play.
+        
         res.json({ success: true });
     } catch (e) {
         console.error("Save Inventory Error:", e);
@@ -429,7 +548,7 @@ app.post('/api/inventory/save', async (req, res) => {
     }
 });
 
-// 2. Fetch User Inventory
+// 5. Fetch User Inventory
 app.get('/api/inventory', async (req, res) => {
     const { discordId } = req.query;
     if (!discordId) return res.status(400).json({ error: "Discord ID required" });
@@ -442,7 +561,7 @@ app.get('/api/inventory', async (req, res) => {
     }
 });
 
-// 3. Claim Item
+// 6. Claim Item
 app.post('/api/inventory/claim', async (req, res) => {
     const { discordId, dbItemId } = req.body;
     if (!discordId || !dbItemId) return res.status(400).json({ error: "Missing data" });

@@ -116,6 +116,7 @@ const clientImageCache = new Map<string, boolean>();
 // --- COMPONENTS ---
 
 const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, className = "" }) => {
+    // ... (Keep existing TradingCard implementation)
     // Rarity styles
     let borderClass = "border-gray-600";
     let glowClass = "";
@@ -269,7 +270,10 @@ const Gacha: React.FC = () => {
     const [dispensingCard, setDispensingCard] = useState<CardData | null>(null);
     const [shakePack, setShakePack] = useState(false);
     
-    const [user, setUser] = useState<any>(null); // For auth tracking
+    // Auth & Packs Logic
+    const [user, setUser] = useState<any>(null);
+    const [packs, setPacks] = useState({ lambPacks: 0, wagyuPacks: 0 });
+    const [processing, setProcessing] = useState(false);
 
     const svgRef = useRef<SVGSVGElement>(null);
     const packRef = useRef<HTMLDivElement>(null);
@@ -282,13 +286,21 @@ const Gacha: React.FC = () => {
         return () => clearInterval(interval);
     }, [trail]);
 
+    // Fetch Packs on mount/user change
+    useEffect(() => {
+        if (user?.id) {
+            fetch(`${DISCORD_API_URL}/api/packs?discordId=${user.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && !data.error) setPacks(data);
+                })
+                .catch(console.error);
+        }
+    }, [user]);
+
     // --- AUTO SAVE LOGIC ---
     const saveToInventory = async (cards: CardData[]) => {
-        if (!user || !user.id) {
-            console.warn("Cannot auto-save: No user logged in.");
-            return;
-        }
-        
+        if (!user || !user.id) return;
         try {
             await fetch(`${DISCORD_API_URL}/api/inventory/save`, {
                 method: 'POST',
@@ -298,7 +310,6 @@ const Gacha: React.FC = () => {
                     items: cards
                 })
             });
-            console.log("Auto-saved inventory.");
         } catch (e) {
             console.error("Auto-save failed", e);
         }
@@ -306,17 +317,50 @@ const Gacha: React.FC = () => {
 
     // --- HANDLERS ---
 
-    const selectPack = (type: PackType) => {
-        setSelectedPack(type);
-        setCurrentPool(type === 'lamb' ? LAMB_POOL : WAGYU_POOL);
-        setStage('cutting');
-        setIsCut(false);
-        setRevealedCards([]);
-        setTrail([]);
-        setCutCoords(null);
-        setCutYPercentage(15);
+    const selectPack = async (type: PackType) => {
+        if (!user || !type) return;
+        
+        // Optimistic check
+        if ((type === 'lamb' && packs.lambPacks < 1) || (type === 'wagyu' && packs.wagyuPacks < 1)) {
+            alert("You don't have enough packs! Redeem a code first.");
+            return;
+        }
+
+        setProcessing(true);
+        // Deduct pack immediately from server
+        try {
+            const res = await fetch(`${DISCORD_API_URL}/api/packs/use`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discordId: user.id, type })
+            });
+            const data = await res.json();
+            
+            if (res.ok && data.success) {
+                // Update local state
+                if (type === 'lamb') setPacks(p => ({ ...p, lambPacks: data.remaining }));
+                else setPacks(p => ({ ...p, wagyuPacks: data.remaining }));
+
+                // Start Game
+                setSelectedPack(type);
+                setCurrentPool(type === 'lamb' ? LAMB_POOL : WAGYU_POOL);
+                setStage('cutting');
+                setIsCut(false);
+                setRevealedCards([]);
+                setTrail([]);
+                setCutCoords(null);
+                setCutYPercentage(15);
+            } else {
+                alert(data.error || "Failed to open pack");
+            }
+        } catch (e) {
+            alert("Network error opening pack");
+        } finally {
+            setProcessing(false);
+        }
     };
 
+    // ... (Keeping all existing cutting/drag/mouse logic unchanged) ...
     const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
         if (isCut) return;
         setIsDragging(true);
@@ -410,7 +454,6 @@ const Gacha: React.FC = () => {
                 setTimeout(() => {
                     setRevealedCards(prev => {
                         const newCards = [nextCard!, ...prev];
-                        // AUTO SAVE TRIGGER
                         if (newCards.length === 5) {
                             saveToInventory(newCards);
                             setTimeout(() => setStage('finished'), 1500);
@@ -431,10 +474,17 @@ const Gacha: React.FC = () => {
         setRevealedCards([]);
         setTrail([]);
         setCutYPercentage(15);
+        // Refresh balance incase
+        if(user?.id) {
+             fetch(`${DISCORD_API_URL}/api/packs?discordId=${user.id}`)
+                .then(res => res.json())
+                .then(data => { if (data && !data.error) setPacks(data); });
+        }
     };
 
     return (
         <div className="min-h-screen py-10 font-sans text-white relative overflow-hidden select-none">
+            {/* CSS & Backgrounds same as before */}
             <style>{`
                 .foil-holo {
                     background: linear-gradient(135deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 70%);
@@ -479,6 +529,26 @@ const Gacha: React.FC = () => {
                 className="!absolute top-4 right-4"
             />
 
+            {/* PACK COUNTERS */}
+            {user && (
+                <div className="absolute top-20 md:top-24 left-4 z-40 flex flex-col gap-2 animate-in fade-in slide-in-from-left-4 duration-500">
+                    <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-xl p-2 pr-4 flex items-center gap-3 shadow-lg">
+                        <div className="text-2xl">🧬</div>
+                        <div>
+                            <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wider leading-none">Lamb Chop</div>
+                            <div className="text-xl font-black text-white leading-none">{packs.lambPacks} <span className="text-xs font-normal text-gray-400">owned</span></div>
+                        </div>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-xl p-2 pr-4 flex items-center gap-3 shadow-lg">
+                        <div className="text-2xl">🫧</div>
+                        <div>
+                            <div className="text-[10px] font-bold text-pink-400 uppercase tracking-wider leading-none">Wagyu A5</div>
+                            <div className="text-xl font-black text-white leading-none">{packs.wagyuPacks} <span className="text-xs font-normal text-gray-400">owned</span></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="relative z-20 container mx-auto px-4 mb-8 pt-16">
                 <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                     <span>←</span> Back to Dashboard
@@ -496,11 +566,16 @@ const Gacha: React.FC = () => {
                             Choose your destiny. Will you clone the ultimate power or discover the mythical ancestor?
                         </p>
 
+                        {/* Updated Grid with Disabled States */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 px-4 md:px-20">
                             {/* LAMB CHOP (MEWTWO) */}
                             <button 
                                 onClick={() => selectPack('lamb')}
-                                className="group relative aspect-[3/4] rounded-[2rem] transition-transform duration-500 hover:scale-105 hover:-rotate-1"
+                                disabled={processing || packs.lambPacks < 1}
+                                className={`
+                                    group relative aspect-[3/4] rounded-[2rem] transition-all duration-500
+                                    ${packs.lambPacks > 0 ? 'hover:scale-105 hover:-rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
+                                `}
                             >
                                 <div className="absolute inset-0 bg-purple-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
                                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-900 to-black rounded-[2rem] border-[6px] border-purple-500/50 shadow-2xl overflow-hidden">
@@ -520,13 +595,25 @@ const Gacha: React.FC = () => {
                                         <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
                                         <p className="text-purple-300 text-xs font-mono uppercase tracking-[0.2em] mt-1">Mewtwo Edition</p>
                                     </div>
+
+                                    {packs.lambPacks === 0 && (
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                                            <div className="bg-red-900/80 border border-red-500 text-white px-4 py-2 rounded-xl font-bold uppercase tracking-widest rotate-12 shadow-2xl">
+                                                Out of Stock
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </button>
 
                             {/* WAGYU (MEW) */}
                             <button 
                                 onClick={() => selectPack('wagyu')}
-                                className="group relative aspect-[3/4] rounded-[2rem] transition-transform duration-500 hover:scale-105 hover:rotate-1"
+                                disabled={processing || packs.wagyuPacks < 1}
+                                className={`
+                                    group relative aspect-[3/4] rounded-[2rem] transition-all duration-500
+                                    ${packs.wagyuPacks > 0 ? 'hover:scale-105 hover:rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
+                                `}
                             >
                                 <div className="absolute inset-0 bg-pink-500 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
                                 <div className="absolute inset-0 bg-gradient-to-b from-rose-400 via-pink-500 to-rose-900 rounded-[2rem] border-[6px] border-pink-300/50 shadow-2xl overflow-hidden">
@@ -544,6 +631,14 @@ const Gacha: React.FC = () => {
                                         <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
                                         <p className="text-pink-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Mew Edition</p>
                                     </div>
+
+                                    {packs.wagyuPacks === 0 && (
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                                            <div className="bg-red-900/80 border border-red-500 text-white px-4 py-2 rounded-xl font-bold uppercase tracking-widest -rotate-12 shadow-2xl">
+                                                Out of Stock
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </button>
                         </div>
@@ -552,7 +647,7 @@ const Gacha: React.FC = () => {
 
                 {(stage === 'cutting' || stage === 'dispensing' || stage === 'finished') && (
                     <div className="relative w-full max-w-4xl flex flex-col items-center">
-                        
+                        {/* (Keep existing Game UI) */}
                         <div className="mb-8 h-12 flex items-center justify-center w-full relative z-30">
                             {!isCut ? (
                                 <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 animate-pulse">
