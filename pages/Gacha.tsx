@@ -2,7 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, DISCORD_API_URL } from '../constants';
+import UserProfile from '../components/UserProfile';
 
 // --- TYPES ---
 type PackType = 'lamb' | 'wagyu' | null;
@@ -40,7 +41,6 @@ const LAMB_POOL: CardData[] = [
     { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Uncommon', hp: 65, description: "Man-made code.", weight: 25 },
 
     // Uncommon Items (Weight: 25)
-    // Fixed broken Exp Candy images with reliable alternatives
     { id: 30001, name: "Exp. Candy M", type: 'Item', subType: "Consumable", rarity: 'Uncommon', description: "A medium sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/stardust.png", weight: 25 },
     { id: 30002, name: "Super Potion", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Heals 60 HP.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/super-potion.png", weight: 25 },
     { id: 30003, name: "Awakening", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Wakes up Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/awakening.png", weight: 25 },
@@ -60,7 +60,6 @@ const LAMB_POOL: CardData[] = [
 
     // Common Items 
     { id: 20001, name: "5x Bronze Coin", type: 'Item', subType: "Currency", rarity: 'Common', description: "Used for trading.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-copper.png", weight: 65 },
-    // Fixed images
     { id: 20002, name: "5x Exp. Candy XS", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A small sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tiny-mushroom.png", weight: 30 },
     { id: 20003, name: "2x Exp. Candy S", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/big-mushroom.png", weight: 30 },
     { id: 20004, name: "5x Pokeball", type: 'Item', subType: "Balls", rarity: 'Common', description: "Catches wild Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png", weight: 30 },
@@ -92,9 +91,8 @@ const WAGYU_POOL: CardData[] = [
 
     // Ultra-Rare Items (Weight increased to 12)
     { id: 30018, name: "5x Ultra Ball", type: 'Item', subType: "Balls", rarity: 'Ultra-Rare', description: "High performance ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png", weight: 12 },
-    // Fixed Image
     { id: 30019, name: "Exp. Candy XL", type: 'Item', subType: "Consumable", rarity: 'Ultra-Rare', description: "A huge sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/comet-shard.png", weight: 12 },
-    // IV Caps (Using Vitamin Sprites)
+    // IV Caps
     { id: 30020, name: "HP IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes HP IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hp-up.png", weight: 12 },
     { id: 30021, name: "Atk IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Attack IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/protein.png", weight: 12 },
     { id: 30022, name: "Def IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Defense IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/iron.png", weight: 12 },
@@ -102,9 +100,8 @@ const WAGYU_POOL: CardData[] = [
     { id: 30024, name: "Sp. Def IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Sp. Def IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/zinc.png", weight: 12 },
     { id: 30025, name: "Speed IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Speed IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/carbos.png", weight: 12 },
 
-    // Rare Items (Weight: 50 - The "Common" of this pack)
+    // Rare Items (Weight: 50)
     { id: 30011, name: "5x Silver Coin", type: 'Item', subType: "Currency", rarity: 'Rare', description: "Valuable currency.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-silver.png", weight: 50 },
-    // Fixed Image
     { id: 30012, name: "2x Exp. Candy L", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "A large sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/star-piece.png", weight: 50 },
     { id: 30013, name: "Rare Candy", type: 'Item', subType: "Consumable", rarity: 'Rare', description: "Levels up Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png", weight: 50 },
     { id: 30014, name: "Full Restore", type: 'Item', subType: "Medicine", rarity: 'Rare', description: "Fully heals HP & Status.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/full-restore.png", weight: 50 },
@@ -114,7 +111,6 @@ const WAGYU_POOL: CardData[] = [
 ];
 
 // --- CACHE ---
-// Persist validity results in memory during session to avoid redundant API calls
 const clientImageCache = new Map<string, boolean>();
 
 // --- COMPONENTS ---
@@ -139,13 +135,11 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         badgeColor = "bg-blue-900/80 text-blue-200 border border-blue-500/30";
         holoEffect = "after:content-[''] after:absolute after:inset-0 after:bg-gradient-to-tr after:from-transparent after:via-white/20 after:to-transparent after:opacity-50 after:pointer-events-none";
     } else if (card.rarity === 'Ultra-Rare') {
-        // Ultra-Rare is now Purple
         borderClass = "border-purple-500";
         glowClass = "shadow-[0_0_20px_rgba(168,85,247,0.6)]";
         badgeColor = "bg-purple-900/80 text-purple-200 border border-purple-500/30";
         holoEffect = "foil-holo"; 
     } else if (card.rarity === 'Legendary') {
-        // Legendary is now Yellow/Gold
         borderClass = "border-yellow-400";
         glowClass = "shadow-[0_0_30px_rgba(250,204,21,0.8)]";
         badgeColor = "bg-yellow-900/90 text-yellow-100 border border-yellow-400/50 shadow-[0_0_10px_#eab308]";
@@ -159,20 +153,16 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         holoEffect = "mythic-holo"; // Custom class for rainbow effect
     }
 
-    // --- SMART IMAGE LOGIC ---
     const [imgSrc, setImgSrc] = useState<string>("");
 
     const getFormattedName = (name: string) => {
-        // Convert "Mr. Mime" -> "mr-mime", "Nidoran♀" -> "nidoran-f", etc.
         return name.toLowerCase()
-            .replace(/[.']/g, '') // remove dots and apostrophes
+            .replace(/[.']/g, '')
             .replace(/♀/g, '-f')
             .replace(/♂/g, '-m')
-            .replace(/\s+/g, '-'); // spaces to hyphens
+            .replace(/\s+/g, '-');
     };
 
-    // Use server-side checking to detect placeholder images by size
-    // WITH CLIENT-SIDE CACHING to speed up repeated pulls
     useEffect(() => {
         const verifyImage = async () => {
             if (card.image) {
@@ -184,7 +174,6 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
             const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`;
 
-            // 1. CHECK LOCAL CACHE
             if (clientImageCache.has(primaryUrl)) {
                 const isValid = clientImageCache.get(primaryUrl);
                 setImgSrc(isValid ? primaryUrl : fallback3d);
@@ -192,22 +181,16 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
             }
 
             try {
-                // Call our backend to check file size (avoiding CORS issues)
-                // If size > 2KB, we assume it's a valid sprite. If < 2KB, it's likely the question mark placeholder.
                 const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
                 const data = await response.json();
-
-                // 2. STORE IN CACHE
                 clientImageCache.set(primaryUrl, data.valid);
 
                 if (data.valid) {
                     setImgSrc(primaryUrl);
                 } else {
-                    console.log(`[Gacha] Placeholder detected via size check for ${card.name}, using 3D fallback.`);
                     setImgSrc(fallback3d);
                 }
             } catch (error) {
-                console.warn("[Gacha] Image check failed, defaulting to primary.", error);
                 setImgSrc(primaryUrl);
             }
         };
@@ -216,42 +199,26 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
     }, [card]);
 
     const handleImageError = () => {
-        // FALLBACK CHAIN (triggered if image loads 404, or if our pre-check failed logic)
-        
-        // 1. If Cobblemon Tools fails, go to PokeAPI Home (3D Render) - User Preferred Fallback
         if (imgSrc.includes('cobblemon.tools')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
-        } 
-        // 2. If Home Render fails, try Official Artwork (2D High Quality)
-        else if (imgSrc.includes('other/home')) {
+        } else if (imgSrc.includes('other/home')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.id}.png`);
-        } 
-        // 3. If Official Artwork fails, try Standard Pixel Sprite
-        else if (imgSrc.includes('official-artwork')) {
+        } else if (imgSrc.includes('official-artwork')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`);
-        } 
-        // 4. Final Fallback: Text Placeholder
-        else {
+        } else {
             setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(card.name)}`);
         }
     };
 
     return (
         <div className={`relative w-48 h-72 rounded-xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
-            {/* Holographic Overlay */}
             {card.rarity !== 'Common' && <div className={`absolute inset-0 z-20 pointer-events-none opacity-40 mix-blend-overlay ${holoEffect}`}></div>}
             
-            {/* Background Image / Art */}
             <div className="absolute inset-0 bg-[#1a1a1a] z-0">
-                {/* Fallback pattern */}
                 <div className={`absolute inset-0 ${bgPattern} opacity-20`}></div>
-                
-                {/* Special Radial BG for high tiers */}
                 {(card.rarity === 'Legendary' || card.rarity === 'Mythical') && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
                 )}
-
-                {/* Main Artwork - Padded bottom to avoid text overlap */}
                 <div className="absolute inset-0 p-4 pb-20 flex items-center justify-center z-10">
                     <img 
                         src={imgSrc} 
@@ -263,10 +230,8 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 </div>
             </div>
 
-            {/* Gradient Overlay for Text Readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 z-10 pointer-events-none"></div>
 
-            {/* Content - Bottom Aligned */}
             <div className="absolute bottom-0 left-0 right-0 p-3 z-30 flex flex-col items-center text-center">
                 <div className={`mb-2 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg ${badgeColor}`}>
                     {card.rarity}
@@ -279,15 +244,12 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 </span>
             </div>
 
-            {/* Top Right ID */}
             <div className="absolute top-2 right-2 z-30 text-[8px] font-mono text-white/50 bg-black/50 px-1.5 rounded">
                 #{card.id.toString().padStart(3, '0')}
             </div>
         </div>
     );
 };
-
-// --- MAIN PAGE ---
 
 const Gacha: React.FC = () => {
     const [stage, setStage] = useState<GameStage>('selection');
@@ -299,11 +261,7 @@ const Gacha: React.FC = () => {
     const [cutCoords, setCutCoords] = useState<{ start: {x:number, y:number}, end: {x:number, y:number} } | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [trail, setTrail] = useState<{x: number, y: number, id: number}[]>([]);
-    
-    // Dynamic Split Logic
     const [cutYPercentage, setCutYPercentage] = useState(15); 
-    
-    // Animation State for Randomness
     const [cutVisuals, setCutVisuals] = useState({ rotate: -30, x: -50, y: -150 });
 
     // Dispensing Logic
@@ -311,23 +269,45 @@ const Gacha: React.FC = () => {
     const [dispensingCard, setDispensingCard] = useState<CardData | null>(null);
     const [shakePack, setShakePack] = useState(false);
     
+    const [user, setUser] = useState<any>(null); // For auth tracking
+
     const svgRef = useRef<SVGSVGElement>(null);
     const packRef = useRef<HTMLDivElement>(null);
 
-    // --- EFFECT: TRAIL FADING ---
     useEffect(() => {
         if (trail.length === 0) return;
         const interval = setInterval(() => {
-            setTrail(prev => prev.filter(p => Date.now() - p.id < 150)); // Faster fade out (150ms)
+            setTrail(prev => prev.filter(p => Date.now() - p.id < 150));
         }, 16);
         return () => clearInterval(interval);
     }, [trail]);
+
+    // --- AUTO SAVE LOGIC ---
+    const saveToInventory = async (cards: CardData[]) => {
+        if (!user || !user.id) {
+            console.warn("Cannot auto-save: No user logged in.");
+            return;
+        }
+        
+        try {
+            await fetch(`${DISCORD_API_URL}/api/inventory/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    discordId: user.id,
+                    items: cards
+                })
+            });
+            console.log("Auto-saved inventory.");
+        } catch (e) {
+            console.error("Auto-save failed", e);
+        }
+    };
 
     // --- HANDLERS ---
 
     const selectPack = (type: PackType) => {
         setSelectedPack(type);
-        // Set the pool based on selection
         setCurrentPool(type === 'lamb' ? LAMB_POOL : WAGYU_POOL);
         setStage('cutting');
         setIsCut(false);
@@ -349,42 +329,30 @@ const Gacha: React.FC = () => {
 
     const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
         if (!isDragging) return;
-
         const pt = getPoint(e);
         if (pt) {
             setTrail(prev => [...prev, { ...pt, id: Date.now() }]);
-            
-            if (cutCoords) {
-                setCutCoords(prev => prev ? { ...prev, end: pt } : null);
-            }
+            if (cutCoords) setCutCoords(prev => prev ? { ...prev, end: pt } : null);
         }
     };
 
     const handleMouseUp = () => {
-        if (isDragging && cutCoords) {
-            checkCut();
-        }
+        if (isDragging && cutCoords) checkCut();
         setIsDragging(false);
     };
 
     const getPoint = (e: React.MouseEvent | React.TouchEvent) => {
         if (!svgRef.current) return null;
-        
         const rect = svgRef.current.getBoundingClientRect();
         const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
         const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-        
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
+        return { x: clientX - rect.left, y: clientY - rect.top };
     };
 
     const checkCut = () => {
         if (!cutCoords) return;
         const dx = cutCoords.end.x - cutCoords.start.x;
         const dy = cutCoords.end.y - cutCoords.start.y;
-        
         if (Math.abs(dx) < 200) return;
 
         const angle = Math.atan2(dy, dx) * (180 / Math.PI);
@@ -407,13 +375,7 @@ const Gacha: React.FC = () => {
         const randomRotate = (Math.random() * 20) - 10;
         const randomX = (Math.random() * 60) - 30;
         const randomY = -80 - (Math.random() * 40);
-
-        setCutVisuals({
-            rotate: randomRotate,
-            x: randomX,
-            y: randomY
-        });
-
+        setCutVisuals({ rotate: randomRotate, x: randomX, y: randomY });
         setIsCut(true);
         setCutCoords(null);
     };
@@ -425,19 +387,10 @@ const Gacha: React.FC = () => {
             setShakePack(true);
             setTimeout(() => setShakePack(false), 300);
 
-            // LOGIC: Select next card from pool
             let eligiblePool = [...currentPool];
-
-            // REMOVED FORCED LOGIC: Wagyu A5 is now purely random weights.
-            // The increased weights in the pool definition handle the "higher chance" requirement.
-
-            // UNIQUE CONSTRAINT: Only 1 "IV Cap" per pack
             const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
-            if (hasIVCap) {
-                eligiblePool = eligiblePool.filter(c => c.subType !== 'IV Cap');
-            }
+            if (hasIVCap) eligiblePool = eligiblePool.filter(c => c.subType !== 'IV Cap');
             
-            // WEIGHTED SELECTION
             const totalWeight = eligiblePool.reduce((sum, item) => sum + (item.weight || 10), 0);
             let randomNum = Math.random() * totalWeight;
             let nextCard: CardData | undefined;
@@ -450,19 +403,21 @@ const Gacha: React.FC = () => {
                 }
                 randomNum -= weight;
             }
-            
-            // Fallback if empty pool or math error (shouldn't happen with correct data)
             if (!nextCard) nextCard = eligiblePool[0] || currentPool[0];
             
             setTimeout(() => {
                 setDispensingCard(nextCard!);
                 setTimeout(() => {
-                    setRevealedCards(prev => [nextCard!, ...prev]);
+                    setRevealedCards(prev => {
+                        const newCards = [nextCard!, ...prev];
+                        // AUTO SAVE TRIGGER
+                        if (newCards.length === 5) {
+                            saveToInventory(newCards);
+                            setTimeout(() => setStage('finished'), 1500);
+                        }
+                        return newCards;
+                    });
                     setDispensingCard(null);
-                    
-                    if (revealedCards.length + 1 === 5) {
-                        setTimeout(() => setStage('finished'), 1500);
-                    }
                 }, 800); 
             }, 100);
         }
@@ -519,7 +474,12 @@ const Gacha: React.FC = () => {
                 <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
             </div>
 
-            <div className="relative z-20 container mx-auto px-4 mb-8">
+            <UserProfile 
+                onUserChange={setUser} 
+                className="absolute top-4 right-4"
+            />
+
+            <div className="relative z-20 container mx-auto px-4 mb-8 pt-16">
                 <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                     <span>←</span> Back to Dashboard
                 </Link>
@@ -528,7 +488,7 @@ const Gacha: React.FC = () => {
             <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[80vh]">
                 
                 {stage === 'selection' && (
-                    <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-10">
+                    <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-4">
                         <h1 className="text-4xl md:text-6xl font-black text-center mb-4 tracking-tighter drop-shadow-2xl">
                             BOOSTER <span className="text-brand-primary">SHOP</span>
                         </h1>
@@ -546,19 +506,16 @@ const Gacha: React.FC = () => {
                                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-900 to-black rounded-[2rem] border-[6px] border-purple-500/50 shadow-2xl overflow-hidden">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                     
-                                    {/* Tech Crimp */}
                                     <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-purple-500/30 flex items-center justify-center space-x-1">
                                         {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-purple-500/20 rounded-full"></div>)}
                                     </div>
                                     <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-purple-500/30"></div>
 
-                                    {/* Art */}
                                     <div className="absolute inset-x-4 top-16 bottom-16 bg-purple-900/10 rounded-xl flex flex-col items-center justify-center border border-purple-500/20 backdrop-blur-sm">
                                         <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🧬</div>
                                         <div className="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Genetic Pack</div>
                                     </div>
 
-                                    {/* Label */}
                                     <div className="absolute bottom-16 left-0 right-0 text-center">
                                         <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
                                         <p className="text-purple-300 text-xs font-mono uppercase tracking-[0.2em] mt-1">Mewtwo Edition</p>
@@ -575,17 +532,14 @@ const Gacha: React.FC = () => {
                                 <div className="absolute inset-0 bg-gradient-to-b from-rose-400 via-pink-500 to-rose-900 rounded-[2rem] border-[6px] border-pink-300/50 shadow-2xl overflow-hidden">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
                                     
-                                    {/* Soft Crimp */}
                                     <div className="absolute top-0 left-0 right-0 h-5 bg-white/10 border-b border-white/20"></div>
                                     <div className="absolute bottom-0 left-0 right-0 h-5 bg-white/10 border-t border-white/20"></div>
 
-                                    {/* Art */}
                                     <div className="absolute inset-x-4 top-16 bottom-16 bg-pink-900/10 rounded-xl flex flex-col items-center justify-center border border-pink-300/20 backdrop-blur-sm">
                                         <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🫧</div>
                                         <div className="bg-pink-400 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Mythic Pack</div>
                                     </div>
 
-                                    {/* Label */}
                                     <div className="absolute bottom-16 left-0 right-0 text-center">
                                         <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
                                         <p className="text-pink-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Mew Edition</p>
@@ -784,7 +738,7 @@ const Gacha: React.FC = () => {
                         </div>
 
                         {stage === 'finished' && (
-                            <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col md:flex-row gap-4 mb-20">
+                            <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col md:flex-row gap-4 mb-20 items-center">
                                 <button 
                                     onClick={resetGame}
                                     className="bg-brand-primary hover:bg-red-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform hover:scale-105 uppercase tracking-wider"
@@ -792,10 +746,10 @@ const Gacha: React.FC = () => {
                                     Open Another Pack
                                 </button>
                                 <Link 
-                                    to="/minecraft"
-                                    className="bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-10 rounded-full transition-colors uppercase tracking-wider text-center"
+                                    to="/inventory"
+                                    className="text-white hover:text-brand-primary underline transition-colors"
                                 >
-                                    Back to Menu
+                                    View Inventory
                                 </Link>
                             </div>
                         )}

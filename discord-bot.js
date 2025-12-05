@@ -36,12 +36,50 @@ const ROLE_SUBSCRIBER = '1339227370833448980';
 const ROLE_FRIEND = '1445655680735383675';
 const WHITELIST_NOTIFY_CHANNEL = '1375823728717467788';
 
+// --- ITEM MAPPING ---
+// Map Gacha Item Names to RCON Commands / Minecraft IDs
+const ITEM_MAP = {
+    'Bronze Coin': 'cobblemon:relic_coin',
+    'Silver Coin': 'cobblemon:silver_coin', 
+    'Gold Coin': 'cobblemon:gold_coin',
+    'Pokeball': 'cobblemon:poke_ball',
+    'Great Ball': 'cobblemon:great_ball',
+    'Ultra Ball': 'cobblemon:ultra_ball',
+    'Master Ball': 'cobblemon:master_ball',
+    'Quick Ball': 'cobblemon:quick_ball',
+    'Safari Ball': 'cobblemon:safari_ball',
+    'Level Ball': 'cobblemon:level_ball',
+    'Rare Candy': 'cobblemon:rare_candy',
+    'Exp. Candy XS': 'cobblemon:exp_candy_xs',
+    'Exp. Candy S': 'cobblemon:exp_candy_s',
+    'Exp. Candy M': 'cobblemon:exp_candy_m',
+    'Exp. Candy L': 'cobblemon:exp_candy_l',
+    'Exp. Candy XL': 'cobblemon:exp_candy_xl',
+    'Full Restore': 'cobblemon:full_restore',
+    'Full Heal': 'cobblemon:full_heal',
+    'Max Ether': 'cobblemon:max_ether',
+    'Max Elixir': 'cobblemon:max_elixir',
+    'Super Potion': 'cobblemon:super_potion',
+    'Antidote': 'cobblemon:antidote',
+    'Awakening': 'cobblemon:awakening',
+    'Ether': 'cobblemon:ether',
+    'Elixir': 'cobblemon:elixir',
+    'HP IV Cap': 'cobblemon:hp_up',
+    'Atk IV Cap': 'cobblemon:protein',
+    'Def IV Cap': 'cobblemon:iron',
+    'Sp. Atk IV Cap': 'cobblemon:calcium',
+    'Sp. Def IV Cap': 'cobblemon:zinc',
+    'Speed IV Cap': 'cobblemon:carbos',
+    'Shiny Upgrade': 'cobblemon:shiny_stone',
+    '1 TM Choice': 'cobblemon:tm_case'
+};
+
 // --- HELPER: RCON SENDER WITH RETRY ---
 const sendRconCommand = async (command) => {
     // 1. Check if configured
     if (!Rcon || !RCON_HOST || !RCON_PASSWORD) {
         console.log(`🔔 [RCON SIMULATION] ${command}`);
-        return false;
+        return true; // Simulate success
     }
 
     const rcon = new Rcon({
@@ -101,6 +139,20 @@ const WhitelistAppSchema = new mongoose.Schema({
     appliedAt: { type: Date, default: Date.now }
 });
 const WhitelistApp = mongoose.model('WhitelistApp', WhitelistAppSchema);
+
+// Inventory Schema
+const InventoryItemSchema = new mongoose.Schema({
+    discordId: { type: String, required: true },
+    itemId: { type: String, required: true }, // e.g. "150" (dex) or "30001" (custom id)
+    name: { type: String, required: true },
+    type: { type: String, required: true }, // 'Pokemon' or 'Item'
+    rarity: { type: String, required: true },
+    image: String,
+    claimed: { type: Boolean, default: false },
+    claimedAt: Date,
+    receivedAt: { type: Date, default: Date.now }
+});
+const InventoryItem = mongoose.model('InventoryItem', InventoryItemSchema);
 
 
 // --- CHAT PREVIEW LOGIC ---
@@ -348,6 +400,115 @@ app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
         res.json({ success: true });
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
+
+// --- INVENTORY & GACHA API ---
+
+// 1. Save Gacha Results
+app.post('/api/inventory/save', async (req, res) => {
+    const { discordId, items } = req.body;
+    if (!discordId || !items || !Array.isArray(items)) return res.status(400).json({ error: "Invalid data" });
+
+    try {
+        const newItems = items.map(item => ({
+            discordId,
+            itemId: item.id.toString(),
+            name: item.name,
+            type: item.type,
+            rarity: item.rarity,
+            image: item.image, // Optional, can be undefined
+            claimed: false,
+            receivedAt: new Date()
+        }));
+
+        await InventoryItem.insertMany(newItems);
+        console.log(`📦 Saved ${items.length} items for user ${discordId}`);
+        res.json({ success: true });
+    } catch (e) {
+        console.error("Save Inventory Error:", e);
+        res.status(500).json({ error: "Failed to save items" });
+    }
+});
+
+// 2. Fetch User Inventory
+app.get('/api/inventory', async (req, res) => {
+    const { discordId } = req.query;
+    if (!discordId) return res.status(400).json({ error: "Discord ID required" });
+
+    try {
+        const items = await InventoryItem.find({ discordId }).sort({ receivedAt: -1 });
+        res.json(items);
+    } catch (e) {
+        res.status(500).json({ error: "Fetch failed" });
+    }
+});
+
+// 3. Claim Item
+app.post('/api/inventory/claim', async (req, res) => {
+    const { discordId, dbItemId } = req.body;
+    if (!discordId || !dbItemId) return res.status(400).json({ error: "Missing data" });
+
+    try {
+        // 1. Verify User and Link
+        const link = await MinecraftLink.findOne({ discordId });
+        if (!link || !link.minecraftUsername) return res.status(400).json({ error: "Minecraft account not linked!" });
+
+        // 2. Find Item
+        const item = await InventoryItem.findOne({ _id: dbItemId, discordId });
+        if (!item) return res.status(404).json({ error: "Item not found" });
+        if (item.claimed) return res.status(400).json({ error: "Item already claimed" });
+
+        // 3. Construct Command
+        let command = "";
+        const player = link.minecraftUsername;
+
+        if (item.type === 'Pokemon') {
+            // pokegive <player> <name>
+            // Clean up name: "Mr. Mime" -> "mr-mime", remove special chars
+            const cleanName = item.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            // For Cobblemon, usually just the name works or "cobblemon:name" if registered
+            // Simple approach: try the name directly.
+            // Actually, `pokegive` command is standard.
+            command = `pokegive ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
+        } else {
+            // Items: parse name for count and type
+            // Name format: "5x Bronze Coin" or "Master Ball"
+            let count = 1;
+            let itemName = item.name;
+
+            // Regex to check if it starts with "Nx "
+            const match = item.name.match(/^(\d+)x\s+(.+)$/);
+            if (match) {
+                count = parseInt(match[1]);
+                itemName = match[2];
+            }
+
+            const mappedId = ITEM_MAP[itemName];
+            if (!mappedId) {
+                console.error(`❌ Unknown item mapping: ${itemName}`);
+                return res.status(500).json({ error: "Item ID map missing. Contact Admin." });
+            }
+
+            command = `give ${player} ${mappedId} ${count}`;
+        }
+
+        console.log(`🚀 Executing Claim: ${command}`);
+        const rconSuccess = await sendRconCommand(command);
+
+        if (rconSuccess) {
+            item.claimed = true;
+            item.claimedAt = new Date();
+            await item.save();
+            res.json({ success: true });
+        } else {
+            res.status(502).json({ error: "RCON Failed. Server might be offline." });
+        }
+
+    } catch (e) {
+        console.error("Claim Error:", e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 
 // --- KEEP ALIVE ---
 const SELF_URL = 'https://urnisa-bot.onrender.com';

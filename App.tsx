@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Routes, Route, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -7,6 +8,7 @@ import Subathon from './pages/Subathon';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
 import Gacha from './pages/Gacha';
+import Inventory from './pages/Inventory';
 import About from './pages/About';
 import Admin from './pages/Admin';
 import Overlay from './pages/Overlay';
@@ -64,6 +66,7 @@ const App: React.FC = () => {
             <Route path="/nisathon/wheel" element={<Wheel />} />
             <Route path="/minecraft" element={<Minecraft />} />
             <Route path="/minecraft/gacha" element={<Gacha />} />
+            <Route path="/inventory" element={<Inventory />} />
             <Route path="/about" element={<About />} />
             <Route path="/admin" element={<Admin />} />
             
