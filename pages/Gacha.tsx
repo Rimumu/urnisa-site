@@ -13,25 +13,26 @@ interface CardData {
     type: 'Pokemon' | 'Item';
     subType: string; // e.g. "Normal", "Tool", "Ball"
     rarity: 'Common' | 'Rare' | 'Legendary' | 'Ultra';
-    image?: string;
-    description?: string; // Kept in interface but not used in UI
+    image?: string; // Optional: If provided, overrides the automatic logic (used for Items)
+    description?: string;
     hp?: number; 
 }
 
 // --- MOCK DATA ---
+// Note: We removed the hardcoded Pokemon URLs. The component will now generate
+// the Cobblemon URL dynamically and fallback to PokeAPI if needed.
 const MOCK_CARDS: CardData[] = [
     { 
-        id: 1, 
+        id: 831, 
         name: "Wooloo", 
         type: 'Pokemon', 
         subType: "Normal", 
         rarity: 'Common', 
         hp: 60, 
-        description: "Its fleece is extremely fluffy.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/831.png" 
+        description: "Its fleece is extremely fluffy." 
     },
     { 
-        id: 2, 
+        id: 50, // Use a dummy ID for items
         name: "Rare Candy", 
         type: 'Item', 
         subType: "Consumable", 
@@ -40,17 +41,16 @@ const MOCK_CARDS: CardData[] = [
         image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png" 
     },
     { 
-        id: 3, 
+        id: 241, 
         name: "Miltank", 
         type: 'Pokemon', 
         subType: "Normal", 
         rarity: 'Common', 
         hp: 110, 
-        description: "Moo.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/241.png" 
+        description: "Moo." 
     },
     { 
-        id: 4, 
+        id: 1, // Dummy ID
         name: "Master Ball", 
         type: 'Item', 
         subType: "Ball", 
@@ -59,14 +59,13 @@ const MOCK_CARDS: CardData[] = [
         image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" 
     },
     { 
-        id: 5, 
+        id: 150, 
         name: "Mewtwo", 
         type: 'Pokemon', 
         subType: "Psychic", 
         rarity: 'Legendary', 
         hp: 150, 
-        description: "Genetic Pokemon.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/150.png" 
+        description: "Genetic Pokemon." 
     },
 ];
 
@@ -98,6 +97,31 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         holoEffect = "foil-holo"; 
     }
 
+    // --- SMART IMAGE LOGIC ---
+    // 1. If explicit image provided (Items), use it.
+    // 2. If Pokemon, try Cobblemon Tools Sprite (Official Cobblemon Models).
+    // 3. Fallback to PokeAPI Home 3D renders.
+    const [imgSrc, setImgSrc] = useState<string>("");
+
+    useEffect(() => {
+        if (card.image) {
+            setImgSrc(card.image);
+        } else {
+            // Default to Cobblemon Tools Sprite
+            setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${card.name.toLowerCase()}/sprite.png`);
+        }
+    }, [card]);
+
+    const handleImageError = () => {
+        // If current failed source was the Cobblemon one, switch to PokeAPI Home
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
+        } else {
+            // If even PokeAPI fails (unlikely), fallback to placeholder
+            setImgSrc(`https://via.placeholder.com/300?text=${card.name}`);
+        }
+    };
+
     return (
         <div className={`relative w-48 h-72 rounded-xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
             {/* Holographic Overlay */}
@@ -110,11 +134,12 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 
                 {/* Main Artwork - Padded bottom to avoid text overlap */}
                 <div className="absolute inset-0 p-4 pb-20 flex items-center justify-center z-10">
-                    <OptimizedImage 
-                        src={card.image || `https://via.placeholder.com/300?text=${card.name}`} 
+                    <img 
+                        src={imgSrc} 
                         alt={card.name}
-                        className="w-full h-full transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl"
-                        contain={true}
+                        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl"
+                        onError={handleImageError}
+                        loading="lazy"
                     />
                 </div>
             </div>
@@ -156,7 +181,6 @@ const Gacha: React.FC = () => {
     const [trail, setTrail] = useState<{x: number, y: number, id: number}[]>([]);
     
     // Dynamic Split Logic
-    // We store where the cut happened (0-100%) to visually split the pack at that exact line
     const [cutYPercentage, setCutYPercentage] = useState(15); 
     
     // Animation State for Randomness
@@ -202,7 +226,6 @@ const Gacha: React.FC = () => {
     };
 
     const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
-        // ONLY update trail if dragging
         if (!isDragging) return;
 
         const pt = getPoint(e);
@@ -223,7 +246,6 @@ const Gacha: React.FC = () => {
     };
 
     const getPoint = (e: React.MouseEvent | React.TouchEvent) => {
-        // Coordinates relative to the SVG overlay
         if (!svgRef.current) return null;
         
         const rect = svgRef.current.getBoundingClientRect();
@@ -241,26 +263,16 @@ const Gacha: React.FC = () => {
         const dx = cutCoords.end.x - cutCoords.start.x;
         const dy = cutCoords.end.y - cutCoords.start.y;
         
-        // 1. Check Horizontal Length (Must cover width of pack approx)
         if (Math.abs(dx) < 200) return;
 
-        // 2. Check Flatness (Angle)
         const angle = Math.atan2(dy, dx) * (180 / Math.PI);
         const isHorizontal = (Math.abs(angle) < 30) || (Math.abs(angle) > 150);
         if (!isHorizontal) return;
 
-        // 3. Check Vertical Position (Validation + Real Time Calculation)
-        // SVG Offset is 200px. Pack Height is 420px.
-        // Pack starts at Y=200 in SVG coords.
         const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
-        
-        // Calculate where the cut is relative to the pack (0px to 420px)
         const relativeY = avgY - 200;
-        
-        // Calculate Percentage (0% is top, 100% is bottom)
         const percentage = (relativeY / 420) * 100;
 
-        // Valid Zone: STRICT 10% to 15%
         if (percentage >= 10 && percentage <= 15) {
             triggerCut(percentage);
         } else {
@@ -270,12 +282,9 @@ const Gacha: React.FC = () => {
 
     const triggerCut = (exactPercentage: number) => {
         setCutYPercentage(exactPercentage);
-
-        // Generate random physics for the top piece
-        // Less extreme ranges to prevent flying off screen
-        const randomRotate = (Math.random() * 20) - 10; // +/- 10 deg
-        const randomX = (Math.random() * 60) - 30; // +/- 30px
-        const randomY = -80 - (Math.random() * 40); // Up 80-120px
+        const randomRotate = (Math.random() * 20) - 10;
+        const randomX = (Math.random() * 60) - 30;
+        const randomY = -80 - (Math.random() * 40);
 
         setCutVisuals({
             rotate: randomRotate,
@@ -288,21 +297,16 @@ const Gacha: React.FC = () => {
     };
 
     const handlePackClick = () => {
-        if (!isCut || dispensingCard) return; // Wait for current animation
+        if (!isCut || dispensingCard) return;
 
         if (revealedCards.length < 5) {
-            // Shake effect
             setShakePack(true);
             setTimeout(() => setShakePack(false), 300);
 
             const nextCard = MOCK_CARDS[revealedCards.length];
             
-            // Delay dispense slightly to allow shake
             setTimeout(() => {
-                // 1. Trigger Fly-Out Animation (Temporary state)
                 setDispensingCard(nextCard);
-
-                // 2. After animation, add to list and clear temporary
                 setTimeout(() => {
                     setRevealedCards(prev => [nextCard, ...prev]);
                     setDispensingCard(null);
@@ -310,7 +314,7 @@ const Gacha: React.FC = () => {
                     if (revealedCards.length + 1 === 5) {
                         setTimeout(() => setStage('finished'), 1500);
                     }
-                }, 800); // Sync with CSS animation duration
+                }, 800); 
             }, 100);
         }
     };
@@ -339,7 +343,7 @@ const Gacha: React.FC = () => {
                 @keyframes flyOut {
                     0% { transform: translateY(0) scale(0.1) rotateX(90deg); opacity: 0; }
                     40% { transform: translateY(-300px) scale(1) rotateX(0deg) rotateZ(5deg); opacity: 1; z-index: 50; }
-                    100% { transform: translateY(1000px) scale(0.5); opacity: 0; } /* Fall "into" the grid */
+                    100% { transform: translateY(1000px) scale(0.5); opacity: 0; }
                 }
                 .animate-fly-out {
                     animation: flyOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -354,17 +358,12 @@ const Gacha: React.FC = () => {
                 }
             `}</style>
 
-            {/* New Background: TCG Playmat Style */}
             <div className="absolute inset-0 bg-[#0f0f11] z-0">
-                {/* Radial Gradient Spotlight */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#2a2a30_0%,_#0f0f11_70%)]"></div>
-                {/* Hex Pattern Texture */}
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
-                {/* Subtle Grid */}
                 <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
             </div>
 
-            {/* Nav Back */}
             <div className="relative z-20 container mx-auto px-4 mb-8">
                 <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                     <span>←</span> Back to Dashboard
@@ -373,7 +372,6 @@ const Gacha: React.FC = () => {
 
             <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[80vh]">
                 
-                {/* --- SELECTION STAGE --- */}
                 {stage === 'selection' && (
                     <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-10">
                         <h1 className="text-4xl md:text-6xl font-black text-center mb-4 tracking-tighter drop-shadow-2xl">
@@ -384,56 +382,36 @@ const Gacha: React.FC = () => {
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 px-4 md:px-20">
-                            {/* LAMB CHOP */}
                             <button 
                                 onClick={() => selectPack('lamb')}
                                 className="group relative aspect-[3/4] rounded-[2rem] transition-transform duration-500 hover:scale-105 hover:-rotate-1"
                             >
-                                {/* Glow */}
                                 <div className="absolute inset-0 bg-red-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                                
-                                {/* Pack Body */}
                                 <div className="absolute inset-0 bg-gradient-to-b from-red-500 to-red-900 rounded-[2rem] border-[6px] border-white/10 shadow-2xl overflow-hidden">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
-                                    
-                                    {/* Crimp Top/Bottom */}
                                     <div className="absolute top-0 left-0 right-0 h-4 bg-black/20 border-b border-white/10 bg-[length:10px_10px] bg-repeat-x" style={{ backgroundImage: 'linear-gradient(45deg, transparent 45%, rgba(0,0,0,0.3) 50%, transparent 55%)' }}></div>
                                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/20 border-t border-white/10 bg-[length:10px_10px] bg-repeat-x" style={{ backgroundImage: 'linear-gradient(45deg, transparent 45%, rgba(0,0,0,0.3) 50%, transparent 55%)' }}></div>
-
-                                    {/* Art */}
                                     <div className="absolute inset-x-4 top-12 bottom-12 bg-black/20 rounded-xl flex items-center justify-center border border-white/5">
                                         <div className="text-[8rem] filter drop-shadow-lg group-hover:scale-110 transition-transform duration-500">🍖</div>
                                     </div>
-
-                                    {/* Label */}
                                     <div className="absolute bottom-16 left-0 right-0 text-center">
                                         <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
                                     </div>
                                 </div>
                             </button>
 
-                            {/* WAGYU */}
                             <button 
                                 onClick={() => selectPack('wagyu')}
                                 className="group relative aspect-[3/4] rounded-[2rem] transition-transform duration-500 hover:scale-105 hover:rotate-1"
                             >
-                                {/* Glow */}
                                 <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-10 group-hover:opacity-30 transition-opacity"></div>
-                                
-                                {/* Pack Body */}
                                 <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-black rounded-[2rem] border-[6px] border-yellow-500/30 shadow-2xl overflow-hidden">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
-                                    
-                                    {/* Crimp */}
                                     <div className="absolute top-0 left-0 right-0 h-4 bg-white/5 border-b border-white/5"></div>
                                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-white/5 border-t border-white/5"></div>
-
-                                    {/* Art */}
                                     <div className="absolute inset-x-4 top-12 bottom-12 bg-yellow-500/5 rounded-xl flex items-center justify-center border border-yellow-500/20">
                                         <div className="text-[8rem] filter drop-shadow-lg group-hover:scale-110 transition-transform duration-500">🥩</div>
                                     </div>
-
-                                    {/* Label */}
                                     <div className="absolute bottom-16 left-0 right-0 text-center">
                                         <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
                                     </div>
@@ -443,11 +421,9 @@ const Gacha: React.FC = () => {
                     </div>
                 )}
 
-                {/* --- INTERACTIVE STAGE --- */}
                 {(stage === 'cutting' || stage === 'dispensing' || stage === 'finished') && (
                     <div className="relative w-full max-w-4xl flex flex-col items-center">
                         
-                        {/* STATUS TEXT (MOVED TO TOP) */}
                         <div className="mb-8 h-12 flex items-center justify-center w-full relative z-30">
                             {!isCut ? (
                                 <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 animate-pulse">
@@ -468,10 +444,7 @@ const Gacha: React.FC = () => {
                             )}
                         </div>
 
-                        {/* GAME AREA CONTAINER */}
                         <div className="relative h-[500px] w-full flex justify-center items-center perspective-1000">
-                            
-                            {/* PACK ITSELF */}
                             <div 
                                 ref={packRef}
                                 className={`relative w-[300px] h-[420px] cursor-pointer ${shakePack ? 'animate-shake' : ''}`}
@@ -479,7 +452,6 @@ const Gacha: React.FC = () => {
                                 onTouchStart={handleMouseDown}
                                 onClick={handlePackClick}
                             >
-                                {/* SVG INTERACTION LAYER (ALWAYS ON TOP) - Only show if not cut yet */}
                                 {!isCut && (
                                     <svg 
                                         ref={svgRef}
@@ -512,7 +484,6 @@ const Gacha: React.FC = () => {
                                     </svg>
                                 )}
 
-                                {/* VISUAL GUIDE LINE (Dashed) - Indicates general cut area */}
                                 {!isCut && (
                                     <div className="absolute top-[15%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/30 z-40 pointer-events-none flex items-center justify-between px-2 opacity-50">
                                         <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2">✂️</span>
@@ -520,7 +491,6 @@ const Gacha: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* DISPENSING CARD (ANIMATED) */}
                                 {dispensingCard && (
                                     <div className="absolute inset-0 flex justify-center items-center z-30 pointer-events-none">
                                         <div className="animate-fly-out">
@@ -529,15 +499,6 @@ const Gacha: React.FC = () => {
                                     </div>
                                 )}
 
-                                {/* --- PACK VISUALS (REAL-TIME SPLIT) --- */}
-                                
-                                {/* 
-                                    Instead of two predefined divs, we render the EXACT SAME pack content twice.
-                                    The Top Div is clipped to show only the top part (based on cutYPercentage).
-                                    The Bottom Div is clipped to show only the bottom part.
-                                */}
-
-                                {/* TOP HALF - DYNAMIC HEIGHT */}
                                 <div 
                                     className={`
                                         absolute inset-0 z-20 
@@ -546,15 +507,12 @@ const Gacha: React.FC = () => {
                                         ${selectedPack === 'lamb' ? 'from-red-500 to-red-900 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
                                     `}
                                     style={{
-                                        // Dynamic Clip Path for Straight Cut
                                         clipPath: `inset(0 0 ${100 - cutYPercentage}% 0)`,
                                         transform: isCut ? `translate(${cutVisuals.x}px, ${cutVisuals.y}px) rotate(${cutVisuals.rotate}deg)` : 'none',
                                         opacity: isCut ? 0 : 1,
                                     }}
                                 >
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
-                                    
-                                    {/* Content (duplicated) */}
                                     <div className="absolute inset-0 flex items-center justify-center opacity-90 pb-8">
                                         <div className="text-[8rem]">{selectedPack === 'lamb' ? '🍖' : '🥩'}</div>
                                     </div>
@@ -563,15 +521,10 @@ const Gacha: React.FC = () => {
                                             {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                         </h2>
                                     </div>
-
-                                    {/* Crimp Top */}
                                     <div className="absolute top-0 left-0 right-0 h-4 bg-black/20 border-b border-white/10"></div>
-                                    
-                                    {/* Cut Edge Highlight (Bottom of top piece) */}
                                     <div className="absolute left-0 w-full h-1 bg-white/50 blur-[1px]" style={{ bottom: `${100 - cutYPercentage}%` }}></div>
                                 </div>
 
-                                {/* BOTTOM HALF - DYNAMIC HEIGHT */}
                                 <div 
                                     className={`
                                         absolute inset-0 z-10
@@ -579,13 +532,10 @@ const Gacha: React.FC = () => {
                                         ${selectedPack === 'lamb' ? 'from-red-500 to-red-900 border-white/20' : 'from-gray-900 to-black border-yellow-500/30'}
                                     `}
                                     style={{
-                                        // Dynamic Clip Path for Straight Cut
                                         clipPath: `inset(${cutYPercentage}% 0 0 0)`
                                     }}
                                 >
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-10"></div>
-                                    
-                                    {/* Content (duplicated) */}
                                     <div className="absolute inset-0 flex items-center justify-center opacity-90 pb-8">
                                         <div className="text-[8rem]">{selectedPack === 'lamb' ? '🍖' : '🥩'}</div>
                                     </div>
@@ -594,20 +544,13 @@ const Gacha: React.FC = () => {
                                             {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                         </h2>
                                     </div>
-
-                                    {/* Crimp Bottom */}
                                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-black/20 border-t border-white/10"></div>
-                                    
-                                    {/* Cut Edge Highlight (Top of bottom piece) */}
                                     <div className="absolute left-0 w-full h-1 bg-white/30 blur-[1px]" style={{ top: `${cutYPercentage}%` }}></div>
-                                    
-                                    {/* Inner Shadow to simulate depth when open */}
                                     {isCut && (
                                         <div className="absolute left-0 right-0 h-16 bg-gradient-to-b from-black/80 to-transparent pointer-events-none" style={{ top: `${cutYPercentage}%` }}></div>
                                     )}
                                 </div>
 
-                                {/* INNER GOLDEN GLOW (Behind split) */}
                                 <div className="absolute inset-4 bg-yellow-400/30 blur-2xl z-0 transition-opacity duration-500"
                                      style={{ 
                                          top: `${cutYPercentage}%`, 
@@ -619,7 +562,6 @@ const Gacha: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* INVENTORY GRID (Cards Land Here) */}
                         <div className="w-full max-w-5xl mt-2">
                             <h3 className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-4 text-center">Revealed Cards</h3>
                             
@@ -642,7 +584,6 @@ const Gacha: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* FINISHED ACTIONS */}
                         {stage === 'finished' && (
                             <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col md:flex-row gap-4 mb-20">
                                 <button 
