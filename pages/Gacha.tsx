@@ -447,8 +447,26 @@ const Gacha: React.FC = () => {
                 {(stage === 'cutting' || stage === 'dispensing' || stage === 'finished') && (
                     <div className="relative w-full max-w-4xl flex flex-col items-center">
                         
-                        {/* HEADER - NOW EMPTY FOR SPACING, TEXT MOVED BELOW */}
-                        <div className="h-4 mb-4"></div>
+                        {/* STATUS TEXT (MOVED TO TOP) */}
+                        <div className="mb-8 h-12 flex items-center justify-center w-full relative z-30">
+                            {!isCut ? (
+                                <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 animate-pulse">
+                                    <h2 className="text-xl font-black uppercase tracking-[0.2em] text-white/90">
+                                        SWIPE TOP TO OPEN ✂️
+                                    </h2>
+                                </div>
+                            ) : stage !== 'finished' ? (
+                                <div className="bg-brand-primary/20 backdrop-blur-md px-6 py-2 rounded-full border border-brand-primary/50 animate-in fade-in zoom-in duration-300">
+                                    <h2 className="text-lg font-bold uppercase tracking-widest text-brand-primary">
+                                        TAP PACK TO REVEAL ({5 - revealedCards.length} LEFT)
+                                    </h2>
+                                </div>
+                            ) : (
+                                <div className="bg-green-500/20 backdrop-blur-md px-6 py-2 rounded-full border border-green-500/50">
+                                    <h2 className="text-xl font-black uppercase text-green-400">OPENING COMPLETE!</h2>
+                                </div>
+                            )}
+                        </div>
 
                         {/* GAME AREA CONTAINER */}
                         <div className="relative h-[500px] w-full flex justify-center items-center perspective-1000">
@@ -599,27 +617,6 @@ const Gacha: React.FC = () => {
                                 </div>
 
                             </div>
-                        </div>
-
-                        {/* STATUS TEXT (MOVED BELOW PACK FOR VISIBILITY) */}
-                        <div className="mt-6 mb-4 h-12 flex items-center justify-center w-full relative z-30">
-                            {!isCut ? (
-                                <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 animate-pulse">
-                                    <h2 className="text-xl font-black uppercase tracking-[0.2em] text-white/90">
-                                        SWIPE TOP TO OPEN ✂️
-                                    </h2>
-                                </div>
-                            ) : stage !== 'finished' ? (
-                                <div className="bg-brand-primary/20 backdrop-blur-md px-6 py-2 rounded-full border border-brand-primary/50 animate-in fade-in zoom-in duration-300">
-                                    <h2 className="text-lg font-bold uppercase tracking-widest text-brand-primary">
-                                        TAP PACK TO DISPENSE ({5 - revealedCards.length} LEFT)
-                                    </h2>
-                                </div>
-                            ) : (
-                                <div className="bg-green-500/20 backdrop-blur-md px-6 py-2 rounded-full border border-green-500/50">
-                                    <h2 className="text-xl font-black uppercase text-green-400">OPENING COMPLETE!</h2>
-                                </div>
-                            )}
                         </div>
 
                         {/* INVENTORY GRID (Cards Land Here) */}
