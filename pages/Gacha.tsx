@@ -22,8 +22,9 @@ interface CardData {
 }
 
 // --- CONSTANTS ---
-const MEWTWO_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png";
-const MEW_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/151.png";
+// Updated to Cobblemon Tools source as requested
+const MEWTWO_IMAGE = "https://cobblemon.tools/pokedex/pokemon/mewtwo/sprite.png";
+const MEW_IMAGE = "https://cobblemon.tools/pokedex/pokemon/mew/sprite.png";
 
 // --- DATA POOLS ---
 
@@ -542,8 +543,8 @@ const Gacha: React.FC = () => {
                 {user && (
                     <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
                         {/* Lamb Counter */}
-                        <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group">
-                            <div className="bg-purple-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center">
+                        <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
+                            <div className="bg-purple-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-purple-500/10">
                                 <img src={MEWTWO_IMAGE} alt="Mewtwo" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                             </div>
                             <div className="flex flex-col">
@@ -552,8 +553,8 @@ const Gacha: React.FC = () => {
                             </div>
                         </div>
                         {/* Wagyu Counter */}
-                        <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group">
-                            <div className="bg-pink-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center">
+                        <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
+                            <div className="bg-pink-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-pink-500/10">
                                 <img src={MEW_IMAGE} alt="Mew" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                             </div>
                             <div className="flex flex-col">
@@ -583,7 +584,7 @@ const Gacha: React.FC = () => {
                                 onClick={() => selectPack('lamb')}
                                 disabled={processing || packs.lambPacks < 1}
                                 className={`
-                                    group relative aspect-[3/4] rounded-[3rem] transition-all duration-500
+                                    group relative aspect-[3/4] rounded-[3rem] transition-all duration-500 overflow-hidden
                                     ${packs.lambPacks > 0 ? 'hover:scale-105 hover:-rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                 `}
                             >
@@ -621,7 +622,7 @@ const Gacha: React.FC = () => {
                                 onClick={() => selectPack('wagyu')}
                                 disabled={processing || packs.wagyuPacks < 1}
                                 className={`
-                                    group relative aspect-[3/4] rounded-[3rem] transition-all duration-500
+                                    group relative aspect-[3/4] rounded-[3rem] transition-all duration-500 overflow-hidden
                                     ${packs.wagyuPacks > 0 ? 'hover:scale-105 hover:rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                 `}
                             >
