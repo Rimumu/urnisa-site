@@ -24,8 +24,8 @@ interface CardData {
 
 // THEME: MEWTWO (Genetic / Science / Lab)
 const LAMB_POOL: CardData[] = [
-    // The Chase (Guaranteed at end, excluded from random pulls via logic)
-    { id: 150, name: "Mewtwo", type: 'Pokemon', subType: "Artificial", rarity: 'Legendary', hp: 180, description: "A clone created by science.", weight: 0 },
+    // The Chase (Now weigh 1, randomly obtainable)
+    { id: 150, name: "Mewtwo", type: 'Pokemon', subType: "Artificial", rarity: 'Legendary', hp: 180, description: "A clone created by science.", weight: 1 },
     
     // Rares (Weight: 10)
     { id: 142, name: "Aerodactyl", type: 'Pokemon', subType: "Fossil", rarity: 'Rare', hp: 120, description: "Resurrected from amber.", weight: 10 },
@@ -40,7 +40,6 @@ const LAMB_POOL: CardData[] = [
     { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Uncommon', hp: 65, description: "Man-made code.", weight: 25 },
 
     // Uncommon Items (Weight: 25)
-    // Updated Images to reliable PokeAPI repo
     { id: 30001, name: "Exp. Candy M", type: 'Item', subType: "Consumable", rarity: 'Uncommon', description: "A medium sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-candy-m.png", weight: 25 },
     { id: 30002, name: "Super Potion", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Heals 60 HP.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/super-potion.png", weight: 25 },
     { id: 30003, name: "Awakening", type: 'Item', subType: "Medicine", rarity: 'Uncommon', description: "Wakes up Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/awakening.png", weight: 25 },
@@ -59,10 +58,7 @@ const LAMB_POOL: CardData[] = [
     { id: 100, name: "Voltorb", type: 'Pokemon', subType: "Ball", rarity: 'Common', hp: 40, description: "Looks like a ball.", weight: 15 },
 
     // Common Items 
-    // Bronze Coin (Weight: 65 - Most frequent single item, but balanced against the many uncommons)
     { id: 20001, name: "5x Bronze Coin", type: 'Item', subType: "Currency", rarity: 'Common', description: "Used for trading.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-copper.png", weight: 65 },
-    
-    // Other Common Items (Weight 30)
     { id: 20002, name: "5x Exp. Candy XS", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A small sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-candy-xs.png", weight: 30 },
     { id: 20003, name: "2x Exp. Candy S", type: 'Item', subType: "Consumable", rarity: 'Common', description: "A sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/exp-candy-s.png", weight: 30 },
     { id: 20004, name: "5x Pokeball", type: 'Item', subType: "Balls", rarity: 'Common', description: "Catches wild Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png", weight: 30 },
@@ -71,8 +67,8 @@ const LAMB_POOL: CardData[] = [
 // THEME: MEW (Mythic / Rare / Ancestor)
 // WAGYU A5: Only Rare, Ultra-Rare, Legendary, Mythic
 const WAGYU_POOL: CardData[] = [
-    // The Chase
-    { id: 151, name: "Mew", type: 'Pokemon', subType: "Originator", rarity: 'Mythical', hp: 100, description: "The ancestor of all.", weight: 0 },
+    // The Chase (Now weigh 1, randomly obtainable)
+    { id: 151, name: "Mew", type: 'Pokemon', subType: "Originator", rarity: 'Mythical', hp: 100, description: "The ancestor of all.", weight: 1 },
     
     // Legendary Items (Weight: 3)
     { id: 30030, name: "Gold Coin", type: 'Item', subType: "Currency", rarity: 'Legendary', description: "A fortune.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-gold.png", weight: 3 },
@@ -425,44 +421,40 @@ const Gacha: React.FC = () => {
             setShakePack(true);
             setTimeout(() => setShakePack(false), 300);
 
-            // LOGIC: Guaranteed Chase on 5th card (index 4)
-            // revealedCards length is 0, 1, 2, 3... so when it is 4, this is the 5th click.
-            
-            let nextCard: CardData | undefined;
-            const isLamb = selectedPack === 'lamb';
-            const chaseName = isLamb ? "Mewtwo" : "Mew";
+            // LOGIC: Select next card from pool
+            let eligiblePool = [...currentPool];
 
-            if (revealedCards.length === 4) {
-                // FORCE CHASE CARD
-                nextCard = currentPool.find(c => c.name === chaseName)!;
-                // Fallback (should never happen if pool is correct)
-                if (!nextCard) nextCard = currentPool[0]; 
-            } else {
-                // RANDOM CARD (Exclude Chase Card to keep it special for the end)
-                let regularPool = currentPool.filter(c => c.name !== chaseName);
-
-                // UNIQUE CONSTRAINT: Only 1 "IV Cap" per pack
-                const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
-                if (hasIVCap) {
-                    regularPool = regularPool.filter(c => c.subType !== 'IV Cap');
-                }
-                
-                // WEIGHTED SELECTION
-                const totalWeight = regularPool.reduce((sum, item) => sum + (item.weight || 10), 0);
-                let randomNum = Math.random() * totalWeight;
-                
-                for (const card of regularPool) {
-                    const weight = card.weight || 10;
-                    if (randomNum < weight) {
-                        nextCard = card;
-                        break;
-                    }
-                    randomNum -= weight;
-                }
-                
-                // Fallback if float math goes slightly off
-                if (!nextCard) nextCard = regularPool[0];
+            // Wagyu Last Card Rule: Must be Ultra-Rare, Legendary, or Mythical
+            if (revealedCards.length === 4 && selectedPack === 'wagyu') {
+                eligiblePool = eligiblePool.filter(c => 
+                    c.rarity === 'Ultra-Rare' || 
+                    c.rarity === 'Legendary' || 
+                    c.rarity === 'Mythical'
+                );
             }
+
+            // UNIQUE CONSTRAINT: Only 1 "IV Cap" per pack
+            const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
+            if (hasIVCap) {
+                eligiblePool = eligiblePool.filter(c => c.subType !== 'IV Cap');
+            }
+            
+            // WEIGHTED SELECTION
+            const totalWeight = eligiblePool.reduce((sum, item) => sum + (item.weight || 10), 0);
+            let randomNum = Math.random() * totalWeight;
+            let nextCard: CardData | undefined;
+            
+            for (const card of eligiblePool) {
+                const weight = card.weight || 10;
+                if (randomNum < weight) {
+                    nextCard = card;
+                    break;
+                }
+                randomNum -= weight;
+            }
+            
+            // Fallback if empty pool or math error (shouldn't happen with correct data)
+            if (!nextCard) nextCard = eligiblePool[0] || currentPool[0];
             
             setTimeout(() => {
                 setDispensingCard(nextCard!);
