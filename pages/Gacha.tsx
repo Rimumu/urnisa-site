@@ -210,8 +210,8 @@ const Gacha: React.FC = () => {
         // Calculate Percentage (0% is top, 100% is bottom)
         const percentage = (relativeY / 420) * 100;
 
-        // Valid Zone: Between 10% and 40% (Top area, but not hitting cards)
-        if (percentage >= 10 && percentage <= 40) {
+        // Valid Zone: STRICT 10% to 15%
+        if (percentage >= 10 && percentage <= 15) {
             triggerCut(percentage);
         } else {
             setCutCoords(null);
@@ -316,7 +316,7 @@ const Gacha: React.FC = () => {
 
             {/* Nav Back */}
             <div className="relative z-20 container mx-auto px-4 mb-8">
-                <Link to="/minecraft-dev" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                     <span>←</span> Back to Dashboard
                 </Link>
             </div>
@@ -605,7 +605,7 @@ const Gacha: React.FC = () => {
                                     Open Another Pack
                                 </button>
                                 <Link 
-                                    to="/minecraft-dev"
+                                    to="/minecraft"
                                     className="bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-10 rounded-full transition-colors uppercase tracking-wider text-center"
                                 >
                                     Back to Menu
