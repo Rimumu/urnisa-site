@@ -28,7 +28,7 @@ const MOCK_CARDS: CardData[] = [
         rarity: 'Common', 
         hp: 60, 
         description: "Its fleece is extremely fluffy.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/831.png" 
+        image: "https://wiki.cobblemon.com/images/e/e5/Wooloo.png" 
     },
     { 
         id: 2, 
@@ -37,7 +37,7 @@ const MOCK_CARDS: CardData[] = [
         subType: "Consumable", 
         rarity: 'Rare', 
         description: "Level up.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/rare-candy.png" 
+        image: "https://wiki.cobblemon.com/images/a/a4/Rare_Candy.png" 
     },
     { 
         id: 3, 
@@ -47,7 +47,7 @@ const MOCK_CARDS: CardData[] = [
         rarity: 'Common', 
         hp: 110, 
         description: "Moo.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/241.png" 
+        image: "https://wiki.cobblemon.com/images/4/43/Miltank.png" 
     },
     { 
         id: 4, 
@@ -56,7 +56,7 @@ const MOCK_CARDS: CardData[] = [
         subType: "Ball", 
         rarity: 'Ultra', 
         description: "Catch anything.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png" 
+        image: "https://wiki.cobblemon.com/images/a/a2/Master_Ball.png" 
     },
     { 
         id: 5, 
@@ -66,7 +66,7 @@ const MOCK_CARDS: CardData[] = [
         rarity: 'Legendary', 
         hp: 150, 
         description: "Genetic Pokemon.", 
-        image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png" 
+        image: "https://wiki.cobblemon.com/images/7/7e/Mewtwo.png" 
     },
 ];
 
