@@ -529,30 +529,30 @@ const Gacha: React.FC = () => {
                 className="!absolute top-4 right-4"
             />
 
-            {/* PACK COUNTERS */}
-            {user && (
-                <div className="absolute top-20 md:top-24 left-4 z-40 flex flex-col gap-2 animate-in fade-in slide-in-from-left-4 duration-500">
-                    <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-xl p-2 pr-4 flex items-center gap-3 shadow-lg">
-                        <div className="text-2xl">🧬</div>
-                        <div>
-                            <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wider leading-none">Lamb Chop</div>
-                            <div className="text-xl font-black text-white leading-none">{packs.lambPacks} <span className="text-xs font-normal text-gray-400">owned</span></div>
-                        </div>
-                    </div>
-                    <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-xl p-2 pr-4 flex items-center gap-3 shadow-lg">
-                        <div className="text-2xl">🫧</div>
-                        <div>
-                            <div className="text-[10px] font-bold text-pink-400 uppercase tracking-wider leading-none">Wagyu A5</div>
-                            <div className="text-xl font-black text-white leading-none">{packs.wagyuPacks} <span className="text-xs font-normal text-gray-400">owned</span></div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="relative z-20 container mx-auto px-4 mb-8 pt-16">
+            {/* HEADER: Back Button & Pack Counters (Reorganized to prevent overlap) */}
+            <div className="relative z-20 container mx-auto px-4 mb-4 pt-24 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
                     <span>←</span> Back to Dashboard
                 </Link>
+
+                {user && (
+                    <div className="flex gap-3 animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
+                            <div className="text-xl">🧬</div>
+                            <div className="leading-none">
+                                <div className="text-[9px] font-bold text-purple-400 uppercase tracking-wider">Lamb Chop</div>
+                                <div className="text-lg font-black text-white">{packs.lambPacks}</div>
+                            </div>
+                        </div>
+                        <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
+                            <div className="text-xl">🫧</div>
+                            <div className="leading-none">
+                                <div className="text-[9px] font-bold text-pink-400 uppercase tracking-wider">Wagyu A5</div>
+                                <div className="text-lg font-black text-white">{packs.wagyuPacks}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[80vh]">
@@ -573,12 +573,12 @@ const Gacha: React.FC = () => {
                                 onClick={() => selectPack('lamb')}
                                 disabled={processing || packs.lambPacks < 1}
                                 className={`
-                                    group relative aspect-[3/4] rounded-[2rem] transition-all duration-500
+                                    group relative aspect-[3/4] rounded-[3rem] transition-all duration-500
                                     ${packs.lambPacks > 0 ? 'hover:scale-105 hover:-rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                 `}
                             >
                                 <div className="absolute inset-0 bg-purple-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-900 to-black rounded-[2rem] border-[6px] border-purple-500/50 shadow-2xl overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-b from-indigo-900 via-purple-900 to-black rounded-[3rem] border-[6px] border-purple-500/50 shadow-2xl overflow-hidden">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                     
                                     <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-purple-500/30 flex items-center justify-center space-x-1">
@@ -586,7 +586,7 @@ const Gacha: React.FC = () => {
                                     </div>
                                     <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-purple-500/30"></div>
 
-                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-purple-900/10 rounded-xl flex flex-col items-center justify-center border border-purple-500/20 backdrop-blur-sm">
+                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-purple-900/10 rounded-[2rem] flex flex-col items-center justify-center border border-purple-500/20 backdrop-blur-sm">
                                         <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🧬</div>
                                         <div className="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Genetic Pack</div>
                                     </div>
@@ -611,18 +611,18 @@ const Gacha: React.FC = () => {
                                 onClick={() => selectPack('wagyu')}
                                 disabled={processing || packs.wagyuPacks < 1}
                                 className={`
-                                    group relative aspect-[3/4] rounded-[2rem] transition-all duration-500
+                                    group relative aspect-[3/4] rounded-[3rem] transition-all duration-500
                                     ${packs.wagyuPacks > 0 ? 'hover:scale-105 hover:rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                 `}
                             >
                                 <div className="absolute inset-0 bg-pink-500 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                <div className="absolute inset-0 bg-gradient-to-b from-rose-400 via-pink-500 to-rose-900 rounded-[2rem] border-[6px] border-pink-300/50 shadow-2xl overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-b from-rose-400 via-pink-500 to-rose-900 rounded-[3rem] border-[6px] border-pink-300/50 shadow-2xl overflow-hidden">
                                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
                                     
                                     <div className="absolute top-0 left-0 right-0 h-5 bg-white/10 border-b border-white/20"></div>
                                     <div className="absolute bottom-0 left-0 right-0 h-5 bg-white/10 border-t border-white/20"></div>
 
-                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-pink-900/10 rounded-xl flex flex-col items-center justify-center border border-pink-300/20 backdrop-blur-sm">
+                                    <div className="absolute inset-x-4 top-16 bottom-16 bg-pink-900/10 rounded-[2rem] flex flex-col items-center justify-center border border-pink-300/20 backdrop-blur-sm">
                                         <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🫧</div>
                                         <div className="bg-pink-400 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Mythic Pack</div>
                                     </div>
@@ -727,7 +727,7 @@ const Gacha: React.FC = () => {
                                 <div 
                                     className={`
                                         absolute inset-0 z-20 
-                                        rounded-[2rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                        rounded-[3rem] overflow-hidden bg-gradient-to-b border-[6px]
                                         transition-all duration-500 ease-out origin-bottom-left
                                         ${selectedPack === 'lamb' 
                                             ? 'from-indigo-900 via-purple-900 to-black border-purple-500/50' 
@@ -765,7 +765,7 @@ const Gacha: React.FC = () => {
                                 <div 
                                     className={`
                                         absolute inset-0 z-10
-                                        rounded-[2rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                        rounded-[3rem] overflow-hidden bg-gradient-to-b border-[6px]
                                         ${selectedPack === 'lamb' 
                                             ? 'from-indigo-900 via-purple-900 to-black border-purple-500/50' 
                                             : 'from-rose-400 via-pink-500 to-rose-900 border-pink-300/50'}
