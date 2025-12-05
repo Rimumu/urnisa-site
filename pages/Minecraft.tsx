@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
 
 interface UserData {
@@ -565,32 +566,25 @@ const Minecraft: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Gacha Pack - DISABLED */}
-                <div className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-not-allowed opacity-70 grayscale">
-                    {/* Coming Soon Overlay */}
-                    <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
-                        <div className="bg-brand-accent text-brand-bg font-black text-xl uppercase px-6 py-2 rounded-full transform -rotate-12 border-2 border-brand-bg shadow-xl">
-                            Coming Soon
-                        </div>
-                    </div>
-
+                {/* Gacha Pack - ENABLED */}
+                <Link to="/minecraft/gacha" className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group hover:scale-[1.02] hover:bg-black/30 transition-all duration-300">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                     
-                    <div className="flex items-center gap-4 mb-4 opacity-50">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
                             🥩
                         </div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-wide">Gacha Pack</h2>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-accent transition-colors">Gacha Pack</h2>
                     </div>
                     
-                    <p className="text-gray-500 font-medium leading-relaxed">
+                    <p className="text-gray-400 font-medium leading-relaxed group-hover:text-gray-300 transition-colors">
                         Slice up some lamb chop and wagyu packs and see if you will get flavorful rewards!
                     </p>
 
-                    <div className="mt-6 flex items-center text-gray-600 font-bold text-sm uppercase tracking-wider">
+                    <div className="mt-6 flex items-center text-brand-accent font-bold text-sm uppercase tracking-wider group-hover:gap-2 transition-all">
                         Open Packs <span className="ml-2">→</span>
                     </div>
-                </div>
+                </Link>
             </div>
 
             {/* How to Join Section - UPDATED */}
