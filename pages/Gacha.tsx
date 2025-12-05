@@ -12,7 +12,7 @@ interface CardData {
     name: string;
     type: 'Pokemon' | 'Item';
     subType: string; // e.g. "Genetic", "Mythical", "Normal"
-    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra' | 'Legendary' | 'Mythical';
+    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical';
     image?: string; 
     description?: string;
     hp?: number; 
@@ -22,35 +22,44 @@ interface CardData {
 
 // THEME: MEWTWO (Genetic / Science / Lab)
 const LAMB_POOL: CardData[] = [
-    // The Chase
+    // The Chase (Guaranteed at end)
     { id: 150, name: "Mewtwo", type: 'Pokemon', subType: "Genetic", rarity: 'Legendary', hp: 180, description: "A clone created by science." },
-    // Rares (3)
-    { id: 132, name: "Ditto", type: 'Pokemon', subType: "Transform", rarity: 'Rare', hp: 48, description: "Can copy anything." },
-    { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Rare', hp: 65, description: "Man-made code." },
+    
+    // Rares (2) - Replaced Ditto with Aerodactyl
+    { id: 142, name: "Aerodactyl", type: 'Pokemon', subType: "Fossil", rarity: 'Rare', hp: 120, description: "Resurrected from amber." },
     { id: 65, name: "Alakazam", type: 'Pokemon', subType: "Psi", rarity: 'Rare', hp: 55, description: "Brain power." },
-    // Common/Uncommon (5)
+    
+    // Uncommon (5)
     { id: 88, name: "Grimer", type: 'Pokemon', subType: "Sludge", rarity: 'Uncommon', hp: 80, description: "Bio-waste." },
+    { id: 93, name: "Haunter", type: 'Pokemon', subType: "Gas", rarity: 'Uncommon', hp: 45, description: "Licks you." },
+    { id: 64, name: "Kadabra", type: 'Pokemon', subType: "Psi", rarity: 'Uncommon', hp: 40, description: "Emit alpha waves." },
+    { id: 101, name: "Electrode", type: 'Pokemon', subType: "Ball", rarity: 'Uncommon', hp: 60, description: "Explodes." },
+    { id: 137, name: "Porygon", type: 'Pokemon', subType: "Virtual", rarity: 'Uncommon', hp: 65, description: "Man-made code." },
+
+    // Common (5)
     { id: 109, name: "Koffing", type: 'Pokemon', subType: "Gas", rarity: 'Common', hp: 40, description: "Toxic fumes." },
     { id: 81, name: "Magnemite", type: 'Pokemon', subType: "Magnet", rarity: 'Common', hp: 25, description: "Anti-gravity." },
     { id: 63, name: "Abra", type: 'Pokemon', subType: "Psi", rarity: 'Common', hp: 25, description: "Sleeps 18 hours." },
     { id: 41, name: "Zubat", type: 'Pokemon', subType: "Bat", rarity: 'Common', hp: 40, description: "Cave dweller." },
+    { id: 100, name: "Voltorb", type: 'Pokemon', subType: "Ball", rarity: 'Common', hp: 40, description: "Looks like a ball." },
 ];
 
 // THEME: MEW (Mythic / Rare / Ancestor)
 const WAGYU_POOL: CardData[] = [
-    // The Chase
+    // The Chase (Guaranteed at end)
     { id: 151, name: "Mew", type: 'Pokemon', subType: "New Species", rarity: 'Mythical', hp: 100, description: "The ancestor of all." },
-    // Epics / Ultra (10)
-    { id: 149, name: "Dragonite", type: 'Pokemon', subType: "Dragon", rarity: 'Ultra', hp: 150, description: "Marine guardian." },
-    { id: 94, name: "Gengar", type: 'Pokemon', subType: "Shadow", rarity: 'Ultra', hp: 130, description: "Hides in shadows." },
-    { id: 131, name: "Lapras", type: 'Pokemon', subType: "Transport", rarity: 'Ultra', hp: 190, description: "Gentle giant." },
-    { id: 143, name: "Snorlax", type: 'Pokemon', subType: "Sleeping", rarity: 'Ultra', hp: 200, description: "Blocks the road." },
-    { id: 59, name: "Arcanine", type: 'Pokemon', subType: "Legendary", rarity: 'Ultra', hp: 160, description: "Majestic flame." },
-    { id: 130, name: "Gyarados", type: 'Pokemon', subType: "Atrocious", rarity: 'Ultra', hp: 170, description: "Destructive rage." },
-    { id: 448, name: "Lucario", type: 'Pokemon', subType: "Aura", rarity: 'Ultra', hp: 140, description: "Reads minds." },
-    { id: 282, name: "Gardevoir", type: 'Pokemon', subType: "Embrace", rarity: 'Ultra', hp: 130, description: "Protects trainer." },
-    { id: 133, name: "Eevee", type: 'Pokemon', subType: "Evolution", rarity: 'Ultra', hp: 60, description: "Infinite potential." },
-    { id: 175, name: "Togepi", type: 'Pokemon', subType: "Spike Ball", rarity: 'Ultra', hp: 50, description: "Full of joy." },
+    
+    // Ultra-Rare (10) - Renamed from Ultra/Epic
+    { id: 149, name: "Dragonite", type: 'Pokemon', subType: "Dragon", rarity: 'Ultra-Rare', hp: 150, description: "Marine guardian." },
+    { id: 94, name: "Gengar", type: 'Pokemon', subType: "Shadow", rarity: 'Ultra-Rare', hp: 130, description: "Hides in shadows." },
+    { id: 131, name: "Lapras", type: 'Pokemon', subType: "Transport", rarity: 'Ultra-Rare', hp: 190, description: "Gentle giant." },
+    { id: 143, name: "Snorlax", type: 'Pokemon', subType: "Sleeping", rarity: 'Ultra-Rare', hp: 200, description: "Blocks the road." },
+    { id: 59, name: "Arcanine", type: 'Pokemon', subType: "Legendary", rarity: 'Ultra-Rare', hp: 160, description: "Majestic flame." },
+    { id: 130, name: "Gyarados", type: 'Pokemon', subType: "Atrocious", rarity: 'Ultra-Rare', hp: 170, description: "Destructive rage." },
+    { id: 448, name: "Lucario", type: 'Pokemon', subType: "Aura", rarity: 'Ultra-Rare', hp: 140, description: "Reads minds." },
+    { id: 282, name: "Gardevoir", type: 'Pokemon', subType: "Embrace", rarity: 'Ultra-Rare', hp: 130, description: "Protects trainer." },
+    { id: 133, name: "Eevee", type: 'Pokemon', subType: "Evolution", rarity: 'Ultra-Rare', hp: 60, description: "Infinite potential." },
+    { id: 175, name: "Togepi", type: 'Pokemon', subType: "Spike Ball", rarity: 'Ultra-Rare', hp: 50, description: "Full of joy." },
 ];
 
 // --- COMPONENTS ---
@@ -74,7 +83,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         glowClass = "shadow-[0_0_15px_rgba(96,165,250,0.5)]";
         badgeColor = "bg-blue-900/80 text-blue-200 border border-blue-500/30";
         holoEffect = "after:content-[''] after:absolute after:inset-0 after:bg-gradient-to-tr after:from-transparent after:via-white/20 after:to-transparent after:opacity-50 after:pointer-events-none";
-    } else if (card.rarity === 'Ultra') {
+    } else if (card.rarity === 'Ultra-Rare') {
         borderClass = "border-amber-400";
         glowClass = "shadow-[0_0_20px_rgba(251,191,36,0.6)]";
         badgeColor = "bg-amber-900/80 text-amber-200 border border-amber-500/30";
@@ -302,11 +311,24 @@ const Gacha: React.FC = () => {
             setShakePack(true);
             setTimeout(() => setShakePack(false), 300);
 
-            // PICK RANDOM CARD FROM CURRENT POOL
-            // Simple random logic for demo. 
-            // In production, you'd want weighted probabilities based on rarity.
-            const randomIndex = Math.floor(Math.random() * currentPool.length);
-            const nextCard = currentPool[randomIndex];
+            // LOGIC: Guaranteed Chase on 5th card (index 4)
+            // revealedCards length is 0, 1, 2, 3... so when it is 4, this is the 5th click.
+            
+            let nextCard: CardData;
+            const isLamb = selectedPack === 'lamb';
+            const chaseName = isLamb ? "Mewtwo" : "Mew";
+
+            if (revealedCards.length === 4) {
+                // FORCE CHASE CARD
+                nextCard = currentPool.find(c => c.name === chaseName)!;
+                // Fallback (should never happen if pool is correct)
+                if (!nextCard) nextCard = currentPool[0]; 
+            } else {
+                // RANDOM CARD (Exclude Chase Card to keep it special for the end)
+                const regularPool = currentPool.filter(c => c.name !== chaseName);
+                const randomIndex = Math.floor(Math.random() * regularPool.length);
+                nextCard = regularPool[randomIndex];
+            }
             
             setTimeout(() => {
                 setDispensingCard(nextCard);
