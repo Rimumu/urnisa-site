@@ -318,7 +318,7 @@ const Minecraft: React.FC = () => {
                         </div>
                         <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-white/20" />
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 01-1.414 0l-4-4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                     </button>
 
@@ -566,25 +566,32 @@ const Minecraft: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Gacha Pack - ENABLED */}
-                <Link to="/minecraft/gacha" className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group hover:scale-[1.02] hover:bg-black/30 transition-all duration-300">
+                {/* Gacha Pack - DISABLED */}
+                <div className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-not-allowed opacity-70 grayscale">
+                    {/* Coming Soon Overlay */}
+                    <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
+                        <div className="bg-brand-primary text-white font-black text-xl uppercase px-6 py-2 rounded-full transform -rotate-12 border-2 border-white shadow-xl">
+                            Coming Soon
+                        </div>
+                    </div>
+
                     <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                     
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
+                    <div className="flex items-center gap-4 mb-4 opacity-50">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner">
                             🥩
                         </div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-accent transition-colors">Gacha Pack</h2>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide">Gacha Pack</h2>
                     </div>
                     
-                    <p className="text-gray-400 font-medium leading-relaxed group-hover:text-gray-300 transition-colors">
+                    <p className="text-gray-500 font-medium leading-relaxed">
                         Slice up some lamb chop and wagyu packs and see if you will get flavorful rewards!
                     </p>
 
-                    <div className="mt-6 flex items-center text-brand-accent font-bold text-sm uppercase tracking-wider group-hover:gap-2 transition-all">
+                    <div className="mt-6 flex items-center text-gray-600 font-bold text-sm uppercase tracking-wider">
                         Open Packs <span className="ml-2">→</span>
                     </div>
-                </Link>
+                </div>
             </div>
 
             {/* How to Join Section - UPDATED */}
