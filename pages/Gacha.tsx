@@ -21,6 +21,10 @@ interface CardData {
     weight?: number; // Higher number = more frequent
 }
 
+// --- CONSTANTS ---
+const MEWTWO_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png";
+const MEW_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/151.png";
+
 // --- DATA POOLS ---
 
 // THEME: MEWTWO (Genetic / Science / Lab)
@@ -539,8 +543,8 @@ const Gacha: React.FC = () => {
                     <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
                         {/* Lamb Counter */}
                         <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group">
-                            <div className="bg-purple-500/20 p-1.5 rounded-full">
-                                <div className="text-xl filter drop-shadow-md group-hover:animate-pulse">🧬</div>
+                            <div className="bg-purple-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center">
+                                <img src={MEWTWO_IMAGE} alt="Mewtwo" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                             </div>
                             <div className="flex flex-col">
                                 <div className="text-[9px] font-black text-purple-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
@@ -549,8 +553,8 @@ const Gacha: React.FC = () => {
                         </div>
                         {/* Wagyu Counter */}
                         <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group">
-                            <div className="bg-pink-500/20 p-1.5 rounded-full">
-                                <div className="text-xl filter drop-shadow-md group-hover:animate-pulse">🫧</div>
+                            <div className="bg-pink-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center">
+                                <img src={MEW_IMAGE} alt="Mew" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                             </div>
                             <div className="flex flex-col">
                                 <div className="text-[9px] font-black text-pink-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
@@ -593,7 +597,7 @@ const Gacha: React.FC = () => {
                                     <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-purple-500/30"></div>
 
                                     <div className="absolute inset-x-4 top-16 bottom-16 bg-purple-900/10 rounded-[2rem] flex flex-col items-center justify-center border border-purple-500/20 backdrop-blur-sm">
-                                        <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🧬</div>
+                                        <img src={MEWTWO_IMAGE} alt="Mewtwo" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500 mb-4" />
                                         <div className="bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest">Genetic Pack</div>
                                     </div>
 
@@ -629,7 +633,7 @@ const Gacha: React.FC = () => {
                                     <div className="absolute bottom-0 left-0 right-0 h-5 bg-white/10 border-t border-white/20"></div>
 
                                     <div className="absolute inset-x-4 top-16 bottom-16 bg-pink-900/10 rounded-[2rem] flex flex-col items-center justify-center border border-pink-300/20 backdrop-blur-sm">
-                                        <div className="text-[7rem] filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500 mb-2">🫧</div>
+                                        <img src={MEW_IMAGE} alt="Mew" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500 mb-4" />
                                         <div className="bg-pink-400 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">Mythic Pack</div>
                                     </div>
 
@@ -749,9 +753,11 @@ const Gacha: React.FC = () => {
                                     
                                     {/* Icon */}
                                     <div className="absolute inset-0 flex flex-col items-center justify-center opacity-90 pb-8 pt-12">
-                                        <div className={`text-[7rem] mb-2 ${selectedPack === 'lamb' ? 'filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)]'}`}>
-                                            {selectedPack === 'lamb' ? '🧬' : '🫧'}
-                                        </div>
+                                        <img 
+                                            src={selectedPack === 'lamb' ? MEWTWO_IMAGE : MEW_IMAGE} 
+                                            alt="Pack Icon"
+                                            className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] mb-4"
+                                        />
                                         <div className={`text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
                                             {selectedPack === 'lamb' ? 'Genetic Pack' : 'Mythic Pack'}
                                         </div>
@@ -783,9 +789,11 @@ const Gacha: React.FC = () => {
                                     <div className={`absolute inset-0 ${selectedPack === 'lamb' ? "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"} opacity-20`}></div>
                                     
                                     <div className="absolute inset-0 flex flex-col items-center justify-center opacity-90 pb-8 pt-12">
-                                        <div className={`text-[7rem] mb-2 ${selectedPack === 'lamb' ? 'filter drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'filter drop-shadow-[0_0_15px_rgba(244,114,182,0.5)]'}`}>
-                                            {selectedPack === 'lamb' ? '🧬' : '🫧'}
-                                        </div>
+                                        <img 
+                                            src={selectedPack === 'lamb' ? MEWTWO_IMAGE : MEW_IMAGE} 
+                                            alt="Pack Icon"
+                                            className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] mb-4"
+                                        />
                                         <div className={`text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest ${selectedPack === 'lamb' ? 'bg-purple-500' : 'bg-pink-400'}`}>
                                             {selectedPack === 'lamb' ? 'Genetic Pack' : 'Mythic Pack'}
                                         </div>
