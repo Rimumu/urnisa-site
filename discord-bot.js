@@ -164,13 +164,23 @@ const UserPackSchema = new mongoose.Schema({
 });
 const UserPack = mongoose.model('UserPack', UserPackSchema);
 
-// Redemption Code Schema
+// Redemption Code Schema (UPDATED)
 const RedemptionCodeSchema = new mongoose.Schema({
     code: { type: String, required: true, unique: true },
     type: { type: String, required: true }, // 'lamb' or 'wagyu'
+    packAmount: { type: Number, default: 1 },
+    
+    // Usage Logic
+    usageType: { type: String, default: 'once_global' }, // 'once_global', 'once_per_user', 'infinite', 'time_limited'
+    expiresAt: { type: Date }, // For time_limited
+    
+    // Tracking
+    usageCount: { type: Number, default: 0 },
+    redeemedBy: [{ type: String }], // Array of discordIds
+    
+    // Legacy support (optional)
     isRedeemed: { type: Boolean, default: false },
-    redeemedBy: { type: String, default: null }, // discordId
-    redeemedAt: Date,
+    
     createdAt: { type: Date, default: Date.now }
 });
 const RedemptionCode = mongoose.model('RedemptionCode', RedemptionCodeSchema);
@@ -423,21 +433,59 @@ app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
 });
 
 // --- CODE GENERATION (Admin) ---
+// UPDATED to support amounts and limits
 app.post('/api/admin/codes/generate', auth, async (req, res) => {
-    const { type, amount = 1 } = req.body; // type: 'lamb' or 'wagyu'
-    if (!type || !['lamb', 'wagyu'].includes(type)) return res.status(400).json({ error: "Invalid type" });
+    const { type, amount = 1, packAmount = 1, usageType = 'once_global', hours = 0 } = req.body;
+    
+    if (!type || !['lamb', 'wagyu'].includes(type)) return res.status(400).json({ error: "Invalid pack type" });
 
     try {
         const codes = [];
+        let expiresAt = undefined;
+        if (usageType === 'time_limited' && hours > 0) {
+            expiresAt = new Date(Date.now() + (hours * 60 * 60 * 1000));
+        }
+
         for (let i = 0; i < amount; i++) {
             const raw = crypto.randomBytes(4).toString('hex').toUpperCase();
             const codeStr = `${type.toUpperCase()}-${raw}`;
-            codes.push({ code: codeStr, type });
+            codes.push({
+                code: codeStr,
+                type,
+                packAmount: Math.max(1, parseInt(packAmount)),
+                usageType, // 'once_global', 'once_per_user', 'infinite', 'time_limited'
+                expiresAt,
+                isRedeemed: false,
+                usageCount: 0,
+                redeemedBy: []
+            });
         }
         await RedemptionCode.insertMany(codes);
         res.json({ success: true, codes: codes.map(c => c.code) });
     } catch (e) {
+        console.error(e);
         res.status(500).json({ error: "Failed to generate codes" });
+    }
+});
+
+// NEW: List Codes
+app.get('/api/admin/codes/list', auth, async (req, res) => {
+    try {
+        const codes = await RedemptionCode.find().sort({ createdAt: -1 }).limit(100);
+        res.json(codes);
+    } catch (e) {
+        res.status(500).json({ error: "Failed to fetch codes" });
+    }
+});
+
+// NEW: Delete Code
+app.post('/api/admin/codes/delete', auth, async (req, res) => {
+    const { id } = req.body;
+    try {
+        await RedemptionCode.findByIdAndDelete(id);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to delete" });
     }
 });
 
@@ -483,7 +531,7 @@ app.post('/api/packs/use', async (req, res) => {
     }
 });
 
-// 3. Redeem Code
+// 3. Redeem Code (UPDATED LOGIC)
 app.post('/api/codes/redeem', async (req, res) => {
     const { discordId, code } = req.body;
     if (!discordId || !code) return res.status(400).json({ error: "Missing data" });
@@ -492,25 +540,60 @@ app.post('/api/codes/redeem', async (req, res) => {
         const codeRecord = await RedemptionCode.findOne({ code: code.trim().toUpperCase() });
         
         if (!codeRecord) return res.status(404).json({ error: "Invalid code" });
-        if (codeRecord.isRedeemed) return res.status(409).json({ error: "Code already redeemed" });
 
-        // Update Code Status
-        codeRecord.isRedeemed = true;
-        codeRecord.redeemedBy = discordId;
-        codeRecord.redeemedAt = new Date();
+        // Logic check based on usageType
+        const usageType = codeRecord.usageType || 'once_global'; // Default to old behavior if missing
+
+        // 1. Time Limit Check
+        if (usageType === 'time_limited' && codeRecord.expiresAt && new Date() > new Date(codeRecord.expiresAt)) {
+            return res.status(400).json({ error: "Code has expired" });
+        }
+
+        // 2. Global Single Use Check
+        if (usageType === 'once_global' && (codeRecord.isRedeemed || codeRecord.usageCount > 0)) {
+            return res.status(409).json({ error: "Code already redeemed" });
+        }
+
+        // 3. Once Per User Check
+        if (usageType === 'once_per_user') {
+            const redeemedList = codeRecord.redeemedBy || [];
+            // Legacy check: check if redeemedBy string matches (if older schema)
+            if (typeof codeRecord.redeemedBy === 'string' && codeRecord.redeemedBy === discordId) {
+                 return res.status(409).json({ error: "You already redeemed this code" });
+            }
+            // Array check
+            if (Array.isArray(redeemedList) && redeemedList.includes(discordId)) {
+                return res.status(409).json({ error: "You already redeemed this code" });
+            }
+        }
+
+        // Apply Redemption
+        // Update Code Record
+        codeRecord.usageCount = (codeRecord.usageCount || 0) + 1;
+        codeRecord.redeemedAt = new Date(); // Last redeemed time
+        
+        // Handle array update safely
+        if (!Array.isArray(codeRecord.redeemedBy)) codeRecord.redeemedBy = [];
+        codeRecord.redeemedBy.push(discordId);
+
+        if (usageType === 'once_global') {
+            codeRecord.isRedeemed = true;
+        }
+
         await codeRecord.save();
 
         // Add Pack to User Wallet
+        const packsToAdd = codeRecord.packAmount || 1;
         const wallet = await UserPack.findOneAndUpdate(
             { discordId },
             { 
                 $setOnInsert: { discordId }, 
-                $inc: { [codeRecord.type === 'lamb' ? 'lambPacks' : 'wagyuPacks']: 1 }
+                $inc: { [codeRecord.type === 'lamb' ? 'lambPacks' : 'wagyuPacks']: packsToAdd }
             },
             { upsert: true, new: true }
         );
 
-        res.json({ success: true, type: codeRecord.type, wallet });
+        res.json({ success: true, type: codeRecord.type, amount: packsToAdd, wallet });
     } catch (e) {
         console.error(e);
         res.status(500).json({ error: "Redemption failed" });
@@ -536,11 +619,6 @@ app.post('/api/inventory/save', async (req, res) => {
 
         await InventoryItem.insertMany(newItems);
         console.log(`📦 Saved ${items.length} items for user ${discordId}`);
-        
-        // Also deduct pack here? No, separate call in frontend is safer for animation flow, 
-        // OR handle atomic transaction. For simplicity, we rely on the `/api/packs/use` call 
-        // made at the START of the gacha sequence to ensure they pay before they play.
-        
         res.json({ success: true });
     } catch (e) {
         console.error("Save Inventory Error:", e);
@@ -581,20 +659,11 @@ app.post('/api/inventory/claim', async (req, res) => {
         const player = link.minecraftUsername;
 
         if (item.type === 'Pokemon') {
-            // pokegive <player> <name>
-            // Clean up name: "Mr. Mime" -> "mr-mime", remove special chars
-            const cleanName = item.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            // For Cobblemon, usually just the name works or "cobblemon:name" if registered
-            // Simple approach: try the name directly.
-            // Actually, `pokegive` command is standard.
             command = `pokegive ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
         } else {
-            // Items: parse name for count and type
-            // Name format: "5x Bronze Coin" or "Master Ball"
             let count = 1;
             let itemName = item.name;
 
-            // Regex to check if it starts with "Nx "
             const match = item.name.match(/^(\d+)x\s+(.+)$/);
             if (match) {
                 count = parseInt(match[1]);

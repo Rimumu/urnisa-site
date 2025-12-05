@@ -34,6 +34,7 @@ const processImageUrl = (url: string): string => {
     return cleanUrl;
 };
 
+// ... (Existing Helpers for Editor and Links remain unchanged) ...
 const isDiscordLink = (url: string) => {
     return url.includes('cdn.discordapp.com') || url.includes('media.discordapp.net');
 };
@@ -53,6 +54,7 @@ const LinkWarning: React.FC<{ url: string }> = ({ url }) => {
 };
 
 // --- RICH TEXT EDITOR COMPONENT ---
+// ... (Keeping existing RichTextEditor logic unchanged) ...
 const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const [activeFormats, setActiveFormats] = useState({
@@ -167,6 +169,18 @@ const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void 
     );
 };
 
+// Interface for Code List
+interface Code {
+    _id: string;
+    code: string;
+    type: 'lamb' | 'wagyu';
+    packAmount: number;
+    usageType: string;
+    usageCount: number;
+    expiresAt?: string;
+    createdAt: string;
+}
+
 const Admin: React.FC = () => {
     // --- AUTH STATE ---
     const [password, setPassword] = useState('');
@@ -229,7 +243,11 @@ const Admin: React.FC = () => {
     // --- CODE GENERATION STATE ---
     const [genType, setGenType] = useState('lamb');
     const [genAmount, setGenAmount] = useState(1);
+    const [genPackAmount, setGenPackAmount] = useState(1);
+    const [genUsageType, setGenUsageType] = useState('once_global');
+    const [genHours, setGenHours] = useState(12);
     const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
+    const [existingCodes, setExistingCodes] = useState<Code[]>([]);
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -283,6 +301,17 @@ const Admin: React.FC = () => {
         } catch (e) {}
     }, [password]);
 
+    const fetchCodes = useCallback(async () => {
+        try {
+            const res = await fetch(`${DISCORD_API_URL}/api/admin/codes/list`, {
+                headers: { Authorization: password }
+            });
+            if (res.ok) {
+                setExistingCodes(await res.json());
+            }
+        } catch(e) {}
+    }, [password]);
+
     // Fetch Whitelist Apps
     useEffect(() => {
         let interval: number;
@@ -290,8 +319,11 @@ const Admin: React.FC = () => {
             fetchWhitelistData();
             interval = window.setInterval(fetchWhitelistData, 10000);
         }
+        if (isAuthenticated && activeTab === 'codes') {
+            fetchCodes();
+        }
         return () => { if(interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, fetchWhitelistData]);
+    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -318,6 +350,7 @@ const Admin: React.FC = () => {
         }
     };
 
+    // ... (Keep existing update handlers) ...
     const handleUpdateSchedule = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -438,16 +471,36 @@ const Admin: React.FC = () => {
             const response = await fetch(`${DISCORD_API_URL}/api/admin/codes/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ type: genType, amount: genAmount })
+                body: JSON.stringify({ 
+                    type: genType, 
+                    amount: genAmount,
+                    packAmount: genPackAmount,
+                    usageType: genUsageType,
+                    hours: genHours
+                })
             });
             const data = await response.json();
             if (response.ok && data.success) {
                 setGeneratedCodes(data.codes);
+                fetchCodes(); // Refresh list
             }
         } catch(e) {} finally { setLoading(false); }
     };
 
+    const handleDeleteCode = async (id: string) => {
+        if (!window.confirm("Delete this code permanently?")) return;
+        try {
+            await fetch(`${DISCORD_API_URL}/api/admin/codes/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ id })
+            });
+            fetchCodes();
+        } catch(e) {}
+    };
+
     // --- GENERIC API CALL HANDLER ---
+    // ... (Keep generic handler)
     const apiCall = async (endpoint: string, body: any) => {
         setLoading(true);
         setManagerStatus(null);
@@ -460,7 +513,6 @@ const Admin: React.FC = () => {
             if (response.ok) {
                 setManagerStatus({ type: 'success', message: 'Action executed successfully!' });
                 if (endpoint.includes('nisathon')) refetchStats();
-                // Refresh log if needed
                 if (endpoint.includes('delete-event') || endpoint.includes('test-event') || endpoint.includes('rebuild')) fetchEventLog();
             } else {
                 setManagerStatus({ type: 'error', message: 'Action failed.' });
@@ -642,8 +694,8 @@ const Admin: React.FC = () => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* ... existing content ... */}
                             <h2 className="text-3xl font-black text-white">Nisathon Manager</h2>
-                            {/* ... (keep existing Timer, Event Log code etc) ... */}
-                            {/* Shortened for brevity, assume previous code remains */}
+                            {/* ... existing timer controls ... */}
+                            {/* ... existing logs ... */}
                         </div>
                     )}
 
@@ -652,12 +704,13 @@ const Admin: React.FC = () => {
                     {/* --- CODES TAB --- */}
                     {activeTab === 'codes' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-white">Generate Gacha Codes</h2>
+                            <h2 className="text-3xl font-black text-white">Gacha Code Manager</h2>
                             
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="space-y-4">
-                                    <div className="flex gap-4">
-                                        <div className="flex-1">
+                                <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Generate Codes</h3>
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
                                             <label className="text-xs font-bold text-gray-500 uppercase">Pack Type</label>
                                             <select 
                                                 value={genType} 
@@ -668,8 +721,46 @@ const Admin: React.FC = () => {
                                                 <option value="wagyu">Wagyu A5 (Mythic)</option>
                                             </select>
                                         </div>
-                                        <div className="w-24">
-                                            <label className="text-xs font-bold text-gray-500 uppercase">Amount</label>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Packs per Code</label>
+                                            <input 
+                                                type="number" 
+                                                value={genPackAmount} 
+                                                onChange={(e) => setGenPackAmount(Math.max(1, parseInt(e.target.value)))}
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white mt-1"
+                                                min="1" max="100"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Usage Limit</label>
+                                            <select 
+                                                value={genUsageType} 
+                                                onChange={(e) => setGenUsageType(e.target.value)}
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white mt-1"
+                                            >
+                                                <option value="once_global">Single Use (Global)</option>
+                                                <option value="once_per_user">Once Per User</option>
+                                                <option value="infinite">Infinite Use</option>
+                                                <option value="time_limited">Limited Time</option>
+                                            </select>
+                                        </div>
+                                        {genUsageType === 'time_limited' && (
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500 uppercase">Duration (Hours)</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={genHours} 
+                                                    onChange={(e) => setGenHours(Math.max(1, parseInt(e.target.value)))}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white mt-1"
+                                                    min="1"
+                                                />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Quantity to Generate</label>
                                             <input 
                                                 type="number" 
                                                 value={genAmount} 
@@ -691,8 +782,8 @@ const Admin: React.FC = () => {
 
                                 {generatedCodes.length > 0 && (
                                     <div className="mt-8 pt-6 border-t border-white/10">
-                                        <h3 className="font-bold text-white mb-4">Generated Codes</h3>
-                                        <div className="bg-black/40 p-4 rounded-xl font-mono text-sm space-y-2 max-h-60 overflow-y-auto custom-scrollbar select-all">
+                                        <h3 className="font-bold text-white mb-4">New Codes</h3>
+                                        <div className="bg-black/40 p-4 rounded-xl font-mono text-sm space-y-2 max-h-40 overflow-y-auto custom-scrollbar select-all">
                                             {generatedCodes.map((code, i) => (
                                                 <div key={i} className="text-brand-accent">{code}</div>
                                             ))}
@@ -705,6 +796,61 @@ const Admin: React.FC = () => {
                                         </button>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Active Codes List */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="font-bold text-white">Active Codes</h3>
+                                    <button onClick={fetchCodes} className="text-xs text-brand-primary hover:underline">Refresh</button>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-gray-300">
+                                        <thead className="bg-white/5 uppercase text-xs font-bold text-gray-500">
+                                            <tr>
+                                                <th className="p-3 rounded-tl-lg">Code</th>
+                                                <th className="p-3">Reward</th>
+                                                <th className="p-3">Limit</th>
+                                                <th className="p-3">Uses</th>
+                                                <th className="p-3 rounded-tr-lg text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {existingCodes.map((c) => (
+                                                <tr key={c._id} className="hover:bg-white/5 transition-colors">
+                                                    <td className="p-3 font-mono text-white select-all">{c.code}</td>
+                                                    <td className="p-3">
+                                                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.type === 'lamb' ? 'bg-purple-500/20 text-purple-300' : 'bg-pink-500/20 text-pink-300'}`}>
+                                                            {c.type}
+                                                        </span>
+                                                        <span className="ml-2 font-bold text-xs">x{c.packAmount || 1}</span>
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {c.usageType === 'once_global' ? <span className="text-red-400">Single</span> :
+                                                         c.usageType === 'once_per_user' ? <span className="text-blue-400">1/User</span> :
+                                                         c.usageType === 'time_limited' ? <span className="text-orange-400">Timed</span> :
+                                                         <span className="text-green-400">Infinite</span>}
+                                                    </td>
+                                                    <td className="p-3 font-mono">{c.usageCount}</td>
+                                                    <td className="p-3 text-right">
+                                                        <button 
+                                                            onClick={() => handleDeleteCode(c._id)}
+                                                            className="text-red-500 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-lg transition-colors"
+                                                            title="Delete"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {existingCodes.length === 0 && (
+                                                <tr>
+                                                    <td colSpan={5} className="p-8 text-center text-gray-500 italic">No codes found.</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}
