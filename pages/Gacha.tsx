@@ -107,26 +107,40 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
     // --- SMART IMAGE LOGIC ---
     const [imgSrc, setImgSrc] = useState<string>("");
 
+    const getFormattedName = (name: string) => {
+        // Convert "Mr. Mime" -> "mr-mime", "Nidoran♀" -> "nidoran-f", etc.
+        return name.toLowerCase()
+            .replace(/[.']/g, '') // remove dots and apostrophes
+            .replace(/♀/g, '-f')
+            .replace(/♂/g, '-m')
+            .replace(/\s+/g, '-'); // spaces to hyphens
+    };
+
     useEffect(() => {
         if (card.image) {
             setImgSrc(card.image);
         } else {
-            // Default to PokeAPI Official Artwork (High Quality)
-            // This is more reliable than fan-wikis which often return placeholders/question marks
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.id}.png`);
+            // PRIMARY SOURCE: Cobblemon Tools
+            setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${getFormattedName(card.name)}/sprite.png`);
         }
     }, [card]);
 
     const handleImageError = () => {
-        // Fallback Chain
-        if (imgSrc.includes('official-artwork')) {
-            // 1. Try 'Home' render (High Quality 3D-ish)
+        // FALLBACK CHAIN
+        // If Cobblemon Tools fails (404 or error), try Official Artwork
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.id}.png`);
+        } 
+        // If Official Artwork fails, try Home Render
+        else if (imgSrc.includes('official-artwork')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
-        } else if (imgSrc.includes('other/home')) {
-            // 2. Try Standard Sprite (Pixel Art) - Very Reliable
+        } 
+        // If Home Render fails, try standard Pixel Sprite
+        else if (imgSrc.includes('other/home')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`);
-        } else {
-            // 3. Final Fallback - Placeholder with text
+        } 
+        // Final Fallback: Text Placeholder
+        else {
             setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(card.name)}`);
         }
     };
