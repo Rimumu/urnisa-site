@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
+import { API_BASE_URL } from '../constants';
 
 // --- TYPES ---
 type PackType = 'lamb' | 'wagyu' | null;
@@ -116,17 +117,41 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
             .replace(/\s+/g, '-'); // spaces to hyphens
     };
 
+    // Use server-side checking to detect placeholder images by size
     useEffect(() => {
-        if (card.image) {
-            setImgSrc(card.image);
-        } else {
-            // PRIMARY SOURCE: Cobblemon Tools
-            setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${getFormattedName(card.name)}/sprite.png`);
-        }
+        const verifyImage = async () => {
+            if (card.image) {
+                setImgSrc(card.image);
+                return;
+            }
+
+            const cobbleName = getFormattedName(card.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`;
+
+            try {
+                // Call our backend to check file size (avoiding CORS issues)
+                // If size > 2KB, we assume it's a valid sprite. If < 2KB, it's likely the question mark placeholder.
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+
+                if (data.valid) {
+                    setImgSrc(primaryUrl);
+                } else {
+                    console.log(`[Gacha] Placeholder detected via size check for ${card.name}, using 3D fallback.`);
+                    setImgSrc(fallback3d);
+                }
+            } catch (error) {
+                console.warn("[Gacha] Image check failed, defaulting to primary.", error);
+                setImgSrc(primaryUrl);
+            }
+        };
+
+        verifyImage();
     }, [card]);
 
     const handleImageError = () => {
-        // FALLBACK CHAIN
+        // FALLBACK CHAIN (triggered if image loads 404, or if our pre-check failed logic)
         
         // 1. If Cobblemon Tools fails, go to PokeAPI Home (3D Render) - User Preferred Fallback
         if (imgSrc.includes('cobblemon.tools')) {
@@ -143,57 +168,6 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         // 4. Final Fallback: Text Placeholder
         else {
             setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(card.name)}`);
-        }
-    };
-
-    const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-        // Only run check if the image is from the primary source (cobblemon.tools)
-        // If we are already on a fallback, we trust it.
-        if (!imgSrc.includes('cobblemon.tools')) return;
-
-        try {
-            const img = e.currentTarget;
-            
-            // NOTE: We REMOVED crossOrigin="anonymous" to allow loading from non-CORS servers like cobblemon.tools
-            // However, this means `getImageData` will throw a SecurityError if the server doesn't support CORS.
-            // We catch this error to allow the image to display, even if we can't inspect pixels.
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            const ctx = canvas.getContext('2d');
-            
-            if (ctx) {
-                ctx.drawImage(img, 0, 0);
-                
-                // --- PIXEL CHECK HEURISTIC ---
-                // Attempts to detect the specific "Question Mark" placeholder.
-                
-                const width = img.naturalWidth;
-                const height = img.naturalHeight;
-
-                // 1. Center Pixel (Should be Grey if it's the question mark body)
-                const centerPixel = ctx.getImageData(width / 2, height / 2, 1, 1).data;
-                
-                // 2. Top-Center Pixel (Should be White if it's the circle background)
-                const topPixel = ctx.getImageData(width / 2, height * 0.2, 1, 1).data;
-
-                // Check if Top Pixel is White-ish (r,g,b > 240)
-                const isWhite = topPixel[0] > 240 && topPixel[1] > 240 && topPixel[2] > 240;
-                
-                // Check if Center Pixel is Grey-ish (r,g,b between 100 and 220, and low saturation)
-                const isGrey = centerPixel[0] > 100 && centerPixel[0] < 220 &&
-                               Math.abs(centerPixel[0] - centerPixel[1]) < 15 &&
-                               Math.abs(centerPixel[1] - centerPixel[2]) < 15;
-
-                if (isWhite && isGrey) {
-                    console.log(`[Gacha] Placeholder detected for ${card.name}, switching to fallback.`);
-                    handleImageError();
-                }
-            }
-        } catch (error) {
-            // SecurityError means CORS blocked pixel reading. 
-            // We ignore it and let the image display as-is to avoid broken images.
         }
     };
 
@@ -219,9 +193,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                         alt={card.name}
                         className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl"
                         onError={handleImageError}
-                        onLoad={handleImageLoad}
                         loading="lazy"
-                        // Removed crossOrigin to fix loading on non-CORS servers
                     />
                 </div>
             </div>
