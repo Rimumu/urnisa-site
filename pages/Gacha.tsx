@@ -127,21 +127,81 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
 
     const handleImageError = () => {
         // FALLBACK CHAIN
-        // If Cobblemon Tools fails (404 or error), try Official Artwork
+        
+        // 1. If Cobblemon Tools fails, go to PokeAPI Home (3D Render) - User Preferred Fallback
         if (imgSrc.includes('cobblemon.tools')) {
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.id}.png`);
-        } 
-        // If Official Artwork fails, try Home Render
-        else if (imgSrc.includes('official-artwork')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
         } 
-        // If Home Render fails, try standard Pixel Sprite
+        // 2. If Home Render fails, try Official Artwork (2D High Quality)
         else if (imgSrc.includes('other/home')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.id}.png`);
+        } 
+        // 3. If Official Artwork fails, try Standard Pixel Sprite
+        else if (imgSrc.includes('official-artwork')) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`);
         } 
-        // Final Fallback: Text Placeholder
+        // 4. Final Fallback: Text Placeholder
         else {
             setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(card.name)}`);
+        }
+    };
+
+    const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        // Only run check if the image is from the primary source (cobblemon.tools)
+        // If we are already on a fallback, we trust it.
+        if (!imgSrc.includes('cobblemon.tools')) return;
+
+        try {
+            const img = e.currentTarget;
+            
+            // NOTE: We need crossOrigin="anonymous" on the img tag for this to work
+            // If the server blocks CORS, the image load will fail, triggering onError,
+            // which handles the fallback automatically. This is a win-win.
+            
+            // Create an invisible canvas to inspect the image pixels
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            
+            if (ctx) {
+                ctx.drawImage(img, 0, 0);
+                
+                // --- PIXEL CHECK HEURISTIC ---
+                // The "Question Mark" placeholder is typically a white circle with a grey question mark.
+                // We check a few key pixels to identify this specific image.
+                
+                const width = img.naturalWidth;
+                const height = img.naturalHeight;
+
+                // 1. Center Pixel (Should be Grey if it's the question mark body)
+                const centerPixel = ctx.getImageData(width / 2, height / 2, 1, 1).data;
+                
+                // 2. Top-Center Pixel (Should be White if it's the circle background)
+                const topPixel = ctx.getImageData(width / 2, height * 0.2, 1, 1).data;
+
+                // 3. Top-Left Corner Pixel (Should be Transparent in a normal sprite, but might be empty here too)
+                // Let's rely on the specific colors of the placeholder.
+                
+                // Check if Top Pixel is White-ish (r,g,b > 240)
+                const isWhite = topPixel[0] > 240 && topPixel[1] > 240 && topPixel[2] > 240;
+                
+                // Check if Center Pixel is Grey-ish (r,g,b between 100 and 220, and low saturation)
+                const isGrey = centerPixel[0] > 100 && centerPixel[0] < 220 &&
+                               Math.abs(centerPixel[0] - centerPixel[1]) < 15 &&
+                               Math.abs(centerPixel[1] - centerPixel[2]) < 15;
+
+                if (isWhite && isGrey) {
+                    // Match detected! It's likely the question mark placeholder.
+                    // Force the fallback manually.
+                    console.log(`[Gacha] Placeholder detected for ${card.name}, switching to fallback.`);
+                    handleImageError();
+                }
+            }
+        } catch (error) {
+            // If we get a SecurityError (CORS), we can't inspect the image.
+            // However, this means the image loaded successfully. We assume it's valid.
+            // If the server blocked the request entirely due to CORS attribute, onError would have fired.
         }
     };
 
@@ -167,7 +227,9 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                         alt={card.name}
                         className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 drop-shadow-2xl"
                         onError={handleImageError}
+                        onLoad={handleImageLoad}
                         loading="lazy"
+                        crossOrigin="anonymous" // Essential for pixel inspection
                     />
                 </div>
             </div>
