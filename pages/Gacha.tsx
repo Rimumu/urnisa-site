@@ -84,16 +84,18 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         badgeColor = "bg-blue-900/80 text-blue-200 border border-blue-500/30";
         holoEffect = "after:content-[''] after:absolute after:inset-0 after:bg-gradient-to-tr after:from-transparent after:via-white/20 after:to-transparent after:opacity-50 after:pointer-events-none";
     } else if (card.rarity === 'Ultra-Rare') {
-        borderClass = "border-amber-400";
-        glowClass = "shadow-[0_0_20px_rgba(251,191,36,0.6)]";
-        badgeColor = "bg-amber-900/80 text-amber-200 border border-amber-500/30";
+        // Ultra-Rare is now Purple
+        borderClass = "border-purple-500";
+        glowClass = "shadow-[0_0_20px_rgba(168,85,247,0.6)]";
+        badgeColor = "bg-purple-900/80 text-purple-200 border border-purple-500/30";
         holoEffect = "foil-holo"; 
     } else if (card.rarity === 'Legendary') {
-        borderClass = "border-purple-600";
-        glowClass = "shadow-[0_0_30px_rgba(147,51,234,0.8)]";
-        badgeColor = "bg-purple-900/90 text-purple-100 border border-purple-400/50 shadow-[0_0_10px_#9333ea]";
+        // Legendary is now Yellow/Gold
+        borderClass = "border-yellow-400";
+        glowClass = "shadow-[0_0_30px_rgba(250,204,21,0.8)]";
+        badgeColor = "bg-yellow-900/90 text-yellow-100 border border-yellow-400/50 shadow-[0_0_10px_#eab308]";
         bgPattern = "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]";
-        holoEffect = "foil-holo after:bg-purple-500/10"; 
+        holoEffect = "foil-holo after:bg-yellow-500/10"; 
     } else if (card.rarity === 'Mythical') {
         borderClass = "border-pink-400";
         glowClass = "shadow-[0_0_35px_rgba(244,114,182,0.9)] ring-2 ring-white/50";
