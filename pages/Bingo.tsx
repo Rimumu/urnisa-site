@@ -499,15 +499,15 @@ const Bingo: React.FC = () => {
             
             <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
                 
-                {/* Header - Top Left (Pill Style) */}
-                <div className="w-full flex justify-start mb-4 pt-2">
+                {/* Header - Absolute Top Left on Desktop */}
+                <div className="absolute top-4 left-4 z-50">
                     <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
                         <span>←</span> Back to Dashboard
                     </Link>
                 </div>
 
-                {/* Bingo Board Container - Reduced Max Width for Compactness */}
-                <div className="relative max-w-3xl w-full flex flex-col items-center">
+                {/* Bingo Board Container - Added padding on mobile to clear button */}
+                <div className="relative max-w-3xl w-full flex flex-col items-center pt-12 md:pt-0">
                     
                     {/* Visual Board Background */}
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] shadow-2xl overflow-hidden z-0">
