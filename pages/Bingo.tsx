@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 
@@ -40,6 +41,45 @@ const WINNING_COMBINATIONS = [
     [0, 6, 12, 18, 24],
     [4, 8, 12, 16, 20]
 ];
+
+// --- SEEDED RNG UTILS ---
+// Hashing function to turn a string ID into a numeric seed
+const cyrb128 = (str: string) => {
+    let h1 = 1779033703, h2 = 3144134277,
+        h3 = 1013904242, h4 = 2773480762;
+    for (let i = 0, k; i < str.length; i++) {
+        k = str.charCodeAt(i);
+        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+        h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+    }
+    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+    return [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
+};
+
+// Simple PRNG (Mulberry32)
+const mulberry32 = (a: number) => {
+    return function() {
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+};
+
+// Generate a random ID like SHCN74CDF
+const generateRandomId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 9; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
 
 // Helper to determine line coords for SVG
 const getLineCoords = (combo: number[]) => {
@@ -152,9 +192,12 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
 };
 
 const Bingo: React.FC = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [gridData, setGridData] = useState<BingoCell[]>([]);
     const [marked, setMarked] = useState<boolean[]>(new Array(25).fill(false));
     const [isGenerating, setIsGenerating] = useState(false);
+    const [currentCardId, setCurrentCardId] = useState<string>("");
+    const [inputCode, setInputCode] = useState("");
     
     // Bingo Win State
     const [winningLines, setWinningLines] = useState<number[][]>([]);
@@ -290,46 +333,61 @@ const Bingo: React.FC = () => {
         };
     }, []);
 
-    const generateNewCard = useCallback(async () => {
+    // --- SEEDED GENERATION LOGIC ---
+    const generateCard = useCallback(async (customId?: string) => {
         if (!cobblemonPool || cobblemonPool.length === 0) return;
         setIsGenerating(true);
         
         try {
-            const available = [...cobblemonPool];
-            const selected: BingoCell[] = [];
-            const selectedIndices = new Set<number>();
-
-            if (available.length < 25) {
-                let i = 0;
-                while (selected.length < 25) {
-                    const entry = available[i % available.length];
-                    selected.push({
-                        id: entry.id,
-                        name: entry.name,
-                        rarity: entry.rarity,
-                        spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
-                    });
-                    i++;
-                }
-            } else {
-                while (selected.length < 25) {
-                    const idx = Math.floor(Math.random() * available.length);
-                    if (!selectedIndices.has(idx)) {
-                        selectedIndices.add(idx);
-                        const entry = available[idx];
-                        selected.push({
-                            id: entry.id,
-                            name: entry.name,
-                            rarity: entry.rarity,
-                            spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
-                        });
-                    }
-                }
+            // 1. Determine ID
+            let idToUse = customId;
+            if (!idToUse) {
+                idToUse = generateRandomId();
             }
             
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // 2. Set URL & State
+            setCurrentCardId(idToUse);
+            setSearchParams({ id: idToUse });
+            setInputCode(""); // Clear input
+
+            // 3. Initialize PRNG
+            const seed = cyrb128(idToUse);
+            const rng = mulberry32(seed[0]);
+
+            // 4. Shuffle & Select
+            const available = [...cobblemonPool];
+            // Fisher-Yates Shuffle with seeded RNG
+            for (let i = available.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [available[i], available[j]] = [available[j], available[i]];
+            }
+
+            // Take first 25 unique items
+            const selected: BingoCell[] = available.slice(0, 25).map(entry => ({
+                id: entry.id,
+                name: entry.name,
+                rarity: entry.rarity,
+                spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
+            }));
+
+            // Fill if pool < 25 (rare but safe)
+            while (selected.length < 25) {
+                const entry = available[Math.floor(rng() * available.length)];
+                selected.push({
+                    id: entry.id,
+                    name: entry.name,
+                    rarity: entry.rarity,
+                    spawns: ["Special"]
+                });
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 300)); // Slight visual delay
             
             setGridData(selected);
+            
+            // Only reset marks if generating a brand new random card, 
+            // if loading a specific ID, we might ideally want to save state, but for now we reset.
+            // (Assuming stateless sharing)
             setMarked(new Array(25).fill(false));
             setWinningLines([]);
             setBingoCount(0);
@@ -342,15 +400,29 @@ const Bingo: React.FC = () => {
         } finally {
             setIsGenerating(false);
         }
-    }, [cobblemonPool]);
+    }, [cobblemonPool, setSearchParams]);
 
+    // Initial Load
     useEffect(() => {
         let mounted = true;
         if (mounted && !loadingSheet && cobblemonPool && gridData.length === 0) {
-            generateNewCard();
+            // Check URL for ID
+            const urlId = searchParams.get('id');
+            if (urlId) {
+                generateCard(urlId);
+            } else {
+                generateCard();
+            }
         }
         return () => { mounted = false; };
-    }, [loadingSheet, cobblemonPool, generateNewCard]);
+    }, [loadingSheet, cobblemonPool, generateCard, searchParams, gridData.length]);
+
+    const handleManualLoad = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (inputCode.trim().length > 0) {
+            generateCard(inputCode.trim().toUpperCase());
+        }
+    };
 
     const toggleMark = (index: number) => {
         const newMarked = [...marked];
@@ -417,13 +489,19 @@ const Bingo: React.FC = () => {
                 .animate-pulse-gold {
                     animation: pulse-gold 2s infinite ease-in-out;
                 }
+                .glass-panel {
+                    background: rgba(0, 0, 0, 0.7);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                }
             `}</style>
             
             <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
                 
                 {/* Header */}
-                <div className="text-center mb-6 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <Link to="/minecraft" className="inline-block text-gray-400 hover:text-white mb-4 text-sm font-bold transition-colors">
+                <div className="text-center mb-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <Link to="/minecraft" className="inline-block text-gray-400 hover:text-white mb-2 text-sm font-bold transition-colors">
                         ← Back to Dashboard
                     </Link>
                 </div>
@@ -440,7 +518,7 @@ const Bingo: React.FC = () => {
                     <div className="relative z-10 w-full p-4 md:p-8 flex flex-col items-center">
                         
                         {/* Logo */}
-                        <div className="mb-6 w-full flex justify-center relative z-10">
+                        <div className="mb-2 w-full flex justify-center relative z-10">
                             <img 
                                 src={LOGO_URL} 
                                 alt="Cobble Bingo" 
@@ -448,22 +526,14 @@ const Bingo: React.FC = () => {
                             />
                         </div>
 
-                        {/* Controls */}
-                        <div className="mb-6 flex gap-4 relative z-10">
-                            <button 
-                                onClick={generateNewCard}
-                                disabled={isGenerating || loadingSheet}
-                                className={`
-                                    bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all transform hover:scale-105 uppercase text-xs tracking-widest
-                                    ${isGenerating || loadingSheet ? 'opacity-70 cursor-wait animate-pulse' : ''}
-                                `}
-                            >
-                                {loadingSheet ? 'Loading Sheet...' : isGenerating ? 'Scouting...' : 'Generate New Card'}
-                            </button>
+                        {/* ID Display */}
+                        <div className="mb-4 flex items-center gap-2 bg-black/40 px-4 py-1.5 rounded-full border border-white/10 shadow-inner">
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Card ID:</span>
+                            <span className="text-brand-primary font-mono font-black tracking-widest text-lg">{currentCardId || "LOADING..."}</span>
                         </div>
                         
                         {/* The Grid */}
-                        <div className="overflow-visible py-16 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
+                        <div className="overflow-visible py-4 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
                             {/* POPUP OVERLAY */}
                             {showBingoPopup && (
                                 <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in fade-in duration-300">
@@ -606,8 +676,54 @@ const Bingo: React.FC = () => {
                                 </div>
                             )}
                         </div>
+                    </div>
+                </div>
 
-                        <div className="mt-4 text-center">
+                {/* --- CONTROL DOCK (Bottom Right) --- */}
+                <div className="fixed bottom-0 right-0 p-4 z-[100] w-full md:w-auto">
+                    <div className="glass-panel p-4 rounded-3xl flex flex-col gap-4 w-full md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
+                        {/* Title */}
+                        <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                            <div className="text-xs font-bold uppercase tracking-widest text-gray-400">Control Deck</div>
+                            <div className="flex gap-2">
+                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            </div>
+                        </div>
+
+                        {/* Input Area */}
+                        <form onSubmit={handleManualLoad} className="flex gap-2">
+                            <input 
+                                type="text" 
+                                value={inputCode}
+                                onChange={(e) => setInputCode(e.target.value.toUpperCase().slice(0,9))}
+                                placeholder="Enter Card ID"
+                                className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-sm placeholder:text-gray-600 focus:border-brand-primary outline-none tracking-widest uppercase"
+                            />
+                            <button 
+                                type="submit" 
+                                disabled={inputCode.length === 0}
+                                className="bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-colors"
+                            >
+                                Load
+                            </button>
+                        </form>
+
+                        {/* Main Actions */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <button 
+                                onClick={() => generateCard()}
+                                disabled={isGenerating || loadingSheet}
+                                className={`
+                                    bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-2 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1
+                                    ${isGenerating || loadingSheet ? 'opacity-70 cursor-wait' : ''}
+                                `}
+                            >
+                                <span>🎲</span>
+                                <span>Random Card</span>
+                            </button>
+                            
                             <button 
                                 onClick={() => {
                                     setMarked(new Array(25).fill(false));
@@ -617,9 +733,10 @@ const Bingo: React.FC = () => {
                                     setShowBingoPopup(false);
                                     if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
                                 }}
-                                className="text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
+                                className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-3 px-2 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1"
                             >
-                                Clear Marks Only
+                                <span>🧹</span>
+                                <span>Clear Marks</span>
                             </button>
                         </div>
                     </div>
