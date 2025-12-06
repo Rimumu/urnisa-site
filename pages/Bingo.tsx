@@ -219,8 +219,8 @@ const getLineCoords = (combo: number[]) => {
     return null;
 };
 
-// Global cache for resolved images to prevent flickering/re-checking on re-renders
-const artworkCache = new Map<string, string>();
+// Cache for image validity
+const clientImageCache = new Map<string, boolean>();
 
 // Shared Helper
 const getFormattedName = (name: string) => {
@@ -250,49 +250,50 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
     useEffect(() => {
         // Free Space handling
         if (item.id === -1) {
-            setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif");
+            setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif"); // Use a placeholder or logo
             return;
         }
 
-        const cacheKey = `${item.id}-${item.name}`;
-        
-        // 1. Check Global Cache first
-        if (artworkCache.has(cacheKey)) {
-            setImgSrc(artworkCache.get(cacheKey)!);
-            return;
-        }
+        const verifyImage = async () => {
+            const cobbleName = getFormattedName(item.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            // Fallback relies on ID. 
+            const fallback3d = item.id > 0 
+                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
+                : primaryUrl;
 
-        // 2. Optimistic Loading (Default to Cobblemon)
-        // We skip the backend check to load instantly. The onError handler will manage fallbacks.
-        const cobbleName = getFormattedName(item.name);
-        const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-        setImgSrc(primaryUrl);
+            if (clientImageCache.has(primaryUrl)) {
+                const isValid = clientImageCache.get(primaryUrl);
+                setImgSrc(isValid ? primaryUrl : fallback3d);
+                return;
+            }
 
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+                clientImageCache.set(primaryUrl, data.valid);
+
+                if (data.valid) {
+                    setImgSrc(primaryUrl);
+                } else {
+                    setImgSrc(fallback3d);
+                }
+            } catch (error) {
+                setImgSrc(primaryUrl);
+            }
+        };
+
+        verifyImage();
     }, [item]);
 
     const handleImageError = () => {
         if (item.id === -1) return;
-        
-        const cobbleName = getFormattedName(item.name);
-        const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-        const homeUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`;
-        const artUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`;
-        const placeholder = `https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(item.name)}`;
-
-        // Simple Fallback Chain based on current src
-        if (imgSrc === primaryUrl && item.id > 0) {
-            setImgSrc(homeUrl);
-        } else if (imgSrc === homeUrl && item.id > 0) {
-            setImgSrc(artUrl);
-        } else if (imgSrc !== placeholder) {
-            setImgSrc(placeholder);
-        }
-    };
-
-    const handleLoad = () => {
-        if (item.id !== -1 && imgSrc && !imgSrc.includes('placeholder')) {
-            const cacheKey = `${item.id}-${item.name}`;
-            artworkCache.set(cacheKey, imgSrc);
+        if (imgSrc.includes('cobblemon.tools') && item.id > 0) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
+        } else if (imgSrc.includes('other/home') && item.id > 0) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`);
+        } else {
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(item.name)}`);
         }
     };
 
@@ -303,7 +304,6 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
             className={`w-full h-full object-contain drop-shadow-lg transition-transform duration-300 ${item.id === -1 ? 'scale-75' : 'group-hover:scale-110'}`}
             contain
             onError={handleImageError}
-            onLoad={handleLoad}
         />
     );
 };
@@ -937,7 +937,7 @@ const Bingo: React.FC = () => {
                             {loadingSheet ? (
                                 <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">📄</div>
-                                    <div className="font-bold">Fetching Pokemon Data...</div>
+                                    <div className="font-bold">Fetching Live Data from Google Sheets...</div>
                                 </div>
                             ) : sheetError ? (
                                 <div className="flex flex-col items-center justify-center text-red-400 mt-10 min-h-[300px]">
@@ -948,7 +948,7 @@ const Bingo: React.FC = () => {
                             ) : gridData.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">🔮</div>
-                                    <div className="font-bold">Preparing Bingo Card...</div>
+                                    <div className="font-bold">Scouting Pokémon...</div>
                                     {searchParams.get('view') === 'saved' && (
                                         <div className="mt-4 text-white">Select a saved card from the menu!</div>
                                     )}
@@ -1012,7 +1012,7 @@ const Bingo: React.FC = () => {
                                                         text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
                                                         ${getRarityBadgeStyle(item.rarity)}
                                                     `}>
-                                                        {item.rarity === 'Ultra-Rare' ? 'ULTRA RARE' : item.rarity}
+                                                        {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
                                                     </div>
 
                                                     {/* Image Container - Adjusted Padding for compact fit */}
