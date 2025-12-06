@@ -192,6 +192,17 @@ const Bingo: React.FC = () => {
         }
     };
 
+    const getNamePlateStyle = (rarity: string) => {
+        switch (rarity) {
+            case 'Mythical':
+                return "bg-gradient-to-t from-pink-900/90 to-pink-900/60 border-t border-pink-500/60 shadow-[0_-5px_15px_rgba(236,72,153,0.4)] backdrop-blur-md";
+            case 'Legendary':
+                return "bg-gradient-to-t from-yellow-900/90 to-yellow-900/60 border-t border-yellow-500/60 shadow-[0_-5px_15px_rgba(234,179,8,0.4)] backdrop-blur-md";
+            default:
+                return "bg-black/80 border-t border-white/5 backdrop-blur-md";
+        }
+    };
+
     return (
         <div className="min-h-screen py-8 font-sans text-white relative">
             <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
@@ -268,14 +279,14 @@ const Bingo: React.FC = () => {
 
                                         {/* Name Bar - Fixed Height at Bottom */}
                                         <div 
-                                            className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md py-1.5 z-20 border-t border-white/5 flex justify-center"
+                                            className={`absolute bottom-0 left-0 right-0 py-1.5 z-20 flex justify-center ${getNamePlateStyle(item.rarity)}`}
                                             onClick={(e) => e.stopPropagation()} // Prevent toggling mark when clicking the bar area
                                         >
                                             <a 
                                                 href={wikiUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link"
+                                                className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
                                             >
                                                 {item.name}
                                                 <svg className="w-2.5 h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
