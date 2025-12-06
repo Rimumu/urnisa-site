@@ -129,15 +129,29 @@ const Bingo: React.FC = () => {
 
     const generateNewCard = useCallback(() => {
         setIsGenerating(true);
-        // Shuffle and pick 25
-        const shuffled = [...MASTER_BINGO_POOL].sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 25);
-        setGridData(selected);
-        setMarked(new Array(25).fill(false));
-        setTimeout(() => setIsGenerating(false), 500);
+        
+        // Use timeout to ensure UI updates to "Shuffling..." before heavy work (if any) and to guarantee visibility
+        setTimeout(() => {
+            // Fisher-Yates Shuffle for true randomness
+            const pool = [...MASTER_BINGO_POOL];
+            let currentIndex = pool.length, randomIndex;
+
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [pool[currentIndex], pool[randomIndex]] = [pool[randomIndex], pool[currentIndex]];
+            }
+
+            const selected = pool.slice(0, 25);
+            
+            // Update state
+            setGridData(selected);
+            setMarked(new Array(25).fill(false));
+            setIsGenerating(false);
+        }, 600); // 600ms delay for "shuffling" effect
     }, []);
 
-    // Initial Generation
+    // Initial Generation on Mount
     useEffect(() => {
         generateNewCard();
     }, [generateNewCard]);
@@ -192,7 +206,7 @@ const Bingo: React.FC = () => {
                             disabled={isGenerating}
                             className={`
                                 bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all transform hover:scale-105 uppercase text-xs tracking-widest
-                                ${isGenerating ? 'opacity-50 cursor-wait' : ''}
+                                ${isGenerating ? 'opacity-70 cursor-wait animate-pulse' : ''}
                             `}
                         >
                             {isGenerating ? 'Shuffling...' : 'Generate New Card'}
@@ -207,7 +221,7 @@ const Bingo: React.FC = () => {
                                     key={`${item.id}-${index}`} // Use index to force unique key if dupes allowed later
                                     onClick={() => toggleMark(index)}
                                     className={`
-                                        relative group cursor-pointer aspect-[4/5] rounded-xl border-2 overflow-hidden transition-all duration-200
+                                        relative group cursor-pointer aspect-[4/5] rounded-xl border-2 overflow-hidden transition-all duration-200 flex flex-col
                                         ${marked[index] 
                                             ? 'bg-black/80 border-red-900/50 grayscale' 
                                             : 'bg-black/40 border-white/10 hover:border-brand-primary/50 hover:bg-black/50 hover:-translate-y-1 hover:shadow-lg'}
@@ -222,13 +236,13 @@ const Bingo: React.FC = () => {
                                         {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
                                     </div>
 
-                                    {/* Image - Centered and Contained */}
-                                    <div className="absolute inset-0 p-3 pb-8 flex items-center justify-center z-10">
+                                    {/* Image Container - Flex Grow to fill space */}
+                                    <div className="flex-1 flex items-center justify-center p-2 relative z-10">
                                         <BingoCardImage item={item} />
                                     </div>
 
-                                    {/* Name - Bottom Overlay */}
-                                    <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm py-1.5 z-20 border-t border-white/5">
+                                    {/* Name Bar - Fixed Height at Bottom */}
+                                    <div className="w-full bg-black/80 backdrop-blur-sm py-1.5 z-20 border-t border-white/10 shrink-0">
                                         <div className="text-[10px] md:text-xs font-bold text-center text-white truncate px-1 text-shadow-sm">
                                             {item.name}
                                         </div>
@@ -236,8 +250,8 @@ const Bingo: React.FC = () => {
 
                                     {/* Cross Out Overlay */}
                                     {marked[index] && (
-                                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-                                            <svg className="w-full h-full text-red-600/80 drop-shadow-2xl p-2" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round">
+                                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/10">
+                                            <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-2xl" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round">
                                                 <line x1="20" y1="20" x2="80" y2="80" />
                                                 <line x1="80" y1="20" x2="20" y2="80" />
                                             </svg>
