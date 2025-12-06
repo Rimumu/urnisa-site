@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
+import UserProfile from '../components/UserProfile';
 
 // --- TYPES ---
 interface BingoCell {
@@ -17,6 +18,16 @@ interface CobblemonEntry {
     name: string;
     rarity: BingoCell['rarity'];
     spawns: Set<string>;
+}
+
+// Saved Card Interface
+interface SavedCard {
+    _id: string;
+    name: string;
+    cardId: string;
+    gridData: BingoCell[];
+    marked: boolean[];
+    updatedAt: string;
 }
 
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
@@ -204,6 +215,15 @@ const Bingo: React.FC = () => {
     const [bingoCount, setBingoCount] = useState(0);
     const [showBingoPopup, setShowBingoPopup] = useState(false);
     
+    // Auth & Modals
+    const [user, setUser] = useState<any>(null);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [cardName, setCardName] = useState("");
+    const [showLoadModal, setShowLoadModal] = useState(false);
+    const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+    const [saving, setSaving] = useState(false);
+    const [loadingCards, setLoadingCards] = useState(false);
+
     // Refs for logic
     const prevBingoCountRef = useRef(0);
     const popupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -294,7 +314,7 @@ const Bingo: React.FC = () => {
         fetchSheetData();
     }, []);
 
-    // Win Logic
+    // 2. Win Logic
     useEffect(() => {
         const lines = WINNING_COMBINATIONS.filter(combo => 
             combo.every(index => marked[index])
@@ -326,12 +346,98 @@ const Bingo: React.FC = () => {
         prevBingoCountRef.current = currentCount;
     }, [marked]);
 
-    // Clean up timer on unmount
+    // 3. Clean up timer on unmount
     useEffect(() => {
         return () => {
             if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
         };
     }, []);
+
+    // 4. Check for Query Params (Load Saved)
+    useEffect(() => {
+        if (searchParams.get('view') === 'saved') {
+            setShowLoadModal(true);
+            // Fetch list immediately if user exists
+            if (user?.id) fetchSavedCards();
+        }
+    }, [searchParams, user]); // Trigger when URL changes or user logs in
+
+    // --- SAVE / LOAD API LOGIC ---
+
+    const fetchSavedCards = async () => {
+        if (!user?.id) return;
+        setLoadingCards(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/bingo/list?discordId=${user.id}`);
+            if (res.ok) {
+                setSavedCards(await res.json());
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingCards(false);
+        }
+    };
+
+    const handleSaveCard = async () => {
+        if (!user?.id) {
+            alert("Please login first!");
+            return;
+        }
+        if (!cardName.trim()) return;
+
+        setSaving(true);
+        try {
+            const payload = {
+                discordId: user.id,
+                name: cardName.trim(),
+                cardId: currentCardId,
+                gridData: gridData,
+                marked: marked
+            };
+
+            const res = await fetch(`${API_BASE_URL}/api/bingo/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                setShowSaveModal(false);
+                setCardName("");
+                alert("Card Saved Successfully!");
+            } else {
+                alert("Failed to save card.");
+            }
+        } catch (e) {
+            alert("Network error.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const loadCard = (card: SavedCard) => {
+        setGridData(card.gridData);
+        setMarked(card.marked);
+        setCurrentCardId(card.cardId);
+        setShowLoadModal(false);
+        // Clean URL param
+        setSearchParams({});
+    };
+
+    const deleteCard = async (name: string) => {
+        if (!confirm(`Delete card "${name}"?`)) return;
+        try {
+            await fetch(`${API_BASE_URL}/api/bingo/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discordId: user.id, name })
+            });
+            fetchSavedCards(); // Refresh list
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     // --- SEEDED GENERATION LOGIC ---
     const generateCard = useCallback(async (customId?: string) => {
@@ -405,7 +511,11 @@ const Bingo: React.FC = () => {
     // Initial Load
     useEffect(() => {
         let mounted = true;
-        if (mounted && !loadingSheet && cobblemonPool && gridData.length === 0) {
+        // Don't generate automatically if we are in 'view=saved' mode, wait for user to pick
+        // But if view is not saved and no ID, gen random.
+        const viewMode = searchParams.get('view');
+        
+        if (mounted && !loadingSheet && cobblemonPool && gridData.length === 0 && viewMode !== 'saved') {
             // Check URL for ID
             const urlId = searchParams.get('id');
             if (urlId) {
@@ -506,6 +616,12 @@ const Bingo: React.FC = () => {
                     </Link>
                 </div>
 
+                {/* USER PROFILE - Absolute Top Right */}
+                <UserProfile 
+                    onUserChange={setUser} 
+                    className="!absolute top-4 right-4"
+                />
+
                 {/* Bingo Board Container - Added padding on mobile to clear button */}
                 <div className="relative max-w-3xl w-full flex flex-col items-center pt-12 md:pt-0">
                     
@@ -559,6 +675,9 @@ const Bingo: React.FC = () => {
                                 <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">🔮</div>
                                     <div className="font-bold">Scouting Pokémon...</div>
+                                    {searchParams.get('view') === 'saved' && (
+                                        <div className="mt-4 text-white">Select a saved card from the menu!</div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className={`grid grid-cols-5 gap-2 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'} relative`}>
@@ -708,17 +827,17 @@ const Bingo: React.FC = () => {
                         </form>
 
                         {/* Main Actions */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-2">
                             <button 
                                 onClick={() => generateCard()}
                                 disabled={isGenerating || loadingSheet}
                                 className={`
-                                    bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-2 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1
+                                    bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1
                                     ${isGenerating || loadingSheet ? 'opacity-70 cursor-wait' : ''}
                                 `}
                             >
                                 <span>🎲</span>
-                                <span>Random Card</span>
+                                <span>Random</span>
                             </button>
                             
                             <button 
@@ -730,14 +849,127 @@ const Bingo: React.FC = () => {
                                     setShowBingoPopup(false);
                                     if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
                                 }}
-                                className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-3 px-2 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1"
+                                className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1"
                             >
                                 <span>🧹</span>
-                                <span>Clear Marks</span>
+                                <span>Clear</span>
+                            </button>
+
+                            <button 
+                                onClick={() => {
+                                    if (!user) {
+                                        alert("Please login first to save!");
+                                        return;
+                                    }
+                                    setShowSaveModal(true);
+                                }}
+                                className="bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1"
+                            >
+                                <span>💾</span>
+                                <span>Save</span>
                             </button>
                         </div>
                     </div>
                 </div>
+
+                {/* SAVE MODAL */}
+                {showSaveModal && (
+                    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
+                            <h3 className="text-xl font-black text-white mb-4">Save Your Bingo Card</h3>
+                            <input 
+                                type="text" 
+                                value={cardName} 
+                                onChange={(e) => setCardName(e.target.value)} 
+                                placeholder="Name your card (e.g. Weekly Grind)" 
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4 focus:outline-none focus:border-brand-primary"
+                                autoFocus
+                            />
+                            <div className="flex gap-3">
+                                <button 
+                                    onClick={() => setShowSaveModal(false)}
+                                    className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleSaveCard}
+                                    disabled={!cardName.trim() || saving}
+                                    className="flex-1 bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg disabled:opacity-50"
+                                >
+                                    {saving ? 'Saving...' : 'Save Card'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* MY BINGO (LOAD) MODAL */}
+                {showLoadModal && (
+                    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-[#1a0b0e] w-full max-w-2xl max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300">
+                            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
+                                <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                                    <span>📂</span> My Saved Cards
+                                </h2>
+                                <button onClick={() => { setShowLoadModal(false); setSearchParams({}); }} className="p-2 rounded-full bg-white/5 hover:bg-white/10 hover:text-brand-primary transition-colors">
+                                    ✕
+                                </button>
+                            </div>
+                            
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                {loadingCards ? (
+                                    <div className="text-center py-10 text-gray-500 animate-pulse">Loading saved cards...</div>
+                                ) : savedCards.length === 0 ? (
+                                    <div className="text-center py-10 text-gray-500">
+                                        <div className="text-4xl mb-2">📭</div>
+                                        <div>No saved cards found.</div>
+                                    </div>
+                                ) : (
+                                    savedCards.map((card) => {
+                                        const marks = card.marked.filter(Boolean).length;
+                                        const percentage = Math.round((marks / 25) * 100);
+                                        return (
+                                            <div key={card._id} className="bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-brand-primary/20 flex items-center justify-center text-xl font-bold text-brand-primary border border-brand-primary/30 shadow-inner">
+                                                    {card.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <h3 className="font-bold text-white text-lg truncate pr-2">{card.name}</h3>
+                                                        <span className="text-xs text-gray-500 font-mono">{new Date(card.updatedAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                                                        <span className="bg-black/30 px-2 py-0.5 rounded font-mono">{card.cardId}</span>
+                                                        <span>{marks}/25 Marked</span>
+                                                        <div className="w-20 h-1.5 bg-black/50 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-brand-primary rounded-full" style={{ width: `${percentage}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={() => loadCard(card)}
+                                                        className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl text-sm shadow-lg transition-transform hover:scale-105"
+                                                    >
+                                                        LOAD
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => deleteCard(card.name)}
+                                                        className="bg-red-900/30 hover:bg-red-600 text-red-200 hover:text-white px-3 py-2 rounded-xl transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </div>

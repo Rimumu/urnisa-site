@@ -40,6 +40,14 @@ const BackpackIcon = () => (
     </svg>
 );
 
+const ArchiveBoxIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="21 8 21 21 3 21 3 8"></polyline>
+        <rect x="1" y="3" width="22" height="5"></rect>
+        <line x1="10" y1="12" x2="14" y2="12"></line>
+    </svg>
+);
+
 const GiftIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 12 20 22 4 22 4 12"></polyline>
@@ -283,6 +291,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                             >
                                 <BackpackIcon />
                                 My Inventory
+                            </button>
+
+                            {/* My Bingo Link - NEW */}
+                            <button 
+                                onClick={() => { navigate('/minecraft/bingo?view=saved'); setMenuOpen(false); }}
+                                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
+                            >
+                                <ArchiveBoxIcon />
+                                My Bingo
                             </button>
 
                             {/* Redeem Link */}
