@@ -53,6 +53,76 @@ const WINNING_COMBINATIONS = [
     [4, 8, 12, 16, 20]
 ];
 
+// Manual Legendary & Mythic Pool
+const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] }[] = [
+    // Legendaries
+    { id: 382, name: 'Kyogre', rarity: 'Legendary' },
+    { id: 383, name: 'Groudon', rarity: 'Legendary' },
+    { id: 483, name: 'Dialga', rarity: 'Legendary' },
+    { id: 487, name: 'Giratina', rarity: 'Legendary' },
+    { id: 381, name: 'Latios', rarity: 'Legendary' },
+    { id: 380, name: 'Latias', rarity: 'Legendary' },
+    { id: 384, name: 'Rayquaza', rarity: 'Legendary' },
+    { id: 1017, name: 'Ogerpon', rarity: 'Legendary' },
+    { id: 644, name: 'Zekrom', rarity: 'Legendary' },
+    { id: 643, name: 'Reshiram', rarity: 'Legendary' },
+    { id: 717, name: 'Yveltal', rarity: 'Legendary' },
+    { id: 1008, name: 'Miraidon', rarity: 'Legendary' },
+    { id: 1007, name: 'Koraidon', rarity: 'Legendary' },
+    { id: 788, name: 'Tapu Fini', rarity: 'Legendary' },
+    { id: 787, name: 'Tapu Bulu', rarity: 'Legendary' },
+    { id: 786, name: 'Tapu Lele', rarity: 'Legendary' },
+    { id: 785, name: 'Tapu Koko', rarity: 'Legendary' },
+    { id: 480, name: 'Uxie', rarity: 'Legendary' },
+    { id: 891, name: 'Kubfu', rarity: 'Legendary' },
+    { id: 772, name: 'Type: Null', rarity: 'Legendary' },
+    { id: 800, name: 'Necrozma', rarity: 'Legendary' },
+    { id: 484, name: 'Palkia', rarity: 'Legendary' },
+    { id: 896, name: 'Glastrier', rarity: 'Legendary' },
+    { id: 889, name: 'Zamazenta', rarity: 'Legendary' },
+    { id: 897, name: 'Spectrier', rarity: 'Legendary' },
+    { id: 1001, name: 'Wo-Chien', rarity: 'Legendary' },
+    { id: 1003, name: 'Ting-Lu', rarity: 'Legendary' },
+    { id: 1002, name: 'Chien-Pao', rarity: 'Legendary' },
+    { id: 1004, name: 'Chi-Yu', rarity: 'Legendary' },
+    { id: 895, name: 'Regidrago', rarity: 'Legendary' },
+    { id: 894, name: 'Regieleki', rarity: 'Legendary' },
+    { id: 377, name: 'Regirock', rarity: 'Legendary' },
+    { id: 378, name: 'Regice', rarity: 'Legendary' },
+    { id: 379, name: 'Registeel', rarity: 'Legendary' },
+    { id: 485, name: 'Heatran', rarity: 'Legendary' },
+    { id: 890, name: 'Eternatus', rarity: 'Legendary' },
+    { id: 488, name: 'Cresselia', rarity: 'Legendary' },
+    { id: 481, name: 'Mesprit', rarity: 'Legendary' },
+    { id: 638, name: 'Cobalion', rarity: 'Legendary' },
+    { id: 640, name: 'Virizion', rarity: 'Legendary' },
+    { id: 646, name: 'Kyurem', rarity: 'Legendary' },
+    { id: 898, name: 'Calyrex', rarity: 'Legendary' },
+    { id: 482, name: 'Azelf', rarity: 'Legendary' },
+    { id: 1024, name: 'Terapagos', rarity: 'Legendary' },
+    { id: 789, name: 'Cosmog', rarity: 'Legendary' },
+    { id: 249, name: 'Lugia', rarity: 'Legendary' },
+    { id: 716, name: 'Xerneas', rarity: 'Legendary' },
+    { id: 645, name: 'Landorus', rarity: 'Legendary' },
+    { id: 642, name: 'Thundurus', rarity: 'Legendary' },
+    { id: 641, name: 'Tornadus', rarity: 'Legendary' },
+    { id: 905, name: 'Enamorus', rarity: 'Legendary' },
+    { id: 888, name: 'Zacian', rarity: 'Legendary' },
+    { id: 250, name: 'Ho-Oh', rarity: 'Legendary' },
+    { id: 150, name: 'Mewtwo', rarity: 'Legendary' },
+    { id: 243, name: 'Raikou', rarity: 'Legendary' },
+    { id: 244, name: 'Entei', rarity: 'Legendary' },
+    { id: 792, name: 'Lunala', rarity: 'Legendary' },
+    { id: 146, name: 'Moltres', rarity: 'Legendary' },
+    { id: 639, name: 'Terrakion', rarity: 'Legendary' },
+    { id: 245, name: 'Suicune', rarity: 'Legendary' },
+    { id: 791, name: 'Solgaleo', rarity: 'Legendary' },
+    { id: 144, name: 'Articuno', rarity: 'Legendary' },
+    { id: 145, name: 'Zapdos', rarity: 'Legendary' },
+    // Mythics
+    { id: 151, name: 'Mew', rarity: 'Mythical' }
+];
+
 // --- SEEDED RNG UTILS ---
 // Hashing function to turn a string ID into a numeric seed
 const cyrb128 = (str: string) => {
@@ -304,6 +374,35 @@ const Bingo: React.FC = () => {
                     }
 
                     poolMap.set(key, entry);
+                });
+
+                // INJECT MANUAL POOL DATA
+                MANUAL_POOL_DATA.forEach(manualEntry => {
+                    const key = manualEntry.name.toLowerCase();
+                    const existing = poolMap.get(key);
+                    
+                    const spawns = new Set<string>();
+                    if (manualEntry.rarity === 'Legendary') {
+                        spawns.add("Check the quest book!");
+                    } else if (manualEntry.rarity === 'Mythical') {
+                        spawns.add("Mythic");
+                    }
+
+                    if (existing) {
+                        // Update existing entry
+                        existing.id = manualEntry.id;
+                        existing.rarity = manualEntry.rarity;
+                        existing.spawns = spawns;
+                        poolMap.set(key, existing);
+                    } else {
+                        // Create new entry
+                        poolMap.set(key, {
+                            id: manualEntry.id,
+                            name: manualEntry.name,
+                            rarity: manualEntry.rarity,
+                            spawns: spawns
+                        });
+                    }
                 });
 
                 if (poolMap.size === 0) throw new Error("No data found in sheet");
