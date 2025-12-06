@@ -11,49 +11,6 @@ interface BingoCell {
     rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical';
 }
 
-// --- CONSTANTS ---
-// Expanded Pool for Random Generation
-const MASTER_BINGO_POOL: BingoCell[] = [
-    { id: 1, name: "Bulbasaur", rarity: "Rare" },
-    { id: 4, name: "Charmander", rarity: "Rare" },
-    { id: 7, name: "Squirtle", rarity: "Rare" },
-    { id: 16, name: "Pidgey", rarity: "Common" },
-    { id: 25, name: "Pikachu", rarity: "Rare" },
-    { id: 39, name: "Jigglypuff", rarity: "Common" },
-    { id: 41, name: "Zubat", rarity: "Common" },
-    { id: 52, name: "Meowth", rarity: "Common" },
-    { id: 54, name: "Psyduck", rarity: "Common" },
-    { id: 58, name: "Growlithe", rarity: "Uncommon" },
-    { id: 63, name: "Abra", rarity: "Uncommon" },
-    { id: 66, name: "Machop", rarity: "Common" },
-    { id: 74, name: "Geodude", rarity: "Common" },
-    { id: 79, name: "Slowpoke", rarity: "Common" },
-    { id: 81, name: "Magnemite", rarity: "Common" },
-    { id: 92, name: "Gastly", rarity: "Uncommon" },
-    { id: 94, name: "Gengar", rarity: "Ultra-Rare" },
-    { id: 95, name: "Onix", rarity: "Uncommon" },
-    { id: 104, name: "Cubone", rarity: "Uncommon" },
-    { id: 123, name: "Scyther", rarity: "Rare" },
-    { id: 129, name: "Magikarp", rarity: "Common" },
-    { id: 130, name: "Gyarados", rarity: "Ultra-Rare" },
-    { id: 131, name: "Lapras", rarity: "Ultra-Rare" },
-    { id: 133, name: "Eevee", rarity: "Rare" },
-    { id: 134, name: "Vaporeon", rarity: "Rare" },
-    { id: 135, name: "Jolteon", rarity: "Rare" },
-    { id: 136, name: "Flareon", rarity: "Rare" },
-    { id: 143, name: "Snorlax", rarity: "Ultra-Rare" },
-    { id: 149, name: "Dragonite", rarity: "Ultra-Rare" },
-    { id: 150, name: "Mewtwo", rarity: "Legendary" },
-    { id: 151, name: "Mew", rarity: "Mythical" },
-    { id: 175, name: "Togepi", rarity: "Uncommon" },
-    { id: 248, name: "Tyranitar", rarity: "Ultra-Rare" },
-    { id: 282, name: "Gardevoir", rarity: "Ultra-Rare" },
-    { id: 376, name: "Metagross", rarity: "Ultra-Rare" },
-    { id: 445, name: "Garchomp", rarity: "Ultra-Rare" },
-    { id: 448, name: "Lucario", rarity: "Ultra-Rare" },
-    { id: 778, name: "Mimikyu", rarity: "Rare" },
-];
-
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
 
 // Cache for image validity
@@ -128,33 +85,73 @@ const Bingo: React.FC = () => {
     const [marked, setMarked] = useState<boolean[]>(new Array(25).fill(false));
     const [isGenerating, setIsGenerating] = useState(false);
 
-    const generateNewCard = useCallback(() => {
+    const generateNewCard = useCallback(async () => {
         setIsGenerating(true);
         
-        // Use timeout to ensure UI updates to "Shuffling..." before heavy work (if any) and to guarantee visibility
-        setTimeout(() => {
-            // Fisher-Yates Shuffle for true randomness
-            const pool = [...MASTER_BINGO_POOL];
-            let currentIndex = pool.length, randomIndex;
-
-            while (currentIndex !== 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [pool[currentIndex], pool[randomIndex]] = [pool[randomIndex], pool[currentIndex]];
+        try {
+            // 1. Generate 25 Unique Random IDs (1-1025)
+            // This covers Gen 1 through Gen 9
+            const ids = new Set<number>();
+            while(ids.size < 25) {
+                ids.add(Math.floor(Math.random() * 1025) + 1);
             }
 
-            const selected = pool.slice(0, 25);
+            // 2. Fetch Data from PokeAPI
+            const promises = Array.from(ids).map(async (id) => {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+                if (!response.ok) throw new Error(`Failed to fetch ${id}`);
+                const data = await response.json();
+
+                // Determine Rarity based on Species Data
+                let rarity: BingoCell['rarity'] = 'Common';
+                
+                if (data.is_mythical) {
+                    rarity = 'Mythical';
+                } else if (data.is_legendary) {
+                    rarity = 'Legendary';
+                } else if (data.capture_rate !== undefined) {
+                    // Logic: Lower capture rate = Higher Rarity
+                    // Capture rates typically range 3 (hardest) to 255 (easiest)
+                    const cr = data.capture_rate;
+                    if (cr <= 45) rarity = 'Ultra-Rare';      // e.g. Pseudo-legends, Snorlax, Starters
+                    else if (cr <= 90) rarity = 'Rare';       // e.g. Eevee evolutions, Onix
+                    else if (cr <= 150) rarity = 'Uncommon';  // e.g. Gloom, Machoke
+                    else rarity = 'Common';                   // e.g. Pidgey, Rattata
+                }
+
+                // Get English Name
+                // PokeAPI returns names in multiple languages, find 'en'
+                const englishName = data.names.find((n: any) => n.language.name === 'en')?.name || data.name;
+
+                return {
+                    id: data.id,
+                    name: englishName,
+                    rarity: rarity
+                } as BingoCell;
+            });
+
+            // 3. Resolve all promises
+            const newGrid = await Promise.all(promises);
             
-            // Update state
-            setGridData(selected);
+            setGridData(newGrid);
             setMarked(new Array(25).fill(false));
+
+        } catch (e) {
+            console.error("Bingo Generation Failed:", e);
+            // Fallback could be implemented here, but retry is usually sufficient
+        } finally {
             setIsGenerating(false);
-        }, 600); // 600ms delay for "shuffling" effect
+        }
     }, []);
 
     // Initial Generation on Mount
     useEffect(() => {
-        generateNewCard();
+        // Use a flag to prevent double-firing in StrictMode development
+        let mounted = true;
+        if (mounted && gridData.length === 0) {
+            generateNewCard();
+        }
+        return () => { mounted = false; };
     }, [generateNewCard]);
 
     const toggleMark = (index: number) => {
@@ -238,76 +235,83 @@ const Bingo: React.FC = () => {
                                 ${isGenerating ? 'opacity-70 cursor-wait animate-pulse' : ''}
                             `}
                         >
-                            {isGenerating ? 'Shuffling...' : 'Generate New Card'}
+                            {isGenerating ? 'Scouting...' : 'Generate New Card'}
                         </button>
                     </div>
                     
                     {/* The Grid - Scrollable on mobile, Centered on Desktop */}
-                    <div className="overflow-x-auto pb-4 md:pb-0 custom-scrollbar flex justify-center w-full relative z-10">
-                        <div className={`grid grid-cols-5 gap-2 md:gap-3 min-w-[600px] md:min-w-0 transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm' : 'opacity-100'}`}>
-                            {gridData.map((item, index) => {
-                                const formattedName = getFormattedName(item.name);
-                                const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
-                                
-                                return (
-                                    <div 
-                                        key={`${item.id}-${index}`} 
-                                        onClick={() => toggleMark(index)}
-                                        className={`
-                                            ${getCellContainerStyle(item.rarity)}
-                                            ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
-                                        `}
-                                    >
-                                        {/* Background Decor for High Rarity */}
-                                        {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
-                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-                                        )}
-
-                                        {/* Rarity Badge - Top Right */}
-                                        <div className={`
-                                            absolute top-2 right-2 z-20
-                                            text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
-                                            ${getRarityBadgeStyle(item.rarity)}
-                                        `}>
-                                            {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
-                                        </div>
-
-                                        {/* Image Container */}
-                                        <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
-                                            <BingoCardImage item={item} />
-                                        </div>
-
-                                        {/* Name Bar - Fixed Height at Bottom */}
+                    <div className="overflow-x-auto pb-4 md:pb-0 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
+                        {gridData.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
+                                <div className="text-4xl mb-4">🔮</div>
+                                <div className="font-bold">Scouting Pokémon...</div>
+                            </div>
+                        ) : (
+                            <div className={`grid grid-cols-5 gap-2 md:gap-3 min-w-[600px] md:min-w-0 transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'}`}>
+                                {gridData.map((item, index) => {
+                                    const formattedName = getFormattedName(item.name);
+                                    const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
+                                    
+                                    return (
                                         <div 
-                                            className={`absolute bottom-0 left-0 right-0 py-1.5 z-20 flex justify-center ${getNamePlateStyle(item.rarity)}`}
-                                            onClick={(e) => e.stopPropagation()} // Prevent toggling mark when clicking the bar area
+                                            key={`${item.id}-${index}`} 
+                                            onClick={() => toggleMark(index)}
+                                            className={`
+                                                ${getCellContainerStyle(item.rarity)}
+                                                ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
+                                            `}
                                         >
-                                            <a 
-                                                href={wikiUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
-                                            >
-                                                {item.name}
-                                                <svg className="w-2.5 h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                </svg>
-                                            </a>
-                                        </div>
+                                            {/* Background Decor for High Rarity */}
+                                            {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
+                                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+                                            )}
 
-                                        {/* Cross Out Overlay */}
-                                        {marked[index] && (
-                                            <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
-                                                <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
-                                                    <line x1="20" y1="20" x2="80" y2="80" />
-                                                    <line x1="80" y1="20" x2="20" y2="80" />
-                                                </svg>
+                                            {/* Rarity Badge - Top Right */}
+                                            <div className={`
+                                                absolute top-2 right-2 z-20
+                                                text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
+                                                ${getRarityBadgeStyle(item.rarity)}
+                                            `}>
+                                                {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
                                             </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
+
+                                            {/* Image Container */}
+                                            <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
+                                                <BingoCardImage item={item} />
+                                            </div>
+
+                                            {/* Name Bar - Fixed Height at Bottom */}
+                                            <div 
+                                                className={`absolute bottom-0 left-0 right-0 py-1.5 z-20 flex justify-center ${getNamePlateStyle(item.rarity)}`}
+                                                onClick={(e) => e.stopPropagation()} // Prevent toggling mark when clicking the bar area
+                                            >
+                                                <a 
+                                                    href={wikiUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
+                                                >
+                                                    {item.name}
+                                                    <svg className="w-2.5 h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+
+                                            {/* Cross Out Overlay */}
+                                            {marked[index] && (
+                                                <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
+                                                    <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
+                                                        <line x1="20" y1="20" x2="80" y2="80" />
+                                                        <line x1="80" y1="20" x2="20" y2="80" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-4 text-center">
