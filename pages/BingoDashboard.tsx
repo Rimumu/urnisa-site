@@ -126,15 +126,47 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
     if (item.rarity === 'Uncommon') bgClass = "bg-green-900 border-green-600";
     if (item.id === -1) bgClass = "bg-white border-white";
 
-    const formattedName = item.name.toLowerCase().trim().replace(/[.']/g, '').replace(/\s+/g, '-');
-    const imgSrc = item.id === -1 
-        ? "https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif"
-        : `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
+    const [imgSrc, setImgSrc] = useState<string>("");
+
+    useEffect(() => {
+        if (item.id === -1) {
+            setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif");
+            return;
+        }
+
+        const formattedName = item.name.toLowerCase().trim().replace(/[.']/g, '').replace(/♀/g, '-f').replace(/♂/g, '-m').replace(/\s+/g, '-');
+        setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`);
+    }, [item]);
+
+    const handleError = () => {
+        if (item.id === -1) return;
+        
+        // Fallback chain similar to Bingo.tsx
+        if (imgSrc.includes('cobblemon.tools') && item.id > 0) {
+            // Fallback 1: PokeAPI Home (3D)
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
+        } else if (imgSrc.includes('other/home') && item.id > 0) {
+            // Fallback 2: PokeAPI Official Artwork
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`);
+        } else if (imgSrc.includes('official-artwork') && item.id > 0) {
+            // Fallback 3: Standard Sprite
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`);
+        } else {
+            // Final Fallback: Placeholder with text
+            setImgSrc(`https://via.placeholder.com/64?text=${item.name.charAt(0)}`);
+        }
+    };
 
     return (
         <div className={`aspect-square rounded-md border ${bgClass} flex items-center justify-center p-1 relative overflow-hidden shadow-sm`}>
             {item.id !== -1 && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>}
-            <img src={imgSrc} alt="" className="w-full h-full object-contain" loading="lazy" />
+            <img 
+                src={imgSrc} 
+                alt={item.name} 
+                className="w-full h-full object-contain" 
+                loading="lazy" 
+                onError={handleError}
+            />
         </div>
     );
 };
@@ -350,7 +382,7 @@ const BingoDashboard: React.FC = () => {
                                 className="bg-brand-primary hover:bg-red-600 text-white font-bold text-xl py-4 px-8 rounded-2xl shadow-[0_0_30px_rgba(229,56,59,0.4)] transition-transform hover:scale-105 flex items-center justify-center gap-3 group"
                             >
                                 <span>🚀</span>
-                                <span>PLAY WEEKLY CARD</span>
+                                <span>PLAY CHALLENGE CARD</span>
                             </Link>
                             
                             <div className="flex gap-4">
