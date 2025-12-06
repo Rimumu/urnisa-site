@@ -142,8 +142,11 @@ const Bingo: React.FC = () => {
                     if (index === 0) return; // Skip Header
                     
                     // Name is critical (Column B / Index 1)
-                    const name = cols[1];
-                    if (!name || !name.trim()) return;
+                    let rawName = cols[1];
+                    if (!rawName || !rawName.trim()) return;
+
+                    // Clean Name: Remove [Variant] tags (e.g. "Gastrodon [West Sea]" -> "Gastrodon")
+                    const name = rawName.replace(/\[.*?\]/g, '').trim();
 
                     // Normalize key for grouping
                     const key = name.toLowerCase();
