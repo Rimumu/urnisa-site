@@ -1,12 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
 
 // --- CONSTANTS ---
-// Reused from Bingo.tsx logic to ensure consistent preview
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
 const CSV_EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 
@@ -25,7 +23,7 @@ interface CobblemonEntry {
     spawns: Set<string>;
 }
 
-// Difficulty Mapping (Replicated from Bingo.tsx)
+// Difficulty Mapping
 const PREFIX_TO_DIFF: Record<string, string> = {
     'D': 'Default',
     'E': 'Easy',
@@ -35,7 +33,7 @@ const PREFIX_TO_DIFF: Record<string, string> = {
     'X': 'Nightmare'
 };
 
-// Manual Data (Copied for preview accuracy)
+// Manual Data
 const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] }[] = [
     { id: 382, name: 'Kyogre', rarity: 'Legendary' }, { id: 383, name: 'Groudon', rarity: 'Legendary' },
     { id: 483, name: 'Dialga', rarity: 'Legendary' }, { id: 487, name: 'Giratina', rarity: 'Legendary' },
@@ -79,7 +77,7 @@ const FREE_SPACE_CELL: BingoCell = {
 };
 
 // Global cache for image validity to avoid repeated backend checks
-const dashboardImageCache = new Map<string, string>();
+const clientImageCache = new Map<string, boolean>();
 
 // --- RNG UTILS ---
 const cyrb128 = (str: string) => {
@@ -126,7 +124,7 @@ const getFormattedName = (name: string) => {
         .replace(/\s+/g, '-');
 };
 
-// Mini Cell Component for Preview Grid
+// Mini Cell Component
 const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
     let bgClass = "bg-gray-700 border-gray-600";
     if (item.rarity === 'Mythical') bgClass = "bg-pink-900 border-pink-500";
@@ -144,18 +142,38 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
             return;
         }
 
-        const cacheKey = `${item.id}-${item.name}`;
+        const formattedName = getFormattedName(item.name);
         
-        // 1. Check Global Cache
-        if (dashboardImageCache.has(cacheKey)) {
-            setImgSrc(dashboardImageCache.get(cacheKey)!);
+        // Priority 1: Cobblemon Tools (Matches server modpack style)
+        const cobbleUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
+        
+        // Priority 2: PokeAPI Home (High Quality 3D) - Requires ID
+        const homeUrl = item.id > 0 ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png` : null;
+        
+        // Priority 3: PokemonDB (Name based fallback)
+        const dbUrl = `https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`;
+
+        // Check Cache first
+        if (clientImageCache.has(cobbleUrl)) {
+            setImgSrc(clientImageCache.get(cobbleUrl) ? cobbleUrl : (homeUrl || dbUrl));
             return;
         }
 
-        // 2. Optimistic Loading (Default to Cobblemon)
-        const formattedName = getFormattedName(item.name);
-        const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
-        setImgSrc(primaryUrl);
+        // Verify Cobblemon URL validity via backend proxy
+        fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(cobbleUrl)}`)
+            .then(res => res.json())
+            .then(data => {
+                clientImageCache.set(cobbleUrl, data.valid);
+                if (data.valid) {
+                    setImgSrc(cobbleUrl);
+                } else {
+                    setImgSrc(homeUrl || dbUrl);
+                }
+            })
+            .catch(() => {
+                // On verification error, fallback immediately
+                setImgSrc(homeUrl || dbUrl);
+            });
 
     }, [item]);
 
@@ -164,25 +182,24 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
         const currentSrc = e.currentTarget.src;
         const formattedName = getFormattedName(item.name);
         
-        const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
-        const homeUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`;
-        const artUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`;
-        const placeholder = `https://via.placeholder.com/64?text=${item.name.charAt(0)}`;
-
-        if (currentSrc === primaryUrl && item.id > 0) {
-            e.currentTarget.src = homeUrl;
-        } else if (currentSrc === homeUrl && item.id > 0) {
-            e.currentTarget.src = artUrl;
-        } else if (currentSrc !== placeholder) {
-            e.currentTarget.src = placeholder;
-        }
-    };
-
-    const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        const currentSrc = e.currentTarget.src;
-        if (item.id !== -1 && currentSrc && !currentSrc.includes('via.placeholder')) {
-            const cacheKey = `${item.id}-${item.name}`;
-            dashboardImageCache.set(cacheKey, currentSrc);
+        // If we failed on Cobblemon or Home, try PokemonDB
+        if (!currentSrc.includes('pokemondb')) {
+            e.currentTarget.src = `https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`;
+        } else {
+            // If PokemonDB fails, try standard pokeapi if ID exists
+             if (item.id > 0 && !currentSrc.includes('raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/')) {
+                 e.currentTarget.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`;
+             } else {
+                 // Final fallback: Hide image, show text
+                 e.currentTarget.style.display = 'none';
+                 if (e.currentTarget.parentElement) {
+                     e.currentTarget.parentElement.classList.add('bg-gray-800');
+                     e.currentTarget.parentElement.innerText = item.name.substring(0, 3).toUpperCase();
+                     e.currentTarget.parentElement.style.color = 'white';
+                     e.currentTarget.parentElement.style.fontSize = '10px';
+                     e.currentTarget.parentElement.style.fontWeight = 'bold';
+                 }
+             }
         }
     };
 
@@ -192,10 +209,9 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
             <img 
                 src={imgSrc} 
                 alt={item.name} 
-                className="w-full h-full object-contain transition-opacity duration-300" 
+                className="w-full h-full object-contain" 
                 loading="lazy" 
                 onError={handleError}
-                onLoad={handleLoad}
             />
         </div>
     );
