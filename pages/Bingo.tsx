@@ -16,6 +16,37 @@ const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/
 // Cache for image validity
 const clientImageCache = new Map<string, boolean>();
 
+// --- COBBLEMON POOL DEFINITION ---
+// Cobblemon has near-complete support for Gen 1-5.
+// We restrict the random pool to these ranges plus specific newer starters/popular mons to ensure they exist.
+const SAFE_ID_RANGES = [
+    [1, 649],   // Gen 1 - Gen 5 (Bulbasaur to Genesect)
+];
+
+const EXTRA_IDS = [
+    // Gen 6 Starters & Popular
+    650, 651, 652, 653, 654, 655, 656, 657, 658, 700, 
+    // Gen 7 Starters & Popular
+    722, 723, 724, 725, 726, 727, 728, 729, 730, 778,
+    // Gen 8 Starters & Popular
+    810, 811, 812, 813, 814, 815, 816, 817, 818, 885, 886, 887,
+    // Gen 9 Starters
+    906, 907, 908, 909, 910, 911, 912, 913, 914
+];
+
+const getSafeRandomId = () => {
+    // 90% chance to pick from main ranges (Gen 1-5)
+    // 10% chance to pick from extras (Newer Gens)
+    if (Math.random() < 0.1 && EXTRA_IDS.length > 0) {
+        return EXTRA_IDS[Math.floor(Math.random() * EXTRA_IDS.length)];
+    }
+
+    const range = SAFE_ID_RANGES[Math.floor(Math.random() * SAFE_ID_RANGES.length)];
+    const min = range[0];
+    const max = range[1];
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
 // Shared Helper
 const getFormattedName = (name: string) => {
     return name.toLowerCase()
@@ -89,11 +120,12 @@ const Bingo: React.FC = () => {
         setIsGenerating(true);
         
         try {
-            // 1. Generate 25 Unique Random IDs (1-1025)
-            // This covers Gen 1 through Gen 9
+            // 1. Generate 25 Unique Random IDs from the Safe Pool
             const ids = new Set<number>();
-            while(ids.size < 25) {
-                ids.add(Math.floor(Math.random() * 1025) + 1);
+            let attempts = 0;
+            while(ids.size < 25 && attempts < 1000) {
+                ids.add(getSafeRandomId());
+                attempts++;
             }
 
             // 2. Fetch Data from PokeAPI
