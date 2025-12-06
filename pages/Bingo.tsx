@@ -36,7 +36,8 @@ const getFormattedName = (name: string) => {
         .replace(/\s+/g, '-');
 };
 
-const mapRarity = (val: string): BingoCell['rarity'] => {
+const mapRarity = (val: string | undefined): BingoCell['rarity'] => {
+    if (!val) return 'Common';
     const v = val.toLowerCase();
     if (v.includes('mythic')) return 'Mythical';
     if (v.includes('legend')) return 'Legendary';
@@ -139,10 +140,10 @@ const Bingo: React.FC = () => {
                 // H [7] = Biome
                 rows.forEach((cols, index) => {
                     if (index === 0) return; // Skip Header
-                    if (cols.length < 8) return; // Ensure row has enough columns (at least up to H)
-
+                    
+                    // Name is critical (Column B / Index 1)
                     const name = cols[1];
-                    if (!name) return;
+                    if (!name || !name.trim()) return;
 
                     // Normalize key for grouping
                     const key = name.toLowerCase();
@@ -150,7 +151,7 @@ const Bingo: React.FC = () => {
                     // Get existing or create new entry
                     let entry = poolMap.get(key);
                     if (!entry) {
-                        const id = parseInt(cols[0]) || 0;
+                        const id = parseInt(cols[0]) || 0; // Column A
                         const rarity = mapRarity(cols[3]); // Column D
                         entry = {
                             id,
@@ -161,8 +162,9 @@ const Bingo: React.FC = () => {
                     }
 
                     // Add Biome from Column H (Index 7)
+                    // Check if column exists first
                     const biomeRaw = cols[7];
-                    if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.toLowerCase() !== 'none') {
+                    if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.toLowerCase() !== 'none' && biomeRaw.trim() !== '') {
                         // Clean biome name (e.g., "minecraft:plains" -> "Plains")
                         const cleanBiome = biomeRaw.split(':').pop()?.replace(/_/g, ' ') || biomeRaw;
                         const formattedBiome = cleanBiome.replace(/\b\w/g, c => c.toUpperCase());
@@ -198,8 +200,6 @@ const Bingo: React.FC = () => {
 
             // Basic safety check
             if (available.length < 25) {
-                // Not enough pokemon in sheet, just take all and repeat
-                // (Shouldn't happen with full dex, but safe fallback)
                 let i = 0;
                 while (selected.length < 25) {
                     const entry = available[i % available.length];
@@ -320,7 +320,7 @@ const Bingo: React.FC = () => {
                 </div>
 
                 {/* Bingo Board Container */}
-                <div className="bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] p-4 md:p-8 shadow-2xl relative overflow-hidden max-w-5xl w-full flex flex-col items-center">
+                <div className="bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] p-4 md:p-8 shadow-2xl relative overflow-hidden max-w-6xl w-full flex flex-col items-center">
                     {/* Decorative Background inside board */}
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
                     
@@ -366,7 +366,7 @@ const Bingo: React.FC = () => {
                                 <div className="font-bold">Scouting Pokémon...</div>
                             </div>
                         ) : (
-                            <div className={`grid grid-cols-5 gap-2 md:gap-3 min-w-[600px] md:min-w-0 transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'}`}>
+                            <div className={`grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'}`}>
                                 {gridData.map((item, index) => {
                                     const formattedName = getFormattedName(item.name);
                                     const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
