@@ -25,6 +25,16 @@ interface CobblemonEntry {
     spawns: Set<string>;
 }
 
+// Difficulty Mapping (Replicated from Bingo.tsx)
+const PREFIX_TO_DIFF: Record<string, string> = {
+    'D': 'Default',
+    'E': 'Easy',
+    'N': 'Normal',
+    'H': 'Hard',
+    'I': 'Insane',
+    'X': 'Nightmare'
+};
+
 // Manual Data (Copied for preview accuracy)
 const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] }[] = [
     { id: 382, name: 'Kyogre', rarity: 'Legendary' }, { id: 383, name: 'Groudon', rarity: 'Legendary' },
@@ -149,12 +159,21 @@ const BingoDashboard: React.FC = () => {
                 if (!csvRes.ok) throw new Error("Failed to fetch sheet");
                 const text = await csvRes.text();
                 
-                // Set Config
+                // Set Config & Parse Difficulty
                 let activeCardId = "WEEK1"; 
+                let difficulty = "Default";
+
                 if (configRes.ok) {
                     const conf = await configRes.json();
                     setConfig(conf);
-                    if (conf.cardId) activeCardId = conf.cardId;
+                    if (conf.cardId) {
+                        activeCardId = conf.cardId;
+                        // Parse difficulty prefix if exists
+                        const parts = conf.cardId.split('-');
+                        if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
+                            difficulty = PREFIX_TO_DIFF[parts[0]];
+                        }
+                    }
                 }
 
                 // 2. Parse Sheet
@@ -184,29 +203,96 @@ const BingoDashboard: React.FC = () => {
                     else poolMap.set(key, { id: m.id, name: m.name, rarity: m.rarity, spawns: new Set() });
                 });
 
-                const pool = Array.from(poolMap.values());
+                const cobblemonPool = Array.from(poolMap.values());
                 
-                // 3. GENERATE PREVIEW GRID (Using Fetched Seed)
+                // 3. GENERATE PREVIEW GRID (Using Fetched Seed and Difficulty Logic)
                 const seed = cyrb128(activeCardId);
                 const rng = mulberry32(seed[0]);
-                
-                // Simple Shuffle for Default Difficulty
-                const available = [...pool];
-                for (let i = available.length - 1; i > 0; i--) {
-                    const j = Math.floor(rng() * (i + 1));
-                    [available[i], available[j]] = [available[j], available[i]];
+
+                // Helper to get random items from filtered pool
+                const getRandomItems = (rarities: BingoCell['rarity'][], count: number) => {
+                    let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
+                    if (pool.length === 0) pool = cobblemonPool; // Fallback
+                    
+                    // Shuffle pool
+                    for (let i = pool.length - 1; i > 0; i--) {
+                        const j = Math.floor(rng() * (i + 1));
+                        [pool[i], pool[j]] = [pool[j], pool[i]];
+                    }
+                    
+                    // Return top N
+                    return pool.slice(0, count).map(entry => ({
+                        id: entry.id,
+                        name: entry.name,
+                        rarity: entry.rarity,
+                        spawns: []
+                    }));
+                };
+
+                let selected: BingoCell[] = [];
+
+                // GENERATION LOGIC (Mirrors Bingo.tsx)
+                if (difficulty === 'Easy') {
+                    const commons = getRandomItems(['Common'], 12);
+                    const uncommons = getRandomItems(['Uncommon'], 12);
+                    selected = [...commons, ...uncommons];
+                } else if (difficulty === 'Normal') {
+                    selected = [
+                        ...getRandomItems(['Common'], 6),
+                        ...getRandomItems(['Uncommon'], 6),
+                        ...getRandomItems(['Rare'], 6),
+                        ...getRandomItems(['Ultra-Rare'], 6)
+                    ];
+                } else if (difficulty === 'Hard') {
+                    selected = [
+                        ...getRandomItems(['Rare'], 12),
+                        ...getRandomItems(['Ultra-Rare'], 12)
+                    ];
+                } else if (difficulty === 'Insane') {
+                    selected = getRandomItems(['Ultra-Rare'], 24);
+                } else if (difficulty === 'Nightmare') {
+                    selected = getRandomItems(['Ultra-Rare'], 20);
+                } else {
+                    // DEFAULT
+                    const pool = [...cobblemonPool];
+                    for (let i = pool.length - 1; i > 0; i--) {
+                        const j = Math.floor(rng() * (i + 1));
+                        [pool[i], pool[j]] = [pool[j], pool[i]];
+                    }
+                    selected = pool.slice(0, 24).map(entry => ({
+                        id: entry.id, name: entry.name, rarity: entry.rarity, spawns: []
+                    }));
                 }
 
-                const selected: BingoCell[] = available.slice(0, 24).map(e => ({
-                    id: e.id, name: e.name, rarity: e.rarity, spawns: []
-                }));
+                // Shuffle selected
+                for (let i = selected.length - 1; i > 0; i--) {
+                    const j = Math.floor(rng() * (i + 1));
+                    [selected[i], selected[j]] = [selected[j], selected[i]];
+                }
 
-                // Construct Grid with Free Space in Center
+                // Construct Grid
                 const finalGrid: BingoCell[] = new Array(25).fill(null);
-                let srcIdx = 0;
-                for (let i = 0; i < 25; i++) {
-                    if (i === 12) finalGrid[i] = FREE_SPACE_CELL;
-                    else finalGrid[i] = selected[srcIdx++];
+                const fillGrid = (source: BingoCell[], skipIndices: number[]) => {
+                    let sourceIdx = 0;
+                    for (let i = 0; i < 25; i++) {
+                        if (skipIndices.includes(i)) continue;
+                        if (sourceIdx < source.length) finalGrid[i] = source[sourceIdx++];
+                        else finalGrid[i] = getRandomItems(['Common'], 1)[0];
+                    }
+                };
+
+                if (difficulty === 'Insane') {
+                    fillGrid(selected, [12]);
+                    finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
+                } else if (difficulty === 'Nightmare') {
+                    const corners = [0, 4, 20, 24];
+                    fillGrid(selected, [12, ...corners]);
+                    finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
+                    const legends = getRandomItems(['Legendary'], 4);
+                    corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
+                } else {
+                    fillGrid(selected, [12]);
+                    finalGrid[12] = FREE_SPACE_CELL;
                 }
 
                 setPreviewGrid(finalGrid);

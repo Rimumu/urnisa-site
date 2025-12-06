@@ -55,6 +55,25 @@ const WINNING_COMBINATIONS = [
     [4, 8, 12, 16, 20]
 ];
 
+// Difficulty Mapping
+const DIFF_PREFIXES: Record<BingoDifficulty, string> = {
+    'Default': 'D',
+    'Easy': 'E',
+    'Normal': 'N',
+    'Hard': 'H',
+    'Insane': 'I',
+    'Nightmare': 'X'
+};
+
+const PREFIX_TO_DIFF: Record<string, BingoDifficulty> = {
+    'D': 'Default',
+    'E': 'Easy',
+    'N': 'Normal',
+    'H': 'Hard',
+    'I': 'Insane',
+    'X': 'Nightmare'
+};
+
 // Manual Legendary & Mythic Pool
 const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] }[] = [
     // Legendaries
@@ -161,14 +180,15 @@ const mulberry32 = (a: number) => {
     }
 };
 
-// Generate a random ID like SHCN74CDF
-const generateRandomId = () => {
+// Generate a random ID with difficulty prefix
+const generateRandomId = (difficulty: BingoDifficulty) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 8; i++) { // 8 chars + prefix = 10-ish total
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return result;
+    const prefix = DIFF_PREFIXES[difficulty];
+    return `${prefix}-${result}`;
 };
 
 // Helper to determine line coords for SVG
@@ -295,6 +315,7 @@ const Bingo: React.FC = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [currentCardId, setCurrentCardId] = useState<string>("");
     const [inputCode, setInputCode] = useState("");
+    const [activeDifficulty, setActiveDifficulty] = useState<BingoDifficulty>('Default');
     
     // Bingo Win State
     const [winningLines, setWinningLines] = useState<number[][]>([]);
@@ -558,6 +579,13 @@ const Bingo: React.FC = () => {
         setMarked(card.marked);
         setCurrentCardId(card.cardId);
         setLoadedCardName(card.name);
+        
+        // Parse Difficulty for display/logic sync (Optional but good for UI consistency)
+        const parts = card.cardId.split('-');
+        if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
+            setActiveDifficulty(PREFIX_TO_DIFF[parts[0]]);
+        }
+
         setShowLoadModal(false);
         // Clean URL param
         setSearchParams({});
@@ -586,19 +614,31 @@ const Bingo: React.FC = () => {
         setLoadedCardName(null); // Reset loaded state for new random cards
         
         try {
-            // 1. Determine ID
+            // 1. Determine ID and Difficulty
             let idToUse = customId;
-            if (!idToUse) {
-                idToUse = generateRandomId();
+            let diffToUse = difficulty;
+
+            if (customId) {
+                // Check if ID contains encoded difficulty (Format: Prefix-RandomString)
+                const parts = customId.split('-');
+                if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
+                    diffToUse = PREFIX_TO_DIFF[parts[0]];
+                }
+                // If legacy ID or manual input without prefix, rely on passed difficulty or default
+            } else {
+                // Generate new ID with difficulty prefix
+                idToUse = generateRandomId(difficulty);
+                diffToUse = difficulty;
             }
             
             // 2. Set URL & State
-            setCurrentCardId(idToUse);
+            if (idToUse) setCurrentCardId(idToUse);
+            setActiveDifficulty(diffToUse);
             setSearchParams({ id: idToUse });
             setInputCode(""); // Clear input
 
-            // 3. Initialize PRNG
-            const seed = cyrb128(idToUse);
+            // 3. Initialize PRNG with the ID
+            const seed = cyrb128(idToUse || "DEFAULT");
             const rng = mulberry32(seed[0]);
 
             // Helper to get random items from filtered pool
@@ -623,13 +663,13 @@ const Bingo: React.FC = () => {
 
             let selected: BingoCell[] = [];
 
-            // 4. GENERATION BASED ON DIFFICULTY
-            if (difficulty === 'Easy') {
+            // 4. GENERATION BASED ON DIFFICULTY (Using Parsed Difficulty)
+            if (diffToUse === 'Easy') {
                 // 12 Common, 12 Uncommon (Total 24) + Free Space
                 const commons = getRandomItems(['Common'], 12);
                 const uncommons = getRandomItems(['Uncommon'], 12);
                 selected = [...commons, ...uncommons];
-            } else if (difficulty === 'Normal') {
+            } else if (diffToUse === 'Normal') {
                 // 6 Common, 6 Uncommon, 6 Rare, 6 Ultra-Rare (Total 24) + Free Space
                 selected = [
                     ...getRandomItems(['Common'], 6),
@@ -637,17 +677,16 @@ const Bingo: React.FC = () => {
                     ...getRandomItems(['Rare'], 6),
                     ...getRandomItems(['Ultra-Rare'], 6)
                 ];
-            } else if (difficulty === 'Hard') {
+            } else if (diffToUse === 'Hard') {
                 // 12 Rare, 12 Ultra-Rare (Total 24) + Free Space
                 selected = [
                     ...getRandomItems(['Rare'], 12),
                     ...getRandomItems(['Ultra-Rare'], 12)
                 ];
-            } else if (difficulty === 'Insane') {
+            } else if (diffToUse === 'Insane') {
                 // 24 Ultra-Rare + 1 Legendary Middle
                 selected = getRandomItems(['Ultra-Rare'], 24);
-                // Middle override happens later, just ensure we have enough
-            } else if (difficulty === 'Nightmare') {
+            } else if (diffToUse === 'Nightmare') {
                 // 20 Ultra-Rare + 1 Mythic Middle + 4 Legendary Corners
                 selected = getRandomItems(['Ultra-Rare'], 20);
             } else {
@@ -688,12 +727,12 @@ const Bingo: React.FC = () => {
                 }
             };
 
-            if (difficulty === 'Insane') {
-                // Center is Legendary, others UR
+            if (diffToUse === 'Insane') {
+                // Center is Legendary
                 fillGrid(selected, [12]);
                 finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
-            } else if (difficulty === 'Nightmare') {
-                // Center Mythic, Corners Legendary, others UR
+            } else if (diffToUse === 'Nightmare') {
+                // Center Mythic, Corners Legendary
                 const corners = [0, 4, 20, 24];
                 fillGrid(selected, [12, ...corners]);
                 
@@ -710,13 +749,11 @@ const Bingo: React.FC = () => {
             
             setGridData(finalGrid);
             
-            // Only reset marks if generating a brand new random card, 
-            // if loading a specific ID, we might ideally want to save state, but for now we reset.
-            // (Assuming stateless sharing)
+            // Reset marks for new generation
             setMarked(new Array(25).fill(false));
             
             // Auto-mark free space if exists
-            if (difficulty !== 'Insane' && difficulty !== 'Nightmare') {
+            if (diffToUse !== 'Insane' && diffToUse !== 'Nightmare') {
                 const newMarked = new Array(25).fill(false);
                 newMarked[12] = true;
                 setMarked(newMarked);
@@ -878,6 +915,11 @@ const Bingo: React.FC = () => {
                         <div className="mb-2 flex items-center justify-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/10 shadow-inner">
                             <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest pt-[1px]">Card ID:</span>
                             <span className="text-brand-primary font-mono font-black tracking-widest text-sm leading-none">{currentCardId || "LOADING..."}</span>
+                            {activeDifficulty !== 'Default' && (
+                                <span className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded ml-1 bg-white/10 text-gray-300`}>
+                                    {activeDifficulty}
+                                </span>
+                            )}
                         </div>
                         
                         {/* The Grid - Removed min-height to fit content */}
@@ -1045,7 +1087,7 @@ const Bingo: React.FC = () => {
                             <input 
                                 type="text" 
                                 value={inputCode}
-                                onChange={(e) => setInputCode(e.target.value.toUpperCase().slice(0,9))}
+                                onChange={(e) => setInputCode(e.target.value.toUpperCase().slice(0,11))}
                                 placeholder="Enter Card ID"
                                 className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-sm placeholder:text-gray-600 focus:border-brand-primary outline-none tracking-widest uppercase"
                             />
