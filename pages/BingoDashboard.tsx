@@ -1,12 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
 
 // --- CONSTANTS ---
-// Reused from Bingo.tsx logic to ensure consistent preview
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
 const CSV_EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 
@@ -25,7 +23,7 @@ interface CobblemonEntry {
     spawns: Set<string>;
 }
 
-// Difficulty Mapping (Replicated from Bingo.tsx)
+// Difficulty Mapping
 const PREFIX_TO_DIFF: Record<string, string> = {
     'D': 'Default',
     'E': 'Easy',
@@ -35,7 +33,7 @@ const PREFIX_TO_DIFF: Record<string, string> = {
     'X': 'Nightmare'
 };
 
-// Manual Data (Copied for preview accuracy)
+// Manual Data
 const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] }[] = [
     { id: 382, name: 'Kyogre', rarity: 'Legendary' }, { id: 383, name: 'Groudon', rarity: 'Legendary' },
     { id: 483, name: 'Dialga', rarity: 'Legendary' }, { id: 487, name: 'Giratina', rarity: 'Legendary' },
@@ -78,6 +76,9 @@ const FREE_SPACE_CELL: BingoCell = {
     spawns: ["Enjoy!"]
 };
 
+// Global cache for image validity to avoid repeated backend checks
+const clientImageCache = new Map<string, boolean>();
+
 // --- RNG UTILS ---
 const cyrb128 = (str: string) => {
     let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
@@ -104,7 +105,6 @@ const mulberry32 = (a: number) => {
     }
 };
 
-// Simplified Rarity Mapping for Preview
 const mapRarity = (val: string | undefined): BingoCell['rarity'] => {
     if (!val) return 'Common';
     const v = val.toLowerCase();
@@ -116,7 +116,15 @@ const mapRarity = (val: string | undefined): BingoCell['rarity'] => {
     return 'Common';
 };
 
-// Mini Cell Component for Preview Grid
+const getFormattedName = (name: string) => {
+    return name.toLowerCase().trim()
+        .replace(/[.':]/g, '')
+        .replace(/♀/g, '-f')
+        .replace(/♂/g, '-m')
+        .replace(/\s+/g, '-');
+};
+
+// Mini Cell Component
 const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
     let bgClass = "bg-gray-700 border-gray-600";
     if (item.rarity === 'Mythical') bgClass = "bg-pink-900 border-pink-500";
@@ -127,66 +135,71 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
     if (item.id === -1) bgClass = "bg-white border-white";
 
     const [imgSrc, setImgSrc] = useState<string>("");
-    // Track fetch attempts for fallback logic
-    const [attempts, setAttempts] = useState(0);
-
-    const getFormattedName = (name: string) => {
-        return name.toLowerCase().trim()
-            .replace(/[.':]/g, '') // Remove dots, apostrophes, colons
-            .replace(/♀/g, '-f')
-            .replace(/♂/g, '-m')
-            .replace(/\s+/g, '-');
-    };
 
     useEffect(() => {
         if (item.id === -1) {
             setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif");
             return;
         }
-        // Reset attempts on item change
-        setAttempts(0);
+
         const formattedName = getFormattedName(item.name);
-        setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`);
+        
+        // Priority 1: Cobblemon Tools (Matches server modpack style)
+        const cobbleUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
+        
+        // Priority 2: PokeAPI Home (High Quality 3D) - Requires ID
+        const homeUrl = item.id > 0 ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png` : null;
+        
+        // Priority 3: PokemonDB (Name based fallback)
+        const dbUrl = `https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`;
+
+        // Check Cache first
+        if (clientImageCache.has(cobbleUrl)) {
+            setImgSrc(clientImageCache.get(cobbleUrl) ? cobbleUrl : (homeUrl || dbUrl));
+            return;
+        }
+
+        // Verify Cobblemon URL validity via backend proxy
+        fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(cobbleUrl)}`)
+            .then(res => res.json())
+            .then(data => {
+                clientImageCache.set(cobbleUrl, data.valid);
+                if (data.valid) {
+                    setImgSrc(cobbleUrl);
+                } else {
+                    setImgSrc(homeUrl || dbUrl);
+                }
+            })
+            .catch(() => {
+                // On verification error, fallback immediately
+                setImgSrc(homeUrl || dbUrl);
+            });
+
     }, [item]);
 
-    const handleError = () => {
-        if (item.id === -1) return;
-        
+    // Robust error handler for the img tag itself
+    const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        const currentSrc = e.currentTarget.src;
         const formattedName = getFormattedName(item.name);
-        setAttempts(prev => prev + 1);
-
-        // Fallback Logic Sequence
-        if (attempts === 0) {
-            // Attempt 1: PokeAPI Home (ID based) - if ID exists
-            if (item.id > 0) {
-                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
-            } else {
-                // If no ID, skip to Name-based fallback immediately
-                setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`);
-                setAttempts(2); // Skip step 1
-            }
-        } else if (attempts === 1) {
-            // Attempt 2: PokemonDB Home (Name based) - robust fallback for missing IDs
-            setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`);
-        } else if (attempts === 2) {
-             // Attempt 3: PokeAPI Official Art (ID based)
-             if (item.id > 0) {
-                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`);
-             } else {
-                 // Final Give Up
-                 setImgSrc(`https://via.placeholder.com/64?text=${item.name.charAt(0)}`);
-                 setAttempts(10); 
-             }
-        } else if (attempts === 3) {
-             // Attempt 4: Standard Sprite (ID based)
-             if (item.id > 0) {
-                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`);
-             } else {
-                 setImgSrc(`https://via.placeholder.com/64?text=${item.name.charAt(0)}`);
-             }
+        
+        // If we failed on Cobblemon or Home, try PokemonDB
+        if (!currentSrc.includes('pokemondb')) {
+            e.currentTarget.src = `https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`;
         } else {
-            // Give up
-            setImgSrc(`https://via.placeholder.com/64?text=${item.name.charAt(0)}`);
+            // If PokemonDB fails, try standard pokeapi if ID exists
+             if (item.id > 0 && !currentSrc.includes('raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/')) {
+                 e.currentTarget.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`;
+             } else {
+                 // Final fallback: Hide image, show text
+                 e.currentTarget.style.display = 'none';
+                 if (e.currentTarget.parentElement) {
+                     e.currentTarget.parentElement.classList.add('bg-gray-800');
+                     e.currentTarget.parentElement.innerText = item.name.substring(0, 3).toUpperCase();
+                     e.currentTarget.parentElement.style.color = 'white';
+                     e.currentTarget.parentElement.style.fontSize = '10px';
+                     e.currentTarget.parentElement.style.fontWeight = 'bold';
+                 }
+             }
         }
     };
 
@@ -196,7 +209,7 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
             <img 
                 src={imgSrc} 
                 alt={item.name} 
-                className="w-full h-full object-contain transition-opacity duration-300" 
+                className="w-full h-full object-contain" 
                 loading="lazy" 
                 onError={handleError}
             />
