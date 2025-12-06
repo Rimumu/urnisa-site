@@ -12,8 +12,10 @@ interface BingoCell {
     spawns: string[];
 }
 
-interface SheetEntry {
+interface CobblemonEntry {
+    id: number;
     name: string;
+    rarity: BingoCell['rarity'];
     spawns: Set<string>;
 }
 
@@ -34,6 +36,16 @@ const getFormattedName = (name: string) => {
         .replace(/\s+/g, '-');
 };
 
+const mapRarity = (val: string): BingoCell['rarity'] => {
+    const v = val.toLowerCase();
+    if (v.includes('mythic')) return 'Mythical';
+    if (v.includes('legend')) return 'Legendary';
+    if (v.includes('ultra')) return 'Ultra-Rare';
+    if (v.includes('rare')) return 'Rare';
+    if (v.includes('uncommon')) return 'Uncommon';
+    return 'Common';
+};
+
 // Helper Component for Cell Image
 const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
     const [imgSrc, setImgSrc] = useState<string>("");
@@ -42,7 +54,7 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
         const verifyImage = async () => {
             const cobbleName = getFormattedName(item.name);
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-            // Fallback relies on ID. If ID is 0 (not found in PokeAPI), we can't use numeric fallback, so we rely on primary.
+            // Fallback relies on ID. 
             const fallback3d = item.id > 0 
                 ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
                 : primaryUrl;
@@ -98,7 +110,7 @@ const Bingo: React.FC = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     
     // Data from Google Sheet
-    const [cobblemonPool, setCobblemonPool] = useState<Map<string, Set<string>> | null>(null);
+    const [cobblemonPool, setCobblemonPool] = useState<CobblemonEntry[] | null>(null);
     const [loadingSheet, setLoadingSheet] = useState(true);
     const [sheetError, setSheetError] = useState(false);
 
@@ -110,37 +122,59 @@ const Bingo: React.FC = () => {
                 if (!response.ok) throw new Error("Failed to fetch sheet");
                 const text = await response.text();
                 
-                const rows = text.split('\n').map(row => row.split(',')); // Simple CSV split
-                const pool = new Map<string, Set<string>>();
-
-                // Iterate rows (Skip header if row 0 is "Pokemon")
-                rows.forEach((cols, index) => {
-                    if (index === 0 && cols[0]?.toLowerCase().includes('pokemon')) return; // Skip header
-                    
-                    const name = cols[0]?.trim();
-                    if (!name) return;
-
-                    // Normalize key
-                    const key = name.toLowerCase(); 
-                    
-                    // Get existing or create new
-                    const entry = pool.get(key) || new Set<string>();
-                    
-                    // Extract biome info (Assuming Column B/index 1 has spawn info)
-                    // If multiple columns have data, join them, or just take the second column
-                    // Handling "repeated entries" logic by merging sets
-                    if (cols[1] && cols[1].trim()) {
-                        // Clean up quotes from CSV if present
-                        const biome = cols[1].replace(/^"|"$/g, '').trim();
-                        entry.add(biome);
-                    }
-
-                    pool.set(key, entry);
+                // Parse CSV respecting quoted fields
+                const rows = text.split('\n').map(row => {
+                    // Regex split to handle commas inside quotes
+                    return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, '').trim());
                 });
 
-                if (pool.size === 0) throw new Error("No data found");
+                const poolMap = new Map<string, CobblemonEntry>();
+
+                // Iterate rows
+                // Column Mapping based on request:
+                // A [0] = ID
+                // B [1] = Name
+                // C [2] = Entry # (Ignored/Implicit via grouping)
+                // D [3] = Bucket (Rarity)
+                // H [7] = Biome
+                rows.forEach((cols, index) => {
+                    if (index === 0) return; // Skip Header
+                    if (cols.length < 8) return; // Ensure row has enough columns (at least up to H)
+
+                    const name = cols[1];
+                    if (!name) return;
+
+                    // Normalize key for grouping
+                    const key = name.toLowerCase();
+                    
+                    // Get existing or create new entry
+                    let entry = poolMap.get(key);
+                    if (!entry) {
+                        const id = parseInt(cols[0]) || 0;
+                        const rarity = mapRarity(cols[3]); // Column D
+                        entry = {
+                            id,
+                            name,
+                            rarity,
+                            spawns: new Set<string>()
+                        };
+                    }
+
+                    // Add Biome from Column H (Index 7)
+                    const biomeRaw = cols[7];
+                    if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.toLowerCase() !== 'none') {
+                        // Clean biome name (e.g., "minecraft:plains" -> "Plains")
+                        const cleanBiome = biomeRaw.split(':').pop()?.replace(/_/g, ' ') || biomeRaw;
+                        const formattedBiome = cleanBiome.replace(/\b\w/g, c => c.toUpperCase());
+                        entry.spawns.add(formattedBiome);
+                    }
+
+                    poolMap.set(key, entry);
+                });
+
+                if (poolMap.size === 0) throw new Error("No data found in sheet");
                 
-                setCobblemonPool(pool);
+                setCobblemonPool(Array.from(poolMap.values()));
             } catch (e) {
                 console.error("Sheet Error:", e);
                 setSheetError(true);
@@ -153,76 +187,51 @@ const Bingo: React.FC = () => {
     }, []);
 
     const generateNewCard = useCallback(async () => {
-        if (!cobblemonPool || cobblemonPool.size === 0) return;
+        if (!cobblemonPool || cobblemonPool.length === 0) return;
         setIsGenerating(true);
         
         try {
-            // 1. Get List of Available Names
-            const allNames = Array.from(cobblemonPool.keys());
-            
-            // 2. Pick 25 Unique Names
-            const selectedNames = new Set<string>();
-            while(selectedNames.size < 25 && selectedNames.size < allNames.length) {
-                const randomName = allNames[Math.floor(Math.random() * allNames.length)];
-                selectedNames.add(randomName);
-            }
+            // Pick 25 Unique Pokemon directly from our sheet data
+            const available = [...cobblemonPool];
+            const selected: BingoCell[] = [];
+            const selectedIndices = new Set<number>();
 
-            // 3. Fetch Metadata from PokeAPI (for Rarity & ID)
-            const promises = Array.from(selectedNames).map(async (nameKey) => {
-                const formattedName = getFormattedName(nameKey);
-                let id = 0;
-                let rarity: BingoCell['rarity'] = 'Common';
-                let displayName = nameKey.charAt(0).toUpperCase() + nameKey.slice(1); // Default capitalize
-
-                try {
-                    // Try to fetch specific species data
-                    const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${formattedName}`);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        id = data.id;
-                        
-                        // Use official name from API
-                        displayName = data.names.find((n: any) => n.language.name === 'en')?.name || data.name;
-
-                        if (data.is_mythical) {
-                            rarity = 'Mythical';
-                        } else if (data.is_legendary) {
-                            rarity = 'Legendary';
-                        } else if (data.capture_rate !== undefined) {
-                            const cr = data.capture_rate;
-                            if (cr <= 45) rarity = 'Ultra-Rare';      
-                            else if (cr <= 90) rarity = 'Rare';       
-                            else if (cr <= 150) rarity = 'Uncommon';  
-                            else rarity = 'Common';                   
-                        }
-                    } else {
-                        // Fallback if not found in PokeAPI (Custom Cobblemon?)
-                        // We keep ID 0, use name from sheet, default Common rarity
-                        console.warn(`Could not find ${formattedName} in PokeAPI`);
-                    }
-                } catch (e) {
-                    console.warn(`Error fetching ${formattedName}`);
+            // Basic safety check
+            if (available.length < 25) {
+                // Not enough pokemon in sheet, just take all and repeat
+                // (Shouldn't happen with full dex, but safe fallback)
+                let i = 0;
+                while (selected.length < 25) {
+                    const entry = available[i % available.length];
+                    selected.push({
+                        id: entry.id,
+                        name: entry.name,
+                        rarity: entry.rarity,
+                        spawns: Array.from(entry.spawns).length > 0 ? Array.from(entry.spawns) : ["Unknown Location"]
+                    });
+                    i++;
                 }
-
-                // Get Spawns from our parsed Sheet Data
-                const spawnSet = cobblemonPool.get(nameKey);
-                const spawns = spawnSet && spawnSet.size > 0 
-                    ? Array.from(spawnSet) 
-                    : ["Check Wiki"]; // Fallback if sheet has name but no location
-
-                return {
-                    id: id,
-                    name: displayName,
-                    rarity: rarity,
-                    spawns: spawns
-                } as BingoCell;
-            });
-
-            // 3. Resolve all
-            const newGrid = await Promise.all(promises);
+            } else {
+                // Random Selection without duplicates
+                while (selected.length < 25) {
+                    const idx = Math.floor(Math.random() * available.length);
+                    if (!selectedIndices.has(idx)) {
+                        selectedIndices.add(idx);
+                        const entry = available[idx];
+                        selected.push({
+                            id: entry.id,
+                            name: entry.name,
+                            rarity: entry.rarity,
+                            spawns: Array.from(entry.spawns).length > 0 ? Array.from(entry.spawns) : ["Unknown Location"]
+                        });
+                    }
+                }
+            }
             
-            setGridData(newGrid);
+            // Simulate a short delay for effect if needed, but strictly data is ready immediately
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            setGridData(selected);
             setMarked(new Array(25).fill(false));
 
         } catch (e) {
