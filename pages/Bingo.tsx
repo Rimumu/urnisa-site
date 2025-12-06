@@ -219,6 +219,7 @@ const Bingo: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [cardName, setCardName] = useState("");
+    const [loadedCardName, setLoadedCardName] = useState<string | null>(null); // To track if we are working on a saved card
     const [showLoadModal, setShowLoadModal] = useState(false);
     const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
     const [saving, setSaving] = useState(false);
@@ -379,6 +380,17 @@ const Bingo: React.FC = () => {
         }
     };
 
+    const openSaveModal = () => {
+        if (!user) {
+            alert("Please login first to save!");
+            return;
+        }
+        // Fetch latest cards to ensure we check collision against up-to-date data
+        fetchSavedCards();
+        setCardName(loadedCardName || "");
+        setShowSaveModal(true);
+    };
+
     const handleSaveCard = async () => {
         if (!user?.id) {
             alert("Please login first!");
@@ -404,8 +416,9 @@ const Bingo: React.FC = () => {
 
             if (res.ok) {
                 setShowSaveModal(false);
-                setCardName("");
+                setLoadedCardName(cardName.trim());
                 alert("Card Saved Successfully!");
+                fetchSavedCards(); // Refresh list silently
             } else {
                 alert("Failed to save card.");
             }
@@ -420,6 +433,7 @@ const Bingo: React.FC = () => {
         setGridData(card.gridData);
         setMarked(card.marked);
         setCurrentCardId(card.cardId);
+        setLoadedCardName(card.name);
         setShowLoadModal(false);
         // Clean URL param
         setSearchParams({});
@@ -434,6 +448,7 @@ const Bingo: React.FC = () => {
                 body: JSON.stringify({ discordId: user.id, name })
             });
             fetchSavedCards(); // Refresh list
+            if (loadedCardName === name) setLoadedCardName(null);
         } catch (e) {
             console.error(e);
         }
@@ -443,6 +458,7 @@ const Bingo: React.FC = () => {
     const generateCard = useCallback(async (customId?: string) => {
         if (!cobblemonPool || cobblemonPool.length === 0) return;
         setIsGenerating(true);
+        setLoadedCardName(null); // Reset loaded state for new random cards
         
         try {
             // 1. Determine ID
@@ -856,13 +872,7 @@ const Bingo: React.FC = () => {
                             </button>
 
                             <button 
-                                onClick={() => {
-                                    if (!user) {
-                                        alert("Please login first to save!");
-                                        return;
-                                    }
-                                    setShowSaveModal(true);
-                                }}
+                                onClick={openSaveModal}
                                 className="bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1"
                             >
                                 <span>💾</span>
@@ -877,15 +887,48 @@ const Bingo: React.FC = () => {
                     <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
                         <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
                             <h3 className="text-xl font-black text-white mb-4">Save Your Bingo Card</h3>
+                            
                             <input 
                                 type="text" 
                                 value={cardName} 
                                 onChange={(e) => setCardName(e.target.value)} 
                                 placeholder="Name your card (e.g. Weekly Grind)" 
-                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white mb-4 focus:outline-none focus:border-brand-primary"
+                                className={`
+                                    w-full bg-black/40 border rounded-xl px-4 py-3 text-white mb-2 focus:outline-none transition-all font-bold
+                                    ${savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase()) ? 'border-yellow-500 focus:border-yellow-500' : 'border-white/10 focus:border-brand-primary'}
+                                `}
                                 autoFocus
                             />
-                            <div className="flex gap-3">
+                            
+                            {/* Warning or Hints */}
+                            {savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase() && cardName.trim() !== "") && (
+                                <div className="text-yellow-500 text-xs font-bold mb-4 flex items-center gap-1">
+                                    <span>⚠️</span> Warning: This will overwrite your existing save.
+                                </div>
+                            )}
+
+                            {/* Quick Select List */}
+                            {savedCards.length > 0 && (
+                                <div className="mb-4">
+                                    <div className="text-[10px] uppercase font-bold text-gray-500 mb-2">Or overwrite existing save:</div>
+                                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
+                                        {savedCards.map(c => (
+                                            <button 
+                                                key={c._id}
+                                                onClick={() => setCardName(c.name)}
+                                                className={`
+                                                    text-xs px-2 py-1 rounded-lg border transition-colors
+                                                    ${cardName === c.name ? 'bg-brand-primary border-brand-primary text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'}
+                                                `}
+                                            >
+                                                {c.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 mt-4">
                                 <button 
                                     onClick={() => setShowSaveModal(false)}
                                     className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors"
@@ -895,9 +938,15 @@ const Bingo: React.FC = () => {
                                 <button 
                                     onClick={handleSaveCard}
                                     disabled={!cardName.trim() || saving}
-                                    className="flex-1 bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg disabled:opacity-50"
+                                    className={`
+                                        flex-1 text-white font-bold py-3 rounded-xl transition-all shadow-lg disabled:opacity-50
+                                        ${savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase()) 
+                                            ? 'bg-yellow-600 hover:bg-yellow-500' 
+                                            : 'bg-brand-primary hover:bg-red-600'}
+                                    `}
                                 >
-                                    {saving ? 'Saving...' : 'Save Card'}
+                                    {saving ? 'Saving...' : 
+                                     savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase()) ? 'Overwrite' : 'Save New'}
                                 </button>
                             </div>
                         </div>
