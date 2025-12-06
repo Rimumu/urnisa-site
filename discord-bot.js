@@ -41,7 +41,7 @@ const WHITELIST_NOTIFY_CHANNEL = '1375823728717467788';
 // Map Gacha Item Names to RCON Commands / Minecraft IDs
 const ITEM_MAP = {
     'Bronze Coin': 'numismatic-overhaul:bronze_coin',
-    'Silver Coin': 'numismatic-overhaulsilver_coin', 
+    'Silver Coin': 'numismatic-overhaul:silver_coin', 
     'Gold Coin': 'numismatic-overhaul:gold_coin',
     'Pokeball': 'cobblemon:poke_ball',
     'Great Ball': 'cobblemon:great_ball',
@@ -80,7 +80,7 @@ const sendRconCommand = async (command) => {
     // 1. Check if configured
     if (!Rcon || !RCON_HOST || !RCON_PASSWORD) {
         console.log(`🔔 [RCON SIMULATION] ${command}`);
-        return true; // Simulate success
+        return "Simulation: Success"; // Return truthy string simulating response
     }
 
     const rcon = new Rcon({
@@ -97,7 +97,7 @@ const sendRconCommand = async (command) => {
             const response = await rcon.send(command);
             console.log(`✅ [RCON SENT] ${command} | Response: ${response}`);
             await rcon.end();
-            return true;
+            return response; // Return the actual response string
         } catch (error) {
             console.warn(`⚠️ [RCON ATTEMPT ${attempt}/${maxRetries}] Failed: ${error.message}`);
             
@@ -160,6 +160,7 @@ const UserPackSchema = new mongoose.Schema({
     discordId: { type: String, required: true, unique: true },
     lambPacks: { type: Number, default: 0 },
     wagyuPacks: { type: Number, default: 0 },
+    lastDailyClaim: { type: Date }, // Added for daily check-in
     updatedAt: { type: Date, default: Date.now }
 });
 const UserPack = mongoose.model('UserPack', UserPackSchema);
@@ -531,6 +532,51 @@ app.post('/api/packs/use', async (req, res) => {
     }
 });
 
+// 2.5 DAILY CLAIM
+app.post('/api/daily/claim', async (req, res) => {
+    const { discordId } = req.body;
+    if (!discordId) return res.status(400).json({ error: "Missing Discord ID" });
+
+    try {
+        // Find or create wallet
+        let wallet = await UserPack.findOne({ discordId });
+        if (!wallet) {
+            wallet = new UserPack({ discordId });
+        }
+
+        const now = new Date();
+        const cooldown = 24 * 60 * 60 * 1000; // 24 hours in ms
+
+        if (wallet.lastDailyClaim) {
+            const lastClaim = new Date(wallet.lastDailyClaim).getTime();
+            const elapsed = now.getTime() - lastClaim;
+
+            if (elapsed < cooldown) {
+                const remainingMs = cooldown - elapsed;
+                return res.status(403).json({ 
+                    error: "Already claimed today", 
+                    remainingMs 
+                });
+            }
+        }
+
+        // Apply Reward (1 Lamb Chop Pack)
+        wallet.lambPacks = (wallet.lambPacks || 0) + 1;
+        wallet.lastDailyClaim = now;
+        await wallet.save();
+
+        res.json({ 
+            success: true, 
+            message: "You have been rewarded with 1x Lamb Chop Pack for checking in!",
+            wallet
+        });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Daily Claim Failed" });
+    }
+});
+
 // 3. Redeem Code (UPDATED LOGIC)
 app.post('/api/codes/redeem', async (req, res) => {
     const { discordId, code } = req.body;
@@ -654,9 +700,42 @@ app.post('/api/inventory/claim', async (req, res) => {
         if (!item) return res.status(404).json({ error: "Item not found" });
         if (item.claimed) return res.status(400).json({ error: "Item already claimed" });
 
+        // 2.5 Check Online Status
+        const player = link.minecraftUsername;
+        
+        // Check if online via RCON "list" command
+        const listResponse = await sendRconCommand("list");
+        
+        if (listResponse === false) {
+             return res.status(502).json({ error: "Could not connect to Minecraft Server." });
+        }
+
+        // Parse list response (Case-insensitive check)
+        // Typical response: "There are 2 of a max of 20 players online: Player1, Player2"
+        const lowerList = listResponse.toLowerCase();
+        const lowerPlayer = player.toLowerCase();
+        
+        let isOnline = false;
+        
+        // Check if username is in the output string
+        if (lowerList.includes(lowerPlayer)) {
+            // Regex to ensure word boundary match
+            const safePlayer = lowerPlayer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+            const regex = new RegExp(`\\b${safePlayer}\\b`);
+            if (regex.test(lowerList)) {
+                isOnline = true;
+            }
+        }
+        
+        // Allow simulation to pass
+        if (listResponse.includes("Simulation")) isOnline = true;
+
+        if (!isOnline) {
+            return res.status(409).json({ error: "You must be online in-game to claim items!" });
+        }
+
         // 3. Construct Command
         let command = "";
-        const player = link.minecraftUsername;
 
         if (item.type === 'Pokemon') {
             command = `pokegive ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
@@ -682,6 +761,7 @@ app.post('/api/inventory/claim', async (req, res) => {
         console.log(`🚀 Executing Claim: ${command}`);
         const rconSuccess = await sendRconCommand(command);
 
+        // Check response of give command if possible, but assume success if RCON connected
         if (rconSuccess) {
             item.claimed = true;
             item.claimedAt = new Date();

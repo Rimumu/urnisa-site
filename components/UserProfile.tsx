@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI, DISCORD_API_URL } from '../constants';
 
@@ -50,6 +50,16 @@ const GiftIcon = () => (
     </svg>
 );
 
+const CalendarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+        <path d="M12 14h.01"></path>
+    </svg>
+);
+
 const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" }) => {
     const [user, setUser] = useState<UserData | null>(null);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -58,6 +68,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
     const [mcInput, setMcInput] = useState('');
     const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error' | 'conflict'>('idle');
     const navigate = useNavigate();
+
+    // Daily Claim States
+    const [dailyLoading, setDailyLoading] = useState(false);
+    const [showDailyModal, setShowDailyModal] = useState(false);
+    const [dailyModalType, setDailyModalType] = useState<'success' | 'cooldown'>('success');
+    const [dailyMessage, setDailyMessage] = useState('');
+    const [cooldownTime, setCooldownTime] = useState(0); // In milliseconds
+    const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Check for existing user on mount
     useEffect(() => {
@@ -69,7 +87,35 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
         } else {
             if (onUserChange) onUserChange(null);
         }
-    }, []); // Empty dependency array to run only once on mount
+    }, []); 
+
+    // Cooldown Timer Logic
+    useEffect(() => {
+        if (showDailyModal && dailyModalType === 'cooldown' && cooldownTime > 0) {
+            countdownRef.current = setInterval(() => {
+                setCooldownTime((prev) => {
+                    const next = prev - 1000;
+                    if (next <= 0) {
+                        if (countdownRef.current) clearInterval(countdownRef.current);
+                        return 0;
+                    }
+                    return next;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+        };
+    }, [showDailyModal, dailyModalType]);
+
+    const formatTime = (ms: number) => {
+        const hours = Math.floor((ms / (1000 * 60 * 60)));
+        const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+        
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    };
 
     const loginRedirect = () => {
         const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
@@ -81,6 +127,39 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
         setUser(null);
         setMenuOpen(false);
         if (onUserChange) onUserChange(null);
+    };
+
+    const handleDailyCheckIn = async () => {
+        if (!user) return;
+        setDailyLoading(true);
+        setMenuOpen(false); // Close dropdown
+
+        try {
+            const response = await fetch(`${DISCORD_API_URL}/api/daily/claim`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discordId: user.id })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setDailyModalType('success');
+                setDailyMessage(data.message);
+                setShowDailyModal(true);
+            } else if (response.status === 403) {
+                setDailyModalType('cooldown');
+                setCooldownTime(data.remainingMs || 0);
+                setShowDailyModal(true);
+            } else {
+                alert("Something went wrong with the check-in system.");
+            }
+        } catch (e) {
+            console.error("Daily check-in error", e);
+            alert("Network error. Please try again.");
+        } finally {
+            setDailyLoading(false);
+        }
     };
 
     const handleLinkSubmit = async (e: React.FormEvent) => {
@@ -171,7 +250,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                         </div>
                         <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-white/20" />
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
                     </button>
 
@@ -183,6 +262,20 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                 <p className="text-sm text-white truncate font-bold">@{user.username}</p>
                             </div>
                             
+                            {/* Daily Check-In */}
+                            <button 
+                                onClick={handleDailyCheckIn}
+                                disabled={dailyLoading}
+                                className="w-full text-left px-4 py-3 text-sm text-brand-accent hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5 disabled:opacity-50"
+                            >
+                                {dailyLoading ? (
+                                    <div className="w-4 h-4 border-2 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <CalendarIcon />
+                                )}
+                                Daily Check-In
+                            </button>
+
                             {/* Inventory Link */}
                             <button 
                                 onClick={() => { navigate('/inventory'); setMenuOpen(false); }}
@@ -192,7 +285,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                 My Inventory
                             </button>
 
-                            {/* Redeem Link - NEW */}
+                            {/* Redeem Link */}
                             <button 
                                 onClick={() => { navigate('/redeem'); setMenuOpen(false); }}
                                 className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
@@ -244,6 +337,50 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                     <DiscordLogo />
                     Login with Discord
                 </button>
+            )}
+
+            {/* DAILY REWARD MODAL */}
+            {showDailyModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-[#1a0b0e] border border-white/10 p-0 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden relative">
+                        {/* Header */}
+                        <div className={`h-24 relative overflow-hidden flex items-center justify-center ${dailyModalType === 'success' ? 'bg-gradient-to-br from-green-900/40 to-black' : 'bg-gradient-to-br from-brand-primary/20 to-black'}`}>
+                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                             <div className={`w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10 text-3xl`}>
+                                {dailyModalType === 'success' ? '🎁' : '⏳'}
+                             </div>
+                        </div>
+
+                        <div className="px-8 pt-12 pb-8 text-center">
+                            <h2 className="text-2xl font-black text-white mb-4">
+                                {dailyModalType === 'success' ? 'Daily Reward!' : 'Already Checked In'}
+                            </h2>
+                            
+                            {dailyModalType === 'success' ? (
+                                <p className="text-gray-300 text-sm mb-6">
+                                    You have been rewarded with <strong className="text-brand-accent">1x Lamb Chop Pack</strong> for checking in!
+                                </p>
+                            ) : (
+                                <div className="mb-6">
+                                    <p className="text-gray-300 text-sm mb-2">
+                                        You have already checked in today!
+                                    </p>
+                                    <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Wait Time</p>
+                                    <div className="text-3xl font-mono font-bold text-brand-primary animate-pulse">
+                                        {formatTime(cooldownTime)}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            <button 
+                                onClick={() => setShowDailyModal(false)}
+                                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* LINK MODAL */}
