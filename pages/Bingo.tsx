@@ -12,65 +12,26 @@ interface BingoCell {
     spawns: string[];
 }
 
+interface SheetEntry {
+    name: string;
+    spawns: Set<string>;
+}
+
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
+const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
+const CSV_EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 
 // Cache for image validity
 const clientImageCache = new Map<string, boolean>();
 
-// --- COBBLEMON POOL DEFINITION ---
-// Cobblemon has near-complete support for Gen 1-5.
-// We restrict the random pool to these ranges plus specific newer starters/popular mons to ensure they exist.
-const SAFE_ID_RANGES = [
-    [1, 649],   // Gen 1 - Gen 5 (Bulbasaur to Genesect)
-];
-
-const EXTRA_IDS = [
-    // Gen 6 Starters & Popular
-    650, 651, 652, 653, 654, 655, 656, 657, 658, 700, 
-    // Gen 7 Starters & Popular
-    722, 723, 724, 725, 726, 727, 728, 729, 730, 778,
-    // Gen 8 Starters & Popular
-    810, 811, 812, 813, 814, 815, 816, 817, 818, 885, 886, 887,
-    // Gen 9 Starters
-    906, 907, 908, 909, 910, 911, 912, 913, 914
-];
-
-const getSafeRandomId = () => {
-    // 90% chance to pick from main ranges (Gen 1-5)
-    // 10% chance to pick from extras (Newer Gens)
-    if (Math.random() < 0.1 && EXTRA_IDS.length > 0) {
-        return EXTRA_IDS[Math.floor(Math.random() * EXTRA_IDS.length)];
-    }
-
-    const range = SAFE_ID_RANGES[Math.floor(Math.random() * SAFE_ID_RANGES.length)];
-    const min = range[0];
-    const max = range[1];
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
 // Shared Helper
 const getFormattedName = (name: string) => {
     return name.toLowerCase()
+        .trim()
         .replace(/[.']/g, '')
         .replace(/♀/g, '-f')
         .replace(/♂/g, '-m')
         .replace(/\s+/g, '-');
-};
-
-const getBiomesFromHabitat = (habitat: string | null): string[] => {
-    if (!habitat) return ["Anywhere"];
-    switch (habitat) {
-        case 'cave': return ["Caves", "Underground", "Dripstone"];
-        case 'forest': return ["Forests", "Jungles", "Taigas", "Roofed Forest"];
-        case 'grassland': return ["Plains", "Savannahs", "Meadows", "Fields"];
-        case 'mountain': return ["Mountains", "Extreme Hills", "Gravelly Peaks", "Cliffs"];
-        case 'rare': return ["Mansions", "Strongholds", "Rare Structures"];
-        case 'rough-terrain': return ["Badlands", "Deserts", "Rocky Peaks", "Savannah Plateau"];
-        case 'sea': return ["Oceans", "Deep Oceans", "Coral Reefs", "Frozen Ocean"];
-        case 'urban': return ["Villages", "Towns", "Structures"];
-        case 'waters-edge': return ["Rivers", "Beaches", "Swamps", "Mangrove"];
-        default: return [habitat.charAt(0).toUpperCase() + habitat.slice(1)];
-    }
 };
 
 // Helper Component for Cell Image
@@ -81,7 +42,10 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
         const verifyImage = async () => {
             const cobbleName = getFormattedName(item.name);
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`;
+            // Fallback relies on ID. If ID is 0 (not found in PokeAPI), we can't use numeric fallback, so we rely on primary.
+            const fallback3d = item.id > 0 
+                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
+                : primaryUrl;
 
             if (clientImageCache.has(primaryUrl)) {
                 const isValid = clientImageCache.get(primaryUrl);
@@ -108,9 +72,9 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
     }, [item]);
 
     const handleImageError = () => {
-        if (imgSrc.includes('cobblemon.tools')) {
+        if (imgSrc.includes('cobblemon.tools') && item.id > 0) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
-        } else if (imgSrc.includes('other/home')) {
+        } else if (imgSrc.includes('other/home') && item.id > 0) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`);
         } else {
             setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(item.name)}`);
@@ -132,56 +96,130 @@ const Bingo: React.FC = () => {
     const [gridData, setGridData] = useState<BingoCell[]>([]);
     const [marked, setMarked] = useState<boolean[]>(new Array(25).fill(false));
     const [isGenerating, setIsGenerating] = useState(false);
+    
+    // Data from Google Sheet
+    const [cobblemonPool, setCobblemonPool] = useState<Map<string, Set<string>> | null>(null);
+    const [loadingSheet, setLoadingSheet] = useState(true);
+    const [sheetError, setSheetError] = useState(false);
+
+    // 1. Fetch and Parse Google Sheet CSV on Mount
+    useEffect(() => {
+        const fetchSheetData = async () => {
+            try {
+                const response = await fetch(CSV_EXPORT_URL);
+                if (!response.ok) throw new Error("Failed to fetch sheet");
+                const text = await response.text();
+                
+                const rows = text.split('\n').map(row => row.split(',')); // Simple CSV split
+                const pool = new Map<string, Set<string>>();
+
+                // Iterate rows (Skip header if row 0 is "Pokemon")
+                rows.forEach((cols, index) => {
+                    if (index === 0 && cols[0]?.toLowerCase().includes('pokemon')) return; // Skip header
+                    
+                    const name = cols[0]?.trim();
+                    if (!name) return;
+
+                    // Normalize key
+                    const key = name.toLowerCase(); 
+                    
+                    // Get existing or create new
+                    const entry = pool.get(key) || new Set<string>();
+                    
+                    // Extract biome info (Assuming Column B/index 1 has spawn info)
+                    // If multiple columns have data, join them, or just take the second column
+                    // Handling "repeated entries" logic by merging sets
+                    if (cols[1] && cols[1].trim()) {
+                        // Clean up quotes from CSV if present
+                        const biome = cols[1].replace(/^"|"$/g, '').trim();
+                        entry.add(biome);
+                    }
+
+                    pool.set(key, entry);
+                });
+
+                if (pool.size === 0) throw new Error("No data found");
+                
+                setCobblemonPool(pool);
+            } catch (e) {
+                console.error("Sheet Error:", e);
+                setSheetError(true);
+            } finally {
+                setLoadingSheet(false);
+            }
+        };
+
+        fetchSheetData();
+    }, []);
 
     const generateNewCard = useCallback(async () => {
+        if (!cobblemonPool || cobblemonPool.size === 0) return;
         setIsGenerating(true);
         
         try {
-            // 1. Generate 25 Unique Random IDs from the Safe Pool
-            const ids = new Set<number>();
-            let attempts = 0;
-            while(ids.size < 25 && attempts < 1000) {
-                ids.add(getSafeRandomId());
-                attempts++;
+            // 1. Get List of Available Names
+            const allNames = Array.from(cobblemonPool.keys());
+            
+            // 2. Pick 25 Unique Names
+            const selectedNames = new Set<string>();
+            while(selectedNames.size < 25 && selectedNames.size < allNames.length) {
+                const randomName = allNames[Math.floor(Math.random() * allNames.length)];
+                selectedNames.add(randomName);
             }
 
-            // 2. Fetch Data from PokeAPI
-            const promises = Array.from(ids).map(async (id) => {
-                const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
-                if (!response.ok) throw new Error(`Failed to fetch ${id}`);
-                const data = await response.json();
-
-                // Determine Rarity based on Species Data
+            // 3. Fetch Metadata from PokeAPI (for Rarity & ID)
+            const promises = Array.from(selectedNames).map(async (nameKey) => {
+                const formattedName = getFormattedName(nameKey);
+                let id = 0;
                 let rarity: BingoCell['rarity'] = 'Common';
-                
-                if (data.is_mythical) {
-                    rarity = 'Mythical';
-                } else if (data.is_legendary) {
-                    rarity = 'Legendary';
-                } else if (data.capture_rate !== undefined) {
-                    // Logic: Lower capture rate = Higher Rarity
-                    const cr = data.capture_rate;
-                    if (cr <= 45) rarity = 'Ultra-Rare';      
-                    else if (cr <= 90) rarity = 'Rare';       
-                    else if (cr <= 150) rarity = 'Uncommon';  
-                    else rarity = 'Common';                   
+                let displayName = nameKey.charAt(0).toUpperCase() + nameKey.slice(1); // Default capitalize
+
+                try {
+                    // Try to fetch specific species data
+                    const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${formattedName}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        id = data.id;
+                        
+                        // Use official name from API
+                        displayName = data.names.find((n: any) => n.language.name === 'en')?.name || data.name;
+
+                        if (data.is_mythical) {
+                            rarity = 'Mythical';
+                        } else if (data.is_legendary) {
+                            rarity = 'Legendary';
+                        } else if (data.capture_rate !== undefined) {
+                            const cr = data.capture_rate;
+                            if (cr <= 45) rarity = 'Ultra-Rare';      
+                            else if (cr <= 90) rarity = 'Rare';       
+                            else if (cr <= 150) rarity = 'Uncommon';  
+                            else rarity = 'Common';                   
+                        }
+                    } else {
+                        // Fallback if not found in PokeAPI (Custom Cobblemon?)
+                        // We keep ID 0, use name from sheet, default Common rarity
+                        console.warn(`Could not find ${formattedName} in PokeAPI`);
+                    }
+                } catch (e) {
+                    console.warn(`Error fetching ${formattedName}`);
                 }
 
-                // Get English Name
-                const englishName = data.names.find((n: any) => n.language.name === 'en')?.name || data.name;
-                
-                // Get Biome Hint (using Habitat as proxy)
-                const spawns = getBiomesFromHabitat(data.habitat?.name || null);
+                // Get Spawns from our parsed Sheet Data
+                const spawnSet = cobblemonPool.get(nameKey);
+                const spawns = spawnSet && spawnSet.size > 0 
+                    ? Array.from(spawnSet) 
+                    : ["Check Wiki"]; // Fallback if sheet has name but no location
 
                 return {
-                    id: data.id,
-                    name: englishName,
+                    id: id,
+                    name: displayName,
                     rarity: rarity,
                     spawns: spawns
                 } as BingoCell;
             });
 
-            // 3. Resolve all promises
+            // 3. Resolve all
             const newGrid = await Promise.all(promises);
             
             setGridData(newGrid);
@@ -192,16 +230,16 @@ const Bingo: React.FC = () => {
         } finally {
             setIsGenerating(false);
         }
-    }, []);
+    }, [cobblemonPool]);
 
-    // Initial Generation on Mount
+    // Initial Generation once pool is loaded
     useEffect(() => {
         let mounted = true;
-        if (mounted && gridData.length === 0) {
+        if (mounted && !loadingSheet && cobblemonPool && gridData.length === 0) {
             generateNewCard();
         }
         return () => { mounted = false; };
-    }, [generateNewCard]);
+    }, [loadingSheet, cobblemonPool, generateNewCard]);
 
     const toggleMark = (index: number) => {
         const newMarked = [...marked];
@@ -289,19 +327,30 @@ const Bingo: React.FC = () => {
                     <div className="mb-6 flex gap-4 relative z-10">
                         <button 
                             onClick={generateNewCard}
-                            disabled={isGenerating}
+                            disabled={isGenerating || loadingSheet}
                             className={`
                                 bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all transform hover:scale-105 uppercase text-xs tracking-widest
-                                ${isGenerating ? 'opacity-70 cursor-wait animate-pulse' : ''}
+                                ${isGenerating || loadingSheet ? 'opacity-70 cursor-wait animate-pulse' : ''}
                             `}
                         >
-                            {isGenerating ? 'Scouting...' : 'Generate New Card'}
+                            {loadingSheet ? 'Loading Sheet...' : isGenerating ? 'Scouting...' : 'Generate New Card'}
                         </button>
                     </div>
                     
-                    {/* The Grid - Scrollable on mobile, Centered on Desktop */}
+                    {/* The Grid */}
                     <div className="overflow-x-auto pb-4 md:pb-0 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
-                        {gridData.length === 0 ? (
+                        {loadingSheet ? (
+                            <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
+                                <div className="text-4xl mb-4">📄</div>
+                                <div className="font-bold">Fetching Live Data from Google Sheets...</div>
+                            </div>
+                        ) : sheetError ? (
+                            <div className="flex flex-col items-center justify-center text-red-400 mt-10">
+                                <div className="text-4xl mb-4">⚠️</div>
+                                <div className="font-bold">Failed to load Pokemon data.</div>
+                                <div className="text-sm opacity-70">Please check the Google Sheet permissions.</div>
+                            </div>
+                        ) : gridData.length === 0 ? (
                             <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
                                 <div className="text-4xl mb-4">🔮</div>
                                 <div className="font-bold">Scouting Pokémon...</div>
@@ -343,17 +392,17 @@ const Bingo: React.FC = () => {
                                             {/* Name Bar - Fixed Height at Bottom */}
                                             <div 
                                                 className={`absolute bottom-0 left-0 right-0 py-1.5 z-20 flex justify-center group/nameplate ${getNamePlateStyle(item.rarity)}`}
-                                                onClick={(e) => e.stopPropagation()} // Prevent toggling mark when clicking the bar area
+                                                onClick={(e) => e.stopPropagation()} 
                                             >
                                                 {/* Tooltip on Hover */}
                                                 <div className={`
-                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-40 p-2 rounded-lg border shadow-xl
+                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 rounded-lg border shadow-xl
                                                     opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
                                                     transition-all duration-200 z-50 backdrop-blur-md pointer-events-none
                                                     ${getTooltipStyle(item.rarity)}
                                                 `}>
                                                     <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Habitat</div>
-                                                    <div className="text-xs font-medium leading-tight">
+                                                    <div className="text-xs font-medium leading-tight max-h-24 overflow-y-auto custom-scrollbar">
                                                         {item.spawns.join(', ')}
                                                     </div>
                                                     {/* Arrow */}
