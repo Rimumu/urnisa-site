@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
@@ -22,6 +22,53 @@ interface CobblemonEntry {
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
 const CSV_EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+
+// Winning Combinations Indices (5x5 Grid)
+const WINNING_COMBINATIONS = [
+    // Rows
+    [0, 1, 2, 3, 4],
+    [5, 6, 7, 8, 9],
+    [10, 11, 12, 13, 14],
+    [15, 16, 17, 18, 19],
+    [20, 21, 22, 23, 24],
+    // Columns
+    [0, 5, 10, 15, 20],
+    [1, 6, 11, 16, 21],
+    [2, 7, 12, 17, 22],
+    [3, 8, 13, 18, 23],
+    [4, 9, 14, 19, 24],
+    // Diagonals
+    [0, 6, 12, 18, 24],
+    [4, 8, 12, 16, 20]
+];
+
+// Helper to determine line coords for SVG
+const getLineCoords = (combo: number[]) => {
+    const start = combo[0];
+    const end = combo[4];
+    
+    // Row: Consecutive numbers in same row block
+    if (end === start + 4 && Math.floor(start / 5) === Math.floor(end / 5)) {
+        const row = Math.floor(start / 5);
+        const y = 10 + row * 20;
+        return { x1: '2%', y1: `${y}%`, x2: '98%', y2: `${y}%` }; 
+    }
+    // Col: Start + 20
+    if (end === start + 20) {
+        const col = start % 5;
+        const x = 10 + col * 20;
+        return { x1: `${x}%`, y1: '2%', x2: `${x}%`, y2: '98%' };
+    }
+    // Diag TL-BR
+    if (start === 0 && end === 24) {
+        return { x1: '2%', y1: '2%', x2: '98%', y2: '98%' };
+    }
+    // Diag TR-BL
+    if (start === 4 && end === 20) {
+        return { x1: '98%', y1: '2%', x2: '2%', y2: '98%' };
+    }
+    return null;
+};
 
 // Cache for image validity
 const clientImageCache = new Map<string, boolean>();
@@ -110,6 +157,12 @@ const Bingo: React.FC = () => {
     const [marked, setMarked] = useState<boolean[]>(new Array(25).fill(false));
     const [isGenerating, setIsGenerating] = useState(false);
     
+    // Bingo Win State
+    const [winningLines, setWinningLines] = useState<number[][]>([]);
+    const [bingoCount, setBingoCount] = useState(0);
+    const [showBingoPopup, setShowBingoPopup] = useState(false);
+    const prevBingoCountRef = useRef(0);
+
     // Data from Google Sheet
     const [cobblemonPool, setCobblemonPool] = useState<CobblemonEntry[] | null>(null);
     const [loadingSheet, setLoadingSheet] = useState(true);
@@ -131,13 +184,6 @@ const Bingo: React.FC = () => {
 
                 const poolMap = new Map<string, CobblemonEntry>();
 
-                // Iterate rows
-                // Column Mapping based on request:
-                // A [0] = ID
-                // B [1] = Name
-                // C [2] = Entry # (Ignored/Implicit via grouping)
-                // D [3] = Bucket (Rarity)
-                // H [7] = Biome
                 rows.forEach((cols, index) => {
                     if (index === 0) return; // Skip Header
                     
@@ -165,30 +211,22 @@ const Bingo: React.FC = () => {
                     }
 
                     // Add Biome from Column H (Index 7)
-                    // Updated logic to handle multi-value cells and robust cleaning
                     const biomeRaw = cols[7];
                     if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.toLowerCase() !== 'none' && biomeRaw.trim() !== '') {
-                        // Split by comma, slash or ampersand to handle multiple biomes in one cell
                         const parts = biomeRaw.split(/[,/&]/);
                         
                         parts.forEach(part => {
                             let clean = part.trim();
-                            // Remove minecraft: prefix if present (case insensitive check)
                             if (clean.toLowerCase().startsWith('minecraft:')) {
-                                clean = clean.substring(10); // Remove "minecraft:"
+                                clean = clean.substring(10);
                             }
-                            // Remove tags if present (e.g. #minecraft:is_forest)
                             if (clean.startsWith('#')) {
                                 clean = clean.substring(1);
                             }
-                            
-                            // Replace underscores with spaces
                             clean = clean.replace(/_/g, ' ');
-                            
-                            // Basic Title Case
                             clean = clean.replace(/\b\w/g, c => c.toUpperCase());
                             
-                            if (clean && clean.length > 2) { // minimal length check
+                            if (clean && clean.length > 2) {
                                 entry.spawns.add(clean.trim());
                             }
                         });
@@ -211,17 +249,35 @@ const Bingo: React.FC = () => {
         fetchSheetData();
     }, []);
 
+    // Win Logic
+    useEffect(() => {
+        const lines = WINNING_COMBINATIONS.filter(combo => 
+            combo.every(index => marked[index])
+        );
+        
+        setWinningLines(lines);
+        
+        if (lines.length > prevBingoCountRef.current) {
+            setBingoCount(lines.length);
+            setShowBingoPopup(true);
+            const timer = setTimeout(() => setShowBingoPopup(false), 3000);
+            return () => clearTimeout(timer);
+        } else if (lines.length < prevBingoCountRef.current) {
+            setBingoCount(lines.length);
+        }
+        
+        prevBingoCountRef.current = lines.length;
+    }, [marked]);
+
     const generateNewCard = useCallback(async () => {
         if (!cobblemonPool || cobblemonPool.length === 0) return;
         setIsGenerating(true);
         
         try {
-            // Pick 25 Unique Pokemon directly from our sheet data
             const available = [...cobblemonPool];
             const selected: BingoCell[] = [];
             const selectedIndices = new Set<number>();
 
-            // Basic safety check
             if (available.length < 25) {
                 let i = 0;
                 while (selected.length < 25) {
@@ -235,7 +291,6 @@ const Bingo: React.FC = () => {
                     i++;
                 }
             } else {
-                // Random Selection without duplicates
                 while (selected.length < 25) {
                     const idx = Math.floor(Math.random() * available.length);
                     if (!selectedIndices.has(idx)) {
@@ -251,11 +306,14 @@ const Bingo: React.FC = () => {
                 }
             }
             
-            // Simulate a short delay for effect if needed, but strictly data is ready immediately
             await new Promise(resolve => setTimeout(resolve, 500));
             
             setGridData(selected);
             setMarked(new Array(25).fill(false));
+            setWinningLines([]);
+            setBingoCount(0);
+            prevBingoCountRef.current = 0;
+            setShowBingoPopup(false);
 
         } catch (e) {
             console.error("Bingo Generation Failed:", e);
@@ -264,7 +322,6 @@ const Bingo: React.FC = () => {
         }
     }, [cobblemonPool]);
 
-    // Initial Generation once pool is loaded
     useEffect(() => {
         let mounted = true;
         if (mounted && !loadingSheet && cobblemonPool && gridData.length === 0) {
@@ -291,10 +348,8 @@ const Bingo: React.FC = () => {
         }
     };
 
-    // Modified to return only visual styles (color, border, shadow), removed layout/overflow props
     const getCardVisuals = (rarity: string) => {
         const base = "border-2";
-        
         switch (rarity) {
             case 'Mythical':
                 return `${base} border-pink-500/50 bg-gradient-to-br from-pink-900/30 to-black/80 shadow-[0_0_10px_rgba(236,72,153,0.1)] group-hover:border-pink-400 group-hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]`;
@@ -320,7 +375,6 @@ const Bingo: React.FC = () => {
         }
     };
 
-    // Helper for Tooltip Styles
     const getTooltipStyle = (rarity: string) => {
         switch(rarity) {
             case 'Mythical': return "border-pink-500 bg-pink-900/95 text-white";
@@ -342,16 +396,15 @@ const Bingo: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Bingo Board Container - UPDATED: Changed overflow-hidden to visible to allow tooltips to show */}
+                {/* Bingo Board Container */}
                 <div className="relative max-w-6xl w-full flex flex-col items-center">
                     
-                    {/* Visual Board Background (Separate div for overflow:hidden rounded corners) */}
+                    {/* Visual Board Background */}
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] shadow-2xl overflow-hidden z-0">
-                        {/* Decorative Background inside board */}
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
                     </div>
 
-                    {/* Content Wrapper (Z-index above background, no overflow constraints) */}
+                    {/* Content Wrapper */}
                     <div className="relative z-10 w-full p-4 md:p-8 flex flex-col items-center">
                         
                         {/* Logo */}
@@ -377,8 +430,18 @@ const Bingo: React.FC = () => {
                             </button>
                         </div>
                         
-                        {/* The Grid - Added py-16 to container to allow tooltips to spill out */}
+                        {/* The Grid */}
                         <div className="overflow-visible py-16 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
+                            {/* POPUP OVERLAY */}
+                            {showBingoPopup && (
+                                <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in fade-in duration-300">
+                                    <div className="bg-brand-primary/90 border-4 border-white text-white font-black text-6xl md:text-8xl px-8 py-4 rounded-3xl shadow-[0_0_50px_rgba(229,56,59,0.8)] rotate-[-12deg] flex flex-col items-center drop-shadow-xl text-center transform scale-110">
+                                        <span className="drop-shadow-md">BINGO!</span>
+                                        {bingoCount > 1 && <span className="text-3xl md:text-5xl text-yellow-300 mt-2 drop-shadow-md">{bingoCount}X COMBO</span>}
+                                    </div>
+                                </div>
+                            )}
+
                             {loadingSheet ? (
                                 <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
                                     <div className="text-4xl mb-4">📄</div>
@@ -396,7 +459,37 @@ const Bingo: React.FC = () => {
                                     <div className="font-bold">Scouting Pokémon...</div>
                                 </div>
                             ) : (
-                                <div className={`grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'}`}>
+                                <div className={`grid grid-cols-5 gap-1 md:gap-3 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'} relative`}>
+                                    
+                                    {/* SVG Overlay for Winning Lines */}
+                                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-50 overflow-visible">
+                                        <defs>
+                                            <filter id="glow">
+                                                <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                                                <feMerge>
+                                                    <feMergeNode in="coloredBlur"/>
+                                                    <feMergeNode in="SourceGraphic"/>
+                                                </feMerge>
+                                            </filter>
+                                        </defs>
+                                        {winningLines.map((combo, i) => {
+                                            const coords = getLineCoords(combo);
+                                            if (!coords) return null;
+                                            return (
+                                                <line 
+                                                    key={i} 
+                                                    x1={coords.x1} y1={coords.y1} 
+                                                    x2={coords.x2} y2={coords.y2} 
+                                                    stroke="#ef4444" 
+                                                    strokeWidth="8" 
+                                                    strokeLinecap="round" 
+                                                    filter="url(#glow)"
+                                                    className="opacity-90 drop-shadow-md"
+                                                />
+                                            );
+                                        })}
+                                    </svg>
+
                                     {gridData.map((item, index) => {
                                         const formattedName = getFormattedName(item.name);
                                         const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
@@ -420,15 +513,15 @@ const Bingo: React.FC = () => {
 
                                                     {/* Rarity Badge - Top Right */}
                                                     <div className={`
-                                                        absolute top-2 right-2 z-20
-                                                        text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
+                                                        absolute top-1 right-1 md:top-2 md:right-2 z-20
+                                                        text-[6px] md:text-[8px] font-bold uppercase tracking-wider px-1 md:px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
                                                         ${getRarityBadgeStyle(item.rarity)}
                                                     `}>
                                                         {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
                                                     </div>
 
                                                     {/* Image Container */}
-                                                    <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
+                                                    <div className="flex-1 flex items-center justify-center p-1 md:p-3 pb-6 md:pb-8 relative z-10">
                                                         <BingoCardImage item={item} />
                                                     </div>
 
@@ -445,18 +538,18 @@ const Bingo: React.FC = () => {
 
                                                 {/* 2. FLOATING NAMEPLATE & TOOLTIP (Outside Clipped Area) */}
                                                 <div 
-                                                    className={`absolute bottom-0 left-0 right-0 py-1.5 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
+                                                    className={`absolute bottom-0 left-0 right-0 py-1 md:py-1.5 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
                                                     onClick={(e) => e.stopPropagation()} 
                                                 >
                                                     {/* Tooltip on Hover */}
                                                     <div className={`
-                                                        absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] p-3 rounded-lg border shadow-2xl
+                                                        absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[150px] md:max-w-[200px] p-3 rounded-lg border shadow-2xl
                                                         opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
                                                         transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
                                                         ${getTooltipStyle(item.rarity)}
                                                     `}>
                                                         <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Biome</div>
-                                                        <div className="text-xs font-medium leading-relaxed">
+                                                        <div className="text-xs font-medium leading-relaxed whitespace-normal">
                                                             {item.spawns.join(', ')}
                                                         </div>
                                                         {/* Arrow */}
@@ -467,10 +560,10 @@ const Bingo: React.FC = () => {
                                                         href={wikiUrl}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
+                                                        className="text-[8px] md:text-xs font-bold text-center text-white truncate px-1 md:px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
                                                     >
                                                         {item.name}
-                                                        <svg className="w-2.5 h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <svg className="w-2 md:w-2.5 h-2 md:h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                                         </svg>
                                                     </a>
@@ -484,7 +577,13 @@ const Bingo: React.FC = () => {
 
                         <div className="mt-4 text-center">
                             <button 
-                                onClick={() => setMarked(new Array(25).fill(false))}
+                                onClick={() => {
+                                    setMarked(new Array(25).fill(false));
+                                    setWinningLines([]);
+                                    setBingoCount(0);
+                                    prevBingoCountRef.current = 0;
+                                    setShowBingoPopup(false);
+                                }}
                                 className="text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
                             >
                                 Clear Marks Only
