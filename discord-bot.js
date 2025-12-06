@@ -433,6 +433,42 @@ app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// NEW: Reset Daily Check-In (Admin)
+app.post('/api/admin/users/reset-daily', auth, async (req, res) => {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Missing query" });
+
+    try {
+        let targetDiscordId = query;
+
+        // Try to resolve username first (Discord or Minecraft username)
+        const link = await MinecraftLink.findOne({ 
+            $or: [
+                { minecraftUsername: new RegExp(`^${query}$`, 'i') },
+                { discordUsername: new RegExp(`^${query}$`, 'i') }
+            ]
+        });
+
+        if (link) {
+            targetDiscordId = link.discordId;
+        }
+
+        const wallet = await UserPack.findOne({ discordId: targetDiscordId });
+        if (!wallet) {
+            return res.status(404).json({ error: "User wallet/history not found." });
+        }
+
+        wallet.lastDailyClaim = null; // Clear the date
+        await wallet.save();
+
+        res.json({ success: true, message: `Daily timer reset for ${targetDiscordId}` });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Operation failed" });
+    }
+});
+
 // --- CODE GENERATION (Admin) ---
 // UPDATED to support amounts and limits
 app.post('/api/admin/codes/generate', auth, async (req, res) => {
@@ -738,7 +774,7 @@ app.post('/api/inventory/claim', async (req, res) => {
         let command = "";
 
         if (item.type === 'Pokemon') {
-            command = `pokegive ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
+            command = `pokegiveother ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
         } else {
             let count = 1;
             let itemName = item.name;

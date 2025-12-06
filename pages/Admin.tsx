@@ -186,7 +186,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -245,6 +245,10 @@ const Admin: React.FC = () => {
     const [genHours, setGenHours] = useState(12);
     const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
     const [existingCodes, setExistingCodes] = useState<Code[]>([]);
+
+    // --- USER MANAGEMENT STATE ---
+    const [userQuery, setUserQuery] = useState('');
+    const [userActionStatus, setUserActionStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -495,6 +499,28 @@ const Admin: React.FC = () => {
         } catch(e) {}
     };
 
+    const handleResetDaily = async () => {
+        setLoading(true);
+        setUserActionStatus(null);
+        try {
+            const response = await fetch(`${DISCORD_API_URL}/api/admin/users/reset-daily`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ query: userQuery })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setUserActionStatus({ type: 'success', message: data.message });
+            } else {
+                setUserActionStatus({ type: 'error', message: data.error || "Failed" });
+            }
+        } catch (e) {
+            setUserActionStatus({ type: 'error', message: "Network Error" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // --- GENERIC API CALL HANDLER ---
     const apiCall = async (endpoint: string, body: any) => {
         setLoading(true);
@@ -670,6 +696,9 @@ const Admin: React.FC = () => {
                     <button onClick={() => setActiveTab('codes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'codes' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>🎁</span> Gacha Codes
                     </button>
+                    <button onClick={() => setActiveTab('users')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'users' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                        <span>👥</span> Users
+                    </button>
                 </nav>
             </div>
 
@@ -678,13 +707,13 @@ const Admin: React.FC = () => {
                 <div className="max-w-4xl mx-auto space-y-8">
                     
                     {/* --- STATUS TOASTS --- */}
-                    {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus].map((status, i) => status && (
+                    {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus].map((status, i) => status && (
                          <div key={i} className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
                             {status.message}
                         </div>
                     ))}
 
-                    {/* --- NISATHON MANAGER TAB --- */}
+                    {/* ... (Existing tabs: nisathon_mgr, countdown, schedule, event, profile, gallery, minecraft, codes) ... */}
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Header Stats */}
@@ -823,7 +852,6 @@ const Admin: React.FC = () => {
                         </div>
                     )}
 
-                    {/* --- COUNTDOWN TAB --- */}
                     {activeTab === 'countdown' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Standalone Countdown</h2>
@@ -852,7 +880,6 @@ const Admin: React.FC = () => {
                         </div>
                     )}
 
-                    {/* --- SCHEDULE TAB --- */}
                     {activeTab === 'schedule' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Schedule Manager</h2>
@@ -884,7 +911,6 @@ const Admin: React.FC = () => {
                         </div>
                     )}
 
-                    {/* --- SETTINGS TAB (Goals & Wheel) --- */}
                     {activeTab === 'event' && (
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Goals */}
@@ -942,7 +968,6 @@ const Admin: React.FC = () => {
                         </div>
                     )}
 
-                    {/* --- PROFILE TAB --- */}
                     {activeTab === 'profile' && (
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* About Me */}
@@ -1002,7 +1027,6 @@ const Admin: React.FC = () => {
                         </div>
                     )}
 
-                    {/* --- GALLERY TAB --- */}
                     {activeTab === 'gallery' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex justify-between items-center">
@@ -1045,7 +1069,6 @@ const Admin: React.FC = () => {
                         </div>
                     )}
 
-                    {/* --- MINECRAFT TAB --- */}
                     {activeTab === 'minecraft' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Minecraft Manager</h2>
@@ -1095,7 +1118,6 @@ const Admin: React.FC = () => {
                         </div>
                     )}
 
-                    {/* --- CODES TAB --- */}
                     {activeTab === 'codes' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Gacha Code Manager</h2>
@@ -1244,6 +1266,33 @@ const Admin: React.FC = () => {
                                             )}
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- USERS TAB --- */}
+                    {activeTab === 'users' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">User Management</h2>
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Reset Daily Check-In</h3>
+                                <p className="text-gray-400 text-sm mb-4">Reset the daily timer for a user so they can check in again immediately.</p>
+                                <div className="flex gap-4">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Discord ID or Minecraft Username" 
+                                        className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-white" 
+                                        value={userQuery} 
+                                        onChange={e => setUserQuery(e.target.value)} 
+                                    />
+                                    <button 
+                                        onClick={handleResetDaily} 
+                                        disabled={loading}
+                                        className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all disabled:opacity-50"
+                                    >
+                                        {loading ? 'Processing...' : 'Reset Timer'}
+                                    </button>
                                 </div>
                             </div>
                         </div>
