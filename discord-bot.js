@@ -36,6 +36,7 @@ const GUILD_ID = '1336782145833668729';
 const ROLE_SUBSCRIBER = '1339227370833448980';
 const ROLE_FRIEND = '1445655680735383675';
 const WHITELIST_NOTIFY_CHANNEL = '1375823728717467788';
+const GACHA_LOG_CHANNEL = '1382803278449868921';
 
 // --- ITEM MAPPING ---
 // Map Gacha Item Names to RCON Commands / Minecraft IDs
@@ -701,6 +702,72 @@ app.post('/api/inventory/save', async (req, res) => {
 
         await InventoryItem.insertMany(newItems);
         console.log(`📦 Saved ${items.length} items for user ${discordId}`);
+
+        // --- DISCORD LOGGING ---
+        if (DISCORD_BOT_TOKEN) {
+            try {
+                // 1. Fetch User Info
+                let username = "Unknown User";
+                let avatarUrl = "";
+                try {
+                    const userRes = await axios.get(`https://discord.com/api/v10/users/${discordId}`, {
+                        headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` }
+                    });
+                    username = userRes.data.global_name || userRes.data.username;
+                    avatarUrl = userRes.data.avatar 
+                        ? `https://cdn.discordapp.com/avatars/${discordId}/${userRes.data.avatar}.png`
+                        : `https://cdn.discordapp.com/embed/avatars/${parseInt(userRes.data.discriminator || 0) % 5}.png`;
+                } catch (e) { console.error("User fetch failed for gacha log"); }
+
+                // 2. Build Item List
+                let hasMythic = false;
+                let hasLegendary = false;
+
+                const descriptionLines = items.map(item => {
+                    const r = item.rarity;
+                    if (r === 'Mythical') { hasMythic = true; return `**🌟 [MYTHICAL] ${item.name}**`; }
+                    if (r === 'Legendary') { hasLegendary = true; return `**✨ [LEGENDARY] ${item.name}**`; }
+                    if (r === 'Ultra-Rare') return `🟣 [Ultra-Rare] ${item.name}`;
+                    if (r === 'Rare') return `🔵 [Rare] ${item.name}`;
+                    if (r === 'Uncommon') return `🟢 [Uncommon] ${item.name}`;
+                    return `⚪ [Common] ${item.name}`;
+                });
+
+                // 3. Determine Color & Title
+                let color = 0x3498db; // Blue default
+                let title = "📦 Pack Opened";
+
+                if (hasMythic) {
+                    color = 0xff00ff; // Magenta
+                    title = "🚨 MYTHIC PULL! 🚨";
+                } else if (hasLegendary) {
+                    color = 0xffd700; // Gold
+                    title = "✨ LEGENDARY PULL! ✨";
+                }
+
+                const embed = {
+                    title: title,
+                    description: descriptionLines.join('\n'),
+                    color: color,
+                    author: {
+                        name: `${username} opened a pack`,
+                        icon_url: avatarUrl
+                    },
+                    timestamp: new Date().toISOString(),
+                    footer: { text: "Urnisa Cobblemon Gacha" }
+                };
+
+                await axios.post(
+                    `https://discord.com/api/v10/channels/${GACHA_LOG_CHANNEL}/messages`,
+                    { embeds: [embed] },
+                    { headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` } }
+                );
+
+            } catch (err) {
+                console.error("Failed to send gacha log to Discord:", err.message);
+            }
+        }
+
         res.json({ success: true });
     } catch (e) {
         console.error("Save Inventory Error:", e);
@@ -774,7 +841,7 @@ app.post('/api/inventory/claim', async (req, res) => {
         let command = "";
 
         if (item.type === 'Pokemon') {
-            command = `pokegiveother ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
+            command = `pokegive ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
         } else {
             let count = 1;
             let itemName = item.name;

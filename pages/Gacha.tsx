@@ -571,10 +571,10 @@ const Gacha: React.FC = () => {
                 {stage === 'selection' && (
                     <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-2">
                         <h1 className="text-4xl md:text-6xl font-black text-center mb-2 tracking-tighter drop-shadow-2xl">
-                            BOOSTER <span className="text-brand-primary">SHOP</span>
+                            GACHA <span className="text-brand-primary">PACK</span>
                         </h1>
                         <p className="text-center text-gray-400 mb-8 max-w-xl mx-auto">
-                            Choose your destiny. Will you clone the ultimate power or discover the mythical ancestor?
+                            Choose your meat! Will you get the cheap meat Mewtwo or discover the mythical meat Mew!
                         </p>
 
                         {/* Updated Grid with Disabled States */}
