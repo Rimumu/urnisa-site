@@ -346,8 +346,8 @@ const Bingo: React.FC = () => {
                         </button>
                     </div>
                     
-                    {/* The Grid */}
-                    <div className="overflow-x-auto pb-4 md:pb-0 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
+                    {/* The Grid - Added py-16 to container to allow tooltips to spill out */}
+                    <div className="overflow-x-auto py-16 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
                         {loadingSheet ? (
                             <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
                                 <div className="text-4xl mb-4">📄</div>
@@ -405,13 +405,13 @@ const Bingo: React.FC = () => {
                                             >
                                                 {/* Tooltip on Hover */}
                                                 <div className={`
-                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 p-2 rounded-lg border shadow-xl
+                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] p-3 rounded-lg border shadow-xl
                                                     opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
-                                                    transition-all duration-200 z-50 backdrop-blur-md pointer-events-none
+                                                    transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
                                                     ${getTooltipStyle(item.rarity)}
                                                 `}>
-                                                    <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Habitat</div>
-                                                    <div className="text-xs font-medium leading-tight max-h-24 overflow-y-auto custom-scrollbar">
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Biome</div>
+                                                    <div className="text-xs font-medium leading-relaxed">
                                                         {item.spawns.join(', ')}
                                                     </div>
                                                     {/* Arrow */}
