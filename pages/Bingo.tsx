@@ -9,6 +9,7 @@ interface BingoCell {
     id: number;
     name: string;
     rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical';
+    spawns: string[];
 }
 
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
@@ -54,6 +55,22 @@ const getFormattedName = (name: string) => {
         .replace(/♀/g, '-f')
         .replace(/♂/g, '-m')
         .replace(/\s+/g, '-');
+};
+
+const getBiomesFromHabitat = (habitat: string | null): string[] => {
+    if (!habitat) return ["Anywhere"];
+    switch (habitat) {
+        case 'cave': return ["Caves", "Underground", "Dripstone"];
+        case 'forest': return ["Forests", "Jungles", "Taigas", "Roofed Forest"];
+        case 'grassland': return ["Plains", "Savannahs", "Meadows", "Fields"];
+        case 'mountain': return ["Mountains", "Extreme Hills", "Gravelly Peaks", "Cliffs"];
+        case 'rare': return ["Mansions", "Strongholds", "Rare Structures"];
+        case 'rough-terrain': return ["Badlands", "Deserts", "Rocky Peaks", "Savannah Plateau"];
+        case 'sea': return ["Oceans", "Deep Oceans", "Coral Reefs", "Frozen Ocean"];
+        case 'urban': return ["Villages", "Towns", "Structures"];
+        case 'waters-edge': return ["Rivers", "Beaches", "Swamps", "Mangrove"];
+        default: return [habitat.charAt(0).toUpperCase() + habitat.slice(1)];
+    }
 };
 
 // Helper Component for Cell Image
@@ -143,22 +160,24 @@ const Bingo: React.FC = () => {
                     rarity = 'Legendary';
                 } else if (data.capture_rate !== undefined) {
                     // Logic: Lower capture rate = Higher Rarity
-                    // Capture rates typically range 3 (hardest) to 255 (easiest)
                     const cr = data.capture_rate;
-                    if (cr <= 45) rarity = 'Ultra-Rare';      // e.g. Pseudo-legends, Snorlax, Starters
-                    else if (cr <= 90) rarity = 'Rare';       // e.g. Eevee evolutions, Onix
-                    else if (cr <= 150) rarity = 'Uncommon';  // e.g. Gloom, Machoke
-                    else rarity = 'Common';                   // e.g. Pidgey, Rattata
+                    if (cr <= 45) rarity = 'Ultra-Rare';      
+                    else if (cr <= 90) rarity = 'Rare';       
+                    else if (cr <= 150) rarity = 'Uncommon';  
+                    else rarity = 'Common';                   
                 }
 
                 // Get English Name
-                // PokeAPI returns names in multiple languages, find 'en'
                 const englishName = data.names.find((n: any) => n.language.name === 'en')?.name || data.name;
+                
+                // Get Biome Hint (using Habitat as proxy)
+                const spawns = getBiomesFromHabitat(data.habitat?.name || null);
 
                 return {
                     id: data.id,
                     name: englishName,
-                    rarity: rarity
+                    rarity: rarity,
+                    spawns: spawns
                 } as BingoCell;
             });
 
@@ -170,7 +189,6 @@ const Bingo: React.FC = () => {
 
         } catch (e) {
             console.error("Bingo Generation Failed:", e);
-            // Fallback could be implemented here, but retry is usually sufficient
         } finally {
             setIsGenerating(false);
         }
@@ -178,7 +196,6 @@ const Bingo: React.FC = () => {
 
     // Initial Generation on Mount
     useEffect(() => {
-        // Use a flag to prevent double-firing in StrictMode development
         let mounted = true;
         if (mounted && gridData.length === 0) {
             generateNewCard();
@@ -229,6 +246,17 @@ const Bingo: React.FC = () => {
                 return "bg-gradient-to-t from-yellow-900/90 to-yellow-900/60 border-t border-yellow-500/60 shadow-[0_-5px_15px_rgba(234,179,8,0.4)] backdrop-blur-md";
             default:
                 return "bg-black/80 border-t border-white/5 backdrop-blur-md";
+        }
+    };
+
+    // Helper for Tooltip Styles
+    const getTooltipStyle = (rarity: string) => {
+        switch(rarity) {
+            case 'Mythical': return "border-pink-500 bg-pink-900/90 text-white";
+            case 'Legendary': return "border-yellow-500 bg-yellow-900/90 text-white";
+            case 'Ultra-Rare': return "border-purple-500 bg-purple-900/90 text-white";
+            case 'Rare': return "border-blue-500 bg-blue-900/90 text-white";
+            default: return "border-gray-500 bg-gray-900/90 text-gray-200";
         }
     };
 
@@ -314,9 +342,24 @@ const Bingo: React.FC = () => {
 
                                             {/* Name Bar - Fixed Height at Bottom */}
                                             <div 
-                                                className={`absolute bottom-0 left-0 right-0 py-1.5 z-20 flex justify-center ${getNamePlateStyle(item.rarity)}`}
+                                                className={`absolute bottom-0 left-0 right-0 py-1.5 z-20 flex justify-center group/nameplate ${getNamePlateStyle(item.rarity)}`}
                                                 onClick={(e) => e.stopPropagation()} // Prevent toggling mark when clicking the bar area
                                             >
+                                                {/* Tooltip on Hover */}
+                                                <div className={`
+                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-40 p-2 rounded-lg border shadow-xl
+                                                    opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
+                                                    transition-all duration-200 z-50 backdrop-blur-md pointer-events-none
+                                                    ${getTooltipStyle(item.rarity)}
+                                                `}>
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Habitat</div>
+                                                    <div className="text-xs font-medium leading-tight">
+                                                        {item.spawns.join(', ')}
+                                                    </div>
+                                                    {/* Arrow */}
+                                                    <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-b border-r ${getTooltipStyle(item.rarity)}`}></div>
+                                                </div>
+
                                                 <a 
                                                     href={wikiUrl}
                                                     target="_blank"
