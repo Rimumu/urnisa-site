@@ -161,6 +161,7 @@ const Bingo: React.FC = () => {
     const [winningLines, setWinningLines] = useState<number[][]>([]);
     const [bingoCount, setBingoCount] = useState(0);
     const [showBingoPopup, setShowBingoPopup] = useState(false);
+    const [hasShownBingo, setHasShownBingo] = useState(false); // Track if popup was already shown for this card
     const prevBingoCountRef = useRef(0);
 
     // Data from Google Sheet
@@ -257,17 +258,21 @@ const Bingo: React.FC = () => {
         
         setWinningLines(lines);
         
-        if (lines.length > prevBingoCountRef.current) {
+        // Only show popup if we have at least one winning line AND haven't shown it yet for this card
+        if (lines.length > 0 && !hasShownBingo) {
             setBingoCount(lines.length);
             setShowBingoPopup(true);
+            setHasShownBingo(true); // Mark as shown to prevent repeat popups
+            
             const timer = setTimeout(() => setShowBingoPopup(false), 3000);
             return () => clearTimeout(timer);
-        } else if (lines.length < prevBingoCountRef.current) {
+        } else {
+            // Still update the count if user gets 2nd bingo, but don't show popup
             setBingoCount(lines.length);
         }
         
         prevBingoCountRef.current = lines.length;
-    }, [marked]);
+    }, [marked, hasShownBingo]);
 
     const generateNewCard = useCallback(async () => {
         if (!cobblemonPool || cobblemonPool.length === 0) return;
@@ -312,6 +317,7 @@ const Bingo: React.FC = () => {
             setMarked(new Array(25).fill(false));
             setWinningLines([]);
             setBingoCount(0);
+            setHasShownBingo(false); // Reset popup trigger
             prevBingoCountRef.current = 0;
             setShowBingoPopup(false);
 
@@ -387,6 +393,16 @@ const Bingo: React.FC = () => {
 
     return (
         <div className="min-h-screen py-8 font-sans text-white relative">
+            <style>{`
+                @keyframes pulse-gold {
+                    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(234, 179, 8, 0.5); }
+                    50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(234, 179, 8, 0.8); }
+                }
+                .animate-pulse-gold {
+                    animation: pulse-gold 2s infinite ease-in-out;
+                }
+            `}</style>
+            
             <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
                 
                 {/* Header */}
@@ -435,9 +451,8 @@ const Bingo: React.FC = () => {
                             {/* POPUP OVERLAY */}
                             {showBingoPopup && (
                                 <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in fade-in duration-300">
-                                    <div className="bg-brand-primary/90 border-4 border-white text-white font-black text-6xl md:text-8xl px-8 py-4 rounded-3xl shadow-[0_0_50px_rgba(229,56,59,0.8)] rotate-[-12deg] flex flex-col items-center drop-shadow-xl text-center transform scale-110">
-                                        <span className="drop-shadow-md">BINGO!</span>
-                                        {bingoCount > 1 && <span className="text-3xl md:text-5xl text-yellow-300 mt-2 drop-shadow-md">{bingoCount}X COMBO</span>}
+                                    <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 border-4 border-white text-black font-black text-6xl md:text-8xl px-12 py-6 rounded-full shadow-[0_0_60px_rgba(234,179,8,0.8)] flex flex-col items-center drop-shadow-md animate-pulse-gold">
+                                        <span className="drop-shadow-sm tracking-widest text-white/90" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>BINGO!</span>
                                     </div>
                                 </div>
                             )}
@@ -581,6 +596,7 @@ const Bingo: React.FC = () => {
                                     setMarked(new Array(25).fill(false));
                                     setWinningLines([]);
                                     setBingoCount(0);
+                                    setHasShownBingo(false);
                                     prevBingoCountRef.current = 0;
                                     setShowBingoPopup(false);
                                 }}
