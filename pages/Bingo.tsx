@@ -843,8 +843,8 @@ const Bingo: React.FC = () => {
                 
                 {/* Header - Absolute Top Left on Desktop */}
                 <div className="absolute top-4 left-4 z-50">
-                    <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
-                        <span>←</span> Back to Dashboard
+                    <Link to="/minecraft/bingo" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
+                        <span>←</span> Back to Bingo Dashboard
                     </Link>
                 </div>
 
