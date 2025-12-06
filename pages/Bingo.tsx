@@ -162,13 +162,33 @@ const Bingo: React.FC = () => {
                     }
 
                     // Add Biome from Column H (Index 7)
-                    // Check if column exists first
+                    // Updated logic to handle multi-value cells and robust cleaning
                     const biomeRaw = cols[7];
                     if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.toLowerCase() !== 'none' && biomeRaw.trim() !== '') {
-                        // Clean biome name (e.g., "minecraft:plains" -> "Plains")
-                        const cleanBiome = biomeRaw.split(':').pop()?.replace(/_/g, ' ') || biomeRaw;
-                        const formattedBiome = cleanBiome.replace(/\b\w/g, c => c.toUpperCase());
-                        entry.spawns.add(formattedBiome);
+                        // Split by comma, slash or ampersand to handle multiple biomes in one cell
+                        const parts = biomeRaw.split(/[,/&]/);
+                        
+                        parts.forEach(part => {
+                            let clean = part.trim();
+                            // Remove minecraft: prefix if present (case insensitive check)
+                            if (clean.toLowerCase().startsWith('minecraft:')) {
+                                clean = clean.substring(10); // Remove "minecraft:"
+                            }
+                            // Remove tags if present (e.g. #minecraft:is_forest)
+                            if (clean.startsWith('#')) {
+                                clean = clean.substring(1);
+                            }
+                            
+                            // Replace underscores with spaces
+                            clean = clean.replace(/_/g, ' ');
+                            
+                            // Basic Title Case
+                            clean = clean.replace(/\b\w/g, c => c.toUpperCase());
+                            
+                            if (clean && clean.length > 2) { // minimal length check
+                                entry.spawns.add(clean.trim());
+                            }
+                        });
                     }
 
                     poolMap.set(key, entry);
@@ -207,7 +227,7 @@ const Bingo: React.FC = () => {
                         id: entry.id,
                         name: entry.name,
                         rarity: entry.rarity,
-                        spawns: Array.from(entry.spawns).length > 0 ? Array.from(entry.spawns) : ["Unknown Location"]
+                        spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
                     });
                     i++;
                 }
@@ -222,7 +242,7 @@ const Bingo: React.FC = () => {
                             id: entry.id,
                             name: entry.name,
                             rarity: entry.rarity,
-                            spawns: Array.from(entry.spawns).length > 0 ? Array.from(entry.spawns) : ["Unknown Location"]
+                            spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
                         });
                     }
                 }
@@ -319,146 +339,154 @@ const Bingo: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Bingo Board Container */}
-                <div className="bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] p-4 md:p-8 shadow-2xl relative overflow-hidden max-w-6xl w-full flex flex-col items-center">
-                    {/* Decorative Background inside board */}
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
+                {/* Bingo Board Container - UPDATED: Changed overflow-hidden to visible to allow tooltips to show */}
+                <div className="relative max-w-6xl w-full flex flex-col items-center">
                     
-                    {/* Logo */}
-                    <div className="mb-6 w-full flex justify-center relative z-10">
-                        <img 
-                            src={LOGO_URL} 
-                            alt="Cobble Bingo" 
-                            className="h-20 md:h-32 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
-                        />
+                    {/* Visual Board Background (Separate div for overflow:hidden rounded corners) */}
+                    <div className="absolute inset-0 bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] shadow-2xl overflow-hidden z-0">
+                        {/* Decorative Background inside board */}
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
                     </div>
 
-                    {/* Controls */}
-                    <div className="mb-6 flex gap-4 relative z-10">
-                        <button 
-                            onClick={generateNewCard}
-                            disabled={isGenerating || loadingSheet}
-                            className={`
-                                bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all transform hover:scale-105 uppercase text-xs tracking-widest
-                                ${isGenerating || loadingSheet ? 'opacity-70 cursor-wait animate-pulse' : ''}
-                            `}
-                        >
-                            {loadingSheet ? 'Loading Sheet...' : isGenerating ? 'Scouting...' : 'Generate New Card'}
-                        </button>
-                    </div>
-                    
-                    {/* The Grid - Added py-16 to container to allow tooltips to spill out */}
-                    <div className="overflow-visible py-16 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
-                        {loadingSheet ? (
-                            <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
-                                <div className="text-4xl mb-4">📄</div>
-                                <div className="font-bold">Fetching Live Data from Google Sheets...</div>
-                            </div>
-                        ) : sheetError ? (
-                            <div className="flex flex-col items-center justify-center text-red-400 mt-10">
-                                <div className="text-4xl mb-4">⚠️</div>
-                                <div className="font-bold">Failed to load Pokemon data.</div>
-                                <div className="text-sm opacity-70">Please check the Google Sheet permissions.</div>
-                            </div>
-                        ) : gridData.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
-                                <div className="text-4xl mb-4">🔮</div>
-                                <div className="font-bold">Scouting Pokémon...</div>
-                            </div>
-                        ) : (
-                            <div className={`grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'}`}>
-                                {gridData.map((item, index) => {
-                                    const formattedName = getFormattedName(item.name);
-                                    const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
-                                    
-                                    return (
-                                        <div 
-                                            key={`${item.id}-${index}`} 
-                                            onClick={() => toggleMark(index)}
-                                            className="relative aspect-[4/5] group cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
-                                        >
-                                            {/* 1. CLIPPED CONTENT (Inner Card) */}
-                                            <div className={`
-                                                absolute inset-0 rounded-xl overflow-hidden flex flex-col z-0
-                                                ${getCardVisuals(item.rarity)}
-                                                ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
-                                            `}>
-                                                {/* Background Decor for High Rarity */}
-                                                {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
-                                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-                                                )}
+                    {/* Content Wrapper (Z-index above background, no overflow constraints) */}
+                    <div className="relative z-10 w-full p-4 md:p-8 flex flex-col items-center">
+                        
+                        {/* Logo */}
+                        <div className="mb-6 w-full flex justify-center relative z-10">
+                            <img 
+                                src={LOGO_URL} 
+                                alt="Cobble Bingo" 
+                                className="h-20 md:h-32 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
+                            />
+                        </div>
 
-                                                {/* Rarity Badge - Top Right */}
-                                                <div className={`
-                                                    absolute top-2 right-2 z-20
-                                                    text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
-                                                    ${getRarityBadgeStyle(item.rarity)}
-                                                `}>
-                                                    {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
-                                                </div>
-
-                                                {/* Image Container */}
-                                                <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
-                                                    <BingoCardImage item={item} />
-                                                </div>
-
-                                                {/* Cross Out Overlay - inside clipped area */}
-                                                {marked[index] && (
-                                                    <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
-                                                        <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
-                                                            <line x1="20" y1="20" x2="80" y2="80" />
-                                                            <line x1="80" y1="20" x2="20" y2="80" />
-                                                        </svg>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* 2. FLOATING NAMEPLATE & TOOLTIP (Outside Clipped Area) */}
+                        {/* Controls */}
+                        <div className="mb-6 flex gap-4 relative z-10">
+                            <button 
+                                onClick={generateNewCard}
+                                disabled={isGenerating || loadingSheet}
+                                className={`
+                                    bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all transform hover:scale-105 uppercase text-xs tracking-widest
+                                    ${isGenerating || loadingSheet ? 'opacity-70 cursor-wait animate-pulse' : ''}
+                                `}
+                            >
+                                {loadingSheet ? 'Loading Sheet...' : isGenerating ? 'Scouting...' : 'Generate New Card'}
+                            </button>
+                        </div>
+                        
+                        {/* The Grid - Added py-16 to container to allow tooltips to spill out */}
+                        <div className="overflow-visible py-16 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
+                            {loadingSheet ? (
+                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
+                                    <div className="text-4xl mb-4">📄</div>
+                                    <div className="font-bold">Fetching Live Data from Google Sheets...</div>
+                                </div>
+                            ) : sheetError ? (
+                                <div className="flex flex-col items-center justify-center text-red-400 mt-10">
+                                    <div className="text-4xl mb-4">⚠️</div>
+                                    <div className="font-bold">Failed to load Pokemon data.</div>
+                                    <div className="text-sm opacity-70">Please check the Google Sheet permissions.</div>
+                                </div>
+                            ) : gridData.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
+                                    <div className="text-4xl mb-4">🔮</div>
+                                    <div className="font-bold">Scouting Pokémon...</div>
+                                </div>
+                            ) : (
+                                <div className={`grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'}`}>
+                                    {gridData.map((item, index) => {
+                                        const formattedName = getFormattedName(item.name);
+                                        const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
+                                        
+                                        return (
                                             <div 
-                                                className={`absolute bottom-0 left-0 right-0 py-1.5 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
-                                                onClick={(e) => e.stopPropagation()} 
+                                                key={`${item.id}-${index}`} 
+                                                onClick={() => toggleMark(index)}
+                                                className="relative aspect-[4/5] group cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
                                             >
-                                                {/* Tooltip on Hover */}
+                                                {/* 1. CLIPPED CONTENT (Inner Card) */}
                                                 <div className={`
-                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] p-3 rounded-lg border shadow-2xl
-                                                    opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
-                                                    transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
-                                                    ${getTooltipStyle(item.rarity)}
+                                                    absolute inset-0 rounded-xl overflow-hidden flex flex-col z-0
+                                                    ${getCardVisuals(item.rarity)}
+                                                    ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
                                                 `}>
-                                                    <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Biome</div>
-                                                    <div className="text-xs font-medium leading-relaxed">
-                                                        {item.spawns.join(', ')}
+                                                    {/* Background Decor for High Rarity */}
+                                                    {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
+                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+                                                    )}
+
+                                                    {/* Rarity Badge - Top Right */}
+                                                    <div className={`
+                                                        absolute top-2 right-2 z-20
+                                                        text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
+                                                        ${getRarityBadgeStyle(item.rarity)}
+                                                    `}>
+                                                        {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
                                                     </div>
-                                                    {/* Arrow */}
-                                                    <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-b border-r ${getTooltipStyle(item.rarity)}`}></div>
+
+                                                    {/* Image Container */}
+                                                    <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
+                                                        <BingoCardImage item={item} />
+                                                    </div>
+
+                                                    {/* Cross Out Overlay - inside clipped area */}
+                                                    {marked[index] && (
+                                                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
+                                                            <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
+                                                                <line x1="20" y1="20" x2="80" y2="80" />
+                                                                <line x1="80" y1="20" x2="20" y2="80" />
+                                                            </svg>
+                                                        </div>
+                                                    )}
                                                 </div>
 
-                                                <a 
-                                                    href={wikiUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
+                                                {/* 2. FLOATING NAMEPLATE & TOOLTIP (Outside Clipped Area) */}
+                                                <div 
+                                                    className={`absolute bottom-0 left-0 right-0 py-1.5 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
+                                                    onClick={(e) => e.stopPropagation()} 
                                                 >
-                                                    {item.name}
-                                                    <svg className="w-2.5 h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                    </svg>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
+                                                    {/* Tooltip on Hover */}
+                                                    <div className={`
+                                                        absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] p-3 rounded-lg border shadow-2xl
+                                                        opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
+                                                        transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
+                                                        ${getTooltipStyle(item.rarity)}
+                                                    `}>
+                                                        <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Biome</div>
+                                                        <div className="text-xs font-medium leading-relaxed">
+                                                            {item.spawns.join(', ')}
+                                                        </div>
+                                                        {/* Arrow */}
+                                                        <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-b border-r ${getTooltipStyle(item.rarity)}`}></div>
+                                                    </div>
 
-                    <div className="mt-4 text-center">
-                        <button 
-                            onClick={() => setMarked(new Array(25).fill(false))}
-                            className="text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
-                        >
-                            Clear Marks Only
-                        </button>
+                                                    <a 
+                                                        href={wikiUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
+                                                    >
+                                                        {item.name}
+                                                        <svg className="w-2.5 h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                        </svg>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-4 text-center">
+                            <button 
+                                onClick={() => setMarked(new Array(25).fill(false))}
+                                className="text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
+                            >
+                                Clear Marks Only
+                            </button>
+                        </div>
                     </div>
                 </div>
 
