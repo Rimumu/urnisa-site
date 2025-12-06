@@ -499,15 +499,15 @@ const Bingo: React.FC = () => {
             
             <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
                 
-                {/* Header */}
-                <div className="text-center mb-1 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <Link to="/minecraft" className="inline-block text-gray-400 hover:text-white mb-2 text-sm font-bold transition-colors">
-                        ← Back to Dashboard
+                {/* Header - Top Left (Pill Style) */}
+                <div className="w-full flex justify-start mb-4 pt-2">
+                    <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
+                        <span>←</span> Back to Dashboard
                     </Link>
                 </div>
 
-                {/* Bingo Board Container - Adjusted Max Width for Compactness */}
-                <div className="relative max-w-4xl w-full flex flex-col items-center">
+                {/* Bingo Board Container - Reduced Max Width for Compactness */}
+                <div className="relative max-w-3xl w-full flex flex-col items-center">
                     
                     {/* Visual Board Background */}
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] shadow-2xl overflow-hidden z-0">
@@ -613,10 +613,10 @@ const Bingo: React.FC = () => {
                                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
                                                     )}
 
-                                                    {/* Rarity Badge - Top Right */}
+                                                    {/* Rarity Badge - Top Right - INCREASED SIZE */}
                                                     <div className={`
                                                         absolute top-1 right-1 z-20
-                                                        text-[6px] font-bold uppercase tracking-wider px-1 py-0.5 rounded shadow-sm backdrop-blur-sm
+                                                        text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
                                                         ${getRarityBadgeStyle(item.rarity)}
                                                     `}>
                                                         {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
