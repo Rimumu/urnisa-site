@@ -127,32 +127,65 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
     if (item.id === -1) bgClass = "bg-white border-white";
 
     const [imgSrc, setImgSrc] = useState<string>("");
+    // Track fetch attempts for fallback logic
+    const [attempts, setAttempts] = useState(0);
+
+    const getFormattedName = (name: string) => {
+        return name.toLowerCase().trim()
+            .replace(/[.':]/g, '') // Remove dots, apostrophes, colons
+            .replace(/♀/g, '-f')
+            .replace(/♂/g, '-m')
+            .replace(/\s+/g, '-');
+    };
 
     useEffect(() => {
         if (item.id === -1) {
             setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif");
             return;
         }
-
-        const formattedName = item.name.toLowerCase().trim().replace(/[.']/g, '').replace(/♀/g, '-f').replace(/♂/g, '-m').replace(/\s+/g, '-');
+        // Reset attempts on item change
+        setAttempts(0);
+        const formattedName = getFormattedName(item.name);
         setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`);
     }, [item]);
 
     const handleError = () => {
         if (item.id === -1) return;
         
-        // Fallback chain similar to Bingo.tsx
-        if (imgSrc.includes('cobblemon.tools') && item.id > 0) {
-            // Fallback 1: PokeAPI Home (3D)
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
-        } else if (imgSrc.includes('other/home') && item.id > 0) {
-            // Fallback 2: PokeAPI Official Artwork
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`);
-        } else if (imgSrc.includes('official-artwork') && item.id > 0) {
-            // Fallback 3: Standard Sprite
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`);
+        const formattedName = getFormattedName(item.name);
+        setAttempts(prev => prev + 1);
+
+        // Fallback Logic Sequence
+        if (attempts === 0) {
+            // Attempt 1: PokeAPI Home (ID based) - if ID exists
+            if (item.id > 0) {
+                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
+            } else {
+                // If no ID, skip to Name-based fallback immediately
+                setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`);
+                setAttempts(2); // Skip step 1
+            }
+        } else if (attempts === 1) {
+            // Attempt 2: PokemonDB Home (Name based) - robust fallback for missing IDs
+            setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`);
+        } else if (attempts === 2) {
+             // Attempt 3: PokeAPI Official Art (ID based)
+             if (item.id > 0) {
+                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`);
+             } else {
+                 // Final Give Up
+                 setImgSrc(`https://via.placeholder.com/64?text=${item.name.charAt(0)}`);
+                 setAttempts(10); 
+             }
+        } else if (attempts === 3) {
+             // Attempt 4: Standard Sprite (ID based)
+             if (item.id > 0) {
+                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`);
+             } else {
+                 setImgSrc(`https://via.placeholder.com/64?text=${item.name.charAt(0)}`);
+             }
         } else {
-            // Final Fallback: Placeholder with text
+            // Give up
             setImgSrc(`https://via.placeholder.com/64?text=${item.name.charAt(0)}`);
         }
     };
@@ -163,7 +196,7 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
             <img 
                 src={imgSrc} 
                 alt={item.name} 
-                className="w-full h-full object-contain" 
+                className="w-full h-full object-contain transition-opacity duration-300" 
                 loading="lazy" 
                 onError={handleError}
             />
