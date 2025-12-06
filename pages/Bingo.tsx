@@ -480,7 +480,7 @@ const Bingo: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen py-8 font-sans text-white relative">
+        <div className="min-h-screen py-2 font-sans text-white relative">
             <style>{`
                 @keyframes pulse-gold {
                     0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
@@ -500,40 +500,40 @@ const Bingo: React.FC = () => {
             <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
                 
                 {/* Header */}
-                <div className="text-center mb-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="text-center mb-1 animate-in fade-in slide-in-from-top-4 duration-700">
                     <Link to="/minecraft" className="inline-block text-gray-400 hover:text-white mb-2 text-sm font-bold transition-colors">
                         ← Back to Dashboard
                     </Link>
                 </div>
 
-                {/* Bingo Board Container */}
-                <div className="relative max-w-6xl w-full flex flex-col items-center">
+                {/* Bingo Board Container - Adjusted Max Width for Compactness */}
+                <div className="relative max-w-4xl w-full flex flex-col items-center">
                     
                     {/* Visual Board Background */}
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] shadow-2xl overflow-hidden z-0">
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
                     </div>
 
-                    {/* Content Wrapper */}
-                    <div className="relative z-10 w-full p-4 md:p-8 flex flex-col items-center">
+                    {/* Content Wrapper - Reduced Padding */}
+                    <div className="relative z-10 w-full p-2 md:p-6 flex flex-col items-center">
                         
-                        {/* Logo */}
+                        {/* Logo - Reduced Size */}
                         <div className="mb-2 w-full flex justify-center relative z-10">
                             <img 
                                 src={LOGO_URL} 
                                 alt="Cobble Bingo" 
-                                className="h-20 md:h-32 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
+                                className="h-16 md:h-24 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
                             />
                         </div>
 
                         {/* ID Display */}
-                        <div className="mb-4 flex items-center gap-2 bg-black/40 px-4 py-1.5 rounded-full border border-white/10 shadow-inner">
-                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Card ID:</span>
-                            <span className="text-brand-primary font-mono font-black tracking-widest text-lg">{currentCardId || "LOADING..."}</span>
+                        <div className="mb-2 flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/10 shadow-inner">
+                            <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Card ID:</span>
+                            <span className="text-brand-primary font-mono font-black tracking-widest text-sm">{currentCardId || "LOADING..."}</span>
                         </div>
                         
-                        {/* The Grid */}
-                        <div className="overflow-visible py-4 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
+                        {/* The Grid - Removed min-height to fit content */}
+                        <div className="overflow-visible py-2 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10">
                             {/* POPUP OVERLAY */}
                             {showBingoPopup && (
                                 <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in fade-in duration-300">
@@ -545,23 +545,23 @@ const Bingo: React.FC = () => {
                             )}
 
                             {loadingSheet ? (
-                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
+                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">📄</div>
                                     <div className="font-bold">Fetching Live Data from Google Sheets...</div>
                                 </div>
                             ) : sheetError ? (
-                                <div className="flex flex-col items-center justify-center text-red-400 mt-10">
+                                <div className="flex flex-col items-center justify-center text-red-400 mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">⚠️</div>
                                     <div className="font-bold">Failed to load Pokemon data.</div>
                                     <div className="text-sm opacity-70">Please check the Google Sheet permissions.</div>
                                 </div>
                             ) : gridData.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
+                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">🔮</div>
                                     <div className="font-bold">Scouting Pokémon...</div>
                                 </div>
                             ) : (
-                                <div className={`grid grid-cols-5 gap-1 md:gap-3 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'} relative`}>
+                                <div className={`grid grid-cols-5 gap-2 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'} relative`}>
                                     
                                     {/* SVG Overlay for Winning Lines */}
                                     <svg className="absolute inset-0 w-full h-full pointer-events-none z-50 overflow-visible">
@@ -615,15 +615,15 @@ const Bingo: React.FC = () => {
 
                                                     {/* Rarity Badge - Top Right */}
                                                     <div className={`
-                                                        absolute top-1 right-1 md:top-2 md:right-2 z-20
-                                                        text-[6px] md:text-[8px] font-bold uppercase tracking-wider px-1 md:px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
+                                                        absolute top-1 right-1 z-20
+                                                        text-[6px] font-bold uppercase tracking-wider px-1 py-0.5 rounded shadow-sm backdrop-blur-sm
                                                         ${getRarityBadgeStyle(item.rarity)}
                                                     `}>
                                                         {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
                                                     </div>
 
-                                                    {/* Image Container */}
-                                                    <div className="flex-1 flex items-center justify-center p-1 md:p-3 pb-6 md:pb-8 relative z-10">
+                                                    {/* Image Container - Adjusted Padding for compact fit */}
+                                                    <div className="flex-1 flex items-center justify-center p-1 pb-6 relative z-10">
                                                         <BingoCardImage item={item} />
                                                     </div>
 
@@ -640,18 +640,18 @@ const Bingo: React.FC = () => {
 
                                                 {/* 2. FLOATING NAMEPLATE & TOOLTIP (Outside Clipped Area) */}
                                                 <div 
-                                                    className={`absolute bottom-0 left-0 right-0 py-1 md:py-1.5 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
+                                                    className={`absolute bottom-0 left-0 right-0 py-1 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
                                                     onClick={(e) => e.stopPropagation()} 
                                                 >
                                                     {/* Tooltip on Hover */}
                                                     <div className={`
-                                                        absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[150px] md:max-w-[200px] p-3 rounded-lg border shadow-2xl
+                                                        absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[120px] md:max-w-[200px] p-2 rounded-lg border shadow-2xl
                                                         opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
                                                         transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
                                                         ${getTooltipStyle(item.rarity)}
                                                     `}>
-                                                        <div className="text-[10px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Biome</div>
-                                                        <div className="text-xs font-medium leading-relaxed whitespace-normal">
+                                                        <div className="text-[9px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Biome</div>
+                                                        <div className="text-[10px] font-medium leading-relaxed whitespace-normal">
                                                             {item.spawns.join(', ')}
                                                         </div>
                                                         {/* Arrow */}
@@ -662,12 +662,9 @@ const Bingo: React.FC = () => {
                                                         href={wikiUrl}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-[8px] md:text-xs font-bold text-center text-white truncate px-1 md:px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
+                                                        className="text-[8px] md:text-[10px] font-bold text-center text-white truncate px-1 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
                                                     >
                                                         {item.name}
-                                                        <svg className="w-2 md:w-2.5 h-2 md:h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                        </svg>
                                                     </a>
                                                 </div>
                                             </div>
