@@ -9,7 +9,7 @@ import UserProfile from '../components/UserProfile';
 interface BingoCell {
     id: number;
     name: string;
-    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical';
+    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical' | 'Free';
     spawns: string[];
 }
 
@@ -29,6 +29,8 @@ interface SavedCard {
     marked: boolean[];
     updatedAt: string;
 }
+
+type BingoDifficulty = 'Default' | 'Easy' | 'Normal' | 'Hard' | 'Insane' | 'Nightmare';
 
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
@@ -122,6 +124,13 @@ const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] 
     // Mythics
     { id: 151, name: 'Mew', rarity: 'Mythical' }
 ];
+
+const FREE_SPACE_CELL: BingoCell = {
+    id: -1,
+    name: "FREE SPACE",
+    rarity: "Free",
+    spawns: ["Enjoy!"]
+};
 
 // --- SEEDED RNG UTILS ---
 // Hashing function to turn a string ID into a numeric seed
@@ -219,6 +228,12 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
     const [imgSrc, setImgSrc] = useState<string>("");
 
     useEffect(() => {
+        // Free Space handling
+        if (item.id === -1) {
+            setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif"); // Use a placeholder or logo
+            return;
+        }
+
         const verifyImage = async () => {
             const cobbleName = getFormattedName(item.name);
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
@@ -252,6 +267,7 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
     }, [item]);
 
     const handleImageError = () => {
+        if (item.id === -1) return;
         if (imgSrc.includes('cobblemon.tools') && item.id > 0) {
             setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
         } else if (imgSrc.includes('other/home') && item.id > 0) {
@@ -265,7 +281,7 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
         <OptimizedImage 
             src={imgSrc} 
             alt={item.name} 
-            className="w-full h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+            className={`w-full h-full object-contain drop-shadow-lg transition-transform duration-300 ${item.id === -1 ? 'scale-75' : 'group-hover:scale-110'}`}
             contain
             onError={handleImageError}
         />
@@ -299,6 +315,9 @@ const Bingo: React.FC = () => {
     const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
     const [saving, setSaving] = useState(false);
     const [loadingCards, setLoadingCards] = useState(false);
+
+    // Difficulty Modal State
+    const [showDiffModal, setShowDiffModal] = useState(false);
 
     // Refs for logic
     const prevBingoCountRef = useRef(0);
@@ -560,9 +579,10 @@ const Bingo: React.FC = () => {
     };
 
     // --- SEEDED GENERATION LOGIC ---
-    const generateCard = useCallback(async (customId?: string) => {
+    const generateCard = useCallback(async (customId?: string, difficulty: BingoDifficulty = 'Default') => {
         if (!cobblemonPool || cobblemonPool.length === 0) return;
         setIsGenerating(true);
+        setShowDiffModal(false);
         setLoadedCardName(null); // Reset loaded state for new random cards
         
         try {
@@ -581,41 +601,127 @@ const Bingo: React.FC = () => {
             const seed = cyrb128(idToUse);
             const rng = mulberry32(seed[0]);
 
-            // 4. Shuffle & Select
-            const available = [...cobblemonPool];
-            // Fisher-Yates Shuffle with seeded RNG
-            for (let i = available.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
-                [available[i], available[j]] = [available[j], available[i]];
-            }
-
-            // Take first 25 unique items
-            const selected: BingoCell[] = available.slice(0, 25).map(entry => ({
-                id: entry.id,
-                name: entry.name,
-                rarity: entry.rarity,
-                spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
-            }));
-
-            // Fill if pool < 25 (rare but safe)
-            while (selected.length < 25) {
-                const entry = available[Math.floor(rng() * available.length)];
-                selected.push({
+            // Helper to get random items from filtered pool
+            const getRandomItems = (rarities: BingoCell['rarity'][], count: number) => {
+                let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
+                if (pool.length === 0) pool = cobblemonPool; // Fallback
+                
+                // Shuffle pool
+                for (let i = pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(rng() * (i + 1));
+                    [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+                
+                // Return top N
+                return pool.slice(0, count).map(entry => ({
                     id: entry.id,
                     name: entry.name,
                     rarity: entry.rarity,
-                    spawns: ["Special"]
-                });
+                    spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
+                }));
+            };
+
+            let selected: BingoCell[] = [];
+
+            // 4. GENERATION BASED ON DIFFICULTY
+            if (difficulty === 'Easy') {
+                // 12 Common, 12 Uncommon (Total 24) + Free Space
+                const commons = getRandomItems(['Common'], 12);
+                const uncommons = getRandomItems(['Uncommon'], 12);
+                selected = [...commons, ...uncommons];
+            } else if (difficulty === 'Normal') {
+                // 6 Common, 6 Uncommon, 6 Rare, 6 Ultra-Rare (Total 24) + Free Space
+                selected = [
+                    ...getRandomItems(['Common'], 6),
+                    ...getRandomItems(['Uncommon'], 6),
+                    ...getRandomItems(['Rare'], 6),
+                    ...getRandomItems(['Ultra-Rare'], 6)
+                ];
+            } else if (difficulty === 'Hard') {
+                // 12 Rare, 12 Ultra-Rare (Total 24) + Free Space
+                selected = [
+                    ...getRandomItems(['Rare'], 12),
+                    ...getRandomItems(['Ultra-Rare'], 12)
+                ];
+            } else if (difficulty === 'Insane') {
+                // 24 Ultra-Rare + 1 Legendary Middle
+                selected = getRandomItems(['Ultra-Rare'], 24);
+                // Middle override happens later, just ensure we have enough
+            } else if (difficulty === 'Nightmare') {
+                // 20 Ultra-Rare + 1 Mythic Middle + 4 Legendary Corners
+                selected = getRandomItems(['Ultra-Rare'], 20);
+            } else {
+                // DEFAULT: Pure Random
+                const pool = [...cobblemonPool];
+                for (let i = pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(rng() * (i + 1));
+                    [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+                selected = pool.slice(0, 24).map(entry => ({
+                    id: entry.id,
+                    name: entry.name,
+                    rarity: entry.rarity,
+                    spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
+                }));
+            }
+
+            // Shuffle the selected set before placing into grid
+            for (let i = selected.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [selected[i], selected[j]] = [selected[j], selected[i]];
+            }
+
+            // 5. CONSTRUCT FINAL GRID (25 Cells)
+            const finalGrid: BingoCell[] = new Array(25).fill(null);
+
+            // Helper to fill grid while skipping specific indices
+            const fillGrid = (source: BingoCell[], skipIndices: number[]) => {
+                let sourceIdx = 0;
+                for (let i = 0; i < 25; i++) {
+                    if (skipIndices.includes(i)) continue;
+                    if (sourceIdx < source.length) {
+                        finalGrid[i] = source[sourceIdx++];
+                    } else {
+                        // Fallback fill if not enough items
+                        finalGrid[i] = getRandomItems(['Common'], 1)[0];
+                    }
+                }
+            };
+
+            if (difficulty === 'Insane') {
+                // Center is Legendary, others UR
+                fillGrid(selected, [12]);
+                finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
+            } else if (difficulty === 'Nightmare') {
+                // Center Mythic, Corners Legendary, others UR
+                const corners = [0, 4, 20, 24];
+                fillGrid(selected, [12, ...corners]);
+                
+                finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
+                const legends = getRandomItems(['Legendary'], 4);
+                corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
+            } else {
+                // Default, Easy, Normal, Hard -> Center is Free Space
+                fillGrid(selected, [12]);
+                finalGrid[12] = FREE_SPACE_CELL;
             }
             
             await new Promise(resolve => setTimeout(resolve, 300)); // Slight visual delay
             
-            setGridData(selected);
+            setGridData(finalGrid);
             
             // Only reset marks if generating a brand new random card, 
             // if loading a specific ID, we might ideally want to save state, but for now we reset.
             // (Assuming stateless sharing)
             setMarked(new Array(25).fill(false));
+            
+            // Auto-mark free space if exists
+            if (difficulty !== 'Insane' && difficulty !== 'Nightmare') {
+                const newMarked = new Array(25).fill(false);
+                newMarked[12] = true;
+                setMarked(newMarked);
+            }
+
             setWinningLines([]);
             setBingoCount(0);
             prevBingoCountRef.current = 0;
@@ -669,6 +775,7 @@ const Bingo: React.FC = () => {
             case 'Ultra-Rare': return 'bg-purple-600/80 text-purple-100';
             case 'Legendary': return 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50';
             case 'Mythical': return 'bg-pink-500 text-white shadow-lg shadow-pink-500/50';
+            case 'Free': return 'bg-white text-black font-black tracking-widest';
             default: return 'bg-gray-500';
         }
     };
@@ -684,6 +791,8 @@ const Bingo: React.FC = () => {
                 return `${base} border-purple-500/40 bg-gradient-to-br from-purple-900/20 to-black/80 group-hover:border-purple-400`;
             case 'Rare':
                 return `${base} border-blue-500/30 bg-gradient-to-br from-blue-900/10 to-black/80 group-hover:border-blue-400`;
+            case 'Free':
+                return `${base} border-white/80 bg-gradient-to-br from-white/20 to-black/80 shadow-inner group-hover:bg-white/30`;
             default:
                 return `${base} border-white/10 bg-black/60 group-hover:border-white/30 group-hover:bg-black/70`;
         }
@@ -695,6 +804,8 @@ const Bingo: React.FC = () => {
                 return "bg-gradient-to-t from-pink-900/90 to-pink-900/60 border-t border-pink-500/60 shadow-[0_-5px_15px_rgba(236,72,153,0.4)] backdrop-blur-md";
             case 'Legendary':
                 return "bg-gradient-to-t from-yellow-900/90 to-yellow-900/60 border-t border-yellow-500/60 shadow-[0_-5px_15px_rgba(234,179,8,0.4)] backdrop-blur-md";
+            case 'Free':
+                return "bg-white text-black font-black border-t border-white backdrop-blur-md";
             default:
                 return "bg-black/80 border-t border-white/5 backdrop-blur-md";
         }
@@ -902,7 +1013,7 @@ const Bingo: React.FC = () => {
                                                         href={wikiUrl}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-[8px] md:text-[10px] font-bold text-center text-white truncate px-1 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link drop-shadow-md"
+                                                        className={`text-[8px] md:text-[10px] text-center truncate px-1 transition-colors flex items-center gap-1 group/link drop-shadow-md ${item.rarity === 'Free' ? 'text-black font-black' : 'text-white font-bold hover:text-brand-primary hover:underline'}`}
                                                     >
                                                         {item.name}
                                                     </a>
@@ -950,7 +1061,7 @@ const Bingo: React.FC = () => {
                         {/* Main Actions */}
                         <div className="grid grid-cols-3 gap-2">
                             <button 
-                                onClick={() => generateCard()}
+                                onClick={() => setShowDiffModal(true)}
                                 disabled={isGenerating || loadingSheet}
                                 className={`
                                     bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1
@@ -986,6 +1097,36 @@ const Bingo: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* DIFFICULTY MODAL */}
+                {showDiffModal && (
+                    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
+                            <button onClick={() => setShowDiffModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+                            <h3 className="text-xl font-black text-white mb-6 text-center">Select Difficulty</h3>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                                {[
+                                    { label: 'Default', desc: 'Standard Random', color: 'bg-gray-600 hover:bg-gray-500' },
+                                    { label: 'Easy', desc: 'Common/Uncommon', color: 'bg-green-600 hover:bg-green-500' },
+                                    { label: 'Normal', desc: 'Balanced Mix', color: 'bg-blue-600 hover:bg-blue-500' },
+                                    { label: 'Hard', desc: 'Rare/Ultra-Rare', color: 'bg-purple-600 hover:bg-purple-500' },
+                                    { label: 'Insane', desc: 'All UR + 1 Legend', color: 'bg-red-600 hover:bg-red-500' },
+                                    { label: 'Nightmare', desc: 'UR + Mythic/Legend', color: 'bg-gradient-to-r from-purple-900 to-black border border-purple-500 hover:brightness-110' },
+                                ].map((opt) => (
+                                    <button
+                                        key={opt.label}
+                                        onClick={() => generateCard(undefined, opt.label as BingoDifficulty)}
+                                        className={`${opt.color} text-white p-3 rounded-xl shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center h-24`}
+                                    >
+                                        <span className="font-bold uppercase tracking-wider text-sm">{opt.label}</span>
+                                        <span className="text-[10px] opacity-80 mt-1 text-center leading-tight">{opt.desc}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* SAVE MODAL */}
                 {showSaveModal && (
