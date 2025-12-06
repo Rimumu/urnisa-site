@@ -59,17 +59,18 @@ const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/
 // Cache for image validity
 const clientImageCache = new Map<string, boolean>();
 
+// Shared Helper
+const getFormattedName = (name: string) => {
+    return name.toLowerCase()
+        .replace(/[.']/g, '')
+        .replace(/♀/g, '-f')
+        .replace(/♂/g, '-m')
+        .replace(/\s+/g, '-');
+};
+
 // Helper Component for Cell Image
 const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
     const [imgSrc, setImgSrc] = useState<string>("");
-
-    const getFormattedName = (name: string) => {
-        return name.toLowerCase()
-            .replace(/[.']/g, '')
-            .replace(/♀/g, '-f')
-            .replace(/♂/g, '-m')
-            .replace(/\s+/g, '-');
-    };
 
     useEffect(() => {
         const verifyImage = async () => {
@@ -115,7 +116,7 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
         <OptimizedImage 
             src={imgSrc} 
             alt={item.name} 
-            className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-full object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
             contain
             onError={handleImageError}
         />
@@ -162,15 +163,32 @@ const Bingo: React.FC = () => {
         setMarked(newMarked);
     };
 
-    const getRarityColor = (rarity: string) => {
+    const getRarityBadgeStyle = (rarity: string) => {
         switch(rarity) {
-            case 'Common': return 'bg-gray-500/80 text-white';
-            case 'Uncommon': return 'bg-green-600/80 text-white';
-            case 'Rare': return 'bg-blue-500/80 text-white';
-            case 'Ultra-Rare': return 'bg-purple-600/80 text-white';
-            case 'Legendary': return 'bg-yellow-500/90 text-black';
-            case 'Mythical': return 'bg-pink-500/90 text-white';
+            case 'Common': return 'bg-gray-600 text-gray-200';
+            case 'Uncommon': return 'bg-green-700/80 text-green-100';
+            case 'Rare': return 'bg-blue-600/80 text-blue-100';
+            case 'Ultra-Rare': return 'bg-purple-600/80 text-purple-100';
+            case 'Legendary': return 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50';
+            case 'Mythical': return 'bg-pink-500 text-white shadow-lg shadow-pink-500/50';
             default: return 'bg-gray-500';
+        }
+    };
+
+    const getCellContainerStyle = (rarity: string) => {
+        const base = "relative group cursor-pointer aspect-[4/5] rounded-xl border-2 overflow-hidden transition-all duration-300 flex flex-col hover:-translate-y-1 hover:shadow-xl";
+        
+        switch (rarity) {
+            case 'Mythical':
+                return `${base} border-pink-500/50 bg-gradient-to-br from-pink-900/30 to-black/80 hover:border-pink-400 shadow-[0_0_10px_rgba(236,72,153,0.1)] hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]`;
+            case 'Legendary':
+                return `${base} border-yellow-500/50 bg-gradient-to-br from-yellow-900/30 to-black/80 hover:border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.1)] hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]`;
+            case 'Ultra-Rare':
+                return `${base} border-purple-500/40 bg-gradient-to-br from-purple-900/20 to-black/80 hover:border-purple-400`;
+            case 'Rare':
+                return `${base} border-blue-500/30 bg-gradient-to-br from-blue-900/10 to-black/80 hover:border-blue-400`;
+            default:
+                return `${base} border-white/10 bg-black/60 hover:border-white/30 hover:bg-black/70`;
         }
     };
 
@@ -216,49 +234,68 @@ const Bingo: React.FC = () => {
                     {/* The Grid - Scrollable on mobile, Centered on Desktop */}
                     <div className="overflow-x-auto pb-4 md:pb-0 custom-scrollbar flex justify-center w-full relative z-10">
                         <div className={`grid grid-cols-5 gap-2 md:gap-3 min-w-[600px] md:min-w-0 transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm' : 'opacity-100'}`}>
-                            {gridData.map((item, index) => (
-                                <div 
-                                    key={`${item.id}-${index}`} // Use index to force unique key if dupes allowed later
-                                    onClick={() => toggleMark(index)}
-                                    className={`
-                                        relative group cursor-pointer aspect-[4/5] rounded-xl border-2 overflow-hidden transition-all duration-200 flex flex-col
-                                        ${marked[index] 
-                                            ? 'bg-black/80 border-red-900/50 grayscale' 
-                                            : 'bg-black/40 border-white/10 hover:border-brand-primary/50 hover:bg-black/50 hover:-translate-y-1 hover:shadow-lg'}
-                                    `}
-                                >
-                                    {/* Rarity Badge - Top Right */}
-                                    <div className={`
-                                        absolute top-1 right-1 z-20
-                                        text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
-                                        ${getRarityColor(item.rarity)}
-                                    `}>
-                                        {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
-                                    </div>
+                            {gridData.map((item, index) => {
+                                const formattedName = getFormattedName(item.name);
+                                const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
+                                
+                                return (
+                                    <div 
+                                        key={`${item.id}-${index}`} 
+                                        onClick={() => toggleMark(index)}
+                                        className={`
+                                            ${getCellContainerStyle(item.rarity)}
+                                            ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
+                                        `}
+                                    >
+                                        {/* Background Decor for High Rarity */}
+                                        {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
+                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+                                        )}
 
-                                    {/* Image Container - Flex Grow to fill space */}
-                                    <div className="flex-1 flex items-center justify-center p-2 relative z-10">
-                                        <BingoCardImage item={item} />
-                                    </div>
-
-                                    {/* Name Bar - Fixed Height at Bottom */}
-                                    <div className="w-full bg-black/80 backdrop-blur-sm py-1.5 z-20 border-t border-white/10 shrink-0">
-                                        <div className="text-[10px] md:text-xs font-bold text-center text-white truncate px-1 text-shadow-sm">
-                                            {item.name}
+                                        {/* Rarity Badge - Top Right */}
+                                        <div className={`
+                                            absolute top-2 right-2 z-20
+                                            text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
+                                            ${getRarityBadgeStyle(item.rarity)}
+                                        `}>
+                                            {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
                                         </div>
-                                    </div>
 
-                                    {/* Cross Out Overlay */}
-                                    {marked[index] && (
-                                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/10">
-                                            <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-2xl" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round">
-                                                <line x1="20" y1="20" x2="80" y2="80" />
-                                                <line x1="80" y1="20" x2="20" y2="80" />
-                                            </svg>
+                                        {/* Image Container */}
+                                        <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
+                                            <BingoCardImage item={item} />
                                         </div>
-                                    )}
-                                </div>
-                            ))}
+
+                                        {/* Name Bar - Fixed Height at Bottom */}
+                                        <div 
+                                            className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md py-1.5 z-20 border-t border-white/5 flex justify-center"
+                                            onClick={(e) => e.stopPropagation()} // Prevent toggling mark when clicking the bar area
+                                        >
+                                            <a 
+                                                href={wikiUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[10px] md:text-xs font-bold text-center text-white truncate px-2 hover:text-brand-primary hover:underline transition-colors flex items-center gap-1 group/link"
+                                            >
+                                                {item.name}
+                                                <svg className="w-2.5 h-2.5 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                            </a>
+                                        </div>
+
+                                        {/* Cross Out Overlay */}
+                                        {marked[index] && (
+                                            <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
+                                                <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
+                                                    <line x1="20" y1="20" x2="80" y2="80" />
+                                                    <line x1="80" y1="20" x2="20" y2="80" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
