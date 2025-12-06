@@ -875,9 +875,9 @@ const Bingo: React.FC = () => {
                         </div>
 
                         {/* ID Display */}
-                        <div className="mb-2 flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/10 shadow-inner">
-                            <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Card ID:</span>
-                            <span className="text-brand-primary font-mono font-black tracking-widest text-sm">{currentCardId || "LOADING..."}</span>
+                        <div className="mb-2 flex items-center justify-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/10 shadow-inner">
+                            <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest pt-[1px]">Card ID:</span>
+                            <span className="text-brand-primary font-mono font-black tracking-widest text-sm leading-none">{currentCardId || "LOADING..."}</span>
                         </div>
                         
                         {/* The Grid - Removed min-height to fit content */}
@@ -1069,7 +1069,7 @@ const Bingo: React.FC = () => {
                                 `}
                             >
                                 <span>🎲</span>
-                                <span>Random</span>
+                                <span>Generate</span>
                             </button>
                             
                             <button 
