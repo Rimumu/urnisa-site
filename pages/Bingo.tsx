@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
@@ -161,8 +160,10 @@ const Bingo: React.FC = () => {
     const [winningLines, setWinningLines] = useState<number[][]>([]);
     const [bingoCount, setBingoCount] = useState(0);
     const [showBingoPopup, setShowBingoPopup] = useState(false);
-    const [hasShownBingo, setHasShownBingo] = useState(false); // Track if popup was already shown for this card
+    
+    // Refs for logic
     const prevBingoCountRef = useRef(0);
+    const popupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Data from Google Sheet
     const [cobblemonPool, setCobblemonPool] = useState<CobblemonEntry[] | null>(null);
@@ -258,21 +259,36 @@ const Bingo: React.FC = () => {
         
         setWinningLines(lines);
         
-        // Only show popup if we have at least one winning line AND haven't shown it yet for this card
-        if (lines.length > 0 && !hasShownBingo) {
-            setBingoCount(lines.length);
+        const currentCount = lines.length;
+        const prevCount = prevBingoCountRef.current;
+
+        // If we have more lines than before, it's a new win (or 2X/3X)
+        if (currentCount > prevCount) {
+            setBingoCount(currentCount);
             setShowBingoPopup(true);
-            setHasShownBingo(true); // Mark as shown to prevent repeat popups
             
-            const timer = setTimeout(() => setShowBingoPopup(false), 3000);
-            return () => clearTimeout(timer);
-        } else {
-            // Still update the count if user gets 2nd bingo, but don't show popup
-            setBingoCount(lines.length);
+            // Clear any existing timer to prevent premature hiding
+            if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+            
+            // Hide after 3 seconds
+            popupTimerRef.current = setTimeout(() => {
+                setShowBingoPopup(false);
+            }, 3000);
+        } else if (currentCount < prevCount) {
+            // If lines decreased (user unchecked), just update count, maybe hide popup
+            setBingoCount(currentCount);
+            if (currentCount === 0) setShowBingoPopup(false);
         }
         
-        prevBingoCountRef.current = lines.length;
-    }, [marked, hasShownBingo]);
+        prevBingoCountRef.current = currentCount;
+    }, [marked]);
+
+    // Clean up timer on unmount
+    useEffect(() => {
+        return () => {
+            if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+        };
+    }, []);
 
     const generateNewCard = useCallback(async () => {
         if (!cobblemonPool || cobblemonPool.length === 0) return;
@@ -317,9 +333,9 @@ const Bingo: React.FC = () => {
             setMarked(new Array(25).fill(false));
             setWinningLines([]);
             setBingoCount(0);
-            setHasShownBingo(false); // Reset popup trigger
             prevBingoCountRef.current = 0;
             setShowBingoPopup(false);
+            if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
 
         } catch (e) {
             console.error("Bingo Generation Failed:", e);
@@ -395,8 +411,8 @@ const Bingo: React.FC = () => {
         <div className="min-h-screen py-8 font-sans text-white relative">
             <style>{`
                 @keyframes pulse-gold {
-                    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(234, 179, 8, 0.5); }
-                    50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(234, 179, 8, 0.8); }
+                    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+                    50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(255, 215, 0, 0.9); }
                 }
                 .animate-pulse-gold {
                     animation: pulse-gold 2s infinite ease-in-out;
@@ -451,8 +467,9 @@ const Bingo: React.FC = () => {
                             {/* POPUP OVERLAY */}
                             {showBingoPopup && (
                                 <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in fade-in duration-300">
-                                    <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 border-4 border-white text-black font-black text-6xl md:text-8xl px-12 py-6 rounded-full shadow-[0_0_60px_rgba(234,179,8,0.8)] flex flex-col items-center drop-shadow-md animate-pulse-gold">
-                                        <span className="drop-shadow-sm tracking-widest text-white/90" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>BINGO!</span>
+                                    <div className="bg-[#FFD700] border-4 border-white text-black font-black text-6xl md:text-8xl px-12 py-6 rounded-full shadow-[0_0_60px_rgba(255,215,0,0.8)] flex flex-col items-center drop-shadow-md animate-pulse-gold transform -rotate-12">
+                                        <span className="drop-shadow-sm tracking-widest text-white/90 stroke-black" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>BINGO!</span>
+                                        {bingoCount > 1 && <span className="text-3xl md:text-5xl text-white mt-2 drop-shadow-md">{bingoCount}X COMBO</span>}
                                     </div>
                                 </div>
                             )}
@@ -596,9 +613,9 @@ const Bingo: React.FC = () => {
                                     setMarked(new Array(25).fill(false));
                                     setWinningLines([]);
                                     setBingoCount(0);
-                                    setHasShownBingo(false);
                                     prevBingoCountRef.current = 0;
                                     setShowBingoPopup(false);
+                                    if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
                                 }}
                                 className="text-gray-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors"
                             >
