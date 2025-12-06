@@ -268,20 +268,21 @@ const Bingo: React.FC = () => {
         }
     };
 
-    const getCellContainerStyle = (rarity: string) => {
-        const base = "relative group cursor-pointer aspect-[4/5] rounded-xl border-2 overflow-hidden transition-all duration-300 flex flex-col hover:-translate-y-1 hover:shadow-xl";
+    // Modified to return only visual styles (color, border, shadow), removed layout/overflow props
+    const getCardVisuals = (rarity: string) => {
+        const base = "border-2";
         
         switch (rarity) {
             case 'Mythical':
-                return `${base} border-pink-500/50 bg-gradient-to-br from-pink-900/30 to-black/80 hover:border-pink-400 shadow-[0_0_10px_rgba(236,72,153,0.1)] hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]`;
+                return `${base} border-pink-500/50 bg-gradient-to-br from-pink-900/30 to-black/80 shadow-[0_0_10px_rgba(236,72,153,0.1)] group-hover:border-pink-400 group-hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]`;
             case 'Legendary':
-                return `${base} border-yellow-500/50 bg-gradient-to-br from-yellow-900/30 to-black/80 hover:border-yellow-400 shadow-[0_0_10px_rgba(234,179,8,0.1)] hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]`;
+                return `${base} border-yellow-500/50 bg-gradient-to-br from-yellow-900/30 to-black/80 shadow-[0_0_10px_rgba(234,179,8,0.1)] group-hover:border-yellow-400 group-hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]`;
             case 'Ultra-Rare':
-                return `${base} border-purple-500/40 bg-gradient-to-br from-purple-900/20 to-black/80 hover:border-purple-400`;
+                return `${base} border-purple-500/40 bg-gradient-to-br from-purple-900/20 to-black/80 group-hover:border-purple-400`;
             case 'Rare':
-                return `${base} border-blue-500/30 bg-gradient-to-br from-blue-900/10 to-black/80 hover:border-blue-400`;
+                return `${base} border-blue-500/30 bg-gradient-to-br from-blue-900/10 to-black/80 group-hover:border-blue-400`;
             default:
-                return `${base} border-white/10 bg-black/60 hover:border-white/30 hover:bg-black/70`;
+                return `${base} border-white/10 bg-black/60 group-hover:border-white/30 group-hover:bg-black/70`;
         }
     };
 
@@ -299,11 +300,11 @@ const Bingo: React.FC = () => {
     // Helper for Tooltip Styles
     const getTooltipStyle = (rarity: string) => {
         switch(rarity) {
-            case 'Mythical': return "border-pink-500 bg-pink-900/90 text-white";
-            case 'Legendary': return "border-yellow-500 bg-yellow-900/90 text-white";
-            case 'Ultra-Rare': return "border-purple-500 bg-purple-900/90 text-white";
-            case 'Rare': return "border-blue-500 bg-blue-900/90 text-white";
-            default: return "border-gray-500 bg-gray-900/90 text-gray-200";
+            case 'Mythical': return "border-pink-500 bg-pink-900/95 text-white";
+            case 'Legendary': return "border-yellow-500 bg-yellow-900/95 text-white";
+            case 'Ultra-Rare': return "border-purple-500 bg-purple-900/95 text-white";
+            case 'Rare': return "border-blue-500 bg-blue-900/95 text-white";
+            default: return "border-gray-500 bg-gray-900/95 text-gray-200";
         }
     };
 
@@ -347,7 +348,7 @@ const Bingo: React.FC = () => {
                     </div>
                     
                     {/* The Grid - Added py-16 to container to allow tooltips to spill out */}
-                    <div className="overflow-x-auto py-16 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
+                    <div className="overflow-visible py-16 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10 min-h-[500px]">
                         {loadingSheet ? (
                             <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10">
                                 <div className="text-4xl mb-4">📄</div>
@@ -374,38 +375,52 @@ const Bingo: React.FC = () => {
                                         <div 
                                             key={`${item.id}-${index}`} 
                                             onClick={() => toggleMark(index)}
-                                            className={`
-                                                ${getCellContainerStyle(item.rarity)}
-                                                ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
-                                            `}
+                                            className="relative aspect-[4/5] group cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
                                         >
-                                            {/* Background Decor for High Rarity */}
-                                            {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
-                                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-                                            )}
-
-                                            {/* Rarity Badge - Top Right */}
+                                            {/* 1. CLIPPED CONTENT (Inner Card) */}
                                             <div className={`
-                                                absolute top-2 right-2 z-20
-                                                text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
-                                                ${getRarityBadgeStyle(item.rarity)}
+                                                absolute inset-0 rounded-xl overflow-hidden flex flex-col z-0
+                                                ${getCardVisuals(item.rarity)}
+                                                ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
                                             `}>
-                                                {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
+                                                {/* Background Decor for High Rarity */}
+                                                {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
+                                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
+                                                )}
+
+                                                {/* Rarity Badge - Top Right */}
+                                                <div className={`
+                                                    absolute top-2 right-2 z-20
+                                                    text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
+                                                    ${getRarityBadgeStyle(item.rarity)}
+                                                `}>
+                                                    {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
+                                                </div>
+
+                                                {/* Image Container */}
+                                                <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
+                                                    <BingoCardImage item={item} />
+                                                </div>
+
+                                                {/* Cross Out Overlay - inside clipped area */}
+                                                {marked[index] && (
+                                                    <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
+                                                        <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
+                                                            <line x1="20" y1="20" x2="80" y2="80" />
+                                                            <line x1="80" y1="20" x2="20" y2="80" />
+                                                        </svg>
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            {/* Image Container */}
-                                            <div className="flex-1 flex items-center justify-center p-3 pb-8 relative z-10">
-                                                <BingoCardImage item={item} />
-                                            </div>
-
-                                            {/* Name Bar - Fixed Height at Bottom */}
+                                            {/* 2. FLOATING NAMEPLATE & TOOLTIP (Outside Clipped Area) */}
                                             <div 
-                                                className={`absolute bottom-0 left-0 right-0 py-1.5 z-20 flex justify-center group/nameplate ${getNamePlateStyle(item.rarity)}`}
+                                                className={`absolute bottom-0 left-0 right-0 py-1.5 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
                                                 onClick={(e) => e.stopPropagation()} 
                                             >
                                                 {/* Tooltip on Hover */}
                                                 <div className={`
-                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] p-3 rounded-lg border shadow-xl
+                                                    absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[200px] p-3 rounded-lg border shadow-2xl
                                                     opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
                                                     transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
                                                     ${getTooltipStyle(item.rarity)}
@@ -430,16 +445,6 @@ const Bingo: React.FC = () => {
                                                     </svg>
                                                 </a>
                                             </div>
-
-                                            {/* Cross Out Overlay */}
-                                            {marked[index] && (
-                                                <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
-                                                    <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
-                                                        <line x1="20" y1="20" x2="80" y2="80" />
-                                                        <line x1="80" y1="20" x2="20" y2="80" />
-                                                    </svg>
-                                                </div>
-                                            )}
                                         </div>
                                     );
                                 })}
