@@ -9,7 +9,6 @@ import UserProfile from '../components/UserProfile';
 // Reused from Bingo.tsx logic to ensure consistent preview
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
 const CSV_EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-const OFFICIAL_SEED = "WEEK1";
 
 // Types
 interface BingoCell {
@@ -134,14 +133,31 @@ const BingoDashboard: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [previewGrid, setPreviewGrid] = useState<BingoCell[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    // Config from API
+    const [config, setConfig] = useState<{ cardId: string, winCondition: string }>({ cardId: '', winCondition: '' });
 
     useEffect(() => {
         const fetchAndGenerate = async () => {
             try {
-                const response = await fetch(CSV_EXPORT_URL);
-                if (!response.ok) throw new Error("Failed");
-                const text = await response.text();
+                // 1. Fetch Data sources in parallel
+                const [csvRes, configRes] = await Promise.all([
+                    fetch(CSV_EXPORT_URL),
+                    fetch(`${API_BASE_URL}/api/bingo/config`)
+                ]);
+
+                if (!csvRes.ok) throw new Error("Failed to fetch sheet");
+                const text = await csvRes.text();
                 
+                // Set Config
+                let activeCardId = "WEEK1"; 
+                if (configRes.ok) {
+                    const conf = await configRes.json();
+                    setConfig(conf);
+                    if (conf.cardId) activeCardId = conf.cardId;
+                }
+
+                // 2. Parse Sheet
                 const rows = text.split('\n').map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, '').trim()));
                 const poolMap = new Map<string, CobblemonEntry>();
 
@@ -170,8 +186,8 @@ const BingoDashboard: React.FC = () => {
 
                 const pool = Array.from(poolMap.values());
                 
-                // GENERATE PREVIEW GRID (Seed: OFFICIAL_SEED)
-                const seed = cyrb128(OFFICIAL_SEED);
+                // 3. GENERATE PREVIEW GRID (Using Fetched Seed)
+                const seed = cyrb128(activeCardId);
                 const rng = mulberry32(seed[0]);
                 
                 // Simple Shuffle for Default Difficulty
@@ -224,16 +240,27 @@ const BingoDashboard: React.FC = () => {
                     <div className="space-y-8 text-center md:text-left order-2 md:order-1">
                         <div>
                             <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-4 drop-shadow-2xl">
-                                WEEKLY <span className="text-brand-primary">BINGO</span>
+                                BINGO <span className="text-red-500">CHALLENGE</span>
                             </h1>
                             <p className="text-xl text-gray-300 font-medium leading-relaxed max-w-lg mx-auto md:mx-0">
-                                Join the community event! Complete this week's official card to earn massive rewards on the server.
+                                Join the community bingo challenge with everyone and compete and finish first to win rewards on the server!
                             </p>
+                        </div>
+
+                        {/* Win Condition Box */}
+                        <div className="bg-gradient-to-r from-red-900/30 to-black/30 p-1 rounded-2xl border border-red-500/30 max-w-md mx-auto md:mx-0 shadow-lg">
+                            <div className="bg-black/40 backdrop-blur-md rounded-xl p-4 flex items-center gap-4">
+                                <div className="text-3xl">🏆</div>
+                                <div>
+                                    <div className="text-xs font-bold text-red-400 uppercase tracking-widest">Winning Condition</div>
+                                    <div className="text-xl font-black text-white">{config.winCondition || "Loading..."}</div>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex flex-col gap-4">
                             <Link 
-                                to={`/minecraft/bingo/card?id=${OFFICIAL_SEED}`}
+                                to={`/minecraft/bingo/card?id=${config.cardId || "WEEK1"}`}
                                 className="bg-brand-primary hover:bg-red-600 text-white font-bold text-xl py-4 px-8 rounded-2xl shadow-[0_0_30px_rgba(229,56,59,0.4)] transition-transform hover:scale-105 flex items-center justify-center gap-3 group"
                             >
                                 <span>🚀</span>
@@ -264,7 +291,7 @@ const BingoDashboard: React.FC = () => {
                     {/* Right Side: Card Preview */}
                     <div className="order-1 md:order-2 flex justify-center perspective-1000">
                         <Link 
-                            to={`/minecraft/bingo/card?id=${OFFICIAL_SEED}`}
+                            to={`/minecraft/bingo/card?id=${config.cardId || "WEEK1"}`}
                             className="relative group cursor-pointer transition-transform duration-500 hover:rotate-y-12 hover:scale-105"
                         >
                             {/* Card Container */}

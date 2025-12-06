@@ -237,6 +237,11 @@ const Admin: React.FC = () => {
     const [whitelistApps, setWhitelistApps] = useState<any[]>([]);
     const [approvedApps, setApprovedApps] = useState<any[]>([]);
 
+    // --- BINGO CONFIG STATE ---
+    const [bingoCardId, setBingoCardId] = useState('');
+    const [bingoWinCondition, setBingoWinCondition] = useState('');
+    const [bingoStatus, setBingoStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
     // --- CODE GENERATION STATE ---
     const [genType, setGenType] = useState('lamb');
     const [genAmount, setGenAmount] = useState(1);
@@ -313,18 +318,30 @@ const Admin: React.FC = () => {
         } catch(e) {}
     }, [password]);
 
+    const fetchBingoConfig = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/bingo/config`);
+            if (res.ok) {
+                const data = await res.json();
+                setBingoCardId(data.cardId || '');
+                setBingoWinCondition(data.winCondition || '');
+            }
+        } catch(e) {}
+    }, []);
+
     // Fetch Whitelist Apps
     useEffect(() => {
         let interval: number;
         if (isAuthenticated && activeTab === 'minecraft') {
             fetchWhitelistData();
+            fetchBingoConfig();
             interval = window.setInterval(fetchWhitelistData, 10000);
         }
         if (isAuthenticated && activeTab === 'codes') {
             fetchCodes();
         }
         return () => { if(interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes]);
+    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -521,6 +538,27 @@ const Admin: React.FC = () => {
         }
     };
 
+    const handleSaveBingoConfig = async () => {
+        setLoading(true);
+        setBingoStatus(null);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/bingo/config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ cardId: bingoCardId, winCondition: bingoWinCondition })
+            });
+            if (response.ok) {
+                setBingoStatus({ type: 'success', message: "Bingo config updated!" });
+            } else {
+                setBingoStatus({ type: 'error', message: "Failed to update config" });
+            }
+        } catch(e) {
+            setBingoStatus({ type: 'error', message: "Network Error" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // --- GENERIC API CALL HANDLER ---
     const apiCall = async (endpoint: string, body: any) => {
         setLoading(true);
@@ -707,7 +745,7 @@ const Admin: React.FC = () => {
                 <div className="max-w-4xl mx-auto space-y-8">
                     
                     {/* --- STATUS TOASTS --- */}
-                    {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus].map((status, i) => status && (
+                    {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus].map((status, i) => status && (
                          <div key={i} className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
                             {status.message}
                         </div>
@@ -1073,6 +1111,40 @@ const Admin: React.FC = () => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Minecraft Manager</h2>
                             
+                            {/* Bingo Configuration (NEW) */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Bingo Configuration</h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Active Card ID</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono"
+                                            value={bingoCardId}
+                                            onChange={e => setBingoCardId(e.target.value.toUpperCase())}
+                                            placeholder="WEEK1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Winning Condition</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white"
+                                            value={bingoWinCondition}
+                                            onChange={e => setBingoWinCondition(e.target.value)}
+                                            placeholder="e.g. 2x Bingo, Blackout, 3 Lines"
+                                        />
+                                    </div>
+                                    <button 
+                                        onClick={handleSaveBingoConfig}
+                                        disabled={loading}
+                                        className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all"
+                                    >
+                                        Update Bingo Settings
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Pending Applications */}
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Pending Whitelist ({whitelistApps.length})</h3>
