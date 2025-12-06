@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
@@ -937,7 +936,7 @@ const Bingo: React.FC = () => {
                             {loadingSheet ? (
                                 <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">📄</div>
-                                    <div className="font-bold">Fetching Live Data from Google Sheets...</div>
+                                    <div className="font-bold">Fetching Pokemon Data...</div>
                                 </div>
                             ) : sheetError ? (
                                 <div className="flex flex-col items-center justify-center text-red-400 mt-10 min-h-[300px]">
@@ -948,7 +947,7 @@ const Bingo: React.FC = () => {
                             ) : gridData.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
                                     <div className="text-4xl mb-4">🔮</div>
-                                    <div className="font-bold">Scouting Pokémon...</div>
+                                    <div className="font-bold">Preparing Bingo Card...</div>
                                     {searchParams.get('view') === 'saved' && (
                                         <div className="mt-4 text-white">Select a saved card from the menu!</div>
                                     )}
@@ -1012,7 +1011,7 @@ const Bingo: React.FC = () => {
                                                         text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
                                                         ${getRarityBadgeStyle(item.rarity)}
                                                     `}>
-                                                        {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
+                                                        {item.rarity === 'Ultra-Rare' ? 'ULTRA RARE' : item.rarity}
                                                     </div>
 
                                                     {/* Image Container - Adjusted Padding for compact fit */}
