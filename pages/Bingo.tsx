@@ -964,7 +964,9 @@ const Bingo: React.FC = () => {
                     <div className="fixed inset-0 z-[250] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
                         <div className="bg-[#1a0b0e] border border-white/10 p-8 rounded-3xl w-full max-w-sm shadow-2xl relative text-center">
                             <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
-                                <span className="text-4xl">🎉</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
                             </div>
                             <h3 className="text-2xl font-black text-white mb-4 tracking-tight">Saved Successfully!</h3>
                             <p className="text-gray-300 mb-8 leading-relaxed">
