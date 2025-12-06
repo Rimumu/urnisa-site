@@ -304,7 +304,7 @@ const Gacha: React.FC = () => {
     }, [user]);
 
     // --- AUTO SAVE LOGIC ---
-    const saveToInventory = async (cards: CardData[]) => {
+    const saveToInventory = async (cards: CardData[], packType: PackType) => {
         if (!user || !user.id) return;
         try {
             await fetch(`${DISCORD_API_URL}/api/inventory/save`, {
@@ -312,7 +312,8 @@ const Gacha: React.FC = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     discordId: user.id,
-                    items: cards
+                    items: cards,
+                    packType: packType
                 })
             });
         } catch (e) {
@@ -460,7 +461,7 @@ const Gacha: React.FC = () => {
                     setRevealedCards(prev => {
                         const newCards = [nextCard!, ...prev];
                         if (newCards.length === 5) {
-                            saveToInventory(newCards);
+                            saveToInventory(newCards, selectedPack);
                             setTimeout(() => setStage('finished'), 1500);
                         }
                         return newCards;

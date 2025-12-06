@@ -685,7 +685,7 @@ app.post('/api/codes/redeem', async (req, res) => {
 
 // 4. Save Gacha Results
 app.post('/api/inventory/save', async (req, res) => {
-    const { discordId, items } = req.body;
+    const { discordId, items, packType } = req.body;
     if (!discordId || !items || !Array.isArray(items)) return res.status(400).json({ error: "Invalid data" });
 
     try {
@@ -719,21 +719,33 @@ app.post('/api/inventory/save', async (req, res) => {
                         : `https://cdn.discordapp.com/embed/avatars/${parseInt(userRes.data.discriminator || 0) % 5}.png`;
                 } catch (e) { console.error("User fetch failed for gacha log"); }
 
-                // 2. Build Item List
+                // 2. Pack Name Handling
+                const packName = packType === 'wagyu' ? 'Wagyu A5' : 'Lamb Chop';
+
+                // 3. Build Item List
                 let hasMythic = false;
                 let hasLegendary = false;
+                let highlightImage = null;
 
                 const descriptionLines = items.map(item => {
                     const r = item.rarity;
-                    if (r === 'Mythical') { hasMythic = true; return `**🌟 [MYTHICAL] ${item.name}**`; }
-                    if (r === 'Legendary') { hasLegendary = true; return `**✨ [LEGENDARY] ${item.name}**`; }
+                    if (r === 'Mythical') { 
+                        hasMythic = true; 
+                        if (!highlightImage) highlightImage = item; 
+                        return `**🌟 [MYTHICAL] ${item.name}**`; 
+                    }
+                    if (r === 'Legendary') { 
+                        hasLegendary = true; 
+                        if (!highlightImage && !hasMythic) highlightImage = item; 
+                        return `**✨ [LEGENDARY] ${item.name}**`; 
+                    }
                     if (r === 'Ultra-Rare') return `🟣 [Ultra-Rare] ${item.name}`;
                     if (r === 'Rare') return `🔵 [Rare] ${item.name}`;
                     if (r === 'Uncommon') return `🟢 [Uncommon] ${item.name}`;
                     return `⚪ [Common] ${item.name}`;
                 });
 
-                // 3. Determine Color & Title
+                // 4. Determine Color & Title
                 let color = 0x3498db; // Blue default
                 let title = "📦 Pack Opened";
 
@@ -750,12 +762,29 @@ app.post('/api/inventory/save', async (req, res) => {
                     description: descriptionLines.join('\n'),
                     color: color,
                     author: {
-                        name: `${username} opened a pack`,
+                        name: `${username} opened a ${packName} pack`,
                         icon_url: avatarUrl
                     },
                     timestamp: new Date().toISOString(),
                     footer: { text: "Urnisa Cobblemon Gacha" }
                 };
+
+                // Add image for high tier pulls
+                if (highlightImage) {
+                    let imageUrl = highlightImage.image;
+                    if (highlightImage.type === 'Pokemon') {
+                        const formattedName = highlightImage.name.toLowerCase()
+                            .replace(/[.']/g, '')
+                            .replace(/♀/g, '-f')
+                            .replace(/♂/g, '-m')
+                            .replace(/\s+/g, '-');
+                        imageUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
+                    }
+                    if (imageUrl) {
+                        embed.image = { url: imageUrl };
+                        // To ensure Discord displays it properly, verify it's a valid URL string
+                    }
+                }
 
                 await axios.post(
                     `https://discord.com/api/v10/channels/${GACHA_LOG_CHANNEL}/messages`,
@@ -841,7 +870,7 @@ app.post('/api/inventory/claim', async (req, res) => {
         let command = "";
 
         if (item.type === 'Pokemon') {
-            command = `pokegive ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
+            command = `pokegiveother ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
         } else {
             let count = 1;
             let itemName = item.name;
