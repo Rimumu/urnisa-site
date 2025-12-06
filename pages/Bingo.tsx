@@ -220,6 +220,11 @@ const Bingo: React.FC = () => {
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [cardName, setCardName] = useState("");
     const [loadedCardName, setLoadedCardName] = useState<string | null>(null); // To track if we are working on a saved card
+    
+    // Success Modal State
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [savedCardName, setSavedCardName] = useState("");
+
     const [showLoadModal, setShowLoadModal] = useState(false);
     const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
     const [saving, setSaving] = useState(false);
@@ -417,7 +422,8 @@ const Bingo: React.FC = () => {
             if (res.ok) {
                 setShowSaveModal(false);
                 setLoadedCardName(cardName.trim());
-                alert("Card Saved Successfully!");
+                setSavedCardName(cardName.trim());
+                setShowSuccessModal(true);
                 fetchSavedCards(); // Refresh list silently
             } else {
                 alert("Failed to save card.");
@@ -949,6 +955,29 @@ const Bingo: React.FC = () => {
                                      savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase()) ? 'Overwrite' : 'Save New'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* SUCCESS MODAL */}
+                {showSuccessModal && (
+                    <div className="fixed inset-0 z-[250] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="bg-[#1a0b0e] border border-white/10 p-8 rounded-3xl w-full max-w-sm shadow-2xl relative text-center">
+                            <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
+                                <span className="text-4xl">🎉</span>
+                            </div>
+                            <h3 className="text-2xl font-black text-white mb-4 tracking-tight">Saved Successfully!</h3>
+                            <p className="text-gray-300 mb-8 leading-relaxed">
+                                Your bingo card has been saved as <br/>
+                                <span className="text-brand-primary font-bold text-lg">"{savedCardName}"</span><br/>
+                                successfully!
+                            </p>
+                            <button 
+                                onClick={() => setShowSuccessModal(false)}
+                                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 )}
