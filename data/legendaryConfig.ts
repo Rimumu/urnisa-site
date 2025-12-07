@@ -3574,6 +3574,81 @@ const RAW_SPAWN_DATA = {
       ],
       "key_item": "myths_and_legends:zygarde_core"
     }
+  },
+  {
+    "id": "chienpao-1",
+    "pokemon": "chienpao",
+    "presets": [
+      "natural"
+    ],
+    "type": "pokemon",
+    "context": "grounded",
+    "bucket": "summons",
+    "level": "50-60",
+    "weight": 3.0,
+    "condition": {
+      "biomes": [
+        "#cobblemon:is_freezing"
+      ],
+      "key_item": "academy:sword_of_ruin"
+    }
+  },
+  {
+    "id": "chiyu-1",
+    "pokemon": "chiyu",
+    "presets": [
+      "natural"
+    ],
+    "type": "pokemon",
+    "context": "grounded",
+    "bucket": "summons",
+    "level": "50-60",
+    "weight": 3.0,
+    "condition": {
+      "biomes": [
+        "minecraft:soul_sand_valley",
+        "regions_unexplored:infernal_holt",
+        "#cobblemon:is_volcanic"
+      ],
+      "key_item": "academy:beads_of_ruin"
+    }
+  },
+  {
+    "id": "tinglu-1",
+    "pokemon": "tinglu",
+    "presets": [
+      "natural"
+    ],
+    "type": "pokemon",
+    "context": "grounded",
+    "bucket": "summons",
+    "level": "50-60",
+    "weight": 3.0,
+    "condition": {
+      "biomes": [
+        "#cobblemon:is_swamp"
+      ],
+      "key_item": "academy:vessel_of_ruin"
+    }
+  },
+  {
+    "id": "wochien-1",
+    "pokemon": "wochien",
+    "presets": [
+      "natural"
+    ],
+    "type": "pokemon",
+    "context": "grounded",
+    "bucket": "summons",
+    "level": "50-60",
+    "weight": 3.0,
+    "condition": {
+      "biomes": [
+        "minecraft:old_growth_spruce_taiga",
+        "regions_unexplored:redwoods"
+      ],
+      "key_item": "academy:tablets_of_ruin"
+    }
   }
 ]
 };
