@@ -27,6 +27,57 @@ const normalizeForMatch = (str: string): string => {
     return str.toLowerCase().replace(/[^a-z0-9]/g, '');
 };
 
+const simplifyBiomes = (biomes: Set<string>): string[] => {
+    const list = Array.from(biomes);
+    const matchedCategories = new Set<string>();
+    const remainingBiomes = new Set<string>(list);
+
+    const rules = [
+        // Special Dimensions/Biomes
+        { label: "The End", keywords: ["The End", "End Barrens", "End Highlands", "End Midlands", "Small End Islands", "End Island"] },
+        { label: "The Nether", keywords: ["Nether", "Crimson Forest", "Warped Forest", "Soul Sand", "Basalt"] },
+        
+        // Climates/Types (as requested)
+        { label: "Tropicals", keywords: ["Tropical"] },
+        { label: "Deserts", keywords: ["Desert", "Sand"] },
+        { label: "Badlands", keywords: ["Badlands", "Mesa"] },
+        { label: "Jungles", keywords: ["Jungle"] },
+        { label: "Bamboo", keywords: ["Bamboo"] },
+        
+        // Water
+        { label: "Oceans", keywords: ["Ocean", "Deep Sea"] },
+        { label: "Rivers", keywords: ["River"] },
+        
+        // Temperature
+        { label: "Frozen/Snowy", keywords: ["Frozen", "Ice", "Icy", "Snow", "Glacial"] },
+        
+        // Terrain
+        { label: "Mountains", keywords: ["Mountain", "Peak", "Hill", "Crag", "Slopes", "Highlands", "Cliffs", "Volcanic"] },
+        { label: "Caves", keywords: ["Cave", "Underground", "Deep Dark", "Dripstone", "Lush Caves"] },
+        { label: "Forests", keywords: ["Forest", "Woods", "Grove", "Orchard"] },
+        { label: "Taigas", keywords: ["Taiga"] },
+        { label: "Swamps", keywords: ["Swamp", "Marsh", "Bog", "Fen", "Billabong"] },
+        { label: "Plains", keywords: ["Plains", "Meadow", "Field", "Grassland", "Prairie"] },
+        { label: "Savannas", keywords: ["Savanna"] },
+        { label: "Beaches", keywords: ["Beach", "Shore", "Coast"] },
+        { label: "Islands", keywords: ["Island", "Isles"] },
+        { label: "Valleys", keywords: ["Valley", "Canyon"] }
+    ];
+
+    rules.forEach(rule => {
+        const matchingItems = Array.from(remainingBiomes).filter(biome => 
+            rule.keywords.some(k => biome.includes(k))
+        );
+
+        if (matchingItems.length > 0) {
+            matchedCategories.add(rule.label);
+            matchingItems.forEach(b => remainingBiomes.delete(b));
+        }
+    });
+
+    return [...Array.from(matchedCategories), ...Array.from(remainingBiomes)].sort();
+};
+
 export const getSpawnInfo = (pokemonName: string): string | null => {
     const target = normalizeForMatch(pokemonName);
     
@@ -60,7 +111,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     });
 
     // 3. Construct Output String
-    const biomeList = Array.from(biomes).sort().join(', ');
+    const biomeList = simplifyBiomes(biomes).join(', ');
     const itemList = Array.from(keyItems).join(' or ');
 
     let result = "";
