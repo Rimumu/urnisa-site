@@ -315,6 +315,9 @@ const BingoDashboard: React.FC = () => {
                 // Remove excluded IDs
                 cobblemonArray = cobblemonArray.filter(entry => !excludedIds.has(entry.id));
 
+                // Sort by ID to ensure deterministic RNG across reloads
+                cobblemonArray.sort((a, b) => a.id - b.id);
+
                 if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
                 
                 const cobblemonPool = cobblemonArray;
@@ -328,6 +331,9 @@ const BingoDashboard: React.FC = () => {
                     let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
                     if (pool.length === 0) pool = cobblemonPool; // Fallback
                     
+                    // Copy for shuffle to keep main pool sorted
+                    pool = [...pool];
+
                     // Shuffle pool
                     for (let i = pool.length - 1; i > 0; i--) {
                         const j = Math.floor(rng() * (i + 1));
@@ -369,11 +375,12 @@ const BingoDashboard: React.FC = () => {
                 } else {
                     // DEFAULT
                     const pool = [...cobblemonPool];
-                    for (let i = pool.length - 1; i > 0; i--) {
+                    const tempPool = [...pool];
+                    for (let i = tempPool.length - 1; i > 0; i--) {
                         const j = Math.floor(rng() * (i + 1));
-                        [pool[i], pool[j]] = [pool[j], pool[i]];
+                        [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
                     }
-                    selected = pool.slice(0, 24).map(entry => ({
+                    selected = tempPool.slice(0, 24).map(entry => ({
                         id: entry.id, name: entry.name, rarity: entry.rarity, spawns: []
                     }));
                 }
