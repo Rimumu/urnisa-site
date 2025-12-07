@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import OptimizedImage from '../components/OptimizedImage';
-import { API_BASE_URL } from '../constants';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import UserProfile from '../components/UserProfile';
-import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
+import { API_BASE_URL, DISCORD_API_URL } from '../constants';
 import { getSpawnInfo } from '../data/legendaryConfig';
+import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
 
 // --- TYPES ---
 interface BingoCell {
@@ -22,52 +21,11 @@ interface CobblemonEntry {
     spawns: Set<string>;
 }
 
-// Saved Card Interface
-interface SavedCard {
-    _id: string;
-    name: string;
-    cardId: string;
-    gridData: BingoCell[];
-    marked: boolean[];
-    updatedAt: string;
-}
-
-type BingoDifficulty = 'Default' | 'Easy' | 'Normal' | 'Hard' | 'Insane' | 'Nightmare';
-
-const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
+// --- CONSTANTS ---
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
 const CSV_EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 
-// Winning Combinations Indices (5x5 Grid)
-const WINNING_COMBINATIONS = [
-    // Rows
-    [0, 1, 2, 3, 4],
-    [5, 6, 7, 8, 9],
-    [10, 11, 12, 13, 14],
-    [15, 16, 17, 18, 19],
-    [20, 21, 22, 23, 24],
-    // Columns
-    [0, 5, 10, 15, 20],
-    [1, 6, 11, 16, 21],
-    [2, 7, 12, 17, 22],
-    [3, 8, 13, 18, 23],
-    [4, 9, 14, 19, 24],
-    // Diagonals
-    [0, 6, 12, 18, 24],
-    [4, 8, 12, 16, 20]
-];
-
-// Difficulty Mapping
-const DIFF_PREFIXES: Record<BingoDifficulty, string> = {
-    'Default': 'D',
-    'Easy': 'E',
-    'Normal': 'N',
-    'Hard': 'H',
-    'Insane': 'I',
-    'Nightmare': 'X'
-};
-
-const PREFIX_TO_DIFF: Record<string, BingoDifficulty> = {
+const PREFIX_TO_DIFF: Record<string, string> = {
     'D': 'Default',
     'E': 'Easy',
     'N': 'Normal',
@@ -76,74 +34,39 @@ const PREFIX_TO_DIFF: Record<string, BingoDifficulty> = {
     'X': 'Nightmare'
 };
 
-// Manual Legendary & Mythic Pool
 const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] }[] = [
-    // Legendaries
-    { id: 382, name: 'Kyogre', rarity: 'Legendary' },
-    { id: 383, name: 'Groudon', rarity: 'Legendary' },
-    { id: 483, name: 'Dialga', rarity: 'Legendary' },
-    { id: 487, name: 'Giratina', rarity: 'Legendary' },
-    { id: 381, name: 'Latios', rarity: 'Legendary' },
-    { id: 380, name: 'Latias', rarity: 'Legendary' },
-    { id: 384, name: 'Rayquaza', rarity: 'Legendary' },
-    { id: 1017, name: 'Ogerpon', rarity: 'Legendary' },
-    { id: 644, name: 'Zekrom', rarity: 'Legendary' },
-    { id: 643, name: 'Reshiram', rarity: 'Legendary' },
-    { id: 717, name: 'Yveltal', rarity: 'Legendary' },
-    { id: 1008, name: 'Miraidon', rarity: 'Legendary' },
-    { id: 1007, name: 'Koraidon', rarity: 'Legendary' },
-    { id: 788, name: 'Tapu Fini', rarity: 'Legendary' },
-    { id: 787, name: 'Tapu Bulu', rarity: 'Legendary' },
-    { id: 786, name: 'Tapu Lele', rarity: 'Legendary' },
-    { id: 785, name: 'Tapu Koko', rarity: 'Legendary' },
-    { id: 480, name: 'Uxie', rarity: 'Legendary' },
-    { id: 891, name: 'Kubfu', rarity: 'Legendary' },
-    { id: 772, name: 'Type: Null', rarity: 'Legendary' },
-    { id: 800, name: 'Necrozma', rarity: 'Legendary' },
-    { id: 484, name: 'Palkia', rarity: 'Legendary' },
-    { id: 896, name: 'Glastrier', rarity: 'Legendary' },
-    { id: 889, name: 'Zamazenta', rarity: 'Legendary' },
-    { id: 897, name: 'Spectrier', rarity: 'Legendary' },
-    { id: 1001, name: 'Wo-Chien', rarity: 'Legendary' },
-    { id: 1003, name: 'Ting-Lu', rarity: 'Legendary' },
-    { id: 1002, name: 'Chien-Pao', rarity: 'Legendary' },
-    { id: 1004, name: 'Chi-Yu', rarity: 'Legendary' },
-    { id: 895, name: 'Regidrago', rarity: 'Legendary' },
-    { id: 894, name: 'Regieleki', rarity: 'Legendary' },
-    { id: 377, name: 'Regirock', rarity: 'Legendary' },
-    { id: 378, name: 'Regice', rarity: 'Legendary' },
-    { id: 379, name: 'Registeel', rarity: 'Legendary' },
-    { id: 485, name: 'Heatran', rarity: 'Legendary' },
-    { id: 890, name: 'Eternatus', rarity: 'Legendary' },
-    { id: 488, name: 'Cresselia', rarity: 'Legendary' },
-    { id: 481, name: 'Mesprit', rarity: 'Legendary' },
-    { id: 638, name: 'Cobalion', rarity: 'Legendary' },
-    { id: 640, name: 'Virizion', rarity: 'Legendary' },
-    { id: 646, name: 'Kyurem', rarity: 'Legendary' },
-    { id: 898, name: 'Calyrex', rarity: 'Legendary' },
-    { id: 482, name: 'Azelf', rarity: 'Legendary' },
-    { id: 1024, name: 'Terapagos', rarity: 'Legendary' },
-    { id: 789, name: 'Cosmog', rarity: 'Legendary' },
-    { id: 249, name: 'Lugia', rarity: 'Legendary' },
-    { id: 716, name: 'Xerneas', rarity: 'Legendary' },
-    { id: 645, name: 'Landorus', rarity: 'Legendary' },
-    { id: 642, name: 'Thundurus', rarity: 'Legendary' },
-    { id: 641, name: 'Tornadus', rarity: 'Legendary' },
-    { id: 905, name: 'Enamorus', rarity: 'Legendary' },
-    { id: 888, name: 'Zacian', rarity: 'Legendary' },
-    { id: 250, name: 'Ho-Oh', rarity: 'Legendary' },
-    { id: 150, name: 'Mewtwo', rarity: 'Legendary' },
-    { id: 243, name: 'Raikou', rarity: 'Legendary' },
-    { id: 244, name: 'Entei', rarity: 'Legendary' },
-    { id: 792, name: 'Lunala', rarity: 'Legendary' },
-    { id: 146, name: 'Moltres', rarity: 'Legendary' },
-    { id: 639, name: 'Terrakion', rarity: 'Legendary' },
-    { id: 245, name: 'Suicune', rarity: 'Legendary' },
-    { id: 791, name: 'Solgaleo', rarity: 'Legendary' },
-    { id: 144, name: 'Articuno', rarity: 'Legendary' },
-    { id: 145, name: 'Zapdos', rarity: 'Legendary' },
-    // Mythics
-    { id: 151, name: 'Mew', rarity: 'Mythical' }
+    { id: 382, name: 'Kyogre', rarity: 'Legendary' }, { id: 383, name: 'Groudon', rarity: 'Legendary' },
+    { id: 483, name: 'Dialga', rarity: 'Legendary' }, { id: 487, name: 'Giratina', rarity: 'Legendary' },
+    { id: 381, name: 'Latios', rarity: 'Legendary' }, { id: 380, name: 'Latias', rarity: 'Legendary' },
+    { id: 384, name: 'Rayquaza', rarity: 'Legendary' }, { id: 1017, name: 'Ogerpon', rarity: 'Legendary' },
+    { id: 644, name: 'Zekrom', rarity: 'Legendary' }, { id: 643, name: 'Reshiram', rarity: 'Legendary' },
+    { id: 717, name: 'Yveltal', rarity: 'Legendary' }, { id: 1008, name: 'Miraidon', rarity: 'Legendary' },
+    { id: 1007, name: 'Koraidon', rarity: 'Legendary' }, { id: 788, name: 'Tapu Fini', rarity: 'Legendary' },
+    { id: 787, name: 'Tapu Bulu', rarity: 'Legendary' }, { id: 786, name: 'Tapu Lele', rarity: 'Legendary' },
+    { id: 785, name: 'Tapu Koko', rarity: 'Legendary' }, { id: 480, name: 'Uxie', rarity: 'Legendary' },
+    { id: 891, name: 'Kubfu', rarity: 'Legendary' }, { id: 772, name: 'Type: Null', rarity: 'Legendary' },
+    { id: 800, name: 'Necrozma', rarity: 'Legendary' }, { id: 484, name: 'Palkia', rarity: 'Legendary' },
+    { id: 896, name: 'Glastrier', rarity: 'Legendary' }, { id: 889, name: 'Zamazenta', rarity: 'Legendary' },
+    { id: 897, name: 'Spectrier', rarity: 'Legendary' }, { id: 1001, name: 'Wo-Chien', rarity: 'Legendary' },
+    { id: 1003, name: 'Ting-Lu', rarity: 'Legendary' }, { id: 1002, name: 'Chien-Pao', rarity: 'Legendary' },
+    { id: 1004, name: 'Chi-Yu', rarity: 'Legendary' }, { id: 895, name: 'Regidrago', rarity: 'Legendary' },
+    { id: 894, name: 'Regieleki', rarity: 'Legendary' }, { id: 377, name: 'Regirock', rarity: 'Legendary' },
+    { id: 378, name: 'Regice', rarity: 'Legendary' }, { id: 379, name: 'Registeel', rarity: 'Legendary' },
+    { id: 485, name: 'Heatran', rarity: 'Legendary' }, { id: 890, name: 'Eternatus', rarity: 'Legendary' },
+    { id: 488, name: 'Cresselia', rarity: 'Legendary' }, { id: 481, name: 'Mesprit', rarity: 'Legendary' },
+    { id: 638, name: 'Cobalion', rarity: 'Legendary' }, { id: 640, name: 'Virizion', rarity: 'Legendary' },
+    { id: 646, name: 'Kyurem', rarity: 'Legendary' }, { id: 898, name: 'Calyrex', rarity: 'Legendary' },
+    { id: 482, name: 'Azelf', rarity: 'Legendary' }, { id: 1024, name: 'Terapagos', rarity: 'Legendary' },
+    { id: 789, name: 'Cosmog', rarity: 'Legendary' }, { id: 249, name: 'Lugia', rarity: 'Legendary' },
+    { id: 716, name: 'Xerneas', rarity: 'Legendary' }, { id: 645, name: 'Landorus', rarity: 'Legendary' },
+    { id: 642, name: 'Thundurus', rarity: 'Legendary' }, { id: 641, name: 'Tornadus', rarity: 'Legendary' },
+    { id: 905, name: 'Enamorus', rarity: 'Legendary' }, { id: 888, name: 'Zacian', rarity: 'Legendary' },
+    { id: 250, name: 'Ho-Oh', rarity: 'Legendary' }, { id: 150, name: 'Mewtwo', rarity: 'Legendary' },
+    { id: 243, name: 'Raikou', rarity: 'Legendary' }, { id: 244, name: 'Entei', rarity: 'Legendary' },
+    { id: 792, name: 'Lunala', rarity: 'Legendary' }, { id: 146, name: 'Moltres', rarity: 'Legendary' },
+    { id: 639, name: 'Terrakion', rarity: 'Legendary' }, { id: 245, name: 'Suicune', rarity: 'Legendary' },
+    { id: 791, name: 'Solgaleo', rarity: 'Legendary' }, { id: 144, name: 'Articuno', rarity: 'Legendary' },
+    { id: 145, name: 'Zapdos', rarity: 'Legendary' }, { id: 151, name: 'Mew', rarity: 'Mythical' }
 ];
 
 const FREE_SPACE_CELL: BingoCell = {
@@ -153,11 +76,9 @@ const FREE_SPACE_CELL: BingoCell = {
     spawns: ["Enjoy!"]
 };
 
-// --- SEEDED RNG UTILS ---
-// Hashing function to turn a string ID into a numeric seed
+// --- UTILS ---
 const cyrb128 = (str: string) => {
-    let h1 = 1779033703, h2 = 3144134277,
-        h3 = 1013904242, h4 = 2773480762;
+    let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
     for (let i = 0, k; i < str.length; i++) {
         k = str.charCodeAt(i);
         h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
@@ -172,7 +93,6 @@ const cyrb128 = (str: string) => {
     return [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
 };
 
-// Simple PRNG (Mulberry32)
 const mulberry32 = (a: number) => {
     return function() {
       var t = a += 0x6D2B79F5;
@@ -180,58 +100,6 @@ const mulberry32 = (a: number) => {
       t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     }
-};
-
-// Generate a random ID with difficulty prefix
-const generateRandomId = (difficulty: BingoDifficulty) => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) { // 8 chars + prefix = 10-ish total
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const prefix = DIFF_PREFIXES[difficulty];
-    return `${prefix}-${result}`;
-};
-
-// Helper to determine line coords for SVG
-const getLineCoords = (combo: number[]) => {
-    const start = combo[0];
-    const end = combo[4];
-    
-    // Row: Consecutive numbers in same row block
-    if (end === start + 4 && Math.floor(start / 5) === Math.floor(end / 5)) {
-        const row = Math.floor(start / 5);
-        const y = 10 + row * 20;
-        return { x1: '2%', y1: `${y}%`, x2: '98%', y2: `${y}%` }; 
-    }
-    // Col: Start + 20
-    if (end === start + 20) {
-        const col = start % 5;
-        const x = 10 + col * 20;
-        return { x1: `${x}%`, y1: '2%', x2: `${x}%`, y2: '98%' };
-    }
-    // Diag TL-BR
-    if (start === 0 && end === 24) {
-        return { x1: '2%', y1: '2%', x2: '98%', y2: '98%' };
-    }
-    // Diag TR-BL
-    if (start === 4 && end === 20) {
-        return { x1: '98%', y1: '2%', x2: '2%', y2: '98%' };
-    }
-    return null;
-};
-
-// Cache for image validity
-const clientImageCache = new Map<string, boolean>();
-
-// Shared Helper
-const getFormattedName = (name: string) => {
-    return name.toLowerCase()
-        .trim()
-        .replace(/[.']/g, '')
-        .replace(/♀/g, '-f')
-        .replace(/♂/g, '-m')
-        .replace(/\s+/g, '-');
 };
 
 const mapRarity = (val: string | undefined): BingoCell['rarity'] => {
@@ -245,874 +113,349 @@ const mapRarity = (val: string | undefined): BingoCell['rarity'] => {
     return 'Common';
 };
 
-// Helper Component for Cell Image
-const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
-    const [imgSrc, setImgSrc] = useState<string>("");
-
-    useEffect(() => {
-        // Free Space handling
-        if (item.id === -1) {
-            setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif"); // Use a placeholder or logo
-            return;
-        }
-
-        const verifyImage = async () => {
-            const cobbleName = getFormattedName(item.name);
-            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-            // Fallback relies on ID. 
-            const fallback3d = item.id > 0 
-                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
-                : primaryUrl;
-
-            if (clientImageCache.has(primaryUrl)) {
-                const isValid = clientImageCache.get(primaryUrl);
-                setImgSrc(isValid ? primaryUrl : fallback3d);
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
-                const data = await response.json();
-                clientImageCache.set(primaryUrl, data.valid);
-
-                if (data.valid) {
-                    setImgSrc(primaryUrl);
-                } else {
-                    setImgSrc(fallback3d);
-                }
-            } catch (error) {
-                setImgSrc(primaryUrl);
-            }
-        };
-
-        verifyImage();
-    }, [item]);
-
-    const handleImageError = () => {
-        if (item.id === -1) return;
-        if (imgSrc.includes('cobblemon.tools') && item.id > 0) {
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`);
-        } else if (imgSrc.includes('other/home') && item.id > 0) {
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`);
-        } else {
-            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(item.name)}`);
-        }
-    };
-
-    return (
-        <OptimizedImage 
-            src={imgSrc} 
-            alt={item.name} 
-            className={`w-full h-full object-contain drop-shadow-lg transition-transform duration-300 ${item.id === -1 ? 'scale-75' : 'group-hover:scale-110'}`}
-            contain
-            onError={handleImageError}
-        />
-    );
+const getFormattedName = (name: string) => {
+    return name.toLowerCase().trim()
+        .replace(/[.':]/g, '')
+        .replace(/♀/g, '-f')
+        .replace(/♂/g, '-m')
+        .replace(/\s+/g, '-');
 };
 
 const Bingo: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const [gridData, setGridData] = useState<BingoCell[]>([]);
-    const [marked, setMarked] = useState<boolean[]>(new Array(25).fill(false));
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [currentCardId, setCurrentCardId] = useState<string>("");
-    const [inputCode, setInputCode] = useState("");
-    const [activeDifficulty, setActiveDifficulty] = useState<BingoDifficulty>('Default');
+    const navigate = useNavigate();
     
-    // Bingo Win State
-    const [winningLines, setWinningLines] = useState<number[][]>([]);
-    const [bingoCount, setBingoCount] = useState(0);
-    const [showBingoPopup, setShowBingoPopup] = useState(false);
-    
-    // Auth & Modals
+    // Auth
     const [user, setUser] = useState<any>(null);
-    const [showSaveModal, setShowSaveModal] = useState(false);
-    const [cardName, setCardName] = useState("");
-    const [loadedCardName, setLoadedCardName] = useState<string | null>(null); // To track if we are working on a saved card
+
+    // State
+    const [loading, setLoading] = useState(false);
+    const [grid, setGrid] = useState<BingoCell[]>([]);
+    const [marked, setMarked] = useState<boolean[]>(new Array(25).fill(false));
     
-    // Success Modal State
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [savedCardName, setSavedCardName] = useState("");
+    // Card ID Management
+    const [currentCardId, setCurrentCardId] = useState<string>('');
+    const [inputCardId, setInputCardId] = useState('');
+    const [copiedId, setCopiedId] = useState(false);
+    const [difficulty, setDifficulty] = useState('Default');
 
-    const [showLoadModal, setShowLoadModal] = useState(false);
-    const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+    // Saving/Loading
     const [saving, setSaving] = useState(false);
-    const [loadingCards, setLoadingCards] = useState(false);
+    const [saveName, setSaveName] = useState('');
+    const [savedCards, setSavedCards] = useState<any[]>([]);
+    const [viewMode, setViewMode] = useState<'play' | 'saved'>('play');
 
-    // Difficulty Modal State
-    const [showDiffModal, setShowDiffModal] = useState(false);
-
-    // Refs for logic
-    const prevBingoCountRef = useRef(0);
-    const popupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    // Data from Google Sheet
-    const [cobblemonPool, setCobblemonPool] = useState<CobblemonEntry[] | null>(null);
-    const [loadingSheet, setLoadingSheet] = useState(true);
-    const [sheetError, setSheetError] = useState(false);
-
-    // 1. Fetch and Parse Google Sheet CSV on Mount
     useEffect(() => {
-        const fetchSheetData = async () => {
-            try {
-                const response = await fetch(CSV_EXPORT_URL);
-                if (!response.ok) throw new Error("Failed to fetch sheet");
-                const text = await response.text();
-                
-                // Parse CSV respecting quoted fields
-                const rows = text.split('\n').map(row => {
-                    // Regex split to handle commas inside quotes
-                    return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, '').trim());
-                });
-
-                const poolMap = new Map<string, CobblemonEntry>();
-
-                rows.forEach((cols, index) => {
-                    if (index === 0) return; // Skip Header
-                    
-                    // Name is critical (Column B / Index 1)
-                    let rawName = cols[1];
-                    if (!rawName || !rawName.trim()) return;
-
-                    // Clean Name: Remove [Variant] tags (e.g. "Gastrodon [West Sea]" -> "Gastrodon")
-                    const name = rawName.replace(/\[.*?\]/g, '').trim();
-
-                    // Normalize key for grouping
-                    const key = name.toLowerCase();
-                    
-                    // Get existing or create new entry
-                    let entry = poolMap.get(key);
-                    if (!entry) {
-                        const id = parseInt(cols[0]) || 0; // Column A
-                        const rarity = mapRarity(cols[3]); // Column D
-                        entry = {
-                            id,
-                            name,
-                            rarity,
-                            spawns: new Set<string>()
-                        };
-                    }
-
-                    // Add Biome from Column H (Index 7)
-                    const biomeRaw = cols[7];
-                    if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.toLowerCase() !== 'none' && biomeRaw.trim() !== '') {
-                        const parts = biomeRaw.split(/[,/&]/);
-                        
-                        parts.forEach(part => {
-                            let clean = part.trim();
-                            if (clean.toLowerCase().startsWith('minecraft:')) {
-                                clean = clean.substring(10);
-                            }
-                            if (clean.startsWith('#')) {
-                                clean = clean.substring(1);
-                            }
-                            clean = clean.replace(/_/g, ' ');
-                            clean = clean.replace(/\b\w/g, c => c.toUpperCase());
-                            
-                            if (clean && clean.length > 2) {
-                                entry.spawns.add(clean.trim());
-                            }
-                        });
-                    }
-
-                    poolMap.set(key, entry);
-                });
-
-                // INJECT MANUAL POOL DATA
-                MANUAL_POOL_DATA.forEach(manualEntry => {
-                    const key = manualEntry.name.toLowerCase();
-                    const existing = poolMap.get(key);
-                    
-                    const spawns = new Set<string>();
-                    
-                    // CHECK FOR JSON CONFIGURATION FIRST
-                    const parsedInfo = getSpawnInfo(manualEntry.name);
-                    
-                    if (parsedInfo) {
-                        spawns.add(parsedInfo);
-                    } else {
-                        // Fallback logic if not in config
-                        if (manualEntry.rarity === 'Legendary') {
-                            spawns.add("Check the quest book!");
-                        } else if (manualEntry.rarity === 'Mythical') {
-                            spawns.add("Mythic");
-                        }
-                    }
-
-                    if (existing) {
-                        // Update existing entry
-                        existing.id = manualEntry.id;
-                        existing.rarity = manualEntry.rarity;
-                        existing.spawns = spawns;
-                        poolMap.set(key, existing);
-                    } else {
-                        // Create new entry
-                        poolMap.set(key, {
-                            id: manualEntry.id,
-                            name: manualEntry.name,
-                            rarity: manualEntry.rarity,
-                            spawns: spawns
-                        });
-                    }
-                });
-
-                // --- FILTERING GACHA POKEMON ---
-                const excludedIds = new Set<number>();
-                [...LAMB_POOL, ...WAGYU_POOL].forEach(item => {
-                    if (item.type === 'Pokemon') {
-                        excludedIds.add(item.id);
-                    }
-                });
-
-                // Convert map to array and filter
-                let cobblemonArray = Array.from(poolMap.values());
-                
-                // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
-                cobblemonArray = cobblemonArray.filter(entry => {
-                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
-                    return !excludedIds.has(entry.id);
-                });
-
-                // Sort by ID then Name to ensure deterministic RNG across reloads
-                cobblemonArray.sort((a, b) => {
-                    if (a.id !== b.id) return a.id - b.id;
-                    return a.name.localeCompare(b.name);
-                });
-
-                if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
-                
-                setCobblemonPool(cobblemonArray);
-            } catch (e) {
-                console.error("Sheet Error:", e);
-                setSheetError(true);
-            } finally {
-                setLoadingSheet(false);
+        const stored = localStorage.getItem('urnisa_mc_user');
+        if (stored) setUser(JSON.parse(stored));
+        
+        const view = searchParams.get('view');
+        if (view === 'saved') {
+            setViewMode('saved');
+        } else {
+            const id = searchParams.get('id');
+            if (id) {
+                setCurrentCardId(id.toUpperCase());
+                setInputCardId(id.toUpperCase());
+                generateGrid(id.toUpperCase());
+            } else {
+                // Generate a random daily seed if none provided
+                const randomId = `D-${new Date().toISOString().split('T')[0].replace(/-/g,'')}`;
+                setCurrentCardId(randomId);
+                generateGrid(randomId);
             }
-        };
-
-        fetchSheetData();
-    }, []);
-
-    // 2. Win Logic
-    useEffect(() => {
-        const lines = WINNING_COMBINATIONS.filter(combo => 
-            combo.every(index => marked[index])
-        );
-        
-        setWinningLines(lines);
-        
-        const currentCount = lines.length;
-        const prevCount = prevBingoCountRef.current;
-
-        // If we have more lines than before, it's a new win (or 2X/3X)
-        if (currentCount > prevCount) {
-            setBingoCount(currentCount);
-            setShowBingoPopup(true);
-            
-            // Clear any existing timer to prevent premature hiding
-            if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
-            
-            // Hide after 3 seconds
-            popupTimerRef.current = setTimeout(() => {
-                setShowBingoPopup(false);
-            }, 3000);
-        } else if (currentCount < prevCount) {
-            // If lines decreased (user unchecked), just update count, maybe hide popup
-            setBingoCount(currentCount);
-            if (currentCount === 0) setShowBingoPopup(false);
         }
-        
-        prevBingoCountRef.current = currentCount;
-    }, [marked]);
+    }, [searchParams]);
 
-    // 3. Clean up timer on unmount
     useEffect(() => {
-        return () => {
-            if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
-        };
-    }, []);
-
-    // 4. Check for Query Params (Load Saved)
-    useEffect(() => {
-        if (searchParams.get('view') === 'saved') {
-            setShowLoadModal(true);
-            // Fetch list immediately if user exists
-            if (user?.id) fetchSavedCards();
+        if (viewMode === 'saved' && user) {
+            fetchSavedCards();
         }
-    }, [searchParams, user]); // Trigger when URL changes or user logs in
-
-    // --- SAVE / LOAD API LOGIC ---
+    }, [viewMode, user]);
 
     const fetchSavedCards = async () => {
-        if (!user?.id) return;
-        setLoadingCards(true);
+        if (!user) return;
         try {
             const res = await fetch(`${API_BASE_URL}/api/bingo/list?discordId=${user.id}`);
-            if (res.ok) {
-                setSavedCards(await res.json());
+            if (res.ok) setSavedCards(await res.json());
+        } catch (e) { console.error(e); }
+    };
+
+    const generateGrid = async (seedString: string) => {
+        setLoading(true);
+        try {
+            // Determine Difficulty
+            let diff = 'Default';
+            const parts = seedString.split('-');
+            if (parts.length >= 2 && PREFIX_TO_DIFF[parts[0]]) {
+                diff = PREFIX_TO_DIFF[parts[0]];
             }
+            setDifficulty(diff);
+
+            const res = await fetch(CSV_EXPORT_URL);
+            const text = await res.text();
+            
+            // Parse CSV
+            const rows = text.split('\n').map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, '').trim()));
+            const poolMap = new Map<string, CobblemonEntry>();
+
+            rows.forEach((cols, index) => {
+                if (index === 0) return;
+                let rawName = cols[1];
+                if (!rawName || !rawName.trim()) return;
+                const name = rawName.replace(/\[.*?\]/g, '').trim();
+                const key = name.toLowerCase();
+                
+                let entry = poolMap.get(key);
+                if (!entry) {
+                    const id = parseInt(cols[0]) || 0;
+                    const rarity = mapRarity(cols[3]);
+                    entry = { id, name, rarity, spawns: new Set() };
+                }
+                poolMap.set(key, entry);
+            });
+
+            // Merge Manual Data
+            MANUAL_POOL_DATA.forEach(m => {
+                const key = m.name.toLowerCase();
+                const ex = poolMap.get(key);
+                
+                const parsedInfo = getSpawnInfo(m.name);
+                const spawns = new Set<string>();
+                if (parsedInfo) spawns.add(parsedInfo);
+                else {
+                    if (m.rarity === 'Legendary') spawns.add("Check Quest Book");
+                    else if (m.rarity === 'Mythical') spawns.add("Mythic");
+                }
+
+                if (ex) { 
+                    ex.id = m.id; 
+                    ex.rarity = m.rarity; 
+                    ex.spawns = spawns;
+                    poolMap.set(key, ex); 
+                } else {
+                    poolMap.set(key, { id: m.id, name: m.name, rarity: m.rarity, spawns: spawns });
+                }
+            });
+
+            // Filter
+            const excludedIds = new Set<number>();
+            [...LAMB_POOL, ...WAGYU_POOL].forEach(item => { if (item.type === 'Pokemon') excludedIds.add(item.id); });
+
+            let cobblemonPool = Array.from(poolMap.values()).filter(entry => {
+                if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
+                return !excludedIds.has(entry.id);
+            });
+
+            cobblemonPool.sort((a, b) => {
+                if (a.id !== b.id) return a.id - b.id;
+                return a.name.localeCompare(b.name);
+            });
+
+            // RNG
+            const seed = cyrb128(seedString);
+            const rng = mulberry32(seed[0]);
+
+            const getRandomItems = (rarities: BingoCell['rarity'][], count: number) => {
+                let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
+                if (pool.length === 0) pool = cobblemonPool;
+                pool = [...pool];
+                for (let i = pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(rng() * (i + 1));
+                    [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+                return pool.slice(0, count).map(entry => ({
+                    id: entry.id, name: entry.name, rarity: entry.rarity, spawns: Array.from(entry.spawns)
+                }));
+            };
+
+            let selected: BingoCell[] = [];
+            if (diff === 'Easy') {
+                selected = [...getRandomItems(['Common'], 12), ...getRandomItems(['Uncommon'], 12)];
+            } else if (diff === 'Normal') {
+                selected = [
+                    ...getRandomItems(['Common'], 6), ...getRandomItems(['Uncommon'], 6),
+                    ...getRandomItems(['Rare'], 6), ...getRandomItems(['Ultra-Rare'], 6)
+                ];
+            } else if (diff === 'Hard') {
+                selected = [...getRandomItems(['Rare'], 12), ...getRandomItems(['Ultra-Rare'], 12)];
+            } else if (diff === 'Insane') {
+                selected = getRandomItems(['Ultra-Rare'], 24);
+            } else if (diff === 'Nightmare') {
+                selected = getRandomItems(['Ultra-Rare'], 20);
+            } else {
+                const tempPool = [...cobblemonPool];
+                for (let i = tempPool.length - 1; i > 0; i--) {
+                    const j = Math.floor(rng() * (i + 1));
+                    [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
+                }
+                selected = tempPool.slice(0, 24).map(e => ({ id: e.id, name: e.name, rarity: e.rarity, spawns: Array.from(e.spawns) }));
+            }
+
+            for (let i = selected.length - 1; i > 0; i--) {
+                const j = Math.floor(rng() * (i + 1));
+                [selected[i], selected[j]] = [selected[j], selected[i]];
+            }
+
+            const finalGrid: BingoCell[] = new Array(25).fill(null);
+            const fillGrid = (source: BingoCell[], skipIndices: number[]) => {
+                let sourceIdx = 0;
+                for (let i = 0; i < 25; i++) {
+                    if (skipIndices.includes(i)) continue;
+                    finalGrid[i] = sourceIdx < source.length ? source[sourceIdx++] : getRandomItems(['Common'], 1)[0];
+                }
+            };
+
+            if (diff === 'Insane') {
+                fillGrid(selected, [12]);
+                finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
+            } else if (diff === 'Nightmare') {
+                const corners = [0, 4, 20, 24];
+                fillGrid(selected, [12, ...corners]);
+                finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
+                const legends = getRandomItems(['Legendary'], 4);
+                corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
+            } else {
+                fillGrid(selected, [12]);
+                finalGrid[12] = FREE_SPACE_CELL;
+            }
+
+            setGrid(finalGrid);
+            setMarked(new Array(25).fill(false)); // Reset marks on new generation
         } catch (e) {
             console.error(e);
         } finally {
-            setLoadingCards(false);
+            setLoading(false);
         }
     };
 
-    const openSaveModal = () => {
-        if (!user) {
-            alert("Please login first to save!");
-            return;
-        }
-        // Fetch latest cards to ensure we check collision against up-to-date data
-        fetchSavedCards();
-        setCardName(loadedCardName || "");
-        setShowSaveModal(true);
+    const handleCopyId = () => {
+        navigator.clipboard.writeText(currentCardId);
+        setCopiedId(true);
+        setTimeout(() => setCopiedId(false), 2000);
     };
 
-    const handleSaveCard = async () => {
-        if (!user?.id) {
-            alert("Please login first!");
-            return;
+    const handleManualLoad = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (inputCardId.trim()) {
+            navigate(`/minecraft/bingo/card?id=${inputCardId.trim().toUpperCase()}`);
         }
-        if (!cardName.trim()) return;
+    };
 
+    const toggleMark = (index: number) => {
+        setMarked(prev => {
+            const next = [...prev];
+            next[index] = !next[index];
+            return next;
+        });
+    };
+
+    const handleSave = async () => {
+        if (!user || !saveName.trim()) return;
         setSaving(true);
         try {
-            const payload = {
-                discordId: user.id,
-                name: cardName.trim(),
-                cardId: currentCardId,
-                gridData: gridData,
-                marked: marked
-            };
-
             const res = await fetch(`${API_BASE_URL}/api/bingo/save`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    discordId: user.id,
+                    name: saveName.trim(),
+                    cardId: currentCardId,
+                    gridData: grid,
+                    marked: marked
+                })
             });
-
             if (res.ok) {
-                setShowSaveModal(false);
-                setLoadedCardName(cardName.trim());
-                setSavedCardName(cardName.trim());
-                setShowSuccessModal(true);
-                fetchSavedCards(); // Refresh list silently
-            } else {
-                alert("Failed to save card.");
+                alert("Card saved!");
+                setSaveName('');
             }
-        } catch (e) {
-            alert("Network error.");
-        } finally {
-            setSaving(false);
-        }
+        } catch (e) { alert("Save failed"); } finally { setSaving(false); }
     };
 
-    const loadCard = (card: SavedCard) => {
-        setGridData(card.gridData);
-        setMarked(card.marked);
+    const handleLoadSaved = (card: any) => {
         setCurrentCardId(card.cardId);
-        setLoadedCardName(card.name);
-        
-        // Parse Difficulty for display/logic sync (Optional but good for UI consistency)
+        setInputCardId(card.cardId);
+        setGrid(card.gridData);
+        setMarked(card.marked || new Array(25).fill(false));
+        // Parse diff for UI
         const parts = card.cardId.split('-');
-        if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
-            setActiveDifficulty(PREFIX_TO_DIFF[parts[0]] as BingoDifficulty);
+        if (parts.length >= 2 && PREFIX_TO_DIFF[parts[0]]) {
+            setDifficulty(PREFIX_TO_DIFF[parts[0]]);
+        } else {
+            setDifficulty('Default');
         }
-
-        setShowLoadModal(false);
-        // Clean URL param
-        setSearchParams({});
+        setViewMode('play');
+        navigate(`/minecraft/bingo/card?id=${card.cardId}`, { replace: true });
     };
 
-    const deleteCard = async (name: string) => {
-        if (!confirm(`Delete card "${name}"?`)) return;
+    const handleDeleteSaved = async (name: string) => {
+        if (!window.confirm("Delete this saved card?")) return;
         try {
             await fetch(`${API_BASE_URL}/api/bingo/delete`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ discordId: user.id, name })
             });
-            fetchSavedCards(); // Refresh list
-            if (loadedCardName === name) setLoadedCardName(null);
-        } catch (e) {
-            console.error(e);
-        }
+            fetchSavedCards();
+        } catch(e) {}
     };
 
-    // --- SEEDED GENERATION LOGIC ---
-    const generateCard = useCallback(async (customId?: string, difficulty: BingoDifficulty = 'Default') => {
-        if (!cobblemonPool || cobblemonPool.length === 0) return;
-        setIsGenerating(true);
-        setShowDiffModal(false);
-        setLoadedCardName(null); // Reset loaded state for new random cards
-        
-        try {
-            // 1. Determine ID and Difficulty
-            let idToUse = customId;
-            let diffToUse = difficulty;
-
-            if (customId) {
-                // Check if ID contains encoded difficulty (Format: Prefix-RandomString)
-                const parts = customId.split('-');
-                if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
-                    diffToUse = PREFIX_TO_DIFF[parts[0]] as BingoDifficulty;
-                }
-                // If legacy ID or manual input without prefix, rely on passed difficulty or default
-            } else {
-                // Generate new ID with difficulty prefix
-                idToUse = generateRandomId(difficulty);
-                diffToUse = difficulty;
-            }
-            
-            // 2. Set URL & State
-            if (idToUse) setCurrentCardId(idToUse);
-            setActiveDifficulty(diffToUse);
-            setSearchParams({ id: idToUse });
-            setInputCode(""); // Clear input
-
-            // 3. Initialize PRNG with the ID
-            const seed = cyrb128(idToUse || "DEFAULT");
-            const rng = mulberry32(seed[0]);
-
-            // Helper to get random items from filtered pool
-            const getRandomItems = (rarities: BingoCell['rarity'][], count: number) => {
-                let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
-                if (pool.length === 0) pool = cobblemonPool; // Fallback
-                
-                // Create a copy to shuffle (avoid modifying the original sorted pool order in memory)
-                pool = [...pool];
-
-                // Shuffle pool
-                for (let i = pool.length - 1; i > 0; i--) {
-                    const j = Math.floor(rng() * (i + 1));
-                    [pool[i], pool[j]] = [pool[j], pool[i]];
-                }
-                
-                // Return top N
-                return pool.slice(0, count).map(entry => ({
-                    id: entry.id,
-                    name: entry.name,
-                    rarity: entry.rarity,
-                    spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
-                }));
-            };
-
-            let selected: BingoCell[] = [];
-
-            // 4. GENERATION BASED ON DIFFICULTY (Using Parsed Difficulty)
-            if (diffToUse === 'Easy') {
-                // 12 Common, 12 Uncommon (Total 24) + Free Space
-                const commons = getRandomItems(['Common'], 12);
-                const uncommons = getRandomItems(['Uncommon'], 12);
-                selected = [...commons, ...uncommons];
-            } else if (diffToUse === 'Normal') {
-                // 6 Common, 6 Uncommon, 6 Rare, 6 Ultra-Rare (Total 24) + Free Space
-                selected = [
-                    ...getRandomItems(['Common'], 6),
-                    ...getRandomItems(['Uncommon'], 6),
-                    ...getRandomItems(['Rare'], 6),
-                    ...getRandomItems(['Ultra-Rare'], 6)
-                ];
-            } else if (diffToUse === 'Hard') {
-                // 12 Rare, 12 Ultra-Rare (Total 24) + Free Space
-                selected = [
-                    ...getRandomItems(['Rare'], 12),
-                    ...getRandomItems(['Ultra-Rare'], 12)
-                ];
-            } else if (diffToUse === 'Insane') {
-                // 24 Ultra-Rare + 1 Legendary Middle
-                selected = getRandomItems(['Ultra-Rare'], 24);
-            } else if (diffToUse === 'Nightmare') {
-                // 20 Ultra-Rare + 1 Mythic Middle + 4 Legendary Corners
-                selected = getRandomItems(['Ultra-Rare'], 20);
-            } else {
-                // DEFAULT: Pure Random
-                const pool = [...cobblemonPool];
-                // Shuffle logic copied to avoid modifying main pool
-                const tempPool = [...pool];
-                for (let i = tempPool.length - 1; i > 0; i--) {
-                    const j = Math.floor(rng() * (i + 1));
-                    [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
-                }
-                selected = tempPool.slice(0, 24).map(entry => ({
-                    id: entry.id,
-                    name: entry.name,
-                    rarity: entry.rarity,
-                    spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
-                }));
-            }
-
-            // Shuffle the selected set before placing into grid
-            for (let i = selected.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
-                [selected[i], selected[j]] = [selected[j], selected[i]];
-            }
-
-            // 5. CONSTRUCT FINAL GRID (25 Cells)
-            const finalGrid: BingoCell[] = new Array(25).fill(null);
-
-            // Helper to fill grid while skipping specific indices
-            const fillGrid = (source: BingoCell[], skipIndices: number[]) => {
-                let sourceIdx = 0;
-                for (let i = 0; i < 25; i++) {
-                    if (skipIndices.includes(i)) continue;
-                    if (sourceIdx < source.length) {
-                        finalGrid[i] = source[sourceIdx++];
-                    } else {
-                        // Fallback fill if not enough items
-                        finalGrid[i] = getRandomItems(['Common'], 1)[0];
-                    }
-                }
-            };
-
-            if (diffToUse === 'Insane') {
-                // Center is Legendary
-                fillGrid(selected, [12]);
-                finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
-            } else if (diffToUse === 'Nightmare') {
-                // Center Mythic, Corners Legendary
-                const corners = [0, 4, 20, 24];
-                fillGrid(selected, [12, ...corners]);
-                
-                finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
-                const legends = getRandomItems(['Legendary'], 4);
-                corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
-            } else {
-                // Default, Easy, Normal, Hard -> Center is Free Space
-                fillGrid(selected, [12]);
-                finalGrid[12] = FREE_SPACE_CELL;
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, 300)); // Slight visual delay
-            
-            setGridData(finalGrid);
-            
-            // Reset marks for new generation
-            setMarked(new Array(25).fill(false));
-            
-            // Auto-mark free space if exists
-            if (diffToUse !== 'Insane' && diffToUse !== 'Nightmare') {
-                const newMarked = new Array(25).fill(false);
-                newMarked[12] = true;
-                setMarked(newMarked);
-            }
-
-            setWinningLines([]);
-            setBingoCount(0);
-            prevBingoCountRef.current = 0;
-            setShowBingoPopup(false);
-            if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
-
-        } catch (e) {
-            console.error("Bingo Generation Failed:", e);
-        } finally {
-            setIsGenerating(false);
-        }
-    }, [cobblemonPool, setSearchParams]);
-
-    // Initial Load
-    useEffect(() => {
-        let mounted = true;
-        // Don't generate automatically if we are in 'view=saved' mode, wait for user to pick
-        // But if view is not saved and no ID, gen random.
-        const viewMode = searchParams.get('view');
-        
-        if (mounted && !loadingSheet && cobblemonPool && gridData.length === 0 && viewMode !== 'saved') {
-            // Check URL for ID
-            const urlId = searchParams.get('id');
-            if (urlId) {
-                generateCard(urlId);
-            } else {
-                generateCard();
-            }
-        }
-        return () => { mounted = false; };
-    }, [loadingSheet, cobblemonPool, generateCard, searchParams, gridData.length]);
-
-    const handleManualLoad = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (inputCode.trim().length > 0) {
-            generateCard(inputCode.trim().toUpperCase());
-        }
+    const getCellImage = (item: BingoCell) => {
+        if (item.id === -1) return "https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif";
+        return `https://cobblemon.tools/pokedex/pokemon/${getFormattedName(item.name)}/sprite.png`;
     };
 
-    const toggleMark = (index: number) => {
-        const newMarked = [...marked];
-        newMarked[index] = !newMarked[index];
-        setMarked(newMarked);
-    };
-
-    const getRarityBadgeStyle = (rarity: string) => {
-        switch(rarity) {
-            case 'Common': return 'bg-gray-600 text-gray-200';
-            case 'Uncommon': return 'bg-green-700/80 text-green-100';
-            case 'Rare': return 'bg-blue-600/80 text-blue-100';
-            case 'Ultra-Rare': return 'bg-purple-600/80 text-purple-100';
-            case 'Legendary': return 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50';
-            case 'Mythical': return 'bg-pink-500 text-white shadow-lg shadow-pink-500/50';
-            case 'Free': return 'bg-white text-black font-black tracking-widest';
-            default: return 'bg-gray-500';
-        }
-    };
-
-    const getCardVisuals = (rarity: string) => {
-        const base = "border-2";
-        switch (rarity) {
-            case 'Mythical':
-                return `${base} border-pink-500/50 bg-gradient-to-br from-pink-900/30 to-black/80 shadow-[0_0_10px_rgba(236,72,153,0.1)] group-hover:border-pink-400 group-hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]`;
-            case 'Legendary':
-                return `${base} border-yellow-500/50 bg-gradient-to-br from-yellow-900/30 to-black/80 shadow-[0_0_10px_rgba(234,179,8,0.1)] group-hover:border-yellow-400 group-hover:shadow-[0_0_20px_rgba(234,179,8,0.3)]`;
-            case 'Ultra-Rare':
-                return `${base} border-purple-500/40 bg-gradient-to-br from-purple-900/20 to-black/80 group-hover:border-purple-400`;
-            case 'Rare':
-                return `${base} border-blue-500/30 bg-gradient-to-br from-blue-900/10 to-black/80 group-hover:border-blue-400`;
-            case 'Free':
-                return `${base} border-white/80 bg-gradient-to-br from-white/20 to-black/80 shadow-inner group-hover:bg-white/30`;
-            default:
-                return `${base} border-white/10 bg-black/60 group-hover:border-white/30 group-hover:bg-black/70`;
-        }
-    };
-
-    const getNamePlateStyle = (rarity: string) => {
-        switch (rarity) {
-            case 'Mythical':
-                return "bg-gradient-to-t from-pink-900/90 to-pink-900/60 border-t border-pink-500/60 shadow-[0_-5px_15px_rgba(236,72,153,0.4)] backdrop-blur-md";
-            case 'Legendary':
-                return "bg-gradient-to-t from-yellow-900/90 to-yellow-900/60 border-t border-yellow-500/60 shadow-[0_-5px_15px_rgba(234,179,8,0.4)] backdrop-blur-md";
-            case 'Free':
-                return "bg-white text-black font-black border-t border-white backdrop-blur-md";
-            default:
-                return "bg-black/80 border-t border-white/5 backdrop-blur-md";
-        }
-    };
-
-    const getTooltipStyle = (rarity: string) => {
-        switch(rarity) {
-            case 'Mythical': return "border-pink-500 bg-pink-900/95 text-white";
-            case 'Legendary': return "border-yellow-500 bg-yellow-900/95 text-white";
-            case 'Ultra-Rare': return "border-purple-500 bg-purple-900/95 text-white";
-            case 'Rare': return "border-blue-500 bg-blue-900/95 text-white";
-            default: return "border-gray-500 bg-gray-900/95 text-gray-200";
-        }
-    };
-
-    return (
-        <div className="min-h-screen py-2 font-sans text-white relative">
-            <style>{`
-                @keyframes pulse-gold {
-                    0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
-                    50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(255, 215, 0, 0.9); }
-                }
-                .animate-pulse-gold {
-                    animation: pulse-gold 2s infinite ease-in-out;
-                }
-                .glass-panel {
-                    background: rgba(0, 0, 0, 0.7);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-                }
-            `}</style>
-            
-            <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
-                
-                {/* Header - Absolute Top Left on Desktop */}
-                <div className="absolute top-4 left-4 z-50">
-                    <Link to="/minecraft/bingo" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
-                        <span>←</span> Back to Bingo Dashboard
-                    </Link>
-                </div>
-
-                {/* USER PROFILE - Absolute Top Right */}
-                <UserProfile 
-                    onUserChange={setUser} 
-                    className="!absolute top-4 right-4"
-                />
-
-                {/* Bingo Board Container - Added padding on mobile to clear button */}
-                <div className="relative max-w-3xl w-full flex flex-col items-center pt-12 md:pt-0">
-                    
-                    {/* Visual Board Background */}
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-xl border-[10px] border-[#1f090c] rounded-[2rem] shadow-2xl overflow-hidden z-0">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none"></div>
+    if (viewMode === 'saved') {
+        return (
+            <div className="min-h-screen py-8 font-sans text-white relative">
+                <UserProfile className="!absolute top-4 right-4" />
+                <div className="container mx-auto px-4 max-w-4xl">
+                    <Link to="/minecraft/bingo" className="text-gray-400 hover:text-white mb-6 inline-block">← Back to Dashboard</Link>
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-3xl font-black">Saved Cards</h1>
+                        <Link to="/minecraft/bingo/card" className="bg-brand-primary px-4 py-2 rounded-lg font-bold text-sm">Create New</Link>
                     </div>
-
-                    {/* Content Wrapper - Reduced Padding */}
-                    <div className="relative z-10 w-full p-2 md:p-6 flex flex-col items-center">
-                        
-                        {/* Logo - Reduced Size */}
-                        <div className="mb-2 w-full flex justify-center relative z-10">
-                            <img 
-                                src={LOGO_URL} 
-                                alt="Cobble Bingo" 
-                                className="h-16 md:h-24 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" 
-                            />
-                        </div>
-
-                        {/* ID Display */}
-                        <div className="mb-2 flex items-center justify-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/10 shadow-inner">
-                            <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest pt-[1px]">Card ID:</span>
-                            <span className="text-brand-primary font-mono font-black tracking-widest text-sm leading-none">{currentCardId || "LOADING..."}</span>
-                            {activeDifficulty !== 'Default' && (
-                                <span className={`text-[8px] uppercase font-bold px-1.5 py-0.5 rounded ml-1 bg-white/10 text-gray-300`}>
-                                    {activeDifficulty}
-                                </span>
-                            )}
-                        </div>
-                        
-                        {/* The Grid - Removed min-height to fit content */}
-                        <div className="overflow-visible py-2 md:pb-4 custom-scrollbar flex justify-center w-full relative z-10">
-                            {/* POPUP OVERLAY */}
-                            {showBingoPopup && (
-                                <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in fade-in duration-300">
-                                    <div className="bg-[#FFD700] border-4 border-white text-black font-black text-6xl md:text-8xl px-12 py-6 rounded-full shadow-[0_0_60px_rgba(255,215,0,0.8)] flex flex-col items-center drop-shadow-md animate-pulse-gold transform -rotate-12">
-                                        <span className="drop-shadow-sm tracking-widest text-white/90 stroke-black" style={{ textShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>BINGO!</span>
-                                        {bingoCount > 1 && <span className="text-3xl md:text-5xl text-white mt-2 drop-shadow-md">{bingoCount}X COMBO</span>}
+                    
+                    {!user ? (
+                        <div className="text-center py-20 bg-black/30 rounded-2xl">Please login to view saved cards.</div>
+                    ) : savedCards.length === 0 ? (
+                        <div className="text-center py-20 bg-black/30 rounded-2xl">No saved cards found.</div>
+                    ) : (
+                        <div className="grid gap-4">
+                            {savedCards.map((card) => (
+                                <div key={card._id} className="bg-black/30 border border-white/10 p-4 rounded-xl flex items-center justify-between">
+                                    <div>
+                                        <div className="font-bold text-xl">{card.name}</div>
+                                        <div className="text-xs text-gray-500 font-mono mt-1">ID: {card.cardId}</div>
+                                        <div className="text-xs text-gray-400 mt-1">Last updated: {new Date(card.updatedAt).toLocaleDateString()}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleLoadSaved(card)} className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm">Load</button>
+                                        <button onClick={() => handleDeleteSaved(card.name)} className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm">Delete</button>
                                     </div>
                                 </div>
-                            )}
-
-                            {loadingSheet ? (
-                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
-                                    <div className="text-4xl mb-4">📄</div>
-                                    <div className="font-bold">Fetching Pokemon Data...</div>
-                                </div>
-                            ) : sheetError ? (
-                                <div className="flex flex-col items-center justify-center text-red-400 mt-10 min-h-[300px]">
-                                    <div className="text-4xl mb-4">⚠️</div>
-                                    <div className="font-bold">Failed to load Pokemon data.</div>
-                                    <div className="text-sm opacity-70">Please check the Google Sheet permissions.</div>
-                                </div>
-                            ) : gridData.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
-                                    <div className="text-4xl mb-4">🔮</div>
-                                    <div className="font-bold">Preparing Bingo Card...</div>
-                                    {searchParams.get('view') === 'saved' && (
-                                        <div className="mt-4 text-white">Select a saved card from the menu!</div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className={`grid grid-cols-5 gap-2 w-full transition-opacity duration-300 ${isGenerating ? 'opacity-50 blur-sm pointer-events-none' : 'opacity-100'} relative`}>
-                                    
-                                    {/* SVG Overlay for Winning Lines */}
-                                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-50 overflow-visible">
-                                        <defs>
-                                            <filter id="glow">
-                                                <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                                                <feMerge>
-                                                    <feMergeNode in="coloredBlur"/>
-                                                    <feMergeNode in="SourceGraphic"/>
-                                                </feMerge>
-                                            </filter>
-                                        </defs>
-                                        {winningLines.map((combo, i) => {
-                                            const coords = getLineCoords(combo);
-                                            if (!coords) return null;
-                                            return (
-                                                <line 
-                                                    key={i} 
-                                                    x1={coords.x1} y1={coords.y1} 
-                                                    x2={coords.x2} y2={coords.y2} 
-                                                    stroke="#ef4444" 
-                                                    strokeWidth="8" 
-                                                    strokeLinecap="round" 
-                                                    filter="url(#glow)"
-                                                    className="opacity-90 drop-shadow-md"
-                                                />
-                                            );
-                                        })}
-                                    </svg>
-
-                                    {gridData.map((item, index) => {
-                                        const formattedName = getFormattedName(item.name);
-                                        const wikiUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}`;
-                                        
-                                        return (
-                                            <div 
-                                                key={`${item.id}-${index}`} 
-                                                onClick={() => toggleMark(index)}
-                                                className="relative aspect-[4/5] group cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
-                                            >
-                                                {/* 1. CLIPPED CONTENT (Inner Card) */}
-                                                <div className={`
-                                                    absolute inset-0 rounded-xl overflow-hidden flex flex-col z-0
-                                                    ${getCardVisuals(item.rarity)}
-                                                    ${marked[index] ? 'grayscale-[0.8] brightness-75 border-red-900/50' : ''}
-                                                `}>
-                                                    {/* Background Decor for High Rarity */}
-                                                    {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
-                                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
-                                                    )}
-
-                                                    {/* Rarity Badge - Top Right - INCREASED SIZE */}
-                                                    <div className={`
-                                                        absolute top-1 right-1 z-20
-                                                        text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
-                                                        ${getRarityBadgeStyle(item.rarity)}
-                                                    `}>
-                                                        {item.rarity === 'Ultra-Rare' ? 'ULTRA RARE' : item.rarity}
-                                                    </div>
-
-                                                    {/* Image Container - Adjusted Padding for compact fit */}
-                                                    <div className="flex-1 flex items-center justify-center p-1 pb-6 relative z-10">
-                                                        <BingoCardImage item={item} />
-                                                    </div>
-
-                                                    {/* Cross Out Overlay - inside clipped area */}
-                                                    {marked[index] && (
-                                                        <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-[1px]">
-                                                            <svg className="w-3/4 h-3/4 text-red-600/90 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="12" strokeLinecap="round">
-                                                                <line x1="20" y1="20" x2="80" y2="80" />
-                                                                <line x1="80" y1="20" x2="20" y2="80" />
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* 2. FLOATING NAMEPLATE & TOOLTIP (Outside Clipped Area) */}
-                                                <div 
-                                                    className={`absolute bottom-0 left-0 right-0 py-1 z-40 flex justify-center group/nameplate rounded-b-xl ${getNamePlateStyle(item.rarity)}`}
-                                                    onClick={(e) => e.stopPropagation()} 
-                                                >
-                                                    {/* Tooltip on Hover */}
-                                                    <div className={`
-                                                        absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[120px] md:max-w-[200px] p-2 rounded-lg border shadow-2xl
-                                                        opacity-0 invisible group-hover/nameplate:opacity-100 group-hover/nameplate:visible 
-                                                        transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
-                                                        ${getTooltipStyle(item.rarity)}
-                                                    `}>
-                                                        <div className="text-[9px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">
-                                                            {item.rarity === 'Legendary' ? 'Condition' : 'Biome'}
-                                                        </div>
-                                                        <div className="text-[10px] font-medium leading-relaxed whitespace-normal">
-                                                            {item.spawns.join(', ')}
-                                                        </div>
-                                                        {/* Arrow */}
-                                                        <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-b border-r ${getTooltipStyle(item.rarity)}`}></div>
-                                                    </div>
-
-                                                    <a 
-                                                        href={wikiUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={`text-[8px] md:text-[10px] text-center truncate px-1 transition-colors flex items-center gap-1 group/link drop-shadow-md ${item.rarity === 'Free' ? 'text-black font-black' : 'text-white font-bold hover:text-brand-primary hover:underline'}`}
-                                                    >
-                                                        {item.name}
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                            ))}
                         </div>
-                    </div>
+                    )}
                 </div>
+            </div>
+        );
+    }
 
-                {/* --- CONTROL DOCK (Bottom Right) --- */}
-                <div className="fixed bottom-0 right-0 p-4 z-[100] w-full md:w-auto">
-                    <div className="glass-panel p-4 rounded-3xl flex flex-col gap-4 w-full md:w-80 shadow-2xl animate-in slide-in-from-bottom-10 fade-in duration-500">
+    return (
+        <div className="min-h-screen py-4 font-sans text-white relative">
+            <UserProfile onUserChange={setUser} className="!absolute top-4 right-4" />
+            
+            <div className="container mx-auto px-4 pt-4 pb-2">
+                <Link to="/minecraft/bingo" className="text-gray-400 hover:text-white mb-4 inline-block text-sm">← Back to Dashboard</Link>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-8 justify-center items-start px-4 max-w-7xl mx-auto">
+                
+                {/* Control Panel */}
+                <div className="w-full lg:w-80 flex flex-col gap-6 order-2 lg:order-1">
+                    <div className="bg-black/30 border border-white/10 p-6 rounded-2xl space-y-6">
+                        
                         {/* Title */}
                         <div className="flex justify-between items-center border-b border-white/10 pb-2">
                             <div className="text-xs font-bold uppercase tracking-widest text-gray-400">Control Deck</div>
@@ -1123,257 +466,159 @@ const Bingo: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Current Card ID Display */}
+                        <div className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 flex items-center justify-between group">
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-[8px] uppercase font-bold text-gray-500 tracking-wider">Current Card ID</span>
+                                <span className="font-mono font-bold text-brand-primary tracking-widest text-sm truncate pr-2 select-all">
+                                    {currentCardId || "----"}
+                                </span>
+                            </div>
+                            <button 
+                                onClick={handleCopyId}
+                                disabled={!currentCardId}
+                                className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Copy ID"
+                            >
+                                {copiedId ? (
+                                    <span className="text-green-500 text-xs font-bold">✓</span>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
+
                         {/* Input Area */}
                         <form onSubmit={handleManualLoad} className="flex gap-2">
                             <input 
                                 type="text" 
-                                value={inputCode}
-                                onChange={(e) => setInputCode(e.target.value.toUpperCase().slice(0,11))}
-                                placeholder="Enter Card ID"
-                                className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-sm placeholder:text-gray-600 focus:border-brand-primary outline-none tracking-widest uppercase"
+                                value={inputCardId}
+                                onChange={(e) => setInputCardId(e.target.value.toUpperCase())}
+                                placeholder="Enter Card ID..."
+                                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono placeholder:text-gray-600 focus:border-brand-primary outline-none"
                             />
-                            <button 
-                                type="submit" 
-                                disabled={inputCode.length === 0}
-                                className="bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-colors"
-                            >
+                            <button type="submit" className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors">
                                 Load
                             </button>
                         </form>
 
-                        {/* Main Actions */}
-                        <div className="grid grid-cols-3 gap-2">
-                            <button 
-                                onClick={() => setShowDiffModal(true)}
-                                disabled={isGenerating || loadingSheet}
-                                className={`
-                                    bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1
-                                    ${isGenerating || loadingSheet ? 'opacity-70 cursor-wait' : ''}
-                                `}
-                            >
-                                <span>🎲</span>
-                                <span>Generate</span>
-                            </button>
-                            
-                            <button 
-                                onClick={() => {
-                                    setMarked(new Array(25).fill(false));
-                                    setWinningLines([]);
-                                    setBingoCount(0);
-                                    prevBingoCountRef.current = 0;
-                                    setShowBingoPopup(false);
-                                    if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
-                                }}
-                                className="bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1"
-                            >
-                                <span>🧹</span>
-                                <span>Clear</span>
-                            </button>
+                        <div className="border-t border-white/10 pt-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-gray-400 uppercase">Difficulty</span>
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                    difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
+                                    difficulty === 'Normal' ? 'bg-blue-500/20 text-blue-400' :
+                                    difficulty === 'Hard' ? 'bg-orange-500/20 text-orange-400' :
+                                    difficulty === 'Insane' ? 'bg-red-500/20 text-red-400' :
+                                    difficulty === 'Nightmare' ? 'bg-purple-500/20 text-purple-400' :
+                                    'bg-gray-500/20 text-gray-400'
+                                }`}>
+                                    {difficulty}
+                                </span>
+                            </div>
+                        </div>
 
-                            <button 
-                                onClick={openSaveModal}
-                                className="bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-3 px-1 rounded-xl shadow-lg transition-all transform hover:scale-105 uppercase text-[10px] tracking-widest flex flex-col items-center justify-center gap-1"
-                            >
-                                <span>💾</span>
-                                <span>Save</span>
-                            </button>
+                        {/* Save Section */}
+                        {user && (
+                            <div className="border-t border-white/10 pt-4">
+                                <div className="text-xs font-bold text-gray-400 uppercase mb-2">Save Progress</div>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        value={saveName} 
+                                        onChange={(e) => setSaveName(e.target.value)} 
+                                        placeholder="Name this card..."
+                                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-brand-primary outline-none"
+                                    />
+                                    <button 
+                                        onClick={handleSave} 
+                                        disabled={saving || !saveName.trim()}
+                                        className="bg-brand-primary hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+                                    >
+                                        {saving ? '...' : 'Save'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="text-[10px] text-gray-500 text-center">
+                            Don't forget to save your progress if logged in!
                         </div>
                     </div>
                 </div>
 
-                {/* DIFFICULTY MODAL */}
-                {showDiffModal && (
-                    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                        <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
-                            <button onClick={() => setShowDiffModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
-                            <h3 className="text-xl font-black text-white mb-6 text-center">Select Difficulty</h3>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                                {[
-                                    { label: 'Default', desc: 'Standard Random', color: 'bg-gray-600 hover:bg-gray-500' },
-                                    { label: 'Easy', desc: 'Common/Uncommon', color: 'bg-green-600 hover:bg-green-500' },
-                                    { label: 'Normal', desc: 'Balanced Mix', color: 'bg-blue-600 hover:bg-blue-500' },
-                                    { label: 'Hard', desc: 'Rare/Ultra-Rare', color: 'bg-purple-600 hover:bg-purple-500' },
-                                    { label: 'Insane', desc: 'All UR + 1 Legend', color: 'bg-red-600 hover:bg-red-500' },
-                                    { label: 'Nightmare', desc: 'UR + Mythic/Legend', color: 'bg-gradient-to-r from-purple-900 to-black border border-purple-500 hover:brightness-110' },
-                                ].map((opt) => (
-                                    <button
-                                        key={opt.label}
-                                        onClick={() => generateCard(undefined, opt.label as BingoDifficulty)}
-                                        className={`${opt.color} text-white p-3 rounded-xl shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center h-24`}
-                                    >
-                                        <span className="font-bold uppercase tracking-wider text-sm">{opt.label}</span>
-                                        <span className="text-[10px] opacity-80 mt-1 text-center leading-tight">{opt.desc}</span>
-                                    </button>
-                                ))}
+                {/* Grid Area */}
+                <div className="flex-1 order-1 lg:order-2 flex justify-center w-full">
+                    {loading ? (
+                        <div className="h-[600px] flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+                                <div className="text-brand-primary font-bold animate-pulse">Generating Card...</div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <div className="w-full max-w-[600px] aspect-square bg-[#1a0b0e] rounded-3xl border-[8px] border-[#3a1017] shadow-2xl p-4 overflow-hidden relative">
+                            <div className="grid grid-cols-5 gap-1 w-full h-full">
+                                {grid.map((cell, idx) => {
+                                    const isMarked = marked[idx];
+                                    let borderColor = "border-gray-700";
+                                    let bgColor = "bg-gray-800/50";
+                                    
+                                    if (cell.rarity === 'Mythical') { borderColor = "border-pink-500"; bgColor = "bg-pink-900/30"; }
+                                    else if (cell.rarity === 'Legendary') { borderColor = "border-yellow-500"; bgColor = "bg-yellow-900/30"; }
+                                    else if (cell.rarity === 'Ultra-Rare') { borderColor = "border-purple-500"; bgColor = "bg-purple-900/30"; }
+                                    else if (cell.rarity === 'Rare') { borderColor = "border-blue-500"; bgColor = "bg-blue-900/30"; }
+                                    else if (cell.rarity === 'Uncommon') { borderColor = "border-green-600"; bgColor = "bg-green-900/30"; }
+                                    if (cell.id === -1) { borderColor = "border-white"; bgColor = "bg-white/10"; }
 
-                {/* SAVE MODAL */}
-                {showSaveModal && (
-                    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                        <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
-                            <h3 className="text-xl font-black text-white mb-4">Save Your Bingo Card</h3>
-                            
-                            <input 
-                                type="text" 
-                                value={cardName} 
-                                onChange={(e) => setCardName(e.target.value)} 
-                                placeholder="Name your card (e.g. Weekly Grind)" 
-                                className={`
-                                    w-full bg-black/40 border rounded-xl px-4 py-3 text-white mb-2 focus:outline-none transition-all font-bold
-                                    ${savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase()) ? 'border-yellow-500 focus:border-yellow-500' : 'border-white/10 focus:border-brand-primary'}
-                                `}
-                                autoFocus
-                            />
-                            
-                            {/* Warning or Hints */}
-                            {savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase() && cardName.trim() !== "") && (
-                                <div className="text-yellow-500 text-xs font-bold mb-4 flex items-center gap-1">
-                                    <span>⚠️</span> Warning: This will overwrite your existing save.
-                                </div>
-                            )}
-
-                            {/* Quick Select List */}
-                            {savedCards.length > 0 && (
-                                <div className="mb-4">
-                                    <div className="text-[10px] uppercase font-bold text-gray-500 mb-2">Or overwrite existing save:</div>
-                                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto custom-scrollbar">
-                                        {savedCards.map(c => (
-                                            <button 
-                                                key={c._id}
-                                                onClick={() => setCardName(c.name)}
-                                                className={`
-                                                    text-xs px-2 py-1 rounded-lg border transition-colors
-                                                    ${cardName === c.name ? 'bg-brand-primary border-brand-primary text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'}
-                                                `}
-                                            >
-                                                {c.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex gap-3 mt-4">
-                                <button 
-                                    onClick={() => setShowSaveModal(false)}
-                                    className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button 
-                                    onClick={handleSaveCard}
-                                    disabled={!cardName.trim() || saving}
-                                    className={`
-                                        flex-1 text-white font-bold py-3 rounded-xl transition-all shadow-lg disabled:opacity-50
-                                        ${savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase()) 
-                                            ? 'bg-yellow-600 hover:bg-yellow-500' 
-                                            : 'bg-brand-primary hover:bg-red-600'}
-                                    `}
-                                >
-                                    {saving ? 'Saving...' : 
-                                     savedCards.some(c => c.name.toLowerCase() === cardName.toLowerCase()) ? 'Overwrite' : 'Save New'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* SUCCESS MODAL */}
-                {showSuccessModal && (
-                    <div className="fixed inset-0 z-[250] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                        <div className="bg-[#1a0b0e] border border-white/10 p-8 rounded-3xl w-full max-w-sm shadow-2xl relative text-center">
-                            <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.2)]">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <h3 className="text-2xl font-black text-white mb-4 tracking-tight">Saved Successfully!</h3>
-                            <p className="text-gray-300 mb-8 leading-relaxed">
-                                Your bingo card has been saved as <br/>
-                                <span className="text-brand-primary font-bold text-lg">"{savedCardName}"</span><br/>
-                                successfully!
-                            </p>
-                            <button 
-                                onClick={() => setShowSuccessModal(false)}
-                                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* MY BINGO (LOAD) MODAL */}
-                {showLoadModal && (
-                    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-                        <div className="bg-[#1a0b0e] w-full max-w-2xl max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300">
-                            <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
-                                <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-                                    <span>📂</span> My Saved Cards
-                                </h2>
-                                <button onClick={() => { setShowLoadModal(false); setSearchParams({}); }} className="p-2 rounded-full bg-white/5 hover:bg-white/10 hover:text-brand-primary transition-colors">
-                                    ✕
-                                </button>
-                            </div>
-                            
-                            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-                                {loadingCards ? (
-                                    <div className="text-center py-10 text-gray-500 animate-pulse">Loading saved cards...</div>
-                                ) : savedCards.length === 0 ? (
-                                    <div className="text-center py-10 text-gray-500">
-                                        <div className="text-4xl mb-2">📭</div>
-                                        <div>No saved cards found.</div>
-                                    </div>
-                                ) : (
-                                    savedCards.map((card) => {
-                                        const marks = card.marked.filter(Boolean).length;
-                                        const percentage = Math.round((marks / 25) * 100);
-                                        return (
-                                            <div key={card._id} className="bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-brand-primary/20 flex items-center justify-center text-xl font-bold text-brand-primary border border-brand-primary/30 shadow-inner">
-                                                    {card.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <h3 className="font-bold text-white text-lg truncate pr-2">{card.name}</h3>
-                                                        <span className="text-xs text-gray-500 font-mono">{new Date(card.updatedAt).toLocaleDateString()}</span>
+                                    return (
+                                        <div 
+                                            key={idx}
+                                            onClick={() => toggleMark(idx)}
+                                            className={`
+                                                relative border-2 rounded-lg flex flex-col items-center justify-center p-1 cursor-pointer transition-all duration-200 group
+                                                ${borderColor} ${bgColor}
+                                                ${isMarked ? 'bg-green-500/20 border-green-400 grayscale-0' : 'grayscale-[0.3] hover:grayscale-0 hover:bg-white/5'}
+                                            `}
+                                        >
+                                            {/* Poke Image */}
+                                            <div className="flex-1 w-full flex items-center justify-center relative">
+                                                <OptimizedImage 
+                                                    src={getCellImage(cell)}
+                                                    alt={cell.name}
+                                                    className={`w-full h-full object-contain drop-shadow-md transition-transform ${isMarked ? 'scale-90 opacity-50' : 'group-hover:scale-110'}`}
+                                                    contain
+                                                />
+                                                {isMarked && (
+                                                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                                                        <span className="text-4xl text-green-400 drop-shadow-lg font-black">✓</span>
                                                     </div>
-                                                    <div className="flex items-center gap-3 text-xs text-gray-400">
-                                                        <span className="bg-black/30 px-2 py-0.5 rounded font-mono">{card.cardId}</span>
-                                                        <span>{marks}/25 Marked</span>
-                                                        <div className="w-20 h-1.5 bg-black/50 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-brand-primary rounded-full" style={{ width: `${percentage}%` }}></div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <button 
-                                                        onClick={() => loadCard(card)}
-                                                        className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl text-sm shadow-lg transition-transform hover:scale-105"
-                                                    >
-                                                        LOAD
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => deleteCard(card.name)}
-                                                        className="bg-red-900/30 hover:bg-red-600 text-red-200 hover:text-white px-3 py-2 rounded-xl transition-colors"
-                                                        title="Delete"
-                                                    >
-                                                        🗑️
-                                                    </button>
-                                                </div>
+                                                )}
                                             </div>
-                                        );
-                                    })
-                                )}
+                                            
+                                            {/* Name Label */}
+                                            <div className="w-full text-center mt-1">
+                                                <span className={`text-[9px] md:text-[10px] font-bold leading-tight block truncate ${isMarked ? 'text-green-400' : 'text-gray-300 group-hover:text-white'}`}>
+                                                    {cell.name}
+                                                </span>
+                                            </div>
+
+                                            {/* Tooltip for Spawns */}
+                                            {cell.spawns && cell.spawns.length > 0 && (
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-black/90 border border-white/20 rounded-lg p-2 text-[10px] text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center shadow-xl">
+                                                    <div className="font-bold text-brand-primary border-b border-white/10 pb-1 mb-1">{cell.rarity}</div>
+                                                    {cell.spawns.join(", ")}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
-                    </div>
-                )}
-
+                    )}
+                </div>
             </div>
         </div>
     );
