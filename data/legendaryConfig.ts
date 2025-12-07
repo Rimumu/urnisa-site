@@ -65,6 +65,9 @@ const formatName = (str: string): string => {
     // Remove hash if it was a tag but didn't have a colon
     if (clean.startsWith('#')) clean = clean.substring(1);
 
+    // Remove 'is_' prefix common in tags (e.g. is_ocean -> ocean)
+    if (clean.startsWith('is_')) clean = clean.substring(3);
+
     // Replace underscores with spaces
     clean = clean.replace(/_/g, ' ');
 

@@ -1068,7 +1068,9 @@ const Bingo: React.FC = () => {
                                                         transition-all duration-200 z-[100] backdrop-blur-md pointer-events-none
                                                         ${getTooltipStyle(item.rarity)}
                                                     `}>
-                                                        <div className="text-[9px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">Biome</div>
+                                                        <div className="text-[9px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">
+                                                            {item.rarity === 'Legendary' ? 'Condition' : 'Biome'}
+                                                        </div>
                                                         <div className="text-[10px] font-medium leading-relaxed whitespace-normal">
                                                             {item.spawns.join(', ')}
                                                         </div>
