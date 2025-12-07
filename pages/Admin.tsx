@@ -186,7 +186,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -254,6 +254,10 @@ const Admin: React.FC = () => {
     // --- USER MANAGEMENT STATE ---
     const [userQuery, setUserQuery] = useState('');
     const [userActionStatus, setUserActionStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    // --- MERGER TOOL STATE ---
+    const [mergedOutput, setMergedOutput] = useState('');
+    const [mergerStats, setMergerStats] = useState({ files: 0, spawns: 0 });
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -559,6 +563,116 @@ const Admin: React.FC = () => {
         }
     };
 
+    // --- JSON MERGER HANDLER ---
+    const handleJsonUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        let allSpawns: any[] = [];
+        let processedCount = 0;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const text = await file.text();
+            try {
+                const json = JSON.parse(text);
+                if (json.spawns && Array.isArray(json.spawns)) {
+                    allSpawns = allSpawns.concat(json.spawns);
+                }
+            } catch (err) {
+                console.error(`Error parsing ${file.name}`);
+            }
+            processedCount++;
+        }
+
+        setMergerStats({ files: processedCount, spawns: allSpawns.length });
+
+        // Generate Code
+        const code = `
+// This file contains the spawn configuration for Legendary Pokemon
+// extracted from the Cobblemon/Myths and Legends config files.
+
+const RAW_SPAWN_DATA = {
+  "enabled": true,
+  "neededInstalledMods": [],
+  "neededUninstalledMods": [],
+  "spawns": ${JSON.stringify(allSpawns, null, 2)}
+};
+
+// Helper to format technical names into readable text
+// e.g. "minecraft:deep_cold_ocean" -> "Deep Cold Ocean"
+// e.g. "myths_and_legends:blue_orb" -> "Blue Orb"
+const formatName = (str: string): string => {
+    if (!str) return "";
+    
+    // Remove namespace prefixes (minecraft:, mod_name:, #tag:)
+    let clean = str.replace(/^.*:/, '');
+    
+    // Remove hash if it was a tag but didn't have a colon
+    if (clean.startsWith('#')) clean = clean.substring(1);
+
+    // Remove 'is_' prefix common in tags (e.g. is_ocean -> ocean)
+    if (clean.startsWith('is_')) clean = clean.substring(3);
+
+    // Replace underscores with spaces
+    clean = clean.replace(/_/g, ' ');
+
+    // Title Case
+    return clean.replace(/\\b\\w/g, (char) => char.toUpperCase());
+};
+
+export const getSpawnInfo = (pokemonName: string): string | null => {
+    const target = pokemonName.toLowerCase().trim();
+    
+    // 1. Filter entries for this pokemon
+    const entries = RAW_SPAWN_DATA.spawns.filter(s => s.pokemon.toLowerCase() === target);
+    
+    if (entries.length === 0) return null;
+
+    // 2. Aggregate Data (using Sets to remove duplicates)
+    const biomes = new Set<string>();
+    const keyItems = new Set<string>();
+
+    entries.forEach(entry => {
+        // Add Biomes
+        if (entry.condition && entry.condition.biomes) {
+            entry.condition.biomes.forEach(b => {
+                biomes.add(formatName(b));
+            });
+        }
+        
+        // Add Key Item
+        if (entry.condition && entry.condition.key_item) {
+            // Handle if key_item is an array or string (json usually string, but being safe)
+            const item = entry.condition.key_item;
+            if (Array.isArray(item)) {
+                item.forEach(i => keyItems.add(formatName(i)));
+            } else if (typeof item === 'string') {
+                keyItems.add(formatName(item));
+            }
+        }
+    });
+
+    // 3. Construct Output String
+    const biomeList = Array.from(biomes).sort().join(', ');
+    const itemList = Array.from(keyItems).join(' or ');
+
+    let result = "";
+    
+    if (itemList) {
+        result += \`Requires: \${itemList}. \`;
+    }
+    
+    if (biomeList) {
+        result += \`Biomes: \${biomeList}.\`;
+    }
+
+    return result.trim();
+};
+`;
+        setMergedOutput(code.trim());
+    };
+
     // --- GENERIC API CALL HANDLER ---
     const apiCall = async (endpoint: string, body: any) => {
         setLoading(true);
@@ -736,6 +850,9 @@ const Admin: React.FC = () => {
                     </button>
                     <button onClick={() => setActiveTab('users')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'users' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>👥</span> Users
+                    </button>
+                    <button onClick={() => setActiveTab('merger')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'merger' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                        <span>🧩</span> JSON Merger
                     </button>
                 </nav>
             </div>
@@ -1365,6 +1482,55 @@ const Admin: React.FC = () => {
                                     >
                                         {loading ? 'Processing...' : 'Reset Timer'}
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- JSON MERGER TAB --- */}
+                    {activeTab === 'merger' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Config Merger Tool</h2>
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Combine JSON Files</h3>
+                                <p className="text-gray-400 text-sm mb-4">
+                                    Select your 81+ individual Pokemon JSON files. This tool will merge them all into the format needed for <code>data/legendaryConfig.ts</code>.
+                                </p>
+                                
+                                <div className="flex flex-col gap-6">
+                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-2xl cursor-pointer hover:bg-white/5 hover:border-brand-primary/50 transition-colors">
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg className="w-8 h-8 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                                            <p className="mb-2 text-sm text-gray-400"><span className="font-bold text-white">Click to upload</span> multiple JSON files</p>
+                                        </div>
+                                        <input type="file" className="hidden" multiple accept=".json" onChange={handleJsonUpload} />
+                                    </label>
+
+                                    {mergerStats.files > 0 && (
+                                        <div className="flex gap-4 text-sm font-mono text-gray-300 bg-black/40 p-3 rounded-lg border border-white/5">
+                                            <span>Files: <strong className="text-white">{mergerStats.files}</strong></span>
+                                            <span>Spawns Found: <strong className="text-brand-primary">{mergerStats.spawns}</strong></span>
+                                        </div>
+                                    )}
+
+                                    {mergedOutput && (
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <label className="text-xs font-bold uppercase text-gray-500">Generated Code</label>
+                                                <button 
+                                                    onClick={() => navigator.clipboard.writeText(mergedOutput)}
+                                                    className="text-xs bg-brand-primary px-3 py-1 rounded font-bold text-white hover:bg-red-600 transition-colors"
+                                                >
+                                                    Copy to Clipboard
+                                                </button>
+                                            </div>
+                                            <textarea 
+                                                readOnly 
+                                                value={mergedOutput} 
+                                                className="w-full h-96 bg-[#1e1e1e] text-gray-300 font-mono text-xs p-4 rounded-xl border border-white/10 focus:outline-none resize-none"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
