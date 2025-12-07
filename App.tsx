@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -23,11 +23,13 @@ import CountdownWidget from './pages/overlays/CountdownWidget';
 import InteractiveBackground from './components/InteractiveBackground';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 import ScrollToTopButton from './components/ScrollToTopButton';
+import ScrollToTop from './components/ScrollToTop';
 
 // Main Layout Wrapper
 // Handles the persistent UI elements (Navbar, Footer, Background)
 const MainLayout: React.FC = () => {
   const [showCapybara, setShowCapybara] = useState(false);
+  const location = useLocation();
   
   const triggerEasterEgg = () => {
     setShowCapybara(true);
@@ -35,9 +37,10 @@ const MainLayout: React.FC = () => {
 
   return (
     <>
+      <ScrollToTop />
       <InteractiveBackground />
       <Navbar onEasterEggTrigger={triggerEasterEgg} />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main key={location.pathname} className="flex-grow container mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Outlet /> {/* This is where child routes (Home, Admin, etc) render */}
       </main>
       <Footer />

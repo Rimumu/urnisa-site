@@ -139,7 +139,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
 
   return (
     <>
-      <nav className="bg-brand-secondary sticky top-0 z-50 shadow-lg shadow-black/30 border-b border-white/10">
+      <nav className="bg-brand-secondary sticky top-0 z-[100] shadow-lg shadow-black/30 border-b border-white/10">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
@@ -210,7 +210,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
       <div
         id="mobile-menu"
         className={`
-          md:hidden fixed inset-0 z-40 bg-brand-bg/95 backdrop-blur-sm
+          md:hidden fixed inset-0 z-[90] bg-brand-bg/95 backdrop-blur-sm
           transition-opacity duration-300 ease-in-out
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
