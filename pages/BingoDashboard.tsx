@@ -312,11 +312,17 @@ const BingoDashboard: React.FC = () => {
                 // Convert map to array and filter
                 let cobblemonArray = Array.from(poolMap.values());
                 
-                // Remove excluded IDs
-                cobblemonArray = cobblemonArray.filter(entry => !excludedIds.has(entry.id));
+                // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
+                cobblemonArray = cobblemonArray.filter(entry => {
+                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
+                    return !excludedIds.has(entry.id);
+                });
 
-                // Sort by ID to ensure deterministic RNG across reloads
-                cobblemonArray.sort((a, b) => a.id - b.id);
+                // Sort by ID then Name to ensure deterministic RNG across reloads
+                cobblemonArray.sort((a, b) => {
+                    if (a.id !== b.id) return a.id - b.id;
+                    return a.name.localeCompare(b.name);
+                });
 
                 if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
                 
