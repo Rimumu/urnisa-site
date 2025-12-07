@@ -65,6 +65,13 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
                     Dashboard
                 </NavLink>
                 <NavLink 
+                    to="/minecraft/bingo" 
+                    onClick={closeMenu}
+                    className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+                >
+                    Bingo Card
+                </NavLink>
+                <NavLink 
                     to="/minecraft/gacha" 
                     onClick={closeMenu}
                     className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
@@ -223,6 +230,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
             <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
                 <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Minecraft</span>
                 <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
+                <NavLink to="/minecraft/bingo" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Bingo Card</NavLink>
                 <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Gacha Pack</NavLink>
             </div>
 

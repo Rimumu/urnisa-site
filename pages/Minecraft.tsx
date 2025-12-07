@@ -246,32 +246,25 @@ const Minecraft: React.FC = () => {
             
             {/* New Navigation Boxes */}
             <div className="flex flex-col gap-6 h-full">
-                {/* Bingo Card - DISABLED */}
-                <div className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-not-allowed opacity-70 grayscale">
-                    {/* Coming Soon Overlay */}
-                    <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
-                        <div className="bg-brand-primary text-white font-black text-xl uppercase px-6 py-2 rounded-full transform -rotate-12 border-2 border-white shadow-xl">
-                            Coming Soon
-                        </div>
-                    </div>
-
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+                {/* Bingo Card - ACTIVE */}
+                <Link to="/minecraft/bingo" className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 hover:border-brand-primary/50 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#60a5fa]/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-[#60a5fa]/10 transition-colors"></div>
                     
-                    <div className="flex items-center gap-4 mb-4 opacity-50">
-                        <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl shadow-inner">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl shadow-inner text-[#60a5fa]">
                             🎫
                         </div>
-                        <h2 className="text-2xl font-black text-white uppercase tracking-wide">Bingo Card</h2>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-[#60a5fa] transition-colors">Bingo Card</h2>
                     </div>
                     
-                    <p className="text-gray-500 font-medium leading-relaxed">
-                        Complete your card by catching Pokémon, building structures, and participating in events to win amazing prizes!
+                    <p className="text-gray-400 font-medium leading-relaxed">
+                        Join the community bingo challenge with everyone and compete and finish first to win rewards on the server!
                     </p>
 
-                    <div className="mt-6 flex items-center text-gray-600 font-bold text-sm uppercase tracking-wider">
-                        View Card <span className="ml-2">→</span>
+                    <div className="mt-6 flex items-center text-brand-primary font-bold text-sm uppercase tracking-wider">
+                        View Dashboard <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                     </div>
-                </div>
+                </Link>
 
                 {/* Gacha Pack - ACTIVE */}
                 <Link to="/minecraft/gacha" className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 hover:border-brand-primary/50 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
