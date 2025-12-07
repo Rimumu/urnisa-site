@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
 import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
+import { getSpawnInfo } from '../data/legendaryConfig';
 
 // --- CONSTANTS ---
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
@@ -278,8 +279,26 @@ const BingoDashboard: React.FC = () => {
                 MANUAL_POOL_DATA.forEach(m => {
                     const key = m.name.toLowerCase();
                     const ex = poolMap.get(key);
-                    if (ex) { ex.id = m.id; ex.rarity = m.rarity; poolMap.set(key, ex); }
-                    else poolMap.set(key, { id: m.id, name: m.name, rarity: m.rarity, spawns: new Set() });
+                    
+                    // NEW: Check JSON config
+                    const parsedInfo = getSpawnInfo(m.name);
+                    const spawns = new Set<string>();
+                    
+                    if (parsedInfo) {
+                        spawns.add(parsedInfo);
+                    } else {
+                        if (m.rarity === 'Legendary') spawns.add("Check the quest book!");
+                        else if (m.rarity === 'Mythical') spawns.add("Mythic");
+                    }
+
+                    if (ex) { 
+                        ex.id = m.id; 
+                        ex.rarity = m.rarity; 
+                        ex.spawns = spawns;
+                        poolMap.set(key, ex); 
+                    } else {
+                        poolMap.set(key, { id: m.id, name: m.name, rarity: m.rarity, spawns: spawns });
+                    }
                 });
 
                 // --- FILTERING GACHA POKEMON ---

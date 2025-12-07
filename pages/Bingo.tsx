@@ -5,6 +5,7 @@ import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
 import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
+import { getSpawnInfo } from '../data/legendaryConfig';
 
 // --- TYPES ---
 interface BingoCell {
@@ -423,10 +424,19 @@ const Bingo: React.FC = () => {
                     const existing = poolMap.get(key);
                     
                     const spawns = new Set<string>();
-                    if (manualEntry.rarity === 'Legendary') {
-                        spawns.add("Check the quest book!");
-                    } else if (manualEntry.rarity === 'Mythical') {
-                        spawns.add("Mythic");
+                    
+                    // CHECK FOR JSON CONFIGURATION FIRST
+                    const parsedInfo = getSpawnInfo(manualEntry.name);
+                    
+                    if (parsedInfo) {
+                        spawns.add(parsedInfo);
+                    } else {
+                        // Fallback logic if not in config
+                        if (manualEntry.rarity === 'Legendary') {
+                            spawns.add("Check the quest book!");
+                        } else if (manualEntry.rarity === 'Mythical') {
+                            spawns.add("Mythic");
+                        }
                     }
 
                     if (existing) {
@@ -598,7 +608,7 @@ const Bingo: React.FC = () => {
         // Parse Difficulty for display/logic sync (Optional but good for UI consistency)
         const parts = card.cardId.split('-');
         if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
-            setActiveDifficulty(PREFIX_TO_DIFF[parts[0]]);
+            setActiveDifficulty(PREFIX_TO_DIFF[parts[0]] as BingoDifficulty);
         }
 
         setShowLoadModal(false);
@@ -637,7 +647,7 @@ const Bingo: React.FC = () => {
                 // Check if ID contains encoded difficulty (Format: Prefix-RandomString)
                 const parts = customId.split('-');
                 if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
-                    diffToUse = PREFIX_TO_DIFF[parts[0]];
+                    diffToUse = PREFIX_TO_DIFF[parts[0]] as BingoDifficulty;
                 }
                 // If legacy ID or manual input without prefix, rely on passed difficulty or default
             } else {
