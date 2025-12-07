@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
+import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
 
 // --- CONSTANTS ---
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
@@ -281,7 +282,23 @@ const BingoDashboard: React.FC = () => {
                     else poolMap.set(key, { id: m.id, name: m.name, rarity: m.rarity, spawns: new Set() });
                 });
 
-                const cobblemonPool = Array.from(poolMap.values());
+                // --- FILTERING GACHA POKEMON ---
+                const excludedIds = new Set<number>();
+                [...LAMB_POOL, ...WAGYU_POOL].forEach(item => {
+                    if (item.type === 'Pokemon') {
+                        excludedIds.add(item.id);
+                    }
+                });
+
+                // Convert map to array and filter
+                let cobblemonArray = Array.from(poolMap.values());
+                
+                // Remove excluded IDs
+                cobblemonArray = cobblemonArray.filter(entry => !excludedIds.has(entry.id));
+
+                if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
+                
+                const cobblemonPool = cobblemonArray;
                 
                 // 3. GENERATE PREVIEW GRID (Using Fetched Seed and Difficulty Logic)
                 const seed = cyrb128(activeCardId);

@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
+import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
 
 // --- TYPES ---
 interface BingoCell {
@@ -444,9 +446,23 @@ const Bingo: React.FC = () => {
                     }
                 });
 
-                if (poolMap.size === 0) throw new Error("No data found in sheet");
+                // --- FILTERING GACHA POKEMON ---
+                const excludedIds = new Set<number>();
+                [...LAMB_POOL, ...WAGYU_POOL].forEach(item => {
+                    if (item.type === 'Pokemon') {
+                        excludedIds.add(item.id);
+                    }
+                });
+
+                // Convert map to array and filter
+                let cobblemonArray = Array.from(poolMap.values());
                 
-                setCobblemonPool(Array.from(poolMap.values()));
+                // Remove excluded IDs
+                cobblemonArray = cobblemonArray.filter(entry => !excludedIds.has(entry.id));
+
+                if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
+                
+                setCobblemonPool(cobblemonArray);
             } catch (e) {
                 console.error("Sheet Error:", e);
                 setSheetError(true);
