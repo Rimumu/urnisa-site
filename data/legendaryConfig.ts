@@ -3675,11 +3675,15 @@ const formatName = (str: string): string => {
     return clean.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const normalizeForMatch = (str: string): string => {
+    return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+};
+
 export const getSpawnInfo = (pokemonName: string): string | null => {
-    const target = pokemonName.toLowerCase().trim();
+    const target = normalizeForMatch(pokemonName);
     
     // 1. Filter entries for this pokemon
-    const entries = RAW_SPAWN_DATA.spawns.filter(s => s.pokemon.toLowerCase() === target);
+    const entries = RAW_SPAWN_DATA.spawns.filter(s => normalizeForMatch(s.pokemon) === target);
     
     if (entries.length === 0) return null;
 
