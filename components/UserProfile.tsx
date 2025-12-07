@@ -295,7 +295,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
 
                             {/* My Bingo Link - NEW */}
                             <button 
-                                onClick={() => { navigate('/minecraft/bingo?view=saved'); setMenuOpen(false); }}
+                                onClick={() => { navigate('/minecraft/bingo/card?view=saved'); setMenuOpen(false); }}
                                 className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
                             >
                                 <ArchiveBoxIcon />
