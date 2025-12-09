@@ -188,6 +188,10 @@ const RedemptionCodeSchema = new mongoose.Schema({
 const RedemptionCode = mongoose.model('RedemptionCode', RedemptionCodeSchema);
 
 
+// --- CACHING SYSTEMS ---
+const messageCache = {}; // channelId -> { data, timestamp }
+const memberCache = new Map(); // userId -> { data, timestamp }
+
 // --- CHAT PREVIEW LOGIC ---
 const fetchDiscordMessages = async (channelId) => {
     if (!DISCORD_BOT_TOKEN) throw new Error("Missing Bot Token");
@@ -205,10 +209,24 @@ const fetchDiscordMessages = async (channelId) => {
 
 const fetchGuildMember = async (guildId, userId) => {
     if (!DISCORD_BOT_TOKEN) return null;
+
+    const cacheKey = `${guildId}:${userId}`;
+    const cached = memberCache.get(cacheKey);
+    // Cache members for 15 minutes to reduce API calls significantly
+    if (cached && (Date.now() - cached.timestamp < 15 * 60 * 1000)) {
+        return cached.data;
+    }
+
     try {
         const response = await axios.get(`https://discord.com/api/v10/guilds/${guildId}/members/${userId}`, {
             headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` }
         });
+        
+        memberCache.set(cacheKey, {
+            data: response.data,
+            timestamp: Date.now()
+        });
+
         return response.data;
     } catch (error) { return null; }
 };
@@ -217,12 +235,21 @@ const fetchGuildMember = async (guildId, userId) => {
 
 app.get('/', (req, res) => res.send('Urnisa Discord Service Active'));
 
-// 1. Chat Preview
+// 1. Chat Preview (CACHED)
 app.get('/api/messages', async (req, res) => {
     const { channelId } = req.query;
     if (!channelId) return res.status(400).json({ error: 'Channel ID required' });
+
+    // Check Message Cache (30 seconds)
+    const cachedMsg = messageCache[channelId];
+    if (cachedMsg && (Date.now() - cachedMsg.timestamp < 30 * 1000)) {
+        return res.json(cachedMsg.data);
+    }
+
     try {
         const messages = await fetchDiscordMessages(channelId);
+        
+        // Parallel fetch for members with individual caching inside fetchGuildMember
         const enhancedMessages = await Promise.all(messages.map(async (msg) => {
             const memberData = await fetchGuildMember(GUILD_ID, msg.author.id);
             return {
@@ -230,8 +257,24 @@ app.get('/api/messages', async (req, res) => {
                 member: memberData ? { nick: memberData.nick, avatar: memberData.avatar } : null
             };
         }));
-        res.json(enhancedMessages.reverse());
-    } catch (error) { res.status(500).json({ error: 'Failed' }); }
+        
+        const finalData = enhancedMessages.reverse();
+
+        // Update Cache
+        messageCache[channelId] = {
+            data: finalData,
+            timestamp: Date.now()
+        };
+
+        res.json(finalData);
+    } catch (error) { 
+        // Fallback: If we hit a rate limit (429) but have stale data, return that instead of erroring
+        if (cachedMsg) {
+            console.warn("⚠️ Discord Rate Limit hit. Serving stale cache.");
+            return res.json(cachedMsg.data);
+        }
+        res.status(500).json({ error: 'Failed' }); 
+    }
 });
 
 // 2. OAuth

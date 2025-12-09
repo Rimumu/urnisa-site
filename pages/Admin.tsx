@@ -700,6 +700,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     // NISATHON HANDLERS
     const handleSetTimer = () => apiCall('nisathon/timer/set', { hours: timerH, minutes: timerM, seconds: timerS });
     const handleAddTimer = () => apiCall('nisathon/timer/add', { minutes: addM });
+    const handleRemoveTimer = () => apiCall('nisathon/timer/add', { minutes: -Math.abs(addM) });
     const handlePauseTimer = () => apiCall('nisathon/timer/pause', {});
     const handleSimulateEvent = () => apiCall('nisathon/test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
     const handleToggleDoubleTimer = () => apiCall('nisathon/event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
@@ -920,7 +921,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             <input type="number" placeholder="Minutes to Add/Sub" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={addM} onChange={e => setAddM(parseInt(e.target.value)||0)} />
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={handleAddTimer} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-bold">Add Time</button>
+                                            <button onClick={handleAddTimer} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-bold">Add</button>
+                                            <button onClick={handleRemoveTimer} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded-lg font-bold">Remove</button>
                                             <button onClick={handlePauseTimer} className={`flex-1 py-2 rounded-lg font-bold text-white ${stats.isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-yellow-600 hover:bg-yellow-500'}`}>
                                                 {stats.isPaused ? 'RESUME' : 'PAUSE'}
                                             </button>
