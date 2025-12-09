@@ -254,6 +254,10 @@ const Admin: React.FC = () => {
     // --- USER MANAGEMENT STATE ---
     const [userQuery, setUserQuery] = useState('');
     const [userActionStatus, setUserActionStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    
+    // --- USER MERGE STATE ---
+    const [mergeSource, setMergeSource] = useState('');
+    const [mergeTarget, setMergeTarget] = useState('');
 
     // --- MERGER TOOL STATE ---
     const [mergedOutput, setMergedOutput] = useState('');
@@ -532,6 +536,33 @@ const Admin: React.FC = () => {
             const data = await response.json();
             if (response.ok) {
                 setUserActionStatus({ type: 'success', message: data.message });
+            } else {
+                setUserActionStatus({ type: 'error', message: data.error || "Failed" });
+            }
+        } catch (e) {
+            setUserActionStatus({ type: 'error', message: "Network Error" });
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const handleMergeUsers = async () => {
+        if (!mergeSource || !mergeTarget) return;
+        if (!window.confirm(`Are you sure you want to merge ALL data from "${mergeSource}" into "${mergeTarget}"?`)) return;
+
+        setLoading(true);
+        setUserActionStatus(null);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/nisathon/merge-users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ sourceUser: mergeSource, targetUser: mergeTarget })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setUserActionStatus({ type: 'success', message: data.message });
+                setMergeSource('');
+                setMergeTarget('');
             } else {
                 setUserActionStatus({ type: 'error', message: data.error || "Failed" });
             }
@@ -1466,6 +1497,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'users' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">User Management</h2>
+                            
+                            {/* Reset Daily */}
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Reset Daily Check-In</h3>
                                 <p className="text-gray-400 text-sm mb-4">Reset the daily timer for a user so they can check in again immediately.</p>
@@ -1483,6 +1516,45 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all disabled:opacity-50"
                                     >
                                         {loading ? 'Processing...' : 'Reset Timer'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Merge Users Section */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Merge Contributors</h3>
+                                <p className="text-gray-400 text-sm mb-4">
+                                    Combine data from one username into another. Useful if a user donated with a different name.
+                                    <br/><span className="text-red-400 font-bold">Warning: This action cannot be undone easily.</span>
+                                </p>
+                                <div className="flex flex-col md:flex-row gap-4 items-end">
+                                    <div className="flex-1 w-full">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Merge From (Old Name)</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" 
+                                            value={mergeSource} 
+                                            onChange={e => setMergeSource(e.target.value)} 
+                                            placeholder="e.g. Anon123"
+                                        />
+                                    </div>
+                                    <div className="flex items-center pb-3 text-gray-500">→</div>
+                                    <div className="flex-1 w-full">
+                                        <label className="text-xs font-bold text-gray-500 uppercase">Merge Into (Main Name)</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" 
+                                            value={mergeTarget} 
+                                            onChange={e => setMergeTarget(e.target.value)} 
+                                            placeholder="e.g. Urnisa"
+                                        />
+                                    </div>
+                                    <button 
+                                        onClick={handleMergeUsers} 
+                                        disabled={loading}
+                                        className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all disabled:opacity-50"
+                                    >
+                                        Merge
                                     </button>
                                 </div>
                             </div>
