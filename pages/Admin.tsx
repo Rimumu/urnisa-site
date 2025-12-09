@@ -548,7 +548,7 @@ const Admin: React.FC = () => {
     
     const handleMergeUsers = async () => {
         if (!mergeSource || !mergeTarget) return;
-        if (!window.confirm(`Are you sure you want to merge ALL data from "${mergeSource}" into "${mergeTarget}"?`)) return;
+        if (!window.confirm(`Are you sure you want to merge ALL data from "${mergeSource}" into "${mergeTarget}"? This will combine their event totals.`)) return;
 
         setLoading(true);
         setUserActionStatus(null);
@@ -563,6 +563,9 @@ const Admin: React.FC = () => {
                 setUserActionStatus({ type: 'success', message: data.message });
                 setMergeSource('');
                 setMergeTarget('');
+                // FORCE REFRESH DATA
+                fetchEventLog();
+                refetchStats();
             } else {
                 setUserActionStatus({ type: 'error', message: data.error || "Failed" });
             }
@@ -1525,7 +1528,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <h3 className="font-bold text-white mb-4 border-b border-white/10 pb-2">Merge Contributors</h3>
                                 <p className="text-gray-400 text-sm mb-4">
                                     Combine data from one username into another. Useful if a user donated with a different name.
-                                    <br/><span className="text-red-400 font-bold">Warning: This action cannot be undone easily.</span>
+                                    <br/><span className="text-red-400 font-bold">Warning: This action cannot be undone easily. It will SUM the totals.</span>
                                 </p>
                                 <div className="flex flex-col md:flex-row gap-4 items-end">
                                     <div className="flex-1 w-full">
@@ -1537,8 +1540,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             onChange={e => setMergeSource(e.target.value)} 
                                             placeholder="e.g. Anon123"
                                         />
+                                        <div className="text-[10px] text-gray-500 mt-1">Case-insensitive (e.g. 'anon' finds 'Anon', 'ANON')</div>
                                     </div>
-                                    <div className="flex items-center pb-3 text-gray-500">→</div>
+                                    <div className="flex items-center pb-6 text-gray-500">→</div>
                                     <div className="flex-1 w-full">
                                         <label className="text-xs font-bold text-gray-500 uppercase">Merge Into (Main Name)</label>
                                         <input 
@@ -1548,14 +1552,17 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             onChange={e => setMergeTarget(e.target.value)} 
                                             placeholder="e.g. Urnisa"
                                         />
+                                        <div className="text-[10px] text-gray-500 mt-1">Exact name (case-sensitive for consistency)</div>
                                     </div>
-                                    <button 
-                                        onClick={handleMergeUsers} 
-                                        disabled={loading}
-                                        className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all disabled:opacity-50"
-                                    >
-                                        Merge
-                                    </button>
+                                    <div className="pb-3">
+                                        <button 
+                                            onClick={handleMergeUsers} 
+                                            disabled={loading || !mergeSource || !mergeTarget}
+                                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all disabled:opacity-50 h-full"
+                                        >
+                                            {loading ? 'Merging...' : 'Merge & Sum'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
