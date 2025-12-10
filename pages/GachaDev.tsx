@@ -22,11 +22,11 @@ interface Particle {
 }
 
 // --- CONSTANTS ---
-// Updated to Weather Trio and Jirachi
-const RAYQUAZA_IMAGE = "https://cobblemon.tools/pokedex/pokemon/rayquaza/sprite.png";
-const GROUDON_IMAGE = "https://cobblemon.tools/pokedex/pokemon/groudon/sprite.png";
-const KYOGRE_IMAGE = "https://cobblemon.tools/pokedex/pokemon/kyogre/sprite.png";
-const WAGYU_PACK_IMAGE = "https://cobblemon.tools/pokedex/pokemon/jirachi/sprite.png";
+// FORCED 3D Renders (PokeAPI Home) to fix broken sprites
+const RAYQUAZA_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/384.png";
+const GROUDON_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/383.png";
+const KYOGRE_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/382.png";
+const WAGYU_PACK_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/385.png";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -88,8 +88,8 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 return;
             }
 
-            // Force 3D Render for broken sprites
-            const forced3D = ['kyogre', 'groudon', 'jirachi'];
+            // Force 3D Render for broken sprites (Kyogre, Groudon, Jirachi)
+            const forced3D = ['kyogre', 'groudon', 'jirachi', 'rayquaza'];
             if (forced3D.includes(card.name.toLowerCase())) {
                 setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
                 return;
