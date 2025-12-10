@@ -1403,24 +1403,46 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             {/* Whitelist Management */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Pending Applications */}
-                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
                                     <h3 className="font-bold text-white mb-4 flex items-center gap-2">
                                         <span className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></span>
                                         Pending Applications
                                     </h3>
-                                    <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
-                                        {whitelistApps.length === 0 ? <div className="text-gray-500 italic text-sm">No pending applications</div> : whitelistApps.map(app => (
-                                            <div key={app._id} className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <img src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-8 h-8 rounded-full" />
-                                                    <div className="flex-1 min-w-0">
+                                    <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
+                                        {whitelistApps.length === 0 ? <div className="text-gray-500 italic text-sm text-center py-10">No pending applications</div> : whitelistApps.map(app => (
+                                            <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                                {/* Avatars */}
+                                                <div className="relative shrink-0">
+                                                    <img 
+                                                        src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
+                                                        className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" 
+                                                        alt="Discord"
+                                                    />
+                                                    <img 
+                                                        src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} 
+                                                        className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800"
+                                                        alt="MC"
+                                                    />
+                                                </div>
+                                                
+                                                <div className="flex-1 min-w-0 w-full">
+                                                    <div className="flex justify-between items-baseline">
                                                         <div className="text-sm font-bold text-white truncate">{app.discordUsername}</div>
-                                                        <div className="text-xs font-mono text-green-400 truncate">MC: {app.minecraftUsername}</div>
+                                                        <div className="text-[10px] text-gray-500 font-mono">
+                                                            {new Date(app.appliedAt).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-xs font-mono text-brand-primary truncate mt-0.5">
+                                                        MC: <span className="text-green-400">{app.minecraftUsername}</span>
+                                                    </div>
+                                                    <div className="text-[10px] text-gray-600 mt-1">
+                                                        Applied: {new Date(app.appliedAt).toLocaleTimeString()}
                                                     </div>
                                                 </div>
-                                                <div className="flex gap-2">
-                                                    <button onClick={() => handleApproveApp(app._id)} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-1.5 rounded-lg text-xs font-bold">Approve</button>
-                                                    <button onClick={() => handleRejectApp(app._id)} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-1.5 rounded-lg text-xs font-bold">Reject</button>
+
+                                                <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                                                    <button onClick={() => handleApproveApp(app._id)} className="flex-1 sm:flex-none bg-green-600 hover:bg-green-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors">Approve</button>
+                                                    <button onClick={() => handleRejectApp(app._id)} className="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors">Reject</button>
                                                 </div>
                                             </div>
                                         ))}
@@ -1428,22 +1450,44 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 </div>
 
                                 {/* Approved List */}
-                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
                                     <h3 className="font-bold text-white mb-4 flex items-center gap-2">
                                         <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                                        Approved (Recent)
+                                        Approved History
                                     </h3>
-                                    <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
+                                    <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
                                         {approvedApps.map(app => (
-                                            <div key={app._id} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-green-900/30 rounded-full flex items-center justify-center text-green-500 text-xs font-bold">✓</div>
-                                                    <div>
-                                                        <div className="text-sm font-bold text-white">{app.discordUsername}</div>
-                                                        <div className="text-xs font-mono text-gray-400">{app.minecraftUsername}</div>
+                                            <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                                {/* Avatars */}
+                                                <div className="relative shrink-0">
+                                                    <img 
+                                                        src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
+                                                        className="w-12 h-12 rounded-full border-2 border-black bg-gray-800 grayscale opacity-70" 
+                                                        alt="Discord"
+                                                    />
+                                                    <img 
+                                                        src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} 
+                                                        className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800 grayscale"
+                                                        alt="MC"
+                                                    />
+                                                    <div className="absolute top-0 left-0 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center border border-black">
+                                                        <span className="text-[8px] text-black font-bold">✓</span>
                                                     </div>
                                                 </div>
-                                                <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-red-400 text-xs font-bold px-2 py-1 bg-red-900/10 rounded hover:bg-red-900/30">Revoke</button>
+
+                                                <div className="flex-1 min-w-0 w-full">
+                                                    <div className="text-sm font-bold text-white truncate opacity-80">{app.discordUsername}</div>
+                                                    <div className="text-xs font-mono text-gray-400 truncate mt-0.5">
+                                                        MC: {app.minecraftUsername}
+                                                    </div>
+                                                    <div className="text-[10px] text-green-500/70 mt-1 font-bold">
+                                                        Approved: {app.approvedAt ? new Date(app.approvedAt).toLocaleString() : 'Unknown'}
+                                                    </div>
+                                                </div>
+
+                                                <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white text-xs font-bold px-3 py-1.5 bg-red-900/10 rounded hover:bg-red-600 transition-colors shrink-0 self-start sm:self-center">
+                                                    Revoke
+                                                </button>
                                             </div>
                                         ))}
                                     </div>

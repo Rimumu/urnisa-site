@@ -138,7 +138,8 @@ const WhitelistAppSchema = new mongoose.Schema({
     discordAvatar: String,
     minecraftUsername: String,
     status: { type: String, default: 'pending' }, // pending, approved, rejected
-    appliedAt: { type: Date, default: Date.now }
+    appliedAt: { type: Date, default: Date.now },
+    approvedAt: { type: Date } // Added to track approval time
 });
 const WhitelistApp = mongoose.model('WhitelistApp', WhitelistAppSchema);
 
@@ -409,7 +410,7 @@ app.get('/api/admin/whitelist', auth, async (req, res) => {
 
 app.get('/api/admin/whitelist/approved', auth, async (req, res) => {
     try {
-        const apps = await WhitelistApp.find({ status: 'approved' }).sort({ appliedAt: -1 });
+        const apps = await WhitelistApp.find({ status: 'approved' }).sort({ approvedAt: -1, appliedAt: -1 }).limit(50);
         res.json(apps);
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -422,6 +423,7 @@ app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
 
         // Update DB
         app.status = 'approved';
+        app.approvedAt = new Date(); // Track approval time
         await app.save();
 
         // Send RCON Command
@@ -477,7 +479,7 @@ app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// NEW: Reset Daily Check-In (Admin)
+// Reset Daily Check-In (Admin)
 app.post('/api/admin/users/reset-daily', auth, async (req, res) => {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: "Missing query" });
