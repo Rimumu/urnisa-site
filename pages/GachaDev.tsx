@@ -428,6 +428,11 @@ const GachaDev: React.FC = () => {
                         #000 20px
                     );
                 }
+                /* New Background Pattern matching site theme */
+                .bg-rose-pattern {
+                    background-image: radial-gradient(#581c25 1.5px, transparent 1.5px);
+                    background-size: 24px 24px;
+                }
             `}</style>
 
             {/* DEV BANNER */}
@@ -436,11 +441,10 @@ const GachaDev: React.FC = () => {
                 DEV ENVIRONMENT
             </div>
 
-            <div className="absolute inset-0 bg-[#0f0f11] z-0">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#2a2a30_0%,_#0f0f11_70%)]"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]"></div>
-                <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '50px 50px' }}></div>
-            </div>
+            {/* UPDATED BACKGROUND */}
+            <div className="absolute inset-0 bg-rose-pattern opacity-10 pointer-events-none z-0"></div>
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none"></div>
 
             <UserProfile 
                 onUserChange={setUser} 
