@@ -589,19 +589,19 @@ const GachaDev: React.FC = () => {
                                             <img 
                                                 src={RAYQUAZA_IMAGE} 
                                                 alt="Rayquaza" 
-                                                className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
+                                                className="absolute top-20 left-1/2 transform -translate-x-1/2 w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
                                             />
                                             {/* Groudon: Bottom Left, Overlapping Rayquaza, Z-20 */}
                                             <img 
                                                 src={GROUDON_IMAGE} 
                                                 alt="Groudon" 
-                                                className="absolute bottom-20 left-2 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
+                                                className="absolute bottom-20 left-2 w-36 h-36 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
                                             />
                                             {/* Kyogre: Bottom Right, Overlapping Rayquaza, Z-20 */}
                                             <img 
                                                 src={KYOGRE_IMAGE} 
                                                 alt="Kyogre" 
-                                                className="absolute bottom-20 right-2 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
+                                                className="absolute bottom-20 right-2 w-36 h-36 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
                                             />
                                         </div>
 
@@ -626,8 +626,10 @@ const GachaDev: React.FC = () => {
                                     <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[3rem] border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
                                         
-                                        <div className="absolute top-0 left-0 right-0 h-5 bg-black/40 border-b border-indigo-500/30"></div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-5 bg-black/40 border-t border-indigo-500/30"></div>
+                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-indigo-500/30 flex items-center justify-center space-x-1">
+                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-indigo-500/20 rounded-full"></div>)}
+                                        </div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-indigo-500/30"></div>
 
                                         {/* Badge at Top */}
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
@@ -806,7 +808,9 @@ const GachaDev: React.FC = () => {
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
-                                        <div className="absolute top-0 left-0 right-0 h-5 bg-black/20 border-b border-white/10"></div>
+                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/20 border-b border-white/10 flex items-center justify-center space-x-1">
+                                            {[...Array(10)].map((_, i) => <div key={i} className={`w-1 h-3 rounded-full ${selectedPack === 'lamb' ? 'bg-emerald-500/20' : 'bg-indigo-500/20'}`}></div>)}
+                                        </div>
                                         <div className="absolute left-0 w-full h-1 bg-white/50 blur-[1px]" style={{ bottom: `${100 - cutYPercentage}%` }}></div>
                                     </div>
 
@@ -865,7 +869,7 @@ const GachaDev: React.FC = () => {
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-5 bg-black/20 border-t border-white/10"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/20 border-t border-white/10"></div>
                                         <div className="absolute left-0 w-full h-1 bg-white/30 blur-[1px]" style={{ top: `${cutYPercentage}%` }}></div>
                                         
                                         {isCut && (
