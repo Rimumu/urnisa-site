@@ -10,10 +10,22 @@ import { CardData, LAMB_POOL, WAGYU_POOL } from '../data/gachaPoolsDev'; // Impo
 type PackType = 'lamb' | 'wagyu' | null;
 type GameStage = 'selection' | 'cutting' | 'dispensing' | 'finished';
 
+interface Particle {
+    id: number;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    color: string;
+    life: number;
+    size: number;
+}
+
 // --- CONSTANTS ---
 // Updated to Weather Trio and Jirachi
 const LAMB_PACK_IMAGE = "https://cobblemon.tools/pokedex/pokemon/rayquaza/sprite.png";
 const WAGYU_PACK_IMAGE = "https://cobblemon.tools/pokedex/pokemon/jirachi/sprite.png";
+const TEAR_SOUND = "https://www.soundjay.com/misc/sounds/paper-rip-2.mp3";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -168,6 +180,7 @@ const GachaDev: React.FC = () => {
     const [trail, setTrail] = useState<{x: number, y: number, id: number}[]>([]);
     const [cutYPercentage, setCutYPercentage] = useState(15); 
     const [cutVisuals, setCutVisuals] = useState({ rotate: -30, x: -50, y: -150 });
+    const [particles, setParticles] = useState<Particle[]>([]);
 
     // Dispensing Logic
     const [revealedCards, setRevealedCards] = useState<CardData[]>([]);
@@ -182,6 +195,7 @@ const GachaDev: React.FC = () => {
     const svgRef = useRef<SVGSVGElement>(null);
     const packRef = useRef<HTMLDivElement>(null);
 
+    // Trail Decay
     useEffect(() => {
         if (trail.length === 0) return;
         const interval = setInterval(() => {
@@ -189,6 +203,21 @@ const GachaDev: React.FC = () => {
         }, 16);
         return () => clearInterval(interval);
     }, [trail]);
+
+    // Particle Physics
+    useEffect(() => {
+        if (particles.length === 0) return;
+        const interval = setInterval(() => {
+            setParticles(prev => prev.map(p => ({
+                ...p,
+                x: p.x + p.vx,
+                y: p.y + p.vy,
+                vy: p.vy + 0.8, // Gravity
+                life: p.life - 0.03
+            })).filter(p => p.life > 0));
+        }, 16);
+        return () => clearInterval(interval);
+    }, [particles.length]);
 
     // Fetch Packs on mount/user change - DEV MODE USES DEV API
     useEffect(() => {
@@ -253,6 +282,7 @@ const GachaDev: React.FC = () => {
                 setIsCut(false);
                 setRevealedCards([]);
                 setTrail([]);
+                setParticles([]);
                 setCutCoords(null);
                 setCutYPercentage(15);
             } else {
@@ -301,17 +331,21 @@ const GachaDev: React.FC = () => {
         if (!cutCoords) return;
         const dx = cutCoords.end.x - cutCoords.start.x;
         const dy = cutCoords.end.y - cutCoords.start.y;
-        if (Math.abs(dx) < 200) return;
+        
+        // Lenient check: Reduced min distance to 150
+        if (Math.abs(dx) < 150) return;
 
         const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        const isHorizontal = (Math.abs(angle) < 30) || (Math.abs(angle) > 150);
+        // Lenient check: Increased angle tolerance to 35 degrees
+        const isHorizontal = (Math.abs(angle) < 35) || (Math.abs(angle) > 145);
         if (!isHorizontal) return;
 
         const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
         const relativeY = avgY - 200;
         const percentage = (relativeY / 420) * 100;
 
-        if (percentage >= 10 && percentage <= 15) {
+        // Lenient check: Widen vertical range to 5% - 30%
+        if (percentage >= 5 && percentage <= 30) {
             triggerCut(percentage);
         } else {
             setCutCoords(null);
@@ -320,10 +354,37 @@ const GachaDev: React.FC = () => {
 
     const triggerCut = (exactPercentage: number) => {
         setCutYPercentage(exactPercentage);
-        const randomRotate = (Math.random() * 20) - 10;
-        const randomX = (Math.random() * 60) - 30;
-        const randomY = -80 - (Math.random() * 40);
+        
+        // Play Sound
+        const audio = new Audio(TEAR_SOUND);
+        audio.volume = 0.4;
+        audio.play().catch(e => console.warn("Audio play failed (user interaction needed)", e));
+
+        // Generate Particles
+        const newParticles: Particle[] = [];
+        const baseColor = selectedPack === 'lamb' ? '#a855f7' : '#ec4899';
+        const cutY = (exactPercentage / 100) * 420;
+
+        for (let i = 0; i < 40; i++) {
+            newParticles.push({
+                id: Date.now() + i,
+                x: Math.random() * 300, // Spread across pack width
+                y: cutY + (Math.random() * 10 - 5), // Near cut line
+                vx: (Math.random() - 0.5) * 15, // Explosion outward
+                vy: (Math.random() - 1) * 15 - 5, // Explosion upward
+                color: Math.random() > 0.6 ? '#ffffff' : baseColor,
+                life: 1.0,
+                size: Math.random() * 6 + 2
+            });
+        }
+        setParticles(newParticles);
+
+        // Dynamic Visuals
+        const randomRotate = (Math.random() * 40) - 20; // More rotation
+        const randomX = (Math.random() * 200) - 100; // Fly further sideways
+        const randomY = -400 - (Math.random() * 50); // Fly further up
         setCutVisuals({ rotate: randomRotate, x: randomX, y: randomY });
+        
         setIsCut(true);
         setCutCoords(null);
     };
@@ -377,6 +438,7 @@ const GachaDev: React.FC = () => {
         setIsCut(false);
         setRevealedCards([]);
         setTrail([]);
+        setParticles([]);
         setCutYPercentage(15);
         // Refresh Dev balance
         fetch(`${DISCORD_API_URL}/api/dev/packs`)
@@ -635,6 +697,23 @@ const GachaDev: React.FC = () => {
                                         </div>
                                     )}
 
+                                    {/* Particles */}
+                                    {particles.map(p => (
+                                        <div 
+                                            key={p.id}
+                                            className="absolute rounded-full pointer-events-none z-50 mix-blend-screen"
+                                            style={{
+                                                left: p.x,
+                                                top: p.y,
+                                                width: p.size + 'px',
+                                                height: p.size + 'px',
+                                                backgroundColor: p.color,
+                                                opacity: p.life,
+                                                transform: `scale(${p.life})`
+                                            }}
+                                        />
+                                    ))}
+
                                     {dispensingCard && (
                                         <div className="absolute inset-0 flex justify-center items-center z-30 pointer-events-none">
                                             <div className="animate-fly-out">
@@ -648,7 +727,7 @@ const GachaDev: React.FC = () => {
                                         className={`
                                             absolute inset-0 z-20 
                                             rounded-[3rem] overflow-hidden bg-gradient-to-b border-[6px]
-                                            transition-all duration-500 ease-out origin-bottom-left
+                                            transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] origin-bottom-left
                                             ${selectedPack === 'lamb' 
                                                 ? 'from-indigo-900 via-purple-900 to-black border-purple-500/50' 
                                                 : 'from-rose-400 via-pink-500 to-rose-900 border-pink-300/50'}
