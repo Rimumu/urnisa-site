@@ -583,25 +583,25 @@ const GachaDev: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Image Composition: Weather Trio (Clustered) */}
-                                        <div className="absolute inset-0 z-10 pointer-events-none">
-                                            {/* Rayquaza Top Center */}
+                                        {/* Image Composition: Weather Trio (Clustered & Overlapping) */}
+                                        <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[3rem]">
+                                            {/* Rayquaza: Center, Big, Z-10 */}
                                             <img 
                                                 src={RAYQUAZA_IMAGE} 
                                                 alt="Rayquaza" 
-                                                className="absolute top-[5%] left-1/2 transform -translate-x-1/2 w-56 h-56 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] group-hover:scale-110 transition-transform duration-500 z-20" 
+                                                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 scale-125 transition-transform duration-700 group-hover:scale-[1.3]" 
                                             />
-                                            {/* Groudon Bottom Left */}
+                                            {/* Groudon: Bottom Left, Overlapping, Z-20 */}
                                             <img 
                                                 src={GROUDON_IMAGE} 
                                                 alt="Groudon" 
-                                                className="absolute bottom-[15%] left-0 w-40 h-40 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] group-hover:translate-x-2 transition-transform duration-500 z-10 translate-x-4" 
+                                                className="absolute bottom-16 -left-8 w-52 h-52 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-4" 
                                             />
-                                            {/* Kyogre Bottom Right */}
+                                            {/* Kyogre: Bottom Right, Overlapping, Z-20 */}
                                             <img 
                                                 src={KYOGRE_IMAGE} 
                                                 alt="Kyogre" 
-                                                className="absolute bottom-[15%] right-0 w-40 h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] group-hover:-translate-x-2 transition-transform duration-500 z-10 -translate-x-4" 
+                                                className="absolute bottom-16 -right-8 w-52 h-52 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-4" 
                                             />
                                         </div>
 
@@ -771,17 +771,17 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-[10%] left-1/2 transform -translate-x-1/2 w-56 h-56 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]" 
+                                                        className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 scale-125" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
                                                         alt="Groudon" 
-                                                        className="absolute bottom-[18%] left-2 w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" 
+                                                        className="absolute bottom-20 -left-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
                                                     />
                                                     <img 
                                                         src={KYOGRE_IMAGE} 
                                                         alt="Kyogre" 
-                                                        className="absolute bottom-[18%] right-2 w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                                                        className="absolute bottom-20 -right-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
                                                     />
                                                 </>
                                             ) : (
@@ -831,17 +831,17 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-[10%] left-1/2 transform -translate-x-1/2 w-56 h-56 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]" 
+                                                        className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 scale-125" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
                                                         alt="Groudon" 
-                                                        className="absolute bottom-[18%] left-2 w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" 
+                                                        className="absolute bottom-20 -left-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
                                                     />
                                                     <img 
                                                         src={KYOGRE_IMAGE} 
                                                         alt="Kyogre" 
-                                                        className="absolute bottom-[18%] right-2 w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                                                        className="absolute bottom-20 -right-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
                                                     />
                                                 </>
                                             ) : (
