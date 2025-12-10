@@ -11,9 +11,9 @@ type PackType = 'lamb' | 'wagyu' | null;
 type GameStage = 'selection' | 'cutting' | 'dispensing' | 'finished';
 
 // --- CONSTANTS ---
-// Updated to Cobblemon Tools source as requested
-const MEWTWO_IMAGE = "https://cobblemon.tools/pokedex/pokemon/mewtwo/sprite.png";
-const MEW_IMAGE = "https://cobblemon.tools/pokedex/pokemon/mew/sprite.png";
+// Updated to Weather Trio and Jirachi
+const LAMB_PACK_IMAGE = "https://cobblemon.tools/pokedex/pokemon/rayquaza/sprite.png";
+const WAGYU_PACK_IMAGE = "https://cobblemon.tools/pokedex/pokemon/jirachi/sprite.png";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -457,7 +457,7 @@ const GachaDev: React.FC = () => {
                     {/* Lamb Counter */}
                     <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
                         <div className="bg-purple-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-purple-500/10">
-                            <img src={MEWTWO_IMAGE} alt="Mewtwo" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                            <img src={LAMB_PACK_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
                             <div className="text-[9px] font-black text-purple-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
@@ -467,7 +467,7 @@ const GachaDev: React.FC = () => {
                     {/* Wagyu Counter */}
                     <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
                         <div className="bg-pink-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-pink-500/10">
-                            <img src={MEW_IMAGE} alt="Mew" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                            <img src={WAGYU_PACK_IMAGE} alt="Wagyu" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
                             <div className="text-[9px] font-black text-pink-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
@@ -489,7 +489,7 @@ const GachaDev: React.FC = () => {
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 md:px-20">
-                            {/* LAMB CHOP (MEWTWO) */}
+                            {/* LAMB CHOP (WEATHER TRIO) */}
                             <button 
                                 onClick={() => selectPack('lamb')}
                                 disabled={processing}
@@ -516,18 +516,18 @@ const GachaDev: React.FC = () => {
 
                                     {/* Image in Center */}
                                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                                        <img src={MEWTWO_IMAGE} alt="Mewtwo" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500" />
+                                        <img src={LAMB_PACK_IMAGE} alt="Weather Trio" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)] group-hover:scale-110 transition-transform duration-500" />
                                     </div>
 
                                     {/* Text at Bottom */}
                                     <div className="absolute bottom-12 left-0 right-0 text-center z-30">
                                         <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
-                                        <p className="text-purple-300 text-xs font-mono uppercase tracking-[0.2em] mt-1">Mewtwo Edition</p>
+                                        <p className="text-purple-300 text-xs font-mono uppercase tracking-[0.2em] mt-1">Weather Trio</p>
                                     </div>
                                 </div>
                             </button>
 
-                            {/* WAGYU (MEW) */}
+                            {/* WAGYU (JIRACHI) */}
                             <button 
                                 onClick={() => selectPack('wagyu')}
                                 disabled={processing}
@@ -552,13 +552,13 @@ const GachaDev: React.FC = () => {
 
                                     {/* Image in Center */}
                                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                                        <img src={MEW_IMAGE} alt="Mew" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500" />
+                                        <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500" />
                                     </div>
 
                                     {/* Text at Bottom */}
                                     <div className="absolute bottom-12 left-0 right-0 text-center z-30">
                                         <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
-                                        <p className="text-pink-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Mew Edition</p>
+                                        <p className="text-pink-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Wishmaker Edition</p>
                                     </div>
                                 </div>
                             </button>
@@ -664,7 +664,7 @@ const GachaDev: React.FC = () => {
                                     {/* Icon */}
                                     <div className="absolute inset-0 flex items-center justify-center z-10">
                                         <img 
-                                            src={selectedPack === 'lamb' ? MEWTWO_IMAGE : MEW_IMAGE} 
+                                            src={selectedPack === 'lamb' ? LAMB_PACK_IMAGE : WAGYU_PACK_IMAGE} 
                                             alt="Pack Icon"
                                             className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                                         />
@@ -704,7 +704,7 @@ const GachaDev: React.FC = () => {
                                     
                                     <div className="absolute inset-0 flex items-center justify-center z-10">
                                         <img 
-                                            src={selectedPack === 'lamb' ? MEWTWO_IMAGE : MEW_IMAGE} 
+                                            src={selectedPack === 'lamb' ? LAMB_PACK_IMAGE : WAGYU_PACK_IMAGE} 
                                             alt="Pack Icon"
                                             className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
                                         />
