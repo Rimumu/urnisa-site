@@ -26,8 +26,8 @@ interface Particle {
 const RAYQUAZA_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/384.png";
 const GROUDON_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/383.png";
 const KYOGRE_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/382.png";
-// Updated Jirachi GIF
-const WAGYU_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765388052/jirachi_m5e7co.gif";
+// Updated Jirachi GIF - Smooth Loop
+const WAGYU_PACK_IMAGE = "https://play.pokemonshowdown.com/sprites/xyani/jirachi.gif";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -638,7 +638,7 @@ const GachaDev: React.FC = () => {
 
                                         {/* Image in Center */}
                                         <div className="absolute inset-0 flex items-center justify-center z-10">
-                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500" />
+                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500" />
                                         </div>
 
                                         {/* Text at Bottom */}
@@ -788,7 +788,7 @@ const GachaDev: React.FC = () => {
                                                 <img 
                                                     src={WAGYU_PACK_IMAGE} 
                                                     alt="Pack Icon"
-                                                    className="w-64 h-64 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]"
+                                                    className="w-80 h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]"
                                                 />
                                             )}
                                         </div>
@@ -848,7 +848,7 @@ const GachaDev: React.FC = () => {
                                                 <img 
                                                     src={WAGYU_PACK_IMAGE} 
                                                     alt="Pack Icon"
-                                                    className="w-64 h-64 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]"
+                                                    className="w-80 h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]"
                                                 />
                                             )}
                                         </div>
