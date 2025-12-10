@@ -771,17 +771,17 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-16 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
+                                                        className="absolute top-20 left-1/2 transform -translate-x-1/2 w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
                                                         alt="Groudon" 
-                                                        className="absolute bottom-28 left-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
+                                                        className="absolute bottom-24 left-2 w-36 h-36 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
                                                     />
                                                     <img 
                                                         src={KYOGRE_IMAGE} 
                                                         alt="Kyogre" 
-                                                        className="absolute bottom-28 right-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
+                                                        className="absolute bottom-24 right-2 w-36 h-36 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
                                                     />
                                                 </>
                                             ) : (
@@ -831,17 +831,17 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-16 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
+                                                        className="absolute top-20 left-1/2 transform -translate-x-1/2 w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
                                                         alt="Groudon" 
-                                                        className="absolute bottom-28 left-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
+                                                        className="absolute bottom-24 left-2 w-36 h-36 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
                                                     />
                                                     <img 
                                                         src={KYOGRE_IMAGE} 
                                                         alt="Kyogre" 
-                                                        className="absolute bottom-28 right-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
+                                                        className="absolute bottom-24 right-2 w-36 h-36 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
                                                     />
                                                 </>
                                             ) : (
