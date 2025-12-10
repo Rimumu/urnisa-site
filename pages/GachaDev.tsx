@@ -88,6 +88,13 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 return;
             }
 
+            // Force 3D Render for broken sprites
+            const forced3D = ['kyogre', 'groudon', 'jirachi'];
+            if (forced3D.includes(card.name.toLowerCase())) {
+                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
+                return;
+            }
+
             const cobbleName = getFormattedName(card.name);
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
             // Fallback 3D Render
@@ -360,8 +367,8 @@ const GachaDev: React.FC = () => {
         
         // Generate Particles
         const newParticles: Particle[] = [];
-        // Switch to Emerald color for Lamb (Weather Trio), Gold for Wagyu (Jirachi)
-        const baseColor = selectedPack === 'lamb' ? '#10b981' : '#fbbf24';
+        // Switch to Emerald color for Lamb (Weather Trio), Indigo for Wagyu (Wishmaker)
+        const baseColor = selectedPack === 'lamb' ? '#10b981' : '#6366f1';
         const cutY = (exactPercentage / 100) * 420;
 
         for (let i = 0; i < 40; i++) {
@@ -614,29 +621,29 @@ const GachaDev: React.FC = () => {
                                         hover:scale-105 hover:rotate-1 cursor-pointer
                                     `}
                                 >
-                                    <div className="absolute inset-0 bg-yellow-400 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-b from-slate-800 via-slate-700 to-slate-900 rounded-[3rem] border-[6px] border-yellow-400/80 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[3rem] border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
                                         
-                                        <div className="absolute top-0 left-0 right-0 h-5 bg-black/40 border-b border-yellow-500/30"></div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-5 bg-black/40 border-t border-yellow-500/30"></div>
+                                        <div className="absolute top-0 left-0 right-0 h-5 bg-black/40 border-b border-indigo-500/30"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-5 bg-black/40 border-t border-indigo-500/30"></div>
 
                                         {/* Badge at Top */}
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className="bg-yellow-500 text-black text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            <div className="bg-indigo-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
                                                 Mythic Pack
                                             </div>
                                         </div>
 
                                         {/* Image in Center */}
                                         <div className="absolute inset-0 flex items-center justify-center z-10">
-                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-48 h-48 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)] group-hover:scale-110 transition-transform duration-500" />
+                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-48 h-48 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500" />
                                         </div>
 
                                         {/* Text at Bottom */}
                                         <div className="absolute bottom-12 left-0 right-0 text-center z-30">
-                                            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-yellow-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
-                                            <p className="text-yellow-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Wishmaker Edition</p>
+                                            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
+                                            <p className="text-indigo-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Wishmaker Edition</p>
                                         </div>
                                     </div>
                                 </button>
@@ -746,7 +753,7 @@ const GachaDev: React.FC = () => {
                                             transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] origin-bottom-left
                                             ${selectedPack === 'lamb' 
                                                 ? 'from-emerald-900 via-teal-900 to-black border-emerald-500/50' 
-                                                : 'from-slate-800 via-slate-700 to-slate-900 border-yellow-400/80'}
+                                                : 'from-[#0f172a] via-[#312e81] to-[#0f172a] border-indigo-400/50'}
                                         `}
                                         style={{
                                             clipPath: `inset(0 0 ${100 - cutYPercentage}% 0)`,
@@ -787,14 +794,14 @@ const GachaDev: React.FC = () => {
 
                                         {/* Badge */}
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500 text-white' : 'bg-yellow-500 text-black'}`}>
+                                            <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500 text-white' : 'bg-indigo-500 text-white'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
                                         {/* Text */}
                                         <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-yellow-200'}`}>
+                                            <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
@@ -809,7 +816,7 @@ const GachaDev: React.FC = () => {
                                             rounded-[3rem] overflow-hidden bg-gradient-to-b border-[6px]
                                             ${selectedPack === 'lamb' 
                                                 ? 'from-emerald-900 via-teal-900 to-black border-emerald-500/50' 
-                                                : 'from-slate-800 via-slate-700 to-slate-900 border-yellow-400/80'}
+                                                : 'from-[#0f172a] via-[#312e81] to-[#0f172a] border-indigo-400/50'}
                                         `}
                                         style={{
                                             clipPath: `inset(${cutYPercentage}% 0 0 0)`
@@ -847,13 +854,13 @@ const GachaDev: React.FC = () => {
 
                                         {/* Badge */}
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-yellow-500 text-black'}`}>
+                                            <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
                                         <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-yellow-200'}`}>
+                                            <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
@@ -866,7 +873,7 @@ const GachaDev: React.FC = () => {
                                     </div>
 
                                     {/* INNER GLOW */}
-                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-emerald-500/40' : 'bg-yellow-500/40'}`}
+                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-emerald-500/40' : 'bg-indigo-500/40'}`}
                                          style={{ 
                                              top: `${cutYPercentage}%`, 
                                              height: '20%', 
