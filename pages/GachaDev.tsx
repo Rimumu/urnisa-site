@@ -22,10 +22,10 @@ interface Particle {
 }
 
 // --- CONSTANTS ---
-// Updated Weather Trio Images (Cloudinary)
-const RAYQUAZA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765407540/rayquazaSTILL_dp2prw.png";
-const GROUDON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765407540/groudonSTILL_n9gwqt.png";
-const KYOGRE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765407539/kyogreSTILL_ygpasz.png";
+// Updated Weather Trio Images (Cropped/Tight Versions)
+const RAYQUAZA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409570/rayquazaSTILL_dp2prw.png";
+const GROUDON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409624/groudonSTILL_n9gwqt.png";
+const KYOGRE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409663/kyogreSTILL_ygpasz.png";
 // Reverted Jirachi GIF (Big Size)
 const WAGYU_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765388052/jirachi_m5e7co.gif";
 
@@ -585,23 +585,23 @@ const GachaDev: React.FC = () => {
 
                                         {/* Image Composition: Weather Trio (Clustered & Overlapping) */}
                                         <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[3rem]">
-                                            {/* Rayquaza: Center, Big, Z-10 */}
+                                            {/* Rayquaza: Top Center, Z-10 */}
                                             <img 
                                                 src={RAYQUAZA_IMAGE} 
                                                 alt="Rayquaza" 
-                                                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 scale-125 transition-transform duration-700 group-hover:scale-[1.3]" 
+                                                className="absolute top-2 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
                                             />
-                                            {/* Groudon: Bottom Left, Overlapping, Z-20 */}
+                                            {/* Groudon: Bottom Left, Overlapping Rayquaza, Z-20 */}
                                             <img 
                                                 src={GROUDON_IMAGE} 
                                                 alt="Groudon" 
-                                                className="absolute bottom-16 -left-8 w-52 h-52 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-4" 
+                                                className="absolute bottom-20 left-2 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
                                             />
-                                            {/* Kyogre: Bottom Right, Overlapping, Z-20 */}
+                                            {/* Kyogre: Bottom Right, Overlapping Rayquaza, Z-20 */}
                                             <img 
                                                 src={KYOGRE_IMAGE} 
                                                 alt="Kyogre" 
-                                                className="absolute bottom-16 -right-8 w-52 h-52 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-4" 
+                                                className="absolute bottom-20 right-2 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
                                             />
                                         </div>
 
@@ -771,17 +771,17 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 scale-125" 
+                                                        className="absolute top-4 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
                                                         alt="Groudon" 
-                                                        className="absolute bottom-20 -left-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
+                                                        className="absolute bottom-28 left-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
                                                     />
                                                     <img 
                                                         src={KYOGRE_IMAGE} 
                                                         alt="Kyogre" 
-                                                        className="absolute bottom-20 -right-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
+                                                        className="absolute bottom-28 right-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
                                                     />
                                                 </>
                                             ) : (
@@ -831,17 +831,17 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 scale-125" 
+                                                        className="absolute top-4 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
                                                         alt="Groudon" 
-                                                        className="absolute bottom-20 -left-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
+                                                        className="absolute bottom-28 left-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
                                                     />
                                                     <img 
                                                         src={KYOGRE_IMAGE} 
                                                         alt="Kyogre" 
-                                                        className="absolute bottom-20 -right-10 w-48 h-48 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
+                                                        className="absolute bottom-28 right-[-10px] w-44 h-44 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
                                                     />
                                                 </>
                                             ) : (
