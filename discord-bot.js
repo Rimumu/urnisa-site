@@ -954,6 +954,23 @@ app.post('/api/inventory/claim', async (req, res) => {
     }
 });
 
+// --- DEV ENDPOINTS ---
+app.get('/api/dev/packs', (req, res) => {
+    // Return infinite packs for testing
+    res.json({ lambPacks: 999, wagyuPacks: 999 });
+});
+
+app.post('/api/dev/packs/use', (req, res) => {
+    // Simulate usage
+    res.json({ success: true, remaining: 998 });
+});
+
+app.post('/api/dev/inventory/save', (req, res) => {
+    // Simulate save
+    console.log("📝 [DEV] Inventory Save Triggered (Not saved to DB)", req.body);
+    res.json({ success: true });
+});
+
 
 // --- KEEP ALIVE ---
 const SELF_URL = 'https://urnisa-bot.onrender.com';
