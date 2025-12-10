@@ -25,7 +25,6 @@ interface Particle {
 // Updated to Weather Trio and Jirachi
 const LAMB_PACK_IMAGE = "https://cobblemon.tools/pokedex/pokemon/rayquaza/sprite.png";
 const WAGYU_PACK_IMAGE = "https://cobblemon.tools/pokedex/pokemon/jirachi/sprite.png";
-const TEAR_SOUND = "https://www.soundjay.com/misc/sounds/paper-rip-2.mp3";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -344,8 +343,8 @@ const GachaDev: React.FC = () => {
         const relativeY = avgY - 200;
         const percentage = (relativeY / 420) * 100;
 
-        // Lenient check: Widen vertical range to 5% - 30%
-        if (percentage >= 5 && percentage <= 30) {
+        // Lenient check: Widen vertical range to 5% - 20%
+        if (percentage >= 5 && percentage <= 20) {
             triggerCut(percentage);
         } else {
             setCutCoords(null);
@@ -355,11 +354,6 @@ const GachaDev: React.FC = () => {
     const triggerCut = (exactPercentage: number) => {
         setCutYPercentage(exactPercentage);
         
-        // Play Sound
-        const audio = new Audio(TEAR_SOUND);
-        audio.volume = 0.4;
-        audio.play().catch(e => console.warn("Audio play failed (user interaction needed)", e));
-
         // Generate Particles
         const newParticles: Particle[] = [];
         const baseColor = selectedPack === 'lamb' ? '#a855f7' : '#ec4899';
