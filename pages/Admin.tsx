@@ -218,11 +218,14 @@ const Admin: React.FC = () => {
     const [testAmount, setTestAmount] = useState("1");
     const [testTier, setTestTier] = useState("1000"); // 1000 = Tier 1, 2000 = Tier 2, 3000 = Tier 3
     const [managerStatus, setManagerStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [timeLeftString, setTimeLeftString] = useState("00:00:00");
+    const [timeBump, setTimeBump] = useState(false);
 
     // --- NEW STATE FOR EVENT LOGS ---
     const [recentEvents, setRecentEvents] = useState<ContributorEvent[]>([]);
     const [confirmDelete, setConfirmDelete] = useState<{id: string, revert: boolean} | null>(null);
     const [filterType, setFilterType] = useState<string>('all'); // New Filter State
+    const [filterUser, setFilterUser] = useState<string>(''); // New User Filter
 
     // --- COUNTDOWN STATE ---
     const [cdH, setCdH] = useState(0);
@@ -278,11 +281,58 @@ const Admin: React.FC = () => {
     useEffect(() => { setLocalGoals(currentGoals); }, [currentGoals]);
     useEffect(() => { setLocalWheel(wheelItems); }, [wheelItems]);
 
-    // Fetch Logs when on manager tab
+    // Timer Animation Logic
+    const timerRef = useRef<number>(0);
+    const prevTimeRef = useRef<number>(0);
+
+    useEffect(() => {
+        const updateTimer = () => {
+            let ms = 0;
+            if (stats.isPaused) {
+                ms = stats.remainingTimeMs || 0;
+            } else {
+                const now = Date.now();
+                const end = new Date(stats.timerEndTime).getTime();
+                ms = Math.max(0, end - now);
+            }
+
+            // Detect Added Time Bump
+            if (ms > prevTimeRef.current + 1000 && prevTimeRef.current > 0) {
+                setTimeBump(true);
+                setTimeout(() => setTimeBump(false), 300);
+            }
+            prevTimeRef.current = ms;
+
+            const hours = Math.floor((ms / (1000 * 60 * 60)));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+            const hStr = hours >= 100 ? hours.toString() : (hours < 10 ? "0" + hours : hours);
+            const mStr = minutes < 10 ? "0" + minutes : minutes;
+            const sStr = seconds < 10 ? "0" + seconds : seconds;
+
+            setTimeLeftString(`${hStr}:${mStr}:${sStr}`);
+            
+            if (!stats.isPaused) {
+                timerRef.current = requestAnimationFrame(updateTimer);
+            }
+        };
+
+        if (stats.isPaused) {
+            updateTimer(); // Update once for paused state
+        } else {
+            timerRef.current = requestAnimationFrame(updateTimer);
+        }
+
+        return () => cancelAnimationFrame(timerRef.current);
+    }, [stats.timerEndTime, stats.isPaused, stats.remainingTimeMs]);
+
+
+    // Fetch Logs when on manager tab - Increased Limit
     const fetchEventLog = async () => {
         try {
-            // Fetch 50 most recent events from backend
-            const res = await fetch(`${API_BASE_URL}/api/nisathon/recent`);
+            // Fetch 500 most recent events from backend
+            const res = await fetch(`${API_BASE_URL}/api/nisathon/recent?limit=500`);
             if(res.ok) setRecentEvents(await res.json());
         } catch(e) {}
     };
@@ -829,14 +879,22 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
     // FILTER LOGIC
     const filteredEvents = recentEvents.filter(evt => {
-        if (filterType === 'all') return true;
-        if (filterType === 'sub') return evt.type === 'sub' || evt.type === 'subscriber';
-        if (filterType === 'gift') return evt.type === 'gift';
-        if (filterType === 'bits') return evt.type === 'bits' || evt.type === 'cheer';
-        if (filterType === 'dono') return evt.type === 'donation' || evt.type === 'tip';
-        if (filterType === 'follow') return evt.type === 'follower' || evt.type === 'follow';
-        return true;
+        // Filter By Type
+        const typeMatch = (filterType === 'all') 
+            || (filterType === 'sub' && (evt.type === 'sub' || evt.type === 'subscriber'))
+            || (filterType === 'gift' && evt.type === 'gift')
+            || (filterType === 'bits' && (evt.type === 'bits' || evt.type === 'cheer'))
+            || (filterType === 'dono' && (evt.type === 'donation' || evt.type === 'tip'))
+            || (filterType === 'follow' && (evt.type === 'follower' || evt.type === 'follow'));
+
+        // Filter By User
+        const userMatch = filterUser.trim() === '' || evt.user.toLowerCase().includes(filterUser.toLowerCase().trim());
+
+        return typeMatch && userMatch;
     });
+
+    const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
+    const latestActivity = recentEvents.length > 0 ? recentEvents[0] : null;
 
     // --- RENDER ---
     if (!isAuthenticated) {
@@ -898,7 +956,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
             {/* --- CONTENT AREA --- */}
             <div className="flex-1 p-6 md:p-10 overflow-y-auto min-h-screen">
-                <div className="max-w-4xl mx-auto space-y-8">
+                <div className="max-w-6xl mx-auto space-y-8">
                     
                     {/* --- STATUS TOASTS --- */}
                     {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus].map((status, i) => status && (
@@ -910,122 +968,198 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {/* ... (Existing tabs: nisathon_mgr, countdown, schedule, event, profile, gallery, minecraft, codes) ... */}
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            {/* Header Stats */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
-                                    <div className="text-xs text-gray-500 font-bold uppercase">Timer End</div>
-                                    <div className="text-lg font-mono text-white">{stats.isPaused ? "PAUSED" : new Date(stats.timerEndTime).toLocaleTimeString()}</div>
+                            {/* LIVE HEADER STATS */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {/* Live Timer */}
+                                <div className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 ${isDoubleTimer ? 'bg-gradient-to-br from-yellow-900/40 to-black border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.2)]' : 'bg-black/40 border-white/10'}`}>
+                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1 flex justify-between items-center">
+                                        Time Remaining
+                                        {stats.isPaused && <span className="bg-amber-500 text-black px-2 rounded text-[10px] animate-pulse">PAUSED</span>}
+                                        {isDoubleTimer && <span className="text-yellow-400 animate-pulse">🔥 2x</span>}
+                                    </div>
+                                    <div className={`text-3xl font-black font-mono tracking-tight ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300`}>
+                                        {timeLeftString}
+                                    </div>
+                                    {timeBump && <div className="absolute right-4 bottom-4 text-green-500 font-bold text-xs animate-ping">+ TIME</div>}
                                 </div>
-                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
-                                    <div className="text-xs text-gray-500 font-bold uppercase">Total NB</div>
-                                    <div className="text-2xl font-black text-brand-primary">{Math.floor(stats.totalNisaballs)}</div>
+
+                                {/* Total Nisaballs */}
+                                <div className="bg-black/40 p-4 rounded-2xl border border-white/10 relative overflow-hidden group">
+                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Total Nisaballs</div>
+                                    <div className="text-3xl font-black text-brand-primary">{Math.floor(stats.totalNisaballs)}</div>
+                                    <div className="absolute -right-4 -bottom-4 text-6xl opacity-5 group-hover:opacity-10 transition-opacity">🏐</div>
                                 </div>
-                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
-                                    <div className="text-xs text-gray-500 font-bold uppercase">Subs</div>
-                                    <div className="text-xl font-bold text-white">{stats.currentSubs}</div>
+
+                                {/* Recent Activity (Replaced Subs Counter) */}
+                                <div className="bg-black/40 p-4 rounded-2xl border border-white/10 relative overflow-hidden group">
+                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Recent Activity</div>
+                                    {latestActivity ? (
+                                        <div>
+                                            <div className="font-bold text-white text-lg truncate">{latestActivity.user}</div>
+                                            <div className="text-xs font-mono text-green-400">{latestActivity.amountDisplay}</div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-gray-500 italic">Waiting for events...</div>
+                                    )}
                                 </div>
-                                <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-center">
-                                    <div className="text-xs text-gray-500 font-bold uppercase">Status</div>
-                                    <div className={`text-sm font-bold uppercase ${streamStatusOverride === 'live' ? 'text-green-500' : streamStatusOverride === 'offline' ? 'text-red-500' : 'text-gray-400'}`}>
+
+                                {/* Stream Status */}
+                                <div className="bg-black/40 p-4 rounded-2xl border border-white/10 flex flex-col justify-between">
+                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Stream Status</div>
+                                    <div className={`text-xl font-black uppercase tracking-wide ${streamStatusOverride === 'live' ? 'text-green-500' : streamStatusOverride === 'offline' ? 'text-red-500' : 'text-blue-400'}`}>
                                         {streamStatusOverride}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Timer Controls */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-bold text-white">Timer Control</h3>
-                                    <button 
-                                        onClick={handleToggleDoubleTimer}
-                                        className={`text-xs px-3 py-1 rounded-full font-bold border transition-colors ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400' : 'bg-transparent text-gray-500 border-gray-600'}`}
-                                    >
-                                        {stats.activeEvent === 'DOUBLE_TIMER' ? '🔥 2x Active' : 'Enable 2x Event'}
-                                    </button>
-                                </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-4">
-                                        <div className="flex gap-2">
-                                            <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={timerH} onChange={e => setTimerH(parseInt(e.target.value)||0)} />
-                                            <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={timerM} onChange={e => setTimerM(parseInt(e.target.value)||0)} />
-                                            <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={timerS} onChange={e => setTimerS(parseInt(e.target.value)||0)} />
-                                        </div>
-                                        <button onClick={handleSetTimer} className="w-full bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg font-bold">Set Absolute Time</button>
+                            {/* Timer Controls & Event Trigger */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <div className="lg:col-span-2 bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="font-bold text-white text-lg">Timer Management</h3>
+                                        <button 
+                                            onClick={handleToggleDoubleTimer}
+                                            className={`text-xs px-4 py-2 rounded-full font-bold border transition-all ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}
+                                        >
+                                            {stats.activeEvent === 'DOUBLE_TIMER' ? '🔥 2x Active' : 'Enable 2x Event'}
+                                        </button>
                                     </div>
                                     
-                                    <div className="space-y-4">
-                                        <div className="flex gap-2">
-                                            <input type="number" placeholder="Minutes to Add/Sub" className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-center" value={addM} onChange={e => setAddM(parseInt(e.target.value)||0)} />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <label className="text-xs text-gray-500 font-bold uppercase">Set Absolute Time</label>
+                                            <div className="flex gap-2">
+                                                <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerH} onChange={e => setTimerH(parseInt(e.target.value)||0)} />
+                                                <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerM} onChange={e => setTimerM(parseInt(e.target.value)||0)} />
+                                                <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerS} onChange={e => setTimerS(parseInt(e.target.value)||0)} />
+                                            </div>
+                                            <button onClick={handleSetTimer} className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-bold transition-colors">Set Time</button>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <button onClick={handleAddTimer} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-bold">Add</button>
-                                            <button onClick={handleRemoveTimer} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded-lg font-bold">Remove</button>
-                                            <button onClick={handlePauseTimer} className={`flex-1 py-2 rounded-lg font-bold text-white ${stats.isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-yellow-600 hover:bg-yellow-500'}`}>
-                                                {stats.isPaused ? 'RESUME' : 'PAUSE'}
-                                            </button>
+                                        
+                                        <div className="space-y-4">
+                                            <label className="text-xs text-gray-500 font-bold uppercase">Quick Adjust</label>
+                                            <div className="flex gap-2">
+                                                <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={addM} onChange={e => setAddM(parseInt(e.target.value)||0)} />
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <button onClick={handleAddTimer} className="bg-green-600/80 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition-colors">+</button>
+                                                <button onClick={handleRemoveTimer} className="bg-red-600/80 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors">-</button>
+                                                <button onClick={handlePauseTimer} className={`py-3 rounded-xl font-bold text-white transition-colors ${stats.isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-yellow-600 hover:bg-yellow-500'}`}>
+                                                    {stats.isPaused ? 'RESUME' : 'PAUSE'}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Manual Event Trigger */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white mb-4">Simulate Event</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                                    <input type="text" placeholder="Username" className="bg-black/40 border border-white/10 rounded-lg p-2 text-white" value={testUser} onChange={e => setTestUser(e.target.value)} />
-                                    <select className="bg-black/40 border border-white/10 rounded-lg p-2 text-white" value={testType} onChange={e => setTestType(e.target.value)}>
-                                        <option value="sub">Sub (Tier 1)</option>
-                                        <option value="gift">Gift Sub</option>
-                                        <option value="bits">Bits</option>
-                                        <option value="donation">Donation ($)</option>
-                                    </select>
-                                    <input type="number" placeholder="Amount" className="bg-black/40 border border-white/10 rounded-lg p-2 text-white" value={testAmount} onChange={e => setTestAmount(e.target.value)} />
-                                    <button onClick={handleSimulateEvent} className="bg-brand-primary hover:bg-red-600 text-white font-bold rounded-lg px-4">Trigger</button>
+                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col justify-between">
+                                    <div>
+                                        <h3 className="font-bold text-white mb-4">Manual Event Trigger</h3>
+                                        <div className="space-y-3">
+                                            <input type="text" placeholder="Username" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white" value={testUser} onChange={e => setTestUser(e.target.value)} />
+                                            <div className="flex gap-2">
+                                                <select className="bg-black/40 border border-white/10 rounded-xl p-3 text-white flex-1" value={testType} onChange={e => setTestType(e.target.value)}>
+                                                    <option value="sub">Sub</option>
+                                                    <option value="gift">Gift</option>
+                                                    <option value="bits">Bits</option>
+                                                    <option value="donation">Dono</option>
+                                                </select>
+                                                <input type="number" placeholder="Amt" className="bg-black/40 border border-white/10 rounded-xl p-3 text-white w-20 text-center" value={testAmount} onChange={e => setTestAmount(e.target.value)} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button onClick={handleSimulateEvent} className="w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-xl mt-4 transition-colors">Trigger Event</button>
                                 </div>
                             </div>
 
                             {/* Stream Status Override */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white mb-4">Stream Status Override</h3>
-                                <div className="flex gap-4">
-                                    <button onClick={() => handleSetStreamStatus('auto')} className={`flex-1 py-3 rounded-xl font-bold border transition-colors ${streamStatusOverride === 'auto' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>AUTO (DecAPI)</button>
-                                    <button onClick={() => handleSetStreamStatus('live')} className={`flex-1 py-3 rounded-xl font-bold border transition-colors ${streamStatusOverride === 'live' ? 'bg-green-600 border-green-400 text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>FORCE LIVE</button>
-                                    <button onClick={() => handleSetStreamStatus('offline')} className={`flex-1 py-3 rounded-xl font-bold border transition-colors ${streamStatusOverride === 'offline' ? 'bg-red-600 border-red-400 text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>FORCE OFFLINE</button>
+                            <div className="bg-black/30 backdrop-blur-lg p-4 rounded-2xl border border-white/10 shadow-xl flex items-center justify-between gap-4">
+                                <h3 className="font-bold text-gray-400 text-sm uppercase tracking-wider ml-2">Stream Status Override</h3>
+                                <div className="flex gap-2 bg-black/40 p-1 rounded-xl">
+                                    <button onClick={() => handleSetStreamStatus('auto')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'auto' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>AUTO</button>
+                                    <button onClick={() => handleSetStreamStatus('live')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'live' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>LIVE</button>
+                                    <button onClick={() => handleSetStreamStatus('offline')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'offline' ? 'bg-red-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>OFFLINE</button>
                                 </div>
                             </div>
 
-                            {/* Event Logs */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-bold text-white">Recent Event Log</h3>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => setFilterType('all')} className={`px-3 py-1 rounded text-xs font-bold ${filterType === 'all' ? 'bg-white text-black' : 'bg-white/10 text-gray-400'}`}>All</button>
-                                        <button onClick={() => setFilterType('sub')} className={`px-3 py-1 rounded text-xs font-bold ${filterType === 'sub' ? 'bg-purple-500 text-white' : 'bg-white/10 text-gray-400'}`}>Subs</button>
-                                        <button onClick={() => setFilterType('dono')} className={`px-3 py-1 rounded text-xs font-bold ${filterType === 'dono' ? 'bg-green-500 text-white' : 'bg-white/10 text-gray-400'}`}>$</button>
+                            {/* REVAMPED EVENT LOGS */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl h-[600px] flex flex-col">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                    <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                                        <span>📜</span> Event Log ({filteredEvents.length})
+                                    </h3>
+                                    
+                                    <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
+                                        <div className="relative flex-1 md:w-64">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search username..." 
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg pl-3 pr-10 py-2 text-sm text-white focus:border-brand-primary outline-none"
+                                                value={filterUser}
+                                                onChange={(e) => setFilterUser(e.target.value)}
+                                            />
+                                            {filterUser && (
+                                                <button onClick={() => setFilterUser('')} className="absolute right-3 top-2 text-gray-500 hover:text-white">✕</button>
+                                            )}
+                                        </div>
+                                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+                                            {['all', 'sub', 'gift', 'bits', 'dono', 'follow'].map(f => (
+                                                <button 
+                                                    key={f}
+                                                    onClick={() => setFilterType(f)} 
+                                                    className={`px-3 py-1.5 rounded-md text-xs font-bold capitalize transition-all ${filterType === f ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-white'}`}
+                                                >
+                                                    {f === 'dono' ? '$' : f}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="max-h-96 overflow-y-auto custom-scrollbar space-y-2">
+
+                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
                                     {filteredEvents.map(evt => (
-                                        <div key={evt._id} className="flex justify-between items-center bg-white/5 p-3 rounded-lg border border-white/5 hover:bg-white/10">
-                                            <div>
-                                                <div className="text-sm font-bold text-white">{evt.user} <span className="text-gray-500 font-normal">({evt.type})</span></div>
-                                                <div className="text-xs text-gray-400">{evt.amountDisplay} • {new Date(evt.createdAt).toLocaleTimeString()}</div>
+                                        <div key={evt._id} className="flex items-center gap-4 bg-white/5 p-3 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0 ${
+                                                evt.type === 'sub' || evt.type === 'subscriber' ? 'bg-purple-500/20 text-purple-400' :
+                                                evt.type === 'gift' ? 'bg-pink-500/20 text-pink-400' :
+                                                evt.type === 'bits' || evt.type === 'cheer' ? 'bg-cyan-500/20 text-cyan-400' :
+                                                evt.type === 'donation' || evt.type === 'tip' ? 'bg-green-500/20 text-green-400' :
+                                                'bg-blue-500/20 text-blue-400'
+                                            }`}>
+                                                {evt.type === 'gift' ? '🎁' : evt.type.includes('sub') ? '⭐' : evt.type.includes('bit') ? '💎' : evt.type.includes('don') || evt.type.includes('tip') ? '💸' : '👤'}
                                             </div>
                                             
+                                            <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                                <div className="truncate">
+                                                    <div className="font-bold text-white text-sm">{evt.user}</div>
+                                                    <div className="text-[10px] text-gray-500 uppercase font-bold">{evt.type}</div>
+                                                </div>
+                                                <div className="text-sm font-mono text-gray-300 truncate">
+                                                    {evt.amountDisplay}
+                                                </div>
+                                                <div className="text-xs text-gray-500 text-right md:text-left">
+                                                    {new Date(evt.createdAt).toLocaleString()}
+                                                </div>
+                                            </div>
+
                                             {confirmDelete?.id === evt._id ? (
-                                                <div className="flex gap-2 animate-in fade-in slide-in-from-right">
-                                                    <button onClick={() => handleDeleteEvent(evt._id, true)} className="bg-red-600 text-white text-xs px-3 py-1 rounded font-bold hover:bg-red-700">Revert Stats & Delete</button>
-                                                    <button onClick={() => handleDeleteEvent(evt._id, false)} className="bg-gray-600 text-white text-xs px-3 py-1 rounded font-bold hover:bg-gray-700">Delete Only</button>
+                                                <div className="flex gap-2 animate-in fade-in slide-in-from-right shrink-0">
+                                                    <button onClick={() => handleDeleteEvent(evt._id, true)} className="bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-red-700">Revert & Delete</button>
+                                                    <button onClick={() => handleDeleteEvent(evt._id, false)} className="bg-gray-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-gray-700">Del Only</button>
                                                     <button onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-white px-2">✕</button>
                                                 </div>
                                             ) : (
-                                                <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-red-500 hover:text-red-300 px-2 py-1 rounded hover:bg-red-500/10 transition-colors">
-                                                    🗑️
+                                                <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-gray-600 hover:text-red-500 px-2 py-1 transition-colors opacity-0 group-hover:opacity-100">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                    </svg>
                                                 </button>
                                             )}
                                         </div>
                                     ))}
+                                    {filteredEvents.length === 0 && (
+                                        <div className="text-center py-20 text-gray-500">No events found matching filters.</div>
+                                    )}
                                 </div>
                             </div>
 
