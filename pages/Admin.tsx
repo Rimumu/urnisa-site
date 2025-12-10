@@ -239,6 +239,7 @@ const Admin: React.FC = () => {
     // --- MINECRAFT WHITELIST STATE ---
     const [whitelistApps, setWhitelistApps] = useState<any[]>([]);
     const [approvedApps, setApprovedApps] = useState<any[]>([]);
+    const [approvedSearch, setApprovedSearch] = useState('');
 
     // --- BINGO CONFIG STATE ---
     const [bingoCardId, setBingoCardId] = useState('');
@@ -893,6 +894,14 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
         return typeMatch && userMatch;
     });
 
+    const filteredApprovedApps = approvedApps.filter(app => {
+        const term = approvedSearch.toLowerCase();
+        return (
+            (app.discordUsername && app.discordUsername.toLowerCase().includes(term)) ||
+            (app.minecraftUsername && app.minecraftUsername.toLowerCase().includes(term))
+        );
+    });
+
     const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
     const latestActivity = recentEvents.length > 0 ? recentEvents[0] : null;
 
@@ -1451,45 +1460,58 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                                 {/* Approved List */}
                                 <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
-                                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                                        <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                                        Approved History
-                                    </h3>
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                                        <h3 className="font-bold text-white flex items-center gap-2">
+                                            <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                            Approved History <span className="text-gray-500 text-sm ml-1">({approvedApps.length})</span>
+                                        </h3>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search username..." 
+                                            value={approvedSearch}
+                                            onChange={(e) => setApprovedSearch(e.target.value)}
+                                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:border-green-500 outline-none w-full sm:w-auto"
+                                        />
+                                    </div>
                                     <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                        {approvedApps.map(app => (
-                                            <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                                                {/* Avatars */}
-                                                <div className="relative shrink-0">
-                                                    <img 
-                                                        src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
-                                                        className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" 
-                                                        alt="Discord"
-                                                    />
-                                                    <img 
-                                                        src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} 
-                                                        className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800"
-                                                        alt="MC"
-                                                    />
-                                                    <div className="absolute top-0 left-0 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center border border-black">
-                                                        <span className="text-[8px] text-black font-bold">✓</span>
+                                        {filteredApprovedApps.length === 0 ? (
+                                            <div className="text-center text-gray-500 text-sm py-4">No matching users found.</div>
+                                        ) : (
+                                            filteredApprovedApps.map(app => (
+                                                <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                                    {/* Avatars */}
+                                                    <div className="relative shrink-0">
+                                                        <img 
+                                                            src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
+                                                            className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" 
+                                                            alt="Discord"
+                                                        />
+                                                        <img 
+                                                            src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} 
+                                                            className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800"
+                                                            alt="MC"
+                                                        />
+                                                        <div className="absolute top-0 left-0 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center border border-black">
+                                                            <span className="text-[8px] text-black font-bold">✓</span>
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                <div className="flex-1 min-w-0 w-full">
-                                                    <div className="text-sm font-bold text-white truncate opacity-80">{app.discordUsername}</div>
-                                                    <div className="text-xs font-mono text-gray-400 truncate mt-0.5">
-                                                        MC: {app.minecraftUsername}
+                                                    <div className="flex-1 min-w-0 w-full">
+                                                        <div className="text-sm font-bold text-white truncate opacity-80">{app.discordUsername}</div>
+                                                        <div className="text-xs font-mono text-gray-400 truncate mt-0.5">
+                                                            MC: {app.minecraftUsername}
+                                                        </div>
+                                                        <div className="text-[10px] text-green-500/70 mt-1 font-bold">
+                                                            Approved: {app.approvedAt ? new Date(app.approvedAt).toLocaleString() : 'Unknown'}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-[10px] text-green-500/70 mt-1 font-bold">
-                                                        Approved: {app.approvedAt ? new Date(app.approvedAt).toLocaleString() : 'Unknown'}
-                                                    </div>
-                                                </div>
 
-                                                <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white text-xs font-bold px-3 py-1.5 bg-red-900/10 rounded hover:bg-red-600 transition-colors shrink-0 self-start sm:self-center">
-                                                    Revoke
-                                                </button>
-                                            </div>
-                                        ))}
+                                                    <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white text-xs font-bold px-3 py-1.5 bg-red-900/10 rounded hover:bg-red-600 transition-colors shrink-0 self-start sm:self-center">
+                                                        Revoke
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             </div>
