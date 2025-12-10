@@ -1462,12 +1462,12 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 <div className="relative shrink-0">
                                                     <img 
                                                         src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
-                                                        className="w-12 h-12 rounded-full border-2 border-black bg-gray-800 grayscale opacity-70" 
+                                                        className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" 
                                                         alt="Discord"
                                                     />
                                                     <img 
                                                         src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} 
-                                                        className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800 grayscale"
+                                                        className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800"
                                                         alt="MC"
                                                     />
                                                     <div className="absolute top-0 left-0 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center border border-black">
