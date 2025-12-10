@@ -585,11 +585,11 @@ const GachaDev: React.FC = () => {
 
                                         {/* Image Composition: Weather Trio (Clustered & Overlapping) */}
                                         <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[3rem]">
-                                            {/* Rayquaza: Top Center, Z-10 */}
+                                            {/* Rayquaza: Top Center, Z-10, Shifted Down to Clear Badge */}
                                             <img 
                                                 src={RAYQUAZA_IMAGE} 
                                                 alt="Rayquaza" 
-                                                className="absolute top-2 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
+                                                className="absolute top-20 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
                                             />
                                             {/* Groudon: Bottom Left, Overlapping Rayquaza, Z-20 */}
                                             <img 
@@ -771,7 +771,7 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-4 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
+                                                        className="absolute top-16 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
@@ -831,7 +831,7 @@ const GachaDev: React.FC = () => {
                                                     <img 
                                                         src={RAYQUAZA_IMAGE} 
                                                         alt="Rayquaza" 
-                                                        className="absolute top-4 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
+                                                        className="absolute top-16 left-1/2 transform -translate-x-1/2 w-64 h-64 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
                                                     />
                                                     <img 
                                                         src={GROUDON_IMAGE} 
