@@ -497,6 +497,22 @@ const GachaDev: React.FC = () => {
                         #000 20px
                     );
                 }
+                
+                /* NEW STAR STYLES */
+                @keyframes spaceDrift {
+                    from { background-position: 0 0; }
+                    to { background-position: 600px 600px; }
+                }
+                .star-layer-1 {
+                    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+                    background-size: 300px 300px;
+                    animation: spaceDrift 60s linear infinite;
+                }
+                .star-layer-2 {
+                    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+                    background-size: 600px 600px;
+                    animation: spaceDrift 80s linear infinite reverse;
+                }
             `}</style>
 
             {/* DEV BANNER */}
@@ -627,7 +643,9 @@ const GachaDev: React.FC = () => {
                                     
                                     {/* Pack Chassis remains Indigo as requested */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[3rem] border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
-                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
+                                        {/* NEW STARS BACKGROUND */}
+                                        <div className="absolute inset-0 star-layer-1 opacity-30"></div>
+                                        <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
                                         
                                         <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-indigo-500/30 flex items-center justify-center space-x-1">
                                             {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-indigo-500/20 rounded-full"></div>)}
@@ -768,7 +786,15 @@ const GachaDev: React.FC = () => {
                                             opacity: isCut ? 0 : 1,
                                         }}
                                     >
-                                        <div className={`absolute inset-0 ${selectedPack === 'lamb' ? "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"} opacity-20`}></div>
+                                        {/* BACKGROUND LOGIC */}
+                                        {selectedPack === 'lamb' ? (
+                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                                        ) : (
+                                            <>
+                                                <div className="absolute inset-0 star-layer-1 opacity-30"></div>
+                                                <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
+                                            </>
+                                        )}
                                         
                                         {/* Icon */}
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
@@ -831,7 +857,15 @@ const GachaDev: React.FC = () => {
                                             clipPath: `inset(${cutYPercentage}% 0 0 0)`
                                         }}
                                     >
-                                        <div className={`absolute inset-0 ${selectedPack === 'lamb' ? "bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" : "bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"} opacity-20`}></div>
+                                        {/* BACKGROUND LOGIC */}
+                                        {selectedPack === 'lamb' ? (
+                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                                        ) : (
+                                            <>
+                                                <div className="absolute inset-0 star-layer-1 opacity-30"></div>
+                                                <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
+                                            </>
+                                        )}
                                         
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
