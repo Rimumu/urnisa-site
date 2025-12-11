@@ -623,7 +623,7 @@ const GachaDev: React.FC = () => {
                                         {/* Text at Bottom */}
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
                                             <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
-                                            <p className="text-emerald-300 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Weather Trio</p>
+                                            <p className="text-emerald-300 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Weather Trio Edition</p>
                                         </div>
                                     </div>
                                 </button>
