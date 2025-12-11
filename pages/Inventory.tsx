@@ -102,6 +102,10 @@ const Inventory: React.FC = () => {
     const [claimingId, setClaimingId] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'unclaimed' | 'pokemon' | 'item'>('all');
     
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 30;
+    
     // Error Modal State
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
@@ -117,6 +121,11 @@ const Inventory: React.FC = () => {
             setLoading(false);
         }
     }, []);
+
+    // Reset pagination when filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filter]);
 
     const fetchInventory = async (discordId: string) => {
         setLoading(true);
@@ -173,12 +182,20 @@ const Inventory: React.FC = () => {
         }
     };
 
+    // Filter Logic
     const filteredItems = items.filter(item => {
         if (filter === 'unclaimed') return !item.claimed;
         if (filter === 'pokemon') return item.type === 'Pokemon';
         if (filter === 'item') return item.type === 'Item';
         return true;
     });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+    const displayedItems = filteredItems.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     const getRarityStyles = (rarity: string) => {
         switch (rarity) {
@@ -203,6 +220,13 @@ const Inventory: React.FC = () => {
             case 'Rare': return "bg-blue-500 text-white";
             case 'Uncommon': return "bg-green-600 text-white";
             default: return "bg-gray-600 text-gray-200";
+        }
+    };
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -249,7 +273,9 @@ const Inventory: React.FC = () => {
                             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
                                 MY <span className="text-brand-primary">INVENTORY</span>
                             </h1>
-                            <p className="text-gray-500 text-sm mt-1 font-medium">Manage and claim your gacha pulls.</p>
+                            <p className="text-gray-500 text-sm mt-1 font-medium">
+                                Showing {displayedItems.length} of {filteredItems.length} items
+                            </p>
                         </div>
                     </div>
 
@@ -276,58 +302,102 @@ const Inventory: React.FC = () => {
                         </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                        {filteredItems.map(item => (
-                            <div 
-                                key={item._id} 
-                                className={`
-                                    relative border-2 rounded-2xl overflow-hidden group transition-all duration-300 flex flex-col
-                                    ${item.claimed ? 'border-gray-800 bg-black/20 opacity-50 grayscale' : getRarityStyles(item.rarity)}
-                                    ${!item.claimed && 'hover:-translate-y-1 hover:shadow-xl'}
-                                `}
-                            >
-                                {/* Top Badge */}
-                                <div className="absolute top-2 right-2 z-20">
-                                    <span className={`text-[9px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full shadow-sm backdrop-blur-md ${getRarityBadge(item.rarity)}`}>
-                                        {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
-                                    </span>
-                                </div>
+                    <>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
+                            {displayedItems.map(item => (
+                                <div 
+                                    key={item._id} 
+                                    className={`
+                                        relative border-2 rounded-2xl overflow-hidden group transition-all duration-300 flex flex-col
+                                        ${item.claimed ? 'border-gray-800 bg-black/20 opacity-50 grayscale' : getRarityStyles(item.rarity)}
+                                        ${!item.claimed && 'hover:-translate-y-1 hover:shadow-xl'}
+                                    `}
+                                >
+                                    {/* Top Badge */}
+                                    <div className="absolute top-2 right-2 z-20">
+                                        <span className={`text-[9px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full shadow-sm backdrop-blur-md ${getRarityBadge(item.rarity)}`}>
+                                            {item.rarity}
+                                        </span>
+                                    </div>
 
-                                <div className="aspect-square p-4 flex items-center justify-center relative">
-                                    {/* Radial Glow for high tiers */}
-                                    {(item.rarity === 'Mythical' || item.rarity === 'Legendary') && (
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0"></div>
-                                    )}
-                                    <div className="relative z-10 w-full h-full">
-                                        <InventoryCardImage item={item} />
+                                    <div className="aspect-square p-4 flex items-center justify-center relative">
+                                        {/* Radial Glow for high tiers */}
+                                        {(item.rarity === 'Mythical' || item.rarity === 'Legendary') && (
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0"></div>
+                                        )}
+                                        <div className="relative z-10 w-full h-full">
+                                            <InventoryCardImage item={item} />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="p-3 bg-black/60 border-t border-white/5 flex flex-col gap-2 mt-auto backdrop-blur-md">
+                                        <h3 className="font-bold text-white text-sm truncate w-full text-center" title={item.name}>{item.name}</h3>
+                                        
+                                        {item.claimed ? (
+                                            <div className="w-full bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-bold py-2 rounded-lg text-center uppercase tracking-wider flex items-center justify-center gap-1">
+                                                <span>✓</span> Claimed
+                                            </div>
+                                        ) : (
+                                            <button 
+                                                onClick={() => handleClaim(item)}
+                                                disabled={claimingId === item._id}
+                                                className={`
+                                                    w-full text-white text-xs font-bold py-2 rounded-lg text-center uppercase tracking-wider shadow-lg transition-all
+                                                    ${claimingId === item._id 
+                                                        ? 'bg-gray-600 cursor-wait' 
+                                                        : 'bg-brand-primary hover:bg-red-600 hover:scale-[1.02]'}
+                                                `}
+                                            >
+                                                {claimingId === item._id ? '...' : 'Claim'}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex justify-center items-center gap-2 pb-8">
+                                <button 
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-4 py-2 rounded-lg bg-black/40 border border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-white font-bold"
+                                >
+                                    ←
+                                </button>
                                 
-                                <div className="p-3 bg-black/60 border-t border-white/5 flex flex-col gap-2 mt-auto backdrop-blur-md">
-                                    <h3 className="font-bold text-white text-sm truncate w-full text-center" title={item.name}>{item.name}</h3>
-                                    
-                                    {item.claimed ? (
-                                        <div className="w-full bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-bold py-2 rounded-lg text-center uppercase tracking-wider flex items-center justify-center gap-1">
-                                            <span>✓</span> Claimed
-                                        </div>
-                                    ) : (
-                                        <button 
-                                            onClick={() => handleClaim(item)}
-                                            disabled={claimingId === item._id}
-                                            className={`
-                                                w-full text-white text-xs font-bold py-2 rounded-lg text-center uppercase tracking-wider shadow-lg transition-all
-                                                ${claimingId === item._id 
-                                                    ? 'bg-gray-600 cursor-wait' 
-                                                    : 'bg-brand-primary hover:bg-red-600 hover:scale-[1.02]'}
-                                            `}
-                                        >
-                                            {claimingId === item._id ? '...' : 'Claim'}
-                                        </button>
-                                    )}
+                                <div className="flex items-center gap-1">
+                                    {/* Simplified Pagination Logic */}
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                        .filter(p => p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2))
+                                        .map((p, i, arr) => {
+                                            const showDots = i > 0 && p !== arr[i-1] + 1;
+                                            return (
+                                                <React.Fragment key={p}>
+                                                    {showDots && <span className="text-gray-500 px-1">...</span>}
+                                                    <button
+                                                        onClick={() => handlePageChange(p)}
+                                                        className={`w-10 h-10 rounded-lg font-bold text-sm transition-all ${currentPage === p ? 'bg-brand-primary text-white scale-110 shadow-lg' : 'bg-black/40 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}`}
+                                                    >
+                                                        {p}
+                                                    </button>
+                                                </React.Fragment>
+                                            );
+                                        })
+                                    }
                                 </div>
+
+                                <button 
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="px-4 py-2 rounded-lg bg-black/40 border border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-white font-bold"
+                                >
+                                    →
+                                </button>
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
