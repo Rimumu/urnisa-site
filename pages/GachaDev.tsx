@@ -26,8 +26,10 @@ interface Particle {
 const RAYQUAZA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409570/rayquazaSTILL_dp2prw.png";
 const GROUDON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409624/groudonSTILL_n9gwqt.png";
 const KYOGRE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409663/kyogreSTILL_ygpasz.png";
-// Reverted Jirachi GIF (Big Size)
+// Reverted Jirachi GIF (Big Size) for Pack
 const WAGYU_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765388052/jirachi_m5e7co.gif";
+// Static Jirachi for Counter
+const JIRACHI_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409704/jirachiSTILL_ex5vkd.png";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -534,23 +536,23 @@ const GachaDev: React.FC = () => {
                 </Link>
 
                 <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
-                    {/* Lamb Counter */}
-                    <div className="bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
-                        <div className="bg-purple-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-purple-500/10">
+                    {/* Lamb Counter (Emerald/Green Theme) */}
+                    <div className="bg-black/60 backdrop-blur-md border border-emerald-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
+                        <div className="bg-emerald-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-emerald-500/10">
                             <img src={RAYQUAZA_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
-                            <div className="text-[9px] font-black text-purple-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
+                            <div className="text-[9px] font-black text-emerald-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
                             <div className="text-lg font-black text-white leading-none">{packs.lambPacks} <span className="text-[10px] text-gray-500">(DEV)</span></div>
                         </div>
                     </div>
-                    {/* Wagyu Counter */}
-                    <div className="bg-black/60 backdrop-blur-md border border-pink-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
-                        <div className="bg-pink-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-pink-500/10">
-                            <img src={WAGYU_PACK_IMAGE} alt="Wagyu" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                    {/* Wagyu Counter (Indigo Theme with Static Jirachi) */}
+                    <div className="bg-black/60 backdrop-blur-md border border-indigo-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
+                        <div className="bg-indigo-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-indigo-500/10">
+                            <img src={JIRACHI_ICON_IMAGE} alt="Wagyu" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
-                            <div className="text-[9px] font-black text-pink-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
+                            <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
                             <div className="text-lg font-black text-white leading-none">{packs.wagyuPacks} <span className="text-[10px] text-gray-500">(DEV)</span></div>
                         </div>
                     </div>
