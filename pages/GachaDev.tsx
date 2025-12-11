@@ -622,7 +622,10 @@ const GachaDev: React.FC = () => {
                                         hover:scale-105 hover:rotate-1 cursor-pointer
                                     `}
                                 >
-                                    <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                    {/* CHANGED: indigo-500 to yellow-500 for the GLOW */}
+                                    <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                    
+                                    {/* Pack Chassis remains Indigo as requested */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[3rem] border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
                                         
@@ -640,7 +643,8 @@ const GachaDev: React.FC = () => {
 
                                         {/* Image in Center */}
                                         <div className="absolute inset-0 flex items-center justify-center z-10">
-                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(244,114,182,0.5)] group-hover:scale-110 transition-transform duration-500" />
+                                            {/* CHANGED: drop-shadow rgba to yellow/gold */}
+                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] group-hover:scale-110 transition-transform duration-500" />
                                         </div>
 
                                         {/* Text at Bottom */}
