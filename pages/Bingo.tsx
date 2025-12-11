@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
-import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
+// REMOVED GACHA IMPORT TO ENSURE STABILITY
 import { getSpawnInfo } from '../data/legendaryConfig';
 
 // --- TYPES ---
@@ -459,23 +459,9 @@ const Bingo: React.FC = () => {
                     }
                 });
 
-                // --- FILTERING GACHA POKEMON ---
-                const excludedIds = new Set<number>();
-                [...LAMB_POOL, ...WAGYU_POOL].forEach(item => {
-                    if (item.type === 'Pokemon') {
-                        excludedIds.add(item.id);
-                    }
-                });
-
-                // Convert map to array and filter
+                // Convert map to array
                 let cobblemonArray = Array.from(poolMap.values());
                 
-                // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
-                cobblemonArray = cobblemonArray.filter(entry => {
-                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
-                    return !excludedIds.has(entry.id);
-                });
-
                 // Sort by ID then Name to ensure deterministic RNG across reloads
                 cobblemonArray.sort((a, b) => {
                     if (a.id !== b.id) return a.id - b.id;
