@@ -638,9 +638,6 @@ const GachaDev: React.FC = () => {
                                         hover:scale-105 hover:rotate-1 cursor-pointer
                                     `}
                                 >
-                                    {/* CHANGED: indigo-500 to yellow-500 for the GLOW */}
-                                    <div className="absolute inset-0 bg-yellow-500 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                    
                                     {/* Pack Chassis remains Indigo as requested */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[3rem] border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
                                         {/* NEW STARS BACKGROUND */}
