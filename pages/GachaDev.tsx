@@ -405,23 +405,31 @@ const GachaDev: React.FC = () => {
             setShakePack(true);
             setTimeout(() => setShakePack(false), 300);
 
-            let eligiblePool = [...currentPool];
-            const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
-            if (hasIVCap) eligiblePool = eligiblePool.filter(c => c.subType !== 'IV Cap');
-            
-            const totalWeight = eligiblePool.reduce((sum, item) => sum + (item.weight || 10), 0);
-            let randomNum = Math.random() * totalWeight;
             let nextCard: CardData | undefined;
-            
-            for (const card of eligiblePool) {
-                const weight = card.weight || 10;
-                if (randomNum < weight) {
-                    nextCard = card;
-                    break;
-                }
-                randomNum -= weight;
+
+            // DEV OVERRIDE: Force Jirachi as the last card in Wagyu pack
+            if (selectedPack === 'wagyu' && revealedCards.length === 4) {
+                nextCard = currentPool.find(c => c.name === 'Jirachi');
             }
-            if (!nextCard) nextCard = eligiblePool[0] || currentPool[0];
+
+            if (!nextCard) {
+                let eligiblePool = [...currentPool];
+                const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
+                if (hasIVCap) eligiblePool = eligiblePool.filter(c => c.subType !== 'IV Cap');
+                
+                const totalWeight = eligiblePool.reduce((sum, item) => sum + (item.weight || 10), 0);
+                let randomNum = Math.random() * totalWeight;
+                
+                for (const card of eligiblePool) {
+                    const weight = card.weight || 10;
+                    if (randomNum < weight) {
+                        nextCard = card;
+                        break;
+                    }
+                    randomNum -= weight;
+                }
+                if (!nextCard) nextCard = eligiblePool[0] || currentPool[0];
+            }
             
             setTimeout(() => {
                 setDispensingCard(nextCard!);

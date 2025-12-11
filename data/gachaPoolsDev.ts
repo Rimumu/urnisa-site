@@ -63,7 +63,7 @@ export const LAMB_POOL: CardData[] = [
 // Replaces previous Mew pool for Dev testing
 export const WAGYU_POOL: CardData[] = [
     // The Chase
-    { id: 385, name: "Jirachi", type: 'Pokemon', subType: "Wish", rarity: 'Mythical', hp: 100, description: "Grants wishes when it wakes.", weight: 1 },
+    { id: 385, name: "Jirachi", type: 'Pokemon', subType: "Wish", rarity: 'Mythical', hp: 100, description: "Grants wishes when it wakes.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409704/jirachiSTILL_ex5vkd.png" },
     
     // Legendary Items (Weight: 3)
     { id: 30030, name: "Gold Coin", type: 'Item', subType: "Currency", rarity: 'Legendary', description: "A fortune.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-gold.png", weight: 3 },
