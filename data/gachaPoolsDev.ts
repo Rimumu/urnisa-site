@@ -72,16 +72,20 @@ export const WAGYU_POOL: CardData[] = [
     { id: 30033, name: "1 TM Choice", type: 'Item', subType: "Technical Machine", rarity: 'Legendary', description: "Teach a move.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png", weight: 3 },
 
     // Ultra-Rare Pokemon (Stars/Space/Psychic Theme)
+    // Kept Requested: Cresselia, Clefable, Starmie, Gardevoir, Lucario
+    // Replaced: Regigigas, Metagross, Bronzong, Rotom, Magnezone -> Minior, Beheeyem, Gothitelle, Musharna, Togekiss
     { id: 488, name: "Cresselia", type: 'Pokemon', subType: "Lunar", rarity: 'Ultra-Rare', hp: 120, description: "Representation of the crescent moon.", weight: 12 },
-    { id: 486, name: "Regigigas", type: 'Pokemon', subType: "Colossal", rarity: 'Ultra-Rare', hp: 110, description: "Moved continents.", weight: 12 },
-    { id: 376, name: "Metagross", type: 'Pokemon', subType: "Iron Leg", rarity: 'Ultra-Rare', hp: 160, description: "Supercomputer brain.", weight: 12 },
-    { id: 437, name: "Bronzong", type: 'Pokemon', subType: "Bronze Bell", rarity: 'Ultra-Rare', hp: 130, description: "Bringer of harvest.", weight: 12 },
     { id: 36, name: "Clefable", type: 'Pokemon', subType: "Fairy", rarity: 'Ultra-Rare', hp: 95, description: "From the moon.", weight: 12 },
     { id: 121, name: "Starmie", type: 'Pokemon', subType: "Mysterious", rarity: 'Ultra-Rare', hp: 60, description: "Core glows with 7 colors.", weight: 12 },
     { id: 282, name: "Gardevoir", type: 'Pokemon', subType: "Embrace", rarity: 'Ultra-Rare', hp: 130, description: "Protects trainer.", weight: 12 },
     { id: 448, name: "Lucario", type: 'Pokemon', subType: "Aura", rarity: 'Ultra-Rare', hp: 140, description: "Reads minds.", weight: 12 },
-    { id: 479, name: "Rotom", type: 'Pokemon', subType: "Plasma", rarity: 'Ultra-Rare', hp: 50, description: "Inhabits electronics.", weight: 12 },
-    { id: 462, name: "Magnezone", type: 'Pokemon', subType: "Magnet Area", rarity: 'Ultra-Rare', hp: 70, description: "Strong magnetic field.", weight: 12 },
+    
+    // New Replacements
+    { id: 774, name: "Minior", type: 'Pokemon', subType: "Meteor", rarity: 'Ultra-Rare', hp: 60, description: "Born from mutated nanoparticles.", weight: 12 },
+    { id: 606, name: "Beheeyem", type: 'Pokemon', subType: "Cerebral", rarity: 'Ultra-Rare', hp: 75, description: "Controls memories.", weight: 12 },
+    { id: 576, name: "Gothitelle", type: 'Pokemon', subType: "Astral Body", rarity: 'Ultra-Rare', hp: 70, description: "Predicts future from stars.", weight: 12 },
+    { id: 518, name: "Musharna", type: 'Pokemon', subType: "Drowsing", rarity: 'Ultra-Rare', hp: 116, description: "Mist of dreams.", weight: 12 },
+    { id: 468, name: "Togekiss", type: 'Pokemon', subType: "Jubilee", rarity: 'Ultra-Rare', hp: 85, description: "Shares blessings.", weight: 12 },
 
     // Ultra-Rare Items (Weight increased to 12)
     { id: 30018, name: "5x Ultra Ball", type: 'Item', subType: "Balls", rarity: 'Ultra-Rare', description: "High performance ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png", weight: 12 },
