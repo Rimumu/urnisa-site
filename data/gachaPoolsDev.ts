@@ -15,11 +15,11 @@ export interface CardData {
 // Replaces previous Mewtwo pool for Dev testing
 export const LAMB_POOL: CardData[] = [
     // The Chase
-    { id: 384, name: "Rayquaza", type: 'Pokemon', subType: "Sky High", rarity: 'Legendary', hp: 210, description: "Masters the weather.", weight: 1 },
+    { id: 384, name: "Rayquaza", type: 'Pokemon', subType: "Sky High", rarity: 'Legendary', hp: 210, description: "Masters the weather.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409570/rayquazaSTILL_dp2prw.png" },
     
     // Top Tier Weather Gods
-    { id: 382, name: "Kyogre", type: 'Pokemon', subType: "Sea Basin", rarity: 'Legendary', hp: 200, description: "Expands the oceans.", weight: 3 },
-    { id: 383, name: "Groudon", type: 'Pokemon', subType: "Continent", rarity: 'Legendary', hp: 200, description: "Expands the land.", weight: 3 },
+    { id: 382, name: "Kyogre", type: 'Pokemon', subType: "Sea Basin", rarity: 'Legendary', hp: 200, description: "Expands the oceans.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409663/kyogreSTILL_ygpasz.png" },
+    { id: 383, name: "Groudon", type: 'Pokemon', subType: "Continent", rarity: 'Legendary', hp: 200, description: "Expands the land.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409624/groudonSTILL_n9gwqt.png" },
 
     // Rares (Weight: 10)
     { id: 373, name: "Salamence", type: 'Pokemon', subType: "Dragon", rarity: 'Rare', hp: 170, description: "Dreams of flying.", weight: 10 },

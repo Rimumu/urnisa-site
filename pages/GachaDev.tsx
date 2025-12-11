@@ -407,11 +407,6 @@ const GachaDev: React.FC = () => {
 
             let nextCard: CardData | undefined;
 
-            // DEV OVERRIDE: Force Jirachi as the last card in Wagyu pack
-            if (selectedPack === 'wagyu' && revealedCards.length === 4) {
-                nextCard = currentPool.find(c => c.name === 'Jirachi');
-            }
-
             if (!nextCard) {
                 let eligiblePool = [...currentPool];
                 const hasIVCap = revealedCards.some(c => c.subType === 'IV Cap');
@@ -834,7 +829,7 @@ const GachaDev: React.FC = () => {
 
                                         {/* Badge */}
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500 text-white' : 'bg-indigo-500 text-white'}`}>
+                                            <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
