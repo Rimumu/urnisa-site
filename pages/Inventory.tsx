@@ -88,7 +88,7 @@ const InventoryCardImage: React.FC<{ item: InventoryItem }> = ({ item }) => {
         <OptimizedImage 
             src={imgSrc} 
             alt={item.name} 
-            className="w-full h-full object-contain drop-shadow-lg"
+            className="w-full h-full object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-110"
             contain
             onError={handleImageError}
         />
@@ -101,6 +101,10 @@ const Inventory: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [claimingId, setClaimingId] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'unclaimed' | 'pokemon' | 'item'>('all');
+    
+    // Error Modal State
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     // Load user on mount
     useEffect(() => {
@@ -130,7 +134,8 @@ const Inventory: React.FC = () => {
 
     const handleClaim = async (item: InventoryItem) => {
         if (!user || !user.minecraftUsername) {
-            alert("Please link your Minecraft account first!");
+            setErrorMessage("Please link your Minecraft account first!");
+            setShowErrorModal(true);
             return;
         }
         if (item.claimed) return;
@@ -151,10 +156,18 @@ const Inventory: React.FC = () => {
                 setItems(prev => prev.map(i => i._id === item._id ? { ...i, claimed: true } : i));
             } else {
                 const err = await res.json();
-                alert(`Claim Failed: ${err.error || "Unknown Error"}`);
+                const msg = err.error || "Unknown Error";
+                // If it's the online check error, clarify it for the user
+                if (msg.includes("must be online")) {
+                    setErrorMessage("Claim Failed: You must be online in-game to claim items!");
+                } else {
+                    setErrorMessage(`Claim Failed: ${msg}`);
+                }
+                setShowErrorModal(true);
             }
         } catch (e) {
-            alert("Network Error during claim.");
+            setErrorMessage("Network Error during claim.");
+            setShowErrorModal(true);
         } finally {
             setClaimingId(null);
         }
@@ -166,6 +179,32 @@ const Inventory: React.FC = () => {
         if (filter === 'item') return item.type === 'Item';
         return true;
     });
+
+    const getRarityStyles = (rarity: string) => {
+        switch (rarity) {
+            case 'Mythical':
+                return "border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)] bg-pink-900/10";
+            case 'Legendary':
+                return "border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)] bg-yellow-900/10";
+            case 'Ultra-Rare':
+                return "border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)] bg-purple-900/10";
+            case 'Rare':
+                return "border-blue-500/50 shadow-[0_0_5px_rgba(59,130,246,0.2)] bg-blue-900/5";
+            default:
+                return "border-white/10 hover:border-white/20 bg-black/40";
+        }
+    };
+
+    const getRarityBadge = (rarity: string) => {
+        switch (rarity) {
+            case 'Mythical': return "bg-pink-500 text-white";
+            case 'Legendary': return "bg-yellow-500 text-black";
+            case 'Ultra-Rare': return "bg-purple-500 text-white";
+            case 'Rare': return "bg-blue-500 text-white";
+            case 'Uncommon': return "bg-green-600 text-white";
+            default: return "bg-gray-600 text-gray-200";
+        }
+    };
 
     if (!user) {
         return (
@@ -183,24 +222,43 @@ const Inventory: React.FC = () => {
         <div className="min-h-screen pt-24 pb-12 px-4 font-sans relative">
             <UserProfile className="!absolute top-4 right-4" />
             
+            {/* Custom Error Modal */}
+            {showErrorModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl text-center relative">
+                        <button onClick={() => setShowErrorModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+                        <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-3xl border border-red-500/20">
+                            ⚠️
+                        </div>
+                        <h3 className="text-xl font-black text-white mb-2">Notice</h3>
+                        <p className="text-gray-400 text-sm mb-6 leading-relaxed">{errorMessage}</p>
+                        <button onClick={() => setShowErrorModal(false)} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
-                    <div>
-                        <Link to="/minecraft/gacha" className="text-gray-400 hover:text-white mb-2 inline-block text-sm">← Back to Gacha</Link>
-                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
-                            MY <span className="text-brand-primary">INVENTORY</span>
-                        </h1>
-                        <p className="text-gray-400 mt-2">
-                            MC Account: <span className="text-green-400 font-mono font-bold">{user.minecraftUsername || "Not Linked"}</span>
-                        </p>
+                <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
+                    <div className="flex flex-col items-start gap-4">
+                        <Link to="/minecraft/gacha" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
+                            <span>←</span> Back to Gacha
+                        </Link>
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
+                                MY <span className="text-brand-primary">INVENTORY</span>
+                            </h1>
+                            <p className="text-gray-500 text-sm mt-1 font-medium">Manage and claim your gacha pulls.</p>
+                        </div>
                     </div>
 
-                    <div className="flex bg-black/30 rounded-xl p-1 border border-white/10">
+                    <div className="flex bg-black/40 rounded-xl p-1 border border-white/10 backdrop-blur-sm overflow-x-auto w-full md:w-auto">
                         {(['all', 'unclaimed', 'pokemon', 'item'] as const).map(f => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
-                                className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-colors ${filter === f ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                                className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all whitespace-nowrap flex-1 md:flex-none ${filter === f ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
                             >
                                 {f}
                             </button>
@@ -211,59 +269,59 @@ const Inventory: React.FC = () => {
                 {loading ? (
                     <div className="text-center py-20 text-gray-500 animate-pulse">Loading items...</div>
                 ) : filteredItems.length === 0 ? (
-                    <div className="text-center py-20 bg-black/20 rounded-3xl border border-white/5">
+                    <div className="text-center py-20 bg-black/20 rounded-3xl border border-white/5 backdrop-blur-sm">
                         <p className="text-2xl text-gray-600 font-bold mb-4">No items found</p>
                         <Link to="/minecraft/gacha" className="bg-brand-primary/20 text-brand-primary px-6 py-3 rounded-full font-bold hover:bg-brand-primary hover:text-white transition-colors">
                             Go Open Packs!
                         </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                         {filteredItems.map(item => (
                             <div 
                                 key={item._id} 
                                 className={`
-                                    relative bg-black/40 border rounded-xl overflow-hidden group transition-all duration-300
-                                    ${item.claimed ? 'border-green-900/30 opacity-60 grayscale-[0.5]' : 'border-white/10 hover:border-brand-primary/50 hover:shadow-lg hover:-translate-y-1'}
+                                    relative border-2 rounded-2xl overflow-hidden group transition-all duration-300 flex flex-col
+                                    ${item.claimed ? 'border-gray-800 bg-black/20 opacity-50 grayscale' : getRarityStyles(item.rarity)}
+                                    ${!item.claimed && 'hover:-translate-y-1 hover:shadow-xl'}
                                 `}
                             >
-                                <div className="aspect-square p-4 flex items-center justify-center bg-gradient-to-b from-transparent to-black/20">
-                                    <InventoryCardImage item={item} />
-                                </div>
-                                
-                                <div className="p-3 bg-black/60 border-t border-white/5">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h3 className="font-bold text-white text-sm truncate w-full" title={item.name}>{item.name}</h3>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
-                                            item.rarity === 'Legendary' ? 'bg-yellow-500/20 text-yellow-200' :
-                                            item.rarity === 'Ultra-Rare' ? 'bg-purple-500/20 text-purple-200' :
-                                            item.rarity === 'Rare' ? 'bg-blue-500/20 text-blue-200' :
-                                            'bg-gray-500/20 text-gray-400'
-                                        }`}>
-                                            {item.rarity}
-                                        </span>
-                                    </div>
+                                {/* Top Badge */}
+                                <div className="absolute top-2 right-2 z-20">
+                                    <span className={`text-[9px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full shadow-sm backdrop-blur-md ${getRarityBadge(item.rarity)}`}>
+                                        {item.rarity === 'Ultra-Rare' ? 'UR' : item.rarity}
+                                    </span>
                                 </div>
 
-                                {/* Hover Overlay for Claim */}
-                                <div className={`
-                                    absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center transition-opacity duration-200
-                                    ${item.claimed ? 'opacity-100 bg-black/40' : 'opacity-0 group-hover:opacity-100'}
-                                `}>
+                                <div className="aspect-square p-4 flex items-center justify-center relative">
+                                    {/* Radial Glow for high tiers */}
+                                    {(item.rarity === 'Mythical' || item.rarity === 'Legendary') && (
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-0"></div>
+                                    )}
+                                    <div className="relative z-10 w-full h-full">
+                                        <InventoryCardImage item={item} />
+                                    </div>
+                                </div>
+                                
+                                <div className="p-3 bg-black/60 border-t border-white/5 flex flex-col gap-2 mt-auto backdrop-blur-md">
+                                    <h3 className="font-bold text-white text-sm truncate w-full text-center" title={item.name}>{item.name}</h3>
+                                    
                                     {item.claimed ? (
-                                        <div className="flex flex-col items-center text-green-500">
-                                            <svg className="w-8 h-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                            <span className="font-bold uppercase text-xs tracking-widest">Claimed</span>
+                                        <div className="w-full bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-bold py-2 rounded-lg text-center uppercase tracking-wider flex items-center justify-center gap-1">
+                                            <span>✓</span> Claimed
                                         </div>
                                     ) : (
                                         <button 
                                             onClick={() => handleClaim(item)}
                                             disabled={claimingId === item._id}
-                                            className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition-transform hover:scale-105"
+                                            className={`
+                                                w-full text-white text-xs font-bold py-2 rounded-lg text-center uppercase tracking-wider shadow-lg transition-all
+                                                ${claimingId === item._id 
+                                                    ? 'bg-gray-600 cursor-wait' 
+                                                    : 'bg-brand-primary hover:bg-red-600 hover:scale-[1.02]'}
+                                            `}
                                         >
-                                            {claimingId === item._id ? 'Processing...' : 'CLAIM'}
+                                            {claimingId === item._id ? '...' : 'Claim'}
                                         </button>
                                     )}
                                 </div>
