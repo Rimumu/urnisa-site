@@ -22,13 +22,10 @@ interface Particle {
 }
 
 // --- CONSTANTS ---
-// Updated Weather Trio Images (Cropped/Tight Versions)
 const RAYQUAZA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409570/rayquazaSTILL_dp2prw.png";
 const GROUDON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409624/groudonSTILL_n9gwqt.png";
 const KYOGRE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409663/kyogreSTILL_ygpasz.png";
-// Reverted Jirachi GIF (Big Size) for Pack
 const WAGYU_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765388052/jirachi_m5e7co.gif";
-// Static Jirachi for Counter
 const JIRACHI_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409704/jirachiSTILL_ex5vkd.png";
 
 // --- CACHE ---
@@ -91,7 +88,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 return;
             }
 
-            // Force 3D Render for broken sprites (Kyogre, Groudon, Jirachi)
+            // Force 3D Render for broken sprites
             const forced3D = ['kyogre', 'groudon', 'jirachi', 'rayquaza'];
             if (forced3D.includes(card.name.toLowerCase())) {
                 setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
@@ -100,7 +97,6 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
 
             const cobbleName = getFormattedName(card.name);
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-            // Fallback 3D Render
             const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`;
 
             if (clientImageCache.has(primaryUrl)) {
@@ -120,7 +116,6 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                     setImgSrc(fallback3d);
                 }
             } catch (error) {
-                // Default to 3D fallback on error
                 setImgSrc(fallback3d);
             }
         };
@@ -141,7 +136,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
     };
 
     return (
-        <div className={`relative w-48 h-72 rounded-3xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
+        <div className={`relative rounded-3xl bg-black transition-all duration-500 select-none border-[4px] ${borderClass} ${glowClass} ${className} group overflow-hidden`}>
             {card.rarity !== 'Common' && <div className={`absolute inset-0 z-20 pointer-events-none opacity-40 mix-blend-overlay ${holoEffect}`}></div>}
             
             <div className="absolute inset-0 bg-[#1a1a1a] z-0">
@@ -149,7 +144,7 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
                 {(card.rarity === 'Legendary' || card.rarity === 'Mythical') && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
                 )}
-                <div className="absolute inset-0 p-4 pb-20 flex items-center justify-center z-10">
+                <div className="absolute inset-0 p-2 md:p-4 pb-16 md:pb-20 flex items-center justify-center z-10">
                     <img 
                         src={imgSrc} 
                         alt={card.name}
@@ -162,14 +157,14 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
 
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90 z-10 pointer-events-none"></div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-3 z-30 flex flex-col items-center text-center">
-                <div className={`mb-2 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg ${badgeColor}`}>
+            <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 z-30 flex flex-col items-center text-center">
+                <div className={`mb-1 md:mb-2 px-2 md:px-3 py-0.5 rounded-full text-[8px] md:text-[9px] font-bold uppercase tracking-widest backdrop-blur-md shadow-lg ${badgeColor}`}>
                     {card.rarity}
                 </div>
-                <h3 className="text-white font-black text-lg leading-none mb-1 drop-shadow-md tracking-wide">
+                <h3 className="text-white font-black text-sm md:text-lg leading-none mb-1 drop-shadow-md tracking-wide truncate w-full px-1">
                     {card.name}
                 </h3>
-                <span className="text-[10px] text-gray-400 font-mono">
+                <span className="text-[8px] md:text-[10px] text-gray-400 font-mono">
                     {card.subType}
                 </span>
             </div>
@@ -234,7 +229,6 @@ const GachaDev: React.FC = () => {
 
     // Fetch Packs on mount/user change - DEV MODE USES DEV API
     useEffect(() => {
-        // In Dev mode, we just fetch simulated packs so user can test immediately
         fetch(`${DISCORD_API_URL}/api/dev/packs`)
             .then(res => res.json())
             .then(data => {
@@ -245,7 +239,6 @@ const GachaDev: React.FC = () => {
 
     // --- AUTO SAVE LOGIC (DEV MOCKED) ---
     const saveToInventory = async (cards: CardData[], packType: PackType) => {
-        // Even if no user, we allow testing in dev mode
         try {
             await fetch(`${DISCORD_API_URL}/api/dev/inventory/save`, {
                 method: 'POST',
@@ -266,13 +259,6 @@ const GachaDev: React.FC = () => {
 
     const selectPack = async (type: PackType) => {
         if (!type) return;
-        
-        // Optimistic check
-        if ((type === 'lamb' && packs.lambPacks < 1) || (type === 'wagyu' && packs.wagyuPacks < 1)) {
-            alert("You don't have enough packs! (In Dev Mode this shouldn't happen)");
-            return;
-        }
-
         setProcessing(true);
         // Deduct pack (DEV API)
         try {
@@ -284,11 +270,9 @@ const GachaDev: React.FC = () => {
             const data = await res.json();
             
             if (res.ok && data.success) {
-                // Update local state
                 if (type === 'lamb') setPacks(p => ({ ...p, lambPacks: data.remaining }));
                 else setPacks(p => ({ ...p, wagyuPacks: data.remaining }));
 
-                // Start Game
                 setSelectedPack(type);
                 setCurrentPool(type === 'lamb' ? LAMB_POOL : WAGYU_POOL);
                 setStage('cutting');
@@ -341,24 +325,38 @@ const GachaDev: React.FC = () => {
     };
 
     const checkCut = () => {
-        if (!cutCoords) return;
+        if (!cutCoords || !packRef.current || !svgRef.current) return;
+        
         const dx = cutCoords.end.x - cutCoords.start.x;
         const dy = cutCoords.end.y - cutCoords.start.y;
         
-        // Lenient check: Reduced min distance to 150
-        if (Math.abs(dx) < 150) return;
+        // Lower threshold for mobile
+        if (Math.abs(dx) < 100) return;
 
         const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        // Lenient check: Increased angle tolerance to 35 degrees
+        // Allow slightly more angled cuts
         const isHorizontal = (Math.abs(angle) < 35) || (Math.abs(angle) > 145);
         if (!isHorizontal) return;
 
+        // Dynamic Height Calculation relative to Pack Size
+        // We use the SVG coordinate space (which is padded) to calculate position relative to the pack
+        const svgRect = svgRef.current.getBoundingClientRect();
+        const packRect = packRef.current.getBoundingClientRect();
+        
+        // Average Y of the cut relative to the SVG top-left
         const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
-        const relativeY = avgY - 200;
-        const percentage = (relativeY / 420) * 100;
+        
+        // The Pack is centered within the SVG.
+        // We need the Y position relative to the Pack's top edge.
+        // svgRect is consistent with getPoint coordinates
+        const offsetInSvg = packRect.top - svgRect.top; 
+        const yInPack = avgY - offsetInSvg;
 
-        // Lenient check: Widen vertical range to 5% - 20%
-        if (percentage >= 5 && percentage <= 20) {
+        // Calculate percentage down the pack height
+        const percentage = (yInPack / packRect.height) * 100;
+
+        // Valid range: Top 5% to 25% of the pack
+        if (percentage >= 5 && percentage <= 25) {
             triggerCut(percentage);
         } else {
             setCutCoords(null);
@@ -368,19 +366,20 @@ const GachaDev: React.FC = () => {
     const triggerCut = (exactPercentage: number) => {
         setCutYPercentage(exactPercentage);
         
-        // Generate Particles
         const newParticles: Particle[] = [];
-        // Switch to Emerald color for Lamb (Weather Trio), Indigo for Wagyu (Wishmaker)
         const baseColor = selectedPack === 'lamb' ? '#10b981' : '#6366f1';
-        const cutY = (exactPercentage / 100) * 420;
+        
+        // Adjust particle Y to be dynamic
+        const packHeight = packRef.current ? packRef.current.clientHeight : 420;
+        const cutY = (exactPercentage / 100) * packHeight;
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 30; i++) {
             newParticles.push({
                 id: Date.now() + i,
-                x: Math.random() * 300, // Spread across pack width
-                y: cutY + (Math.random() * 10 - 5), // Near cut line
-                vx: (Math.random() - 0.5) * 15, // Explosion outward
-                vy: (Math.random() - 1) * 15 - 5, // Explosion upward
+                x: Math.random() * 300, 
+                y: cutY + (Math.random() * 10 - 5),
+                vx: (Math.random() - 0.5) * 15,
+                vy: (Math.random() - 1) * 15 - 5,
                 color: Math.random() > 0.6 ? '#ffffff' : baseColor,
                 life: 1.0,
                 size: Math.random() * 6 + 2
@@ -388,10 +387,9 @@ const GachaDev: React.FC = () => {
         }
         setParticles(newParticles);
 
-        // Dynamic Visuals
-        const randomRotate = (Math.random() * 40) - 20; // More rotation
-        const randomX = (Math.random() * 200) - 100; // Fly further sideways
-        const randomY = -400 - (Math.random() * 50); // Fly further up
+        const randomRotate = (Math.random() * 40) - 20;
+        const randomX = (Math.random() * 200) - 100;
+        const randomY = -400 - (Math.random() * 50);
         setCutVisuals({ rotate: randomRotate, x: randomX, y: randomY });
         
         setIsCut(true);
@@ -452,7 +450,6 @@ const GachaDev: React.FC = () => {
         setTrail([]);
         setParticles([]);
         setCutYPercentage(15);
-        // Refresh Dev balance
         fetch(`${DISCORD_API_URL}/api/dev/packs`)
             .then(res => res.json())
             .then(data => { if (data && !data.error) setPacks(data); });
@@ -534,7 +531,7 @@ const GachaDev: React.FC = () => {
 
             {/* HEADER */}
             <div className="relative z-20 container mx-auto px-4 pt-12 pb-2 flex flex-col items-start gap-4">
-                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
                     <span>←</span> Back to Dashboard
                 </Link>
 
@@ -562,34 +559,34 @@ const GachaDev: React.FC = () => {
                 </div>
             </div>
 
-            <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[70vh] py-8">
+            <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[80vh] py-4 md:py-8">
                 
                 {/* WRAPPER CONTAINER - ROUNDED & THEMED */}
-                <div className="w-full max-w-6xl bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col items-center min-h-[600px]">
+                <div className="w-full max-w-6xl bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] md:rounded-[3rem] p-4 md:p-12 shadow-2xl relative overflow-hidden flex flex-col items-center min-h-[500px] md:min-h-[600px]">
                     {/* Inner Decor */}
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
 
                     {stage === 'selection' && (
                         <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 mt-2 relative z-10">
-                            <h1 className="text-4xl md:text-6xl font-black text-center mb-2 tracking-tighter drop-shadow-2xl">
+                            <h1 className="text-3xl md:text-6xl font-black text-center mb-2 tracking-tighter drop-shadow-2xl">
                                 <span className="text-amber-500">DEV</span> GACHA <span className="text-brand-primary">PACK</span>
                             </h1>
-                            <p className="text-center text-gray-400 mb-8 max-w-xl mx-auto">
+                            <p className="text-center text-gray-400 mb-8 max-w-xl mx-auto text-sm md:text-base">
                                 Testing Environment. Packs deducted here are simulated.
                             </p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 md:px-20">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2 md:px-20">
                                 {/* LAMB CHOP (WEATHER TRIO) */}
                                 <button 
                                     onClick={() => selectPack('lamb')}
                                     disabled={processing}
                                     className={`
-                                        group relative aspect-[3/4] rounded-[3rem] transition-all duration-500 overflow-hidden
-                                        hover:scale-105 hover:-rotate-1 cursor-pointer
+                                        group relative aspect-[3/4] rounded-[2rem] md:rounded-[3rem] transition-all duration-500 overflow-hidden
+                                        hover:scale-105 hover:-rotate-1 cursor-pointer w-full max-w-sm mx-auto
                                     `}
                                 >
                                     <div className="absolute inset-0 bg-emerald-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-900 via-teal-900 to-black rounded-[3rem] border-[6px] border-emerald-500/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-900 via-teal-900 to-black rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-emerald-500/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         
                                         <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-emerald-500/30 flex items-center justify-center space-x-1">
@@ -604,32 +601,29 @@ const GachaDev: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Image Composition: Weather Trio (Clustered & Overlapping) */}
+                                        {/* Image Composition */}
                                         <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[3rem]">
-                                            {/* Rayquaza: Top Center, Z-10, Shifted Down to Clear Badge */}
                                             <img 
                                                 src={RAYQUAZA_IMAGE} 
                                                 alt="Rayquaza" 
-                                                className="absolute top-16 left-1/2 transform -translate-x-1/2 w-72 h-72 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
+                                                className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 md:w-72 h-60 md:h-72 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
                                             />
-                                            {/* Groudon: Bottom Left, Overlapping Rayquaza, Z-20 */}
                                             <img 
                                                 src={GROUDON_IMAGE} 
                                                 alt="Groudon" 
-                                                className="absolute bottom-20 left-4 w-56 h-56 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
+                                                className="absolute bottom-20 left-2 md:left-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
                                             />
-                                            {/* Kyogre: Bottom Right, Overlapping Rayquaza, Z-20 */}
                                             <img 
                                                 src={KYOGRE_IMAGE} 
                                                 alt="Kyogre" 
-                                                className="absolute bottom-20 right-4 w-56 h-56 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
+                                                className="absolute bottom-20 right-2 md:right-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
                                             />
                                         </div>
 
                                         {/* Text at Bottom */}
-                                        <div className="absolute bottom-12 left-0 right-0 text-center z-30">
-                                            <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
-                                            <p className="text-emerald-300 text-xs font-mono uppercase tracking-[0.2em] mt-1">Weather Trio</p>
+                                        <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
+                                            <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
+                                            <p className="text-emerald-300 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Weather Trio</p>
                                         </div>
                                     </div>
                                 </button>
@@ -639,13 +633,11 @@ const GachaDev: React.FC = () => {
                                     onClick={() => selectPack('wagyu')}
                                     disabled={processing}
                                     className={`
-                                        group relative aspect-[3/4] rounded-[3rem] transition-all duration-500 overflow-hidden
-                                        hover:scale-105 hover:rotate-1 cursor-pointer
+                                        group relative aspect-[3/4] rounded-[2rem] md:rounded-[3rem] transition-all duration-500 overflow-hidden
+                                        hover:scale-105 hover:rotate-1 cursor-pointer w-full max-w-sm mx-auto
                                     `}
                                 >
-                                    {/* Pack Chassis remains Indigo as requested */}
-                                    <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[3rem] border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
-                                        {/* NEW STARS BACKGROUND */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 star-layer-1 opacity-30"></div>
                                         <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
                                         
@@ -654,23 +646,19 @@ const GachaDev: React.FC = () => {
                                         </div>
                                         <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-indigo-500/30"></div>
 
-                                        {/* Badge at Top */}
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
                                             <div className="bg-indigo-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
                                                 Mythic Pack
                                             </div>
                                         </div>
 
-                                        {/* Image in Center */}
                                         <div className="absolute inset-0 flex items-center justify-center z-10">
-                                            {/* CHANGED: drop-shadow rgba to yellow/gold */}
-                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-80 h-80 object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] group-hover:scale-110 transition-transform duration-500" />
+                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] group-hover:scale-110 transition-transform duration-500" />
                                         </div>
 
-                                        {/* Text at Bottom */}
-                                        <div className="absolute bottom-12 left-0 right-0 text-center z-30">
-                                            <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
-                                            <p className="text-indigo-100 text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Wishmaker Edition</p>
+                                        <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
+                                            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
+                                            <p className="text-indigo-100 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Wishmaker Edition</p>
                                         </div>
                                     </div>
                                 </button>
@@ -680,30 +668,35 @@ const GachaDev: React.FC = () => {
 
                     {(stage === 'cutting' || stage === 'dispensing' || stage === 'finished') && (
                         <div className="relative w-full max-w-4xl flex flex-col items-center z-10">
-                            <div className="mb-8 h-12 flex items-center justify-center w-full relative z-30">
+                            <div className="mb-4 md:mb-8 h-12 flex items-center justify-center w-full relative z-30">
                                 {!isCut ? (
                                     <div className="bg-black/50 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 animate-pulse">
-                                        <h2 className="text-xl font-black uppercase tracking-[0.2em] text-white/90">
+                                        <h2 className="text-sm md:text-xl font-black uppercase tracking-[0.2em] text-white/90 whitespace-nowrap">
                                             SWIPE TOP TO OPEN ✂️
                                         </h2>
                                     </div>
                                 ) : stage !== 'finished' ? (
                                     <div className="bg-brand-primary/20 backdrop-blur-md px-6 py-2 rounded-full border border-brand-primary/50 animate-in fade-in zoom-in duration-300">
-                                        <h2 className="text-lg font-bold uppercase tracking-widest text-brand-primary">
-                                            TAP PACK TO REVEAL ({5 - revealedCards.length} LEFT)
+                                        <h2 className="text-sm md:text-lg font-bold uppercase tracking-widest text-brand-primary whitespace-nowrap">
+                                            TAP PACK TO REVEAL ({5 - revealedCards.length})
                                         </h2>
                                     </div>
                                 ) : (
                                     <div className="bg-green-500/20 backdrop-blur-md px-6 py-2 rounded-full border border-green-500/50">
-                                        <h2 className="text-xl font-black uppercase text-green-400">OPENING COMPLETE!</h2>
+                                        <h2 className="text-lg md:text-xl font-black uppercase text-green-400">OPENING COMPLETE!</h2>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="relative h-[500px] w-full flex justify-center items-center perspective-1000">
+                            {/* PACK INTERACTION AREA */}
+                            <div className="relative h-[450px] md:h-[500px] w-full flex justify-center items-center perspective-1000">
                                 <div 
                                     ref={packRef}
-                                    className={`relative w-[300px] h-[420px] cursor-pointer ${shakePack ? 'animate-shake' : ''}`}
+                                    className={`
+                                        relative w-[75vw] max-w-[300px] aspect-[300/420] 
+                                        cursor-pointer touch-none select-none
+                                        ${shakePack ? 'animate-shake' : ''}
+                                    `}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
                                     onClick={handlePackClick}
@@ -711,7 +704,7 @@ const GachaDev: React.FC = () => {
                                     {!isCut && (
                                         <svg 
                                             ref={svgRef}
-                                            className="absolute inset-[-200px] w-[calc(100%+400px)] h-[calc(100%+400px)] z-50 pointer-events-auto touch-none"
+                                            className="absolute inset-[-50px] md:inset-[-200px] w-[calc(100%+100px)] md:w-[calc(100%+400px)] h-[calc(100%+100px)] md:h-[calc(100%+400px)] z-50 pointer-events-auto touch-none"
                                             onMouseMove={handleMouseMove}
                                             onMouseUp={handleMouseUp}
                                             onMouseLeave={handleMouseUp}
@@ -741,9 +734,9 @@ const GachaDev: React.FC = () => {
                                     )}
 
                                     {!isCut && (
-                                        <div className="absolute top-[15%] left-[-20px] right-[-20px] h-0 border-t-2 border-dashed border-white/30 z-40 pointer-events-none flex items-center justify-between px-2 opacity-50">
-                                            <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2">✂️</span>
-                                            <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2 rotate-180">✂️</span>
+                                        <div className="absolute top-[15%] left-[-15px] right-[-15px] h-0 border-t-2 border-dashed border-white/30 z-40 pointer-events-none flex items-center justify-between px-0 opacity-50">
+                                            <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2 shadow-lg">✂️</span>
+                                            <span className="text-xs bg-black/60 rounded-full w-5 h-5 flex items-center justify-center transform -translate-y-1/2 rotate-180 shadow-lg">✂️</span>
                                         </div>
                                     )}
 
@@ -766,8 +759,8 @@ const GachaDev: React.FC = () => {
 
                                     {dispensingCard && (
                                         <div className="absolute inset-0 flex justify-center items-center z-30 pointer-events-none">
-                                            <div className="animate-fly-out">
-                                                <TradingCard card={dispensingCard} />
+                                            <div className="animate-fly-out w-32 md:w-48">
+                                                <TradingCard card={dispensingCard} className="w-full h-auto aspect-[2/3]" />
                                             </div>
                                         </div>
                                     )}
@@ -776,7 +769,7 @@ const GachaDev: React.FC = () => {
                                     <div 
                                         className={`
                                             absolute inset-0 z-20 
-                                            rounded-[3rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                            rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] origin-bottom-left
                                             ${selectedPack === 'lamb' 
                                                 ? 'from-emerald-900 via-teal-900 to-black border-emerald-500/50' 
@@ -788,7 +781,6 @@ const GachaDev: React.FC = () => {
                                             opacity: isCut ? 0 : 1,
                                         }}
                                     >
-                                        {/* BACKGROUND LOGIC */}
                                         {selectedPack === 'lamb' ? (
                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         ) : (
@@ -798,45 +790,26 @@ const GachaDev: React.FC = () => {
                                             </>
                                         )}
                                         
-                                        {/* Icon */}
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img 
-                                                        src={RAYQUAZA_IMAGE} 
-                                                        alt="Rayquaza" 
-                                                        className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 h-60 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
-                                                    />
-                                                    <img 
-                                                        src={GROUDON_IMAGE} 
-                                                        alt="Groudon" 
-                                                        className="absolute bottom-24 left-4 w-40 h-40 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
-                                                    />
-                                                    <img 
-                                                        src={KYOGRE_IMAGE} 
-                                                        alt="Kyogre" 
-                                                        className="absolute bottom-24 right-4 w-40 h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
-                                                    />
+                                                    <img src={RAYQUAZA_IMAGE} alt="Rayquaza" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" />
+                                                    <img src={GROUDON_IMAGE} alt="Groudon" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" />
+                                                    <img src={KYOGRE_IMAGE} alt="Kyogre" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" />
                                                 </>
                                             ) : (
-                                                <img 
-                                                    src={WAGYU_PACK_IMAGE} 
-                                                    alt="Pack Icon"
-                                                    className="w-80 h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]"
-                                                />
+                                                <img src={WAGYU_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]" />
                                             )}
                                         </div>
 
-                                        {/* Badge */}
-                                        <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
+                                        <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
-                                        {/* Text */}
-                                        <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
+                                        <div className="absolute bottom-8 md:bottom-12 left-0 right-0 text-center pointer-events-none z-30">
+                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
@@ -850,7 +823,7 @@ const GachaDev: React.FC = () => {
                                     <div 
                                         className={`
                                             absolute inset-0 z-10
-                                            rounded-[3rem] overflow-hidden bg-gradient-to-b border-[6px]
+                                            rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             ${selectedPack === 'lamb' 
                                                 ? 'from-emerald-900 via-teal-900 to-black border-emerald-500/50' 
                                                 : 'from-[#0f172a] via-[#312e81] to-[#0f172a] border-indigo-400/50'}
@@ -859,7 +832,6 @@ const GachaDev: React.FC = () => {
                                             clipPath: `inset(${cutYPercentage}% 0 0 0)`
                                         }}
                                     >
-                                        {/* BACKGROUND LOGIC */}
                                         {selectedPack === 'lamb' ? (
                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         ) : (
@@ -872,40 +844,23 @@ const GachaDev: React.FC = () => {
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img 
-                                                        src={RAYQUAZA_IMAGE} 
-                                                        alt="Rayquaza" 
-                                                        className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 h-60 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" 
-                                                    />
-                                                    <img 
-                                                        src={GROUDON_IMAGE} 
-                                                        alt="Groudon" 
-                                                        className="absolute bottom-24 left-4 w-40 h-40 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" 
-                                                    />
-                                                    <img 
-                                                        src={KYOGRE_IMAGE} 
-                                                        alt="Kyogre" 
-                                                        className="absolute bottom-24 right-4 w-40 h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" 
-                                                    />
+                                                    <img src={RAYQUAZA_IMAGE} alt="Rayquaza" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" />
+                                                    <img src={GROUDON_IMAGE} alt="Groudon" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" />
+                                                    <img src={KYOGRE_IMAGE} alt="Kyogre" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" />
                                                 </>
                                             ) : (
-                                                <img 
-                                                    src={WAGYU_PACK_IMAGE} 
-                                                    alt="Pack Icon"
-                                                    className="w-80 h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]"
-                                                />
+                                                <img src={WAGYU_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]" />
                                             )}
                                         </div>
 
-                                        {/* Badge */}
-                                        <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
+                                        <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
-                                        <div className="absolute bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
+                                        <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center pointer-events-none z-30">
+                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
@@ -929,37 +884,37 @@ const GachaDev: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="w-full max-w-5xl mt-2">
+                            <div className="w-full max-w-5xl mt-2 px-2">
                                 <h3 className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-4 text-center">Revealed Cards</h3>
                                 
-                                <div className="flex flex-wrap justify-center gap-4 min-h-[320px]">
+                                <div className="flex flex-wrap justify-center gap-2 md:gap-4 min-h-[200px] md:min-h-[320px]">
                                     {revealedCards.map((card, idx) => (
                                         <div 
                                             key={idx} 
                                             className="animate-in zoom-in-50 fade-in duration-500 slide-in-from-top-10"
                                             style={{ animationDelay: `${idx * 100}ms` }}
                                         >
-                                            <TradingCard card={card} className="w-40 h-60 hover:z-50 hover:scale-110 cursor-pointer shadow-xl" />
+                                            <TradingCard card={card} className="w-32 h-48 md:w-40 md:h-60 hover:z-50 hover:scale-110 cursor-pointer shadow-xl" />
                                         </div>
                                     ))}
                                     
                                     {revealedCards.length === 0 && stage !== 'finished' && (
-                                        <div className="w-full h-60 flex items-center justify-center border-2 border-dashed border-white/10 rounded-3xl bg-white/5">
-                                            <p className="text-gray-600 font-mono text-sm">Cards will appear here...</p>
+                                        <div className="w-full h-40 md:h-60 flex items-center justify-center border-2 border-dashed border-white/10 rounded-3xl bg-white/5 mx-4">
+                                            <p className="text-gray-600 font-mono text-xs md:text-sm">Cards will appear here...</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {stage === 'finished' && (
-                                <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col md:flex-row gap-4 mb-20 items-center">
+                                <div className="mt-8 md:mt-12 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col md:flex-row gap-4 mb-20 items-center px-4 w-full md:w-auto">
                                     <button 
                                         onClick={resetGame}
-                                        className="bg-brand-primary hover:bg-red-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform hover:scale-105 uppercase tracking-wider"
+                                        className="bg-brand-primary hover:bg-red-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform hover:scale-105 uppercase tracking-wider w-full md:w-auto text-sm md:text-base"
                                     >
                                         Open Another Pack
                                     </button>
-                                    <div className="text-white opacity-50">
+                                    <div className="text-white opacity-50 text-xs md:text-sm text-center">
                                         (Inventory link disabled in Dev)
                                     </div>
                                 </div>
