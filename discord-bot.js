@@ -816,8 +816,9 @@ app.post('/api/inventory/save', async (req, res) => {
 
                 // Add image for high tier pulls
                 if (highlightImage) {
-                    let imageUrl = highlightImage.image;
-                    if (highlightImage.type === 'Pokemon') {
+                    let imageUrl = highlightImage.image; // Use custom image if available
+                    
+                    if (!imageUrl && highlightImage.type === 'Pokemon') {
                         const formattedName = highlightImage.name.toLowerCase()
                             .replace(/[.']/g, '')
                             .replace(/♀/g, '-f')
@@ -825,9 +826,9 @@ app.post('/api/inventory/save', async (req, res) => {
                             .replace(/\s+/g, '-');
                         imageUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
                     }
+                    
                     if (imageUrl) {
                         embed.image = { url: imageUrl };
-                        // To ensure Discord displays it properly, verify it's a valid URL string
                     }
                 }
 
