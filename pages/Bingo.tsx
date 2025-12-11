@@ -353,9 +353,12 @@ const Bingo: React.FC = () => {
                 });
 
                 // INJECT LEGACY POOL DATA TO RESTORE OLD IDS
+                // Combine both pools and filter for Pokemon types to be consistent with sheet structure
                 const LEGACY_POOL = [...LAMB_POOL, ...WAGYU_POOL];
                 
                 LEGACY_POOL.forEach(legacyEntry => {
+                    // Only process Pokemon entries for the grid, but include items if you want them in the pool
+                    // For Bingo, usually we want Pokemon unless the previous card had items
                     const key = legacyEntry.name.toLowerCase();
                     const existing = poolMap.get(key);
                     
