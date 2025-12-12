@@ -652,7 +652,6 @@ const Bingo: React.FC = () => {
 
     // --- SEEDED GENERATION LOGIC ---
     const generateCard = useCallback(async (customId?: string, difficulty: BingoDifficulty = 'Default') => {
-        if (!cobblemonPool || cobblemonPool.length === 0) return;
         setIsGenerating(true);
         setShowDiffModal(false);
         setLoadedCardName(null); // Reset loaded state for new random cards
@@ -663,14 +662,11 @@ const Bingo: React.FC = () => {
             let diffToUse = difficulty;
 
             if (customId) {
-                // Check if ID contains encoded difficulty (Format: Prefix-RandomString)
                 const parts = customId.split('-');
                 if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
                     diffToUse = PREFIX_TO_DIFF[parts[0]] as BingoDifficulty;
                 }
-                // If legacy ID or manual input without prefix, rely on passed difficulty or default
             } else {
-                // Generate new ID with difficulty prefix
                 idToUse = generateRandomId(difficulty);
                 diffToUse = difficulty;
             }
@@ -679,9 +675,37 @@ const Bingo: React.FC = () => {
             if (idToUse) setCurrentCardId(idToUse);
             setActiveDifficulty(diffToUse);
             setSearchParams({ id: idToUse });
-            setInputCode(""); // Clear input
+            setInputCode(""); 
 
-            // 3. Initialize PRNG with the ID
+            // 3. CHECK BACKEND FOR PERSISTED DEFINITION
+            try {
+                const checkRes = await fetch(`${API_BASE_URL}/api/bingo/definition?id=${idToUse}`);
+                if (checkRes.ok) {
+                    const def = await checkRes.json();
+                    if (def && def.gridData && Array.isArray(def.gridData)) {
+                        setGridData(def.gridData);
+                        setMarked(new Array(25).fill(false));
+                        // Auto-mark free space if exists
+                        const center = def.gridData[12];
+                        if (center && center.id === -1) {
+                            const newMarked = new Array(25).fill(false);
+                            newMarked[12] = true;
+                            setMarked(newMarked);
+                        }
+                        setIsGenerating(false);
+                        return; // Exit early using saved definition
+                    }
+                }
+            } catch (e) { console.error("Def check error", e); }
+
+            // 4. IF NOT FOUND, GENERATE LOCALLY (Requires Pool)
+            if (!cobblemonPool || cobblemonPool.length === 0) {
+                // If pool is missing and we couldn't load from DB, we are stuck.
+                // But usually pool loads fast.
+                setIsGenerating(false);
+                return;
+            }
+
             const seed = cyrb128(idToUse || "DEFAULT");
             const rng = mulberry32(seed[0]);
 
@@ -689,17 +713,11 @@ const Bingo: React.FC = () => {
             const getRandomItems = (rarities: BingoCell['rarity'][], count: number) => {
                 let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
                 if (pool.length === 0) pool = cobblemonPool; // Fallback
-                
-                // Create a copy to shuffle (avoid modifying the original sorted pool order in memory)
                 pool = [...pool];
-
-                // Shuffle pool
                 for (let i = pool.length - 1; i > 0; i--) {
                     const j = Math.floor(rng() * (i + 1));
                     [pool[i], pool[j]] = [pool[j], pool[i]];
                 }
-                
-                // Return top N
                 return pool.slice(0, count).map(entry => ({
                     id: entry.id,
                     name: entry.name,
@@ -710,14 +728,12 @@ const Bingo: React.FC = () => {
 
             let selected: BingoCell[] = [];
 
-            // 4. GENERATION BASED ON DIFFICULTY (Using Parsed Difficulty)
+            // GENERATION BASED ON DIFFICULTY
             if (diffToUse === 'Easy') {
-                // 12 Common, 12 Uncommon (Total 24) + Free Space
                 const commons = getRandomItems(['Common'], 12);
                 const uncommons = getRandomItems(['Uncommon'], 12);
                 selected = [...commons, ...uncommons];
             } else if (diffToUse === 'Normal') {
-                // 6 Common, 6 Uncommon, 6 Rare, 6 Ultra-Rare (Total 24) + Free Space
                 selected = [
                     ...getRandomItems(['Common'], 6),
                     ...getRandomItems(['Uncommon'], 6),
@@ -725,21 +741,16 @@ const Bingo: React.FC = () => {
                     ...getRandomItems(['Ultra-Rare'], 6)
                 ];
             } else if (diffToUse === 'Hard') {
-                // 12 Rare, 12 Ultra-Rare (Total 24) + Free Space
                 selected = [
                     ...getRandomItems(['Rare'], 12),
                     ...getRandomItems(['Ultra-Rare'], 12)
                 ];
             } else if (diffToUse === 'Insane') {
-                // 24 Ultra-Rare + 1 Legendary Middle
                 selected = getRandomItems(['Ultra-Rare'], 24);
             } else if (diffToUse === 'Nightmare') {
-                // 20 Ultra-Rare + 1 Mythic Middle + 4 Legendary Corners
                 selected = getRandomItems(['Ultra-Rare'], 20);
             } else {
-                // DEFAULT: Pure Random
                 const pool = [...cobblemonPool];
-                // Shuffle logic copied to avoid modifying main pool
                 const tempPool = [...pool];
                 for (let i = tempPool.length - 1; i > 0; i--) {
                     const j = Math.floor(rng() * (i + 1));
@@ -753,16 +764,12 @@ const Bingo: React.FC = () => {
                 }));
             }
 
-            // Shuffle the selected set before placing into grid
             for (let i = selected.length - 1; i > 0; i--) {
                 const j = Math.floor(rng() * (i + 1));
                 [selected[i], selected[j]] = [selected[j], selected[i]];
             }
 
-            // 5. CONSTRUCT FINAL GRID (25 Cells)
             const finalGrid: BingoCell[] = new Array(25).fill(null);
-
-            // Helper to fill grid while skipping specific indices
             const fillGrid = (source: BingoCell[], skipIndices: number[]) => {
                 let sourceIdx = 0;
                 for (let i = 0; i < 25; i++) {
@@ -770,38 +777,29 @@ const Bingo: React.FC = () => {
                     if (sourceIdx < source.length) {
                         finalGrid[i] = source[sourceIdx++];
                     } else {
-                        // Fallback fill if not enough items
                         finalGrid[i] = getRandomItems(['Common'], 1)[0];
                     }
                 }
             };
 
             if (diffToUse === 'Insane') {
-                // Center is Legendary
                 fillGrid(selected, [12]);
                 finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
             } else if (diffToUse === 'Nightmare') {
-                // Center Mythic, Corners Legendary
                 const corners = [0, 4, 20, 24];
                 fillGrid(selected, [12, ...corners]);
-                
                 finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
                 const legends = getRandomItems(['Legendary'], 4);
                 corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
             } else {
-                // Default, Easy, Normal, Hard -> Center is Free Space
                 fillGrid(selected, [12]);
                 finalGrid[12] = FREE_SPACE_CELL;
             }
             
-            await new Promise(resolve => setTimeout(resolve, 300)); // Slight visual delay
-            
+            await new Promise(resolve => setTimeout(resolve, 300));
             setGridData(finalGrid);
             
-            // Reset marks for new generation
             setMarked(new Array(25).fill(false));
-            
-            // Auto-mark free space if exists
             if (diffToUse !== 'Insane' && diffToUse !== 'Nightmare') {
                 const newMarked = new Array(25).fill(false);
                 newMarked[12] = true;
@@ -813,6 +811,21 @@ const Bingo: React.FC = () => {
             prevBingoCountRef.current = 0;
             setShowBingoPopup(false);
             if (popupTimerRef.current) clearTimeout(popupTimerRef.current);
+
+            // 5. SAVE GENERATED DEFINITION TO BACKEND
+            if (idToUse) {
+                try {
+                    await fetch(`${API_BASE_URL}/api/bingo/definition`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            cardId: idToUse, 
+                            gridData: finalGrid,
+                            difficulty: diffToUse
+                        })
+                    });
+                } catch (e) { console.error("Def save error", e); }
+            }
 
         } catch (e) {
             console.error("Bingo Generation Failed:", e);
@@ -828,12 +841,14 @@ const Bingo: React.FC = () => {
         // But if view is not saved and no ID, gen random.
         const viewMode = searchParams.get('view');
         
-        if (mounted && !loadingSheet && cobblemonPool && gridData.length === 0 && viewMode !== 'saved') {
-            // Check URL for ID
-            const urlId = searchParams.get('id');
+        // Wait for sheet only if we don't have an ID. If ID exists, we might be able to load from DB.
+        // But generateCard handles the "Pool Missing but DB Has It" case now.
+        const urlId = searchParams.get('id');
+
+        if (mounted && gridData.length === 0 && viewMode !== 'saved') {
             if (urlId) {
                 generateCard(urlId);
-            } else {
+            } else if (cobblemonPool && !loadingSheet) {
                 generateCard();
             }
         }
@@ -983,10 +998,10 @@ const Bingo: React.FC = () => {
                                 </div>
                             )}
 
-                            {loadingSheet ? (
+                            {isGenerating && !gridData.length ? (
                                 <div className="flex flex-col items-center justify-center text-gray-500 animate-pulse mt-10 min-h-[300px]">
-                                    <div className="text-4xl mb-4">📄</div>
-                                    <div className="font-bold">Fetching Pokemon Data...</div>
+                                    <div className="text-4xl mb-4">🔮</div>
+                                    <div className="font-bold">Retrieving Card...</div>
                                 </div>
                             ) : sheetError ? (
                                 <div className="flex flex-col items-center justify-center text-red-400 mt-10 min-h-[300px]">

@@ -256,7 +256,21 @@ const BingoDashboard: React.FC = () => {
                     }
                 }
 
-                // 2. Parse Sheet
+                // 2. CHECK IF DEFINITION EXISTS (PERSISTENCE)
+                // This ensures the preview matches the real generated card
+                try {
+                    const checkRes = await fetch(`${API_BASE_URL}/api/bingo/definition?id=${activeCardId}`);
+                    if (checkRes.ok) {
+                        const def = await checkRes.json();
+                        if (def && def.gridData && Array.isArray(def.gridData)) {
+                            setPreviewGrid(def.gridData);
+                            setLoading(false);
+                            return; // Stop early, use saved data
+                        }
+                    }
+                } catch (e) { /* Ignore and generate locally */ }
+
+                // 3. IF NO SAVED DEFINITION, PARSE SHEET AND GENERATE
                 const rows = text.split('\n').map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, '').trim()));
                 const poolMap = new Map<string, CobblemonEntry>();
 
@@ -328,7 +342,7 @@ const BingoDashboard: React.FC = () => {
                 
                 const cobblemonPool = cobblemonArray;
                 
-                // 3. GENERATE PREVIEW GRID (Using Fetched Seed and Difficulty Logic)
+                // 4. GENERATE PREVIEW GRID (Using Fetched Seed and Difficulty Logic)
                 const seed = cyrb128(activeCardId);
                 const rng = mulberry32(seed[0]);
 
@@ -423,6 +437,20 @@ const BingoDashboard: React.FC = () => {
                 }
 
                 setPreviewGrid(finalGrid);
+
+                // 5. SAVE THIS GENERATED DEFINITION (So other views see same thing)
+                try {
+                    await fetch(`${API_BASE_URL}/api/bingo/definition`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            cardId: activeCardId, 
+                            gridData: finalGrid,
+                            difficulty: difficulty
+                        })
+                    });
+                } catch (e) { /* ignore save errors */ }
+
             } catch (e) {
                 console.error("Preview Gen Error", e);
             } finally {
