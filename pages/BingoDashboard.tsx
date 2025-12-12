@@ -244,12 +244,8 @@ const BingoDashboard: React.FC = () => {
                 // Convert map to array
                 let cobblemonArray = Array.from(poolMap.values());
 
-                // Sort by ID then Name to ensure deterministic RNG across reloads
-                cobblemonArray.sort((a, b) => {
-                    if (a.id !== b.id) return a.id - b.id;
-                    return a.name.localeCompare(b.name);
-                });
-
+                // NOTE: Do not sort arbitrarily. Keep CSV order to maintain legacy seed compatibility.
+                
                 if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
                 
                 const cobblemonPool = cobblemonArray;
