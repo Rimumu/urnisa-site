@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
-// IMPORT LEGACY POOLS
-import { LAMB_POOL, WAGYU_POOL } from '../data/bingoLegacyPools';
+import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
 import { getSpawnInfo } from '../data/legendaryConfig';
 
 // --- CONSTANTS ---
@@ -35,6 +34,42 @@ const PREFIX_TO_DIFF: Record<string, string> = {
     'I': 'Insane',
     'X': 'Nightmare'
 };
+
+// Manual Data
+const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] }[] = [
+    { id: 382, name: 'Kyogre', rarity: 'Legendary' }, { id: 383, name: 'Groudon', rarity: 'Legendary' },
+    { id: 483, name: 'Dialga', rarity: 'Legendary' }, { id: 487, name: 'Giratina', rarity: 'Legendary' },
+    { id: 381, name: 'Latios', rarity: 'Legendary' }, { id: 380, name: 'Latias', rarity: 'Legendary' },
+    { id: 384, name: 'Rayquaza', rarity: 'Legendary' }, { id: 1017, name: 'Ogerpon', rarity: 'Legendary' },
+    { id: 644, name: 'Zekrom', rarity: 'Legendary' }, { id: 643, name: 'Reshiram', rarity: 'Legendary' },
+    { id: 717, name: 'Yveltal', rarity: 'Legendary' }, { id: 1008, name: 'Miraidon', rarity: 'Legendary' },
+    { id: 1007, name: 'Koraidon', rarity: 'Legendary' }, { id: 788, name: 'Tapu Fini', rarity: 'Legendary' },
+    { id: 787, name: 'Tapu Bulu', rarity: 'Legendary' }, { id: 786, name: 'Tapu Lele', rarity: 'Legendary' },
+    { id: 785, name: 'Tapu Koko', rarity: 'Legendary' }, { id: 480, name: 'Uxie', rarity: 'Legendary' },
+    { id: 891, name: 'Kubfu', rarity: 'Legendary' }, { id: 772, name: 'Type: Null', rarity: 'Legendary' },
+    { id: 800, name: 'Necrozma', rarity: 'Legendary' }, { id: 484, name: 'Palkia', rarity: 'Legendary' },
+    { id: 896, name: 'Glastrier', rarity: 'Legendary' }, { id: 889, name: 'Zamazenta', rarity: 'Legendary' },
+    { id: 897, name: 'Spectrier', rarity: 'Legendary' }, { id: 1001, name: 'Wo-Chien', rarity: 'Legendary' },
+    { id: 1003, name: 'Ting-Lu', rarity: 'Legendary' }, { id: 1002, name: 'Chien-Pao', rarity: 'Legendary' },
+    { id: 1004, name: 'Chi-Yu', rarity: 'Legendary' }, { id: 895, name: 'Regidrago', rarity: 'Legendary' },
+    { id: 894, name: 'Regieleki', rarity: 'Legendary' }, { id: 377, name: 'Regirock', rarity: 'Legendary' },
+    { id: 378, name: 'Regice', rarity: 'Legendary' }, { id: 379, name: 'Registeel', rarity: 'Legendary' },
+    { id: 485, name: 'Heatran', rarity: 'Legendary' }, { id: 890, name: 'Eternatus', rarity: 'Legendary' },
+    { id: 488, name: 'Cresselia', rarity: 'Legendary' }, { id: 481, name: 'Mesprit', rarity: 'Legendary' },
+    { id: 638, name: 'Cobalion', rarity: 'Legendary' }, { id: 640, name: 'Virizion', rarity: 'Legendary' },
+    { id: 646, name: 'Kyurem', rarity: 'Legendary' }, { id: 898, name: 'Calyrex', rarity: 'Legendary' },
+    { id: 482, name: 'Azelf', rarity: 'Legendary' }, { id: 1024, name: 'Terapagos', rarity: 'Legendary' },
+    { id: 789, name: 'Cosmog', rarity: 'Legendary' }, { id: 249, name: 'Lugia', rarity: 'Legendary' },
+    { id: 716, name: 'Xerneas', rarity: 'Legendary' }, { id: 645, name: 'Landorus', rarity: 'Legendary' },
+    { id: 642, name: 'Thundurus', rarity: 'Legendary' }, { id: 641, name: 'Tornadus', rarity: 'Legendary' },
+    { id: 905, name: 'Enamorus', rarity: 'Legendary' }, { id: 888, name: 'Zacian', rarity: 'Legendary' },
+    { id: 250, name: 'Ho-Oh', rarity: 'Legendary' }, { id: 150, name: 'Mewtwo', rarity: 'Legendary' },
+    { id: 243, name: 'Raikou', rarity: 'Legendary' }, { id: 244, name: 'Entei', rarity: 'Legendary' },
+    { id: 792, name: 'Lunala', rarity: 'Legendary' }, { id: 146, name: 'Moltres', rarity: 'Legendary' },
+    { id: 639, name: 'Terrakion', rarity: 'Legendary' }, { id: 245, name: 'Suicune', rarity: 'Legendary' },
+    { id: 791, name: 'Solgaleo', rarity: 'Legendary' }, { id: 144, name: 'Articuno', rarity: 'Legendary' },
+    { id: 145, name: 'Zapdos', rarity: 'Legendary' }, { id: 151, name: 'Mew', rarity: 'Mythical' }
+];
 
 const FREE_SPACE_CELL: BingoCell = {
     id: -1,
@@ -241,11 +276,54 @@ const BingoDashboard: React.FC = () => {
                     poolMap.set(key, entry);
                 });
 
-                // Convert map to array
-                let cobblemonArray = Array.from(poolMap.values());
+                MANUAL_POOL_DATA.forEach(m => {
+                    const key = m.name.toLowerCase();
+                    const ex = poolMap.get(key);
+                    
+                    // NEW: Check JSON config
+                    const parsedInfo = getSpawnInfo(m.name);
+                    const spawns = new Set<string>();
+                    
+                    if (parsedInfo) {
+                        spawns.add(parsedInfo);
+                    } else {
+                        if (m.rarity === 'Legendary') spawns.add("Check the quest book!");
+                        else if (m.rarity === 'Mythical') spawns.add("Mythic");
+                    }
 
-                // NOTE: Do not sort arbitrarily. Keep CSV order to maintain legacy seed compatibility.
+                    if (ex) { 
+                        ex.id = m.id; 
+                        ex.rarity = m.rarity; 
+                        ex.spawns = spawns;
+                        poolMap.set(key, ex); 
+                    } else {
+                        poolMap.set(key, { id: m.id, name: m.name, rarity: m.rarity, spawns: spawns });
+                    }
+                });
+
+                // --- FILTERING GACHA POKEMON ---
+                const excludedIds = new Set<number>();
+                [...LAMB_POOL, ...WAGYU_POOL].forEach(item => {
+                    if (item.type === 'Pokemon') {
+                        excludedIds.add(item.id);
+                    }
+                });
+
+                // Convert map to array and filter
+                let cobblemonArray = Array.from(poolMap.values());
                 
+                // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
+                cobblemonArray = cobblemonArray.filter(entry => {
+                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
+                    return !excludedIds.has(entry.id);
+                });
+
+                // Sort by ID then Name to ensure deterministic RNG across reloads
+                cobblemonArray.sort((a, b) => {
+                    if (a.id !== b.id) return a.id - b.id;
+                    return a.name.localeCompare(b.name);
+                });
+
                 if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
                 
                 const cobblemonPool = cobblemonArray;
@@ -363,7 +441,7 @@ const BingoDashboard: React.FC = () => {
             />
 
             <div className="container mx-auto px-4 pt-4 pb-2">
-                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm">
                     <span>←</span> Back to Dashboard
                 </Link>
             </div>
