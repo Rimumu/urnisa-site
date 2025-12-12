@@ -4,9 +4,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
-// IMPORT LEGACY POOLS TO MAINTAIN ID DETERMINISM
-import { LAMB_POOL, WAGYU_POOL } from '../data/bingoLegacyPools';
-import { getSpawnInfo } from '../data/legendaryConfig';
 
 // --- TYPES ---
 interface BingoCell {
@@ -350,49 +347,6 @@ const Bingo: React.FC = () => {
                     }
 
                     poolMap.set(key, entry);
-                });
-
-                // INJECT LEGACY POOL DATA TO RESTORE OLD IDS
-                // Combine both pools and filter for Pokemon types to be consistent with sheet structure
-                const LEGACY_POOL = [...LAMB_POOL, ...WAGYU_POOL];
-                
-                LEGACY_POOL.forEach(legacyEntry => {
-                    // Only process Pokemon entries for the grid, but include items if you want them in the pool
-                    // For Bingo, usually we want Pokemon unless the previous card had items
-                    const key = legacyEntry.name.toLowerCase();
-                    const existing = poolMap.get(key);
-                    
-                    const spawns = new Set<string>();
-                    
-                    // CHECK FOR JSON CONFIGURATION FIRST
-                    const parsedInfo = getSpawnInfo(legacyEntry.name);
-                    
-                    if (parsedInfo) {
-                        spawns.add(parsedInfo);
-                    } else {
-                        // Fallback logic if not in config
-                        if (legacyEntry.rarity === 'Legendary') {
-                            spawns.add("Check the quest book!");
-                        } else if (legacyEntry.rarity === 'Mythical') {
-                            spawns.add("Mythic");
-                        }
-                    }
-
-                    if (existing) {
-                        // Update existing entry
-                        existing.id = legacyEntry.id;
-                        existing.rarity = legacyEntry.rarity;
-                        existing.spawns = spawns;
-                        poolMap.set(key, existing);
-                    } else {
-                        // Create new entry
-                        poolMap.set(key, {
-                            id: legacyEntry.id,
-                            name: legacyEntry.name,
-                            rarity: legacyEntry.rarity,
-                            spawns: spawns
-                        });
-                    }
                 });
 
                 // Convert map to array

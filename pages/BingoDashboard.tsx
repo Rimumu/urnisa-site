@@ -241,33 +241,6 @@ const BingoDashboard: React.FC = () => {
                     poolMap.set(key, entry);
                 });
 
-                const LEGACY_POOL = [...LAMB_POOL, ...WAGYU_POOL];
-
-                LEGACY_POOL.forEach(m => {
-                    const key = m.name.toLowerCase();
-                    const ex = poolMap.get(key);
-                    
-                    // NEW: Check JSON config
-                    const parsedInfo = getSpawnInfo(m.name);
-                    const spawns = new Set<string>();
-                    
-                    if (parsedInfo) {
-                        spawns.add(parsedInfo);
-                    } else {
-                        if (m.rarity === 'Legendary') spawns.add("Check the quest book!");
-                        else if (m.rarity === 'Mythical') spawns.add("Mythic");
-                    }
-
-                    if (ex) { 
-                        ex.id = m.id; 
-                        ex.rarity = m.rarity; 
-                        ex.spawns = spawns;
-                        poolMap.set(key, ex); 
-                    } else {
-                        poolMap.set(key, { id: m.id, name: m.name, rarity: m.rarity, spawns: spawns });
-                    }
-                });
-
                 // Convert map to array
                 let cobblemonArray = Array.from(poolMap.values());
 
