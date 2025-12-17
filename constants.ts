@@ -16,11 +16,11 @@ const isLocal =
     hostname.startsWith('192.168.');
 
 // 1. General Website Backend (Database, Nisathon, Admin)
-const BACKEND_PROD_URL = 'https://urnisa-backend-3b3m.onrender.com';
+const BACKEND_PROD_URL = 'https://urnisa-backend-21ls.onrender.com';
 export const API_BASE_URL = isLocal ? `http://${hostname}:3001` : BACKEND_PROD_URL;
 
 // 2. Discord Bot Service (Chat Preview + Auth)
-const BOT_PROD_URL = 'https://urnisa-dbot.onrender.com';
+const BOT_PROD_URL = 'https://urnisa-dbot-r1lm.onrender.com';
 export const DISCORD_API_URL = isLocal ? `http://${hostname}:3002` : BOT_PROD_URL;
 
 // 3. Discord OAuth Configuration
