@@ -1,4 +1,3 @@
-
 export interface CardData {
     id: number;
     name: string;
@@ -11,27 +10,27 @@ export interface CardData {
     weight?: number; // Higher number = more frequent
 }
 
-// THEME: WEATHER TRIO (Rayquaza / Kyogre / Groudon)
+// THEME: CREATION TRIO (Dialga / Palkia / Giratina) - Time, Space, Antimatter
 export const LAMB_POOL: CardData[] = [
-    // The Chase
-    { id: 384, name: "Rayquaza", type: 'Pokemon', subType: "Sky High", rarity: 'Legendary', hp: 210, description: "Masters the weather.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409570/rayquazaSTILL_dp2prw.png" },
+    // The Chase - Time
+    { id: 483, name: "Dialga", type: 'Pokemon', subType: "Temporal", rarity: 'Legendary', hp: 220, description: "A legendary Pokemon that can control time.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766066036/dialgaSTILL_d5h5oc.png" },
     
-    // Top Tier Weather Gods
-    { id: 382, name: "Kyogre", type: 'Pokemon', subType: "Sea Basin", rarity: 'Legendary', hp: 200, description: "Expands the oceans.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409663/kyogreSTILL_ygpasz.png" },
-    { id: 383, name: "Groudon", type: 'Pokemon', subType: "Continent", rarity: 'Legendary', hp: 200, description: "Expands the land.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409624/groudonSTILL_n9gwqt.png" },
+    // The Support - Space & Antimatter
+    { id: 484, name: "Palkia", type: 'Pokemon', subType: "Spatial", rarity: 'Legendary', hp: 210, description: "It has the ability to distort space.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766065601/palkiaSTILL_ype3sr.png" },
+    { id: 487, name: "Giratina", type: 'Pokemon', subType: "Renegade", rarity: 'Legendary', hp: 250, description: "Lives in the Distortion World.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766066274/giratinaSTILL2_f2spbc.png" },
 
-    // Rares (Weight: 10)
-    { id: 373, name: "Salamence", type: 'Pokemon', subType: "Dragon", rarity: 'Rare', hp: 170, description: "Dreams of flying.", weight: 10 },
-    { id: 376, name: "Metagross", type: 'Pokemon', subType: "Iron Leg", rarity: 'Rare', hp: 160, description: "Four brains.", weight: 10 },
-    { id: 350, name: "Milotic", type: 'Pokemon', subType: "Tender", rarity: 'Rare', hp: 150, description: "Most beautiful Pokemon.", weight: 10 },
+    // Rares (Weight: 10) - Themed Powerful Sinnoh/Distortion Mons
+    { id: 445, name: "Garchomp", type: 'Pokemon', subType: "Mach", rarity: 'Rare', hp: 170, description: "Flies at the speed of sound.", weight: 10 },
+    { id: 462, name: "Magnezone", type: 'Pokemon', subType: "Magnet Area", rarity: 'Rare', hp: 160, description: "Evolved in a special magnetic field.", weight: 10 },
+    { id: 442, name: "Spiritomb", type: 'Pokemon', subType: "Forbidden", rarity: 'Rare', hp: 140, description: "Bound to a keystone for 500 years.", weight: 10 },
     { id: 30010, name: "2x Quick Ball", type: 'Item', subType: "Balls", rarity: 'Rare', description: "Catches fast.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/quick-ball.png", weight: 10 },
     
-    // Uncommon Pokemon (Weather/Hoenn Themed)
-    { id: 351, name: "Castform", type: 'Pokemon', subType: "Weather", rarity: 'Uncommon', hp: 70, description: "Changes with weather.", weight: 25 },
-    { id: 338, name: "Solrock", type: 'Pokemon', subType: "Meteorite", rarity: 'Uncommon', hp: 90, description: "Solar power.", weight: 25 },
-    { id: 337, name: "Lunatone", type: 'Pokemon', subType: "Meteorite", rarity: 'Uncommon', hp: 90, description: "Moon power.", weight: 25 },
-    { id: 344, name: "Claydol", type: 'Pokemon', subType: "Clay Doll", rarity: 'Uncommon', hp: 60, description: "Ancient beams.", weight: 25 },
-    { id: 359, name: "Absol", type: 'Pokemon', subType: "Disaster", rarity: 'Uncommon', hp: 65, description: "Senses danger.", weight: 25 },
+    // Uncommon Pokemon (Time/Space/Antimatter flavored)
+    { id: 437, name: "Bronzong", type: 'Pokemon', subType: "Bronze Bell", rarity: 'Uncommon', hp: 110, description: "Brought rain in ancient times.", weight: 25 },
+    { id: 121, name: "Starmie", type: 'Pokemon', subType: "Mysterious", rarity: 'Uncommon', hp: 90, description: "Its core glows with 7 colors.", weight: 25 },
+    { id: 429, name: "Mismagius", type: 'Pokemon', subType: "Magical", rarity: 'Uncommon', hp: 100, description: "Mutters incantations of misery.", weight: 25 },
+    { id: 178, name: "Xatu", type: 'Pokemon', subType: "Mystic", rarity: 'Uncommon', hp: 100, description: "Sees the past and future simultaneously.", weight: 25 },
+    { id: 605, name: "Elgyem", type: 'Pokemon', subType: "Cerebral", rarity: 'Uncommon', hp: 80, description: "Came from far away in space.", weight: 25 },
 
     // Uncommon Items (Weight: 25)
     { id: 30001, name: "Exp. Candy M", type: 'Item', subType: "Consumable", rarity: 'Uncommon', description: "A medium sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/stardust.png", weight: 25 },
@@ -44,12 +43,12 @@ export const LAMB_POOL: CardData[] = [
     { id: 30008, name: "3x Safari Ball", type: 'Item', subType: "Balls", rarity: 'Uncommon', description: "Special camouflage ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/safari-ball.png", weight: 25 },
     { id: 30009, name: "2x Level Ball", type: 'Item', subType: "Balls", rarity: 'Uncommon', description: "Effective on lower levels.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/level-ball.png", weight: 25 },
     
-    // Common Pokemon (Weight: 15)
-    { id: 278, name: "Wingull", type: 'Pokemon', subType: "Seagull", rarity: 'Common', hp: 40, description: "Rides the winds.", weight: 15 },
-    { id: 320, name: "Wailmer", type: 'Pokemon', subType: "Ball Whale", rarity: 'Common', hp: 130, description: "Bounces like a ball.", weight: 15 },
-    { id: 339, name: "Barboach", type: 'Pokemon', subType: "Whiskers", rarity: 'Common', hp: 50, description: "Slime coated.", weight: 15 },
-    { id: 304, name: "Aron", type: 'Pokemon', subType: "Iron Armor", rarity: 'Common', hp: 50, description: "Eats iron ore.", weight: 15 },
-    { id: 293, name: "Whismur", type: 'Pokemon', subType: "Whisper", rarity: 'Common', hp: 64, description: "Usually quiet.", weight: 15 },
+    // Common Pokemon
+    { id: 343, name: "Baltoy", type: 'Pokemon', subType: "Clay Doll", rarity: 'Common', hp: 50, description: "Spins like a top.", weight: 20 },
+    { id: 774, name: "Minior", type: 'Pokemon', subType: "Meteor", rarity: 'Common', hp: 60, description: "Born from space debris.", weight: 15 },
+    { id: 92, name: "Gastly", type: 'Pokemon', subType: "Gas", rarity: 'Common', hp: 45, description: "Mostly composed of gas.", weight: 15 },
+    { id: 427, name: "Buneary", type: 'Pokemon', subType: "Rabbit", rarity: 'Common', hp: 50, description: "Curled ears.", weight: 15 },
+    { id: 443, name: "Gible", type: 'Pokemon', subType: "Land Shark", rarity: 'Common', hp: 58, description: "Loves big bites.", weight: 15 },
 
     // Common Items 
     { id: 20001, name: "5x Bronze Coin", type: 'Item', subType: "Currency", rarity: 'Common', description: "Used for trading.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-copper.png", weight: 65 },
@@ -58,10 +57,10 @@ export const LAMB_POOL: CardData[] = [
     { id: 20004, name: "5x Pokeball", type: 'Item', subType: "Balls", rarity: 'Common', description: "Catches wild Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png", weight: 30 },
 ];
 
-// THEME: JIRACHI (Wishmaker / Stars / Space)
+// THEME: ARCEUS (The Creator / Alpha) - Infinite Time, Space, and Power
 export const WAGYU_POOL: CardData[] = [
     // The Chase
-    { id: 385, name: "Jirachi", type: 'Pokemon', subType: "Wish", rarity: 'Mythical', hp: 100, description: "Grants wishes when it wakes.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1765409704/jirachiSTILL_ex5vkd.png" },
+    { id: 493, name: "Arceus", type: 'Pokemon', subType: "Alpha", rarity: 'Mythical', hp: 300, description: "The creator of the universe.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png" },
     
     // Legendary Items (Weight: 3)
     { id: 30030, name: "Gold Coin", type: 'Item', subType: "Currency", rarity: 'Legendary', description: "A fortune.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-gold.png", weight: 3 },
@@ -69,23 +68,21 @@ export const WAGYU_POOL: CardData[] = [
     { id: 30032, name: "Master Ball", type: 'Item', subType: "Balls", rarity: 'Legendary', description: "Catches without fail.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/master-ball.png", weight: 3 },
     { id: 30033, name: "1 TM Choice", type: 'Item', subType: "Technical Machine", rarity: 'Legendary', description: "Teach a move.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png", weight: 3 },
 
-    // Ultra-Rare Pokemon (Stars/Space/Psychic Theme)
-    { id: 488, name: "Cresselia", type: 'Pokemon', subType: "Lunar", rarity: 'Ultra-Rare', hp: 120, description: "Representation of the crescent moon.", weight: 12 },
-    { id: 36, name: "Clefable", type: 'Pokemon', subType: "Fairy", rarity: 'Ultra-Rare', hp: 95, description: "From the moon.", weight: 12 },
-    { id: 121, name: "Starmie", type: 'Pokemon', subType: "Mysterious", rarity: 'Ultra-Rare', hp: 60, description: "Core glows with 7 colors.", weight: 12 },
-    { id: 282, name: "Gardevoir", type: 'Pokemon', subType: "Embrace", rarity: 'Ultra-Rare', hp: 130, description: "Protects trainer.", weight: 12 },
-    { id: 448, name: "Lucario", type: 'Pokemon', subType: "Aura", rarity: 'Ultra-Rare', hp: 140, description: "Reads minds.", weight: 12 },
-    
-    { id: 774, name: "Minior", type: 'Pokemon', subType: "Meteor", rarity: 'Ultra-Rare', hp: 60, description: "Born from mutated nanoparticles.", weight: 12 },
-    { id: 606, name: "Beheeyem", type: 'Pokemon', subType: "Cerebral", rarity: 'Ultra-Rare', hp: 75, description: "Controls memories.", weight: 12 },
-    { id: 576, name: "Gothitelle", type: 'Pokemon', subType: "Astral Body", rarity: 'Ultra-Rare', hp: 70, description: "Predicts future from stars.", weight: 12 },
-    { id: 518, name: "Musharna", type: 'Pokemon', subType: "Drowsing", rarity: 'Ultra-Rare', hp: 116, description: "Mist of dreams.", weight: 12 },
-    { id: 468, name: "Togekiss", type: 'Pokemon', subType: "Jubilee", rarity: 'Ultra-Rare', hp: 85, description: "Shares blessings.", weight: 12 },
+    // Ultra-Rare Pokemon (Non-Legendary/Mythical Powerful Mons - Time/Space/Antimatter)
+    { id: 887, name: "Dragapult", type: 'Pokemon', subType: "Stealth", rarity: 'Ultra-Rare', hp: 150, description: "Carries Dreepy in its horns.", weight: 12 },
+    { id: 376, name: "Metagross", type: 'Pokemon', subType: "Iron Leg", rarity: 'Ultra-Rare', hp: 160, description: "A supercomputer on legs.", weight: 12 },
+    { id: 445, name: "Garchomp", type: 'Pokemon', subType: "Mach", rarity: 'Ultra-Rare', hp: 170, description: "Can fly as fast as a jet plane.", weight: 12 },
+    { id: 637, name: "Volcarona", type: 'Pokemon', subType: "Sun", rarity: 'Ultra-Rare', hp: 140, description: "Its scales glow like the sun.", weight: 12 },
+    { id: 474, name: "Porygon-Z", type: 'Pokemon', subType: "Virtual", rarity: 'Ultra-Rare', hp: 110, description: "Modified to travel between dimensions.", weight: 12 },
+    { id: 462, name: "Magnezone", type: 'Pokemon', subType: "Magnet Area", rarity: 'Ultra-Rare', hp: 160, description: "Connected to space magnetic fields.", weight: 12 },
+    { id: 442, name: "Spiritomb", type: 'Pokemon', subType: "Forbidden", rarity: 'Ultra-Rare', hp: 140, description: "Made of 108 spirits.", weight: 12 },
+    { id: 437, name: "Bronzong", type: 'Pokemon', subType: "Bronze Bell", rarity: 'Ultra-Rare', hp: 150, description: "Masters of ancient ritual.", weight: 12 },
+    { id: 970, name: "Glimmora", type: 'Pokemon', subType: "Multi-Calyx", rarity: 'Ultra-Rare', hp: 130, description: "Resembles a space-born crystal.", weight: 12 },
+    { id: 561, name: "Sigilyph", type: 'Pokemon', subType: "Avianoid", rarity: 'Ultra-Rare', hp: 110, description: "Guardian of ancient space-faring cities.", weight: 12 },
 
-    // Ultra-Rare Items (Weight increased to 12)
+    // Ultra-Rare Items
     { id: 30018, name: "5x Ultra Ball", type: 'Item', subType: "Balls", rarity: 'Ultra-Rare', description: "High performance ball.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png", weight: 12 },
     { id: 30019, name: "Exp. Candy XL", type: 'Item', subType: "Consumable", rarity: 'Ultra-Rare', description: "A huge sweet treat.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/comet-shard.png", weight: 12 },
-    // IV Caps
     { id: 30020, name: "HP IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes HP IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hp-up.png", weight: 12 },
     { id: 30021, name: "Atk IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Attack IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/protein.png", weight: 12 },
     { id: 30022, name: "Def IV Cap", type: 'Item', subType: "IV Cap", rarity: 'Ultra-Rare', description: "Maxes Defense IV.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/iron.png", weight: 12 },

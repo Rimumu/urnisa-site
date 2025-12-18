@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
@@ -22,11 +21,11 @@ interface Particle {
 }
 
 // --- CONSTANTS ---
-const RAYQUAZA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409570/rayquazaSTILL_dp2prw.png";
-const GROUDON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409624/groudonSTILL_n9gwqt.png";
-const KYOGRE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409663/kyogreSTILL_ygpasz.png";
-const WAGYU_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765388052/jirachi_m5e7co.gif";
-const JIRACHI_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1765409704/jirachiSTILL_ex5vkd.png";
+const DIALGA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066036/dialgaSTILL_d5h5oc.png";
+const PALKIA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065601/palkiaSTILL_ype3sr.png";
+const GIRATINA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066274/giratinaSTILL2_f2spbc.png";
+const ARCEUS_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png";
+const ARCEUS_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -85,13 +84,6 @@ const TradingCard: React.FC<{ card: CardData; className?: string }> = ({ card, c
         const verifyImage = async () => {
             if (card.image) {
                 setImgSrc(card.image);
-                return;
-            }
-
-            // Force 3D Render for broken sprites
-            const forced3D = ['kyogre', 'groudon', 'jirachi', 'rayquaza'];
-            if (forced3D.includes(card.name.toLowerCase())) {
-                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${card.id}.png`);
                 return;
             }
 
@@ -339,15 +331,12 @@ const Gacha: React.FC = () => {
         const dx = cutCoords.end.x - cutCoords.start.x;
         const dy = cutCoords.end.y - cutCoords.start.y;
         
-        // Lower threshold for mobile
         if (Math.abs(dx) < 100) return;
 
         const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        // Allow slightly more angled cuts
         const isHorizontal = (Math.abs(angle) < 35) || (Math.abs(angle) > 145);
         if (!isHorizontal) return;
 
-        // Dynamic Height Calculation
         const svgRect = svgRef.current.getBoundingClientRect();
         const packRect = packRef.current.getBoundingClientRect();
         const avgY = (cutCoords.start.y + cutCoords.end.y) / 2;
@@ -366,7 +355,7 @@ const Gacha: React.FC = () => {
         setCutYPercentage(exactPercentage);
         
         const newParticles: Particle[] = [];
-        const baseColor = selectedPack === 'lamb' ? '#10b981' : '#6366f1';
+        const baseColor = selectedPack === 'lamb' ? '#7dd3fc' : '#fbbf24';
         
         const packHeight = packRef.current ? packRef.current.clientHeight : 420;
         const cutY = (exactPercentage / 100) * packHeight;
@@ -489,8 +478,6 @@ const Gacha: React.FC = () => {
                 .animate-shake {
                     animation: shake 0.3s ease-in-out;
                 }
-                
-                /* NEW STAR STYLES */
                 @keyframes spaceDrift {
                     from { background-position: 0 0; }
                     to { background-position: 600px 600px; }
@@ -507,36 +494,29 @@ const Gacha: React.FC = () => {
                 }
             `}</style>
 
-            {/* User Profile */}
-            <UserProfile 
-                onUserChange={setUser} 
-                className="!absolute top-4 right-4"
-            />
+            <UserProfile onUserChange={setUser} className="!absolute top-4 right-4" />
 
-            {/* HEADER */}
             <div className="relative z-20 container mx-auto px-4 pt-12 pb-2 flex flex-col items-start gap-4">
                 <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
                     <span>←</span> Back to Dashboard
                 </Link>
 
                 <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
-                    {/* Lamb Counter (Emerald/Green Theme) */}
-                    <div className="bg-black/60 backdrop-blur-md border border-emerald-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
-                        <div className="bg-emerald-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-emerald-500/10">
-                            <img src={RAYQUAZA_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                    <div className="bg-black/60 backdrop-blur-md border border-sky-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
+                        <div className="bg-sky-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-sky-500/10">
+                            <img src={DIALGA_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
-                            <div className="text-[9px] font-black text-emerald-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
+                            <div className="text-[9px] font-black text-sky-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
                             <div className="text-lg font-black text-white leading-none">{packs.lambPacks}</div>
                         </div>
                     </div>
-                    {/* Wagyu Counter (Indigo Theme with Static Jirachi) */}
-                    <div className="bg-black/60 backdrop-blur-md border border-indigo-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
-                        <div className="bg-indigo-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-indigo-500/10">
-                            <img src={JIRACHI_ICON_IMAGE} alt="Wagyu" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                    <div className="bg-black/60 backdrop-blur-md border border-amber-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
+                        <div className="bg-amber-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-amber-500/10">
+                            <img src={ARCEUS_ICON_IMAGE} alt="Wagyu" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
-                            <div className="text-[9px] font-black text-indigo-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
+                            <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
                             <div className="text-lg font-black text-white leading-none">{packs.wagyuPacks}</div>
                         </div>
                     </div>
@@ -544,10 +524,7 @@ const Gacha: React.FC = () => {
             </div>
 
             <div className="relative z-10 container mx-auto px-4 flex flex-col items-center justify-start min-h-[80vh] py-4 md:py-8">
-                
-                {/* WRAPPER CONTAINER - ROUNDED & THEMED */}
                 <div className="w-full max-w-6xl bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] md:rounded-[3rem] p-4 md:p-12 shadow-2xl relative overflow-hidden flex flex-col items-center min-h-[500px] md:min-h-[600px]">
-                    {/* Inner Decor */}
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
 
                     {stage === 'selection' && (
@@ -556,11 +533,11 @@ const Gacha: React.FC = () => {
                                 GACHA <span className="text-brand-primary">PACK</span>
                             </h1>
                             <p className="text-center text-gray-400 mb-8 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-                                Are you going to eat lamb and become the weather master? Or will you wish upon the star for unlimited A5 Wagyu steak granted by The Wishmaker Jirachi!
+                                Are you going to unveil the lambs of creations or will you unpack the premium creator Arceus?
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2 md:px-20">
-                                {/* LAMB CHOP (WEATHER TRIO) */}
+                                {/* LAMB CHOP (CREATION TRIO) */}
                                 <button 
                                     onClick={() => selectPack('lamb')}
                                     disabled={processing}
@@ -569,58 +546,35 @@ const Gacha: React.FC = () => {
                                         ${packs.lambPacks > 0 ? 'hover:scale-105 hover:-rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                     `}
                                 >
-                                    <div className="absolute inset-0 bg-emerald-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-900 via-teal-900 to-black rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-emerald-500/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-sky-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-b from-sky-900 via-slate-900 to-black rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-sky-500/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         
-                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-emerald-500/30 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-emerald-500/20 rounded-full"></div>)}
+                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-sky-500/30 flex items-center justify-center space-x-1">
+                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-sky-500/20 rounded-full"></div>)}
                                         </div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-emerald-500/30"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-sky-500/30"></div>
 
-                                        {/* Badge at Top */}
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className="bg-emerald-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            <div className="bg-sky-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
                                                 Legendary Pack
                                             </div>
                                         </div>
 
-                                        {/* Image Composition */}
                                         <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[3rem]">
-                                            <img 
-                                                src={RAYQUAZA_IMAGE} 
-                                                alt="Rayquaza" 
-                                                className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 md:w-72 h-60 md:h-72 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
-                                            />
-                                            <img 
-                                                src={GROUDON_IMAGE} 
-                                                alt="Groudon" 
-                                                className="absolute bottom-20 left-2 md:left-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
-                                            />
-                                            <img 
-                                                src={KYOGRE_IMAGE} 
-                                                alt="Kyogre" 
-                                                className="absolute bottom-20 right-2 md:right-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
-                                            />
+                                            <img src={DIALGA_IMAGE} alt="Dialga" className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 md:w-72 h-60 md:h-72 object-contain drop-shadow-[0_0_15px_rgba(125,211,252,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" />
+                                            <img src={PALKIA_IMAGE} alt="Palkia" className="absolute bottom-20 left-2 md:left-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(244,114,182,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" />
+                                            <img src={GIRATINA_IMAGE} alt="Giratina" className="absolute bottom-20 right-2 md:right-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" />
                                         </div>
 
-                                        {/* Text at Bottom */}
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
                                             <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
-                                            <p className="text-emerald-300 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Weather Trio Edition</p>
+                                            <p className="text-sky-300 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Creation Trio Edition</p>
                                         </div>
-
-                                        {packs.lambPacks === 0 && (
-                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-40">
-                                                <div className="bg-red-900/80 border border-red-500 text-white px-4 py-2 rounded-xl font-bold uppercase tracking-widest rotate-12 shadow-2xl">
-                                                    Out of Stock
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </button>
 
-                                {/* WAGYU (JIRACHI) */}
+                                {/* WAGYU (ARCEUS) */}
                                 <button 
                                     onClick={() => selectPack('wagyu')}
                                     disabled={processing}
@@ -629,37 +583,29 @@ const Gacha: React.FC = () => {
                                         ${packs.wagyuPacks > 0 ? 'hover:scale-105 hover:rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                     `}
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#312e81] to-[#0f172a] rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-indigo-400/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-[#fde68a] via-white to-[#fde68a] rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-amber-400/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 star-layer-1 opacity-30"></div>
                                         <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
                                         
-                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-indigo-500/30 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-indigo-500/20 rounded-full"></div>)}
+                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-amber-500/30 flex items-center justify-center space-x-1">
+                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-amber-500/20 rounded-full"></div>)}
                                         </div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-indigo-500/30"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-amber-500/30"></div>
 
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className="bg-indigo-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            <div className="bg-amber-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
                                                 Mythic Pack
                                             </div>
                                         </div>
 
                                         <div className="absolute inset-0 flex items-center justify-center z-10">
-                                            <img src={WAGYU_PACK_IMAGE} alt="Jirachi" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] group-hover:scale-110 transition-transform duration-500" />
+                                            <img src={ARCEUS_PACK_IMAGE} alt="Arceus" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)] group-hover:scale-110 transition-transform duration-500" />
                                         </div>
 
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
-                                            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
-                                            <p className="text-indigo-100 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1 text-shadow">Wishmaker Edition</p>
+                                            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-900 to-amber-600 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
+                                            <p className="text-amber-900 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Creator Edition</p>
                                         </div>
-
-                                        {packs.wagyuPacks === 0 && (
-                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-40">
-                                                <div className="bg-red-900/80 border border-red-500 text-white px-4 py-2 rounded-xl font-bold uppercase tracking-widest -rotate-12 shadow-2xl">
-                                                    Out of Stock
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </button>
                             </div>
@@ -688,7 +634,6 @@ const Gacha: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* PACK INTERACTION AREA */}
                             <div className="relative h-[450px] md:h-[500px] w-full flex justify-center items-center perspective-1000">
                                 <div 
                                     ref={packRef}
@@ -740,7 +685,6 @@ const Gacha: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* Particles */}
                                     {particles.map(p => (
                                         <div 
                                             key={p.id}
@@ -765,15 +709,14 @@ const Gacha: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {/* --- TOP HALF (CUT) --- */}
                                     <div 
                                         className={`
                                             absolute inset-0 z-20 
                                             rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] origin-bottom-left
                                             ${selectedPack === 'lamb' 
-                                                ? 'from-emerald-900 via-teal-900 to-black border-emerald-500/50' 
-                                                : 'from-[#0f172a] via-[#312e81] to-[#0f172a] border-indigo-400/50'}
+                                                ? 'from-sky-900 via-slate-900 to-black border-sky-500/50' 
+                                                : 'from-[#fde68a] via-white to-[#fde68a] border-amber-400/50'}
                                         `}
                                         style={{
                                             clipPath: `inset(0 0 ${100 - cutYPercentage}% 0)`,
@@ -781,106 +724,86 @@ const Gacha: React.FC = () => {
                                             opacity: isCut ? 0 : 1,
                                         }}
                                     >
-                                        {selectedPack === 'lamb' ? (
-                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-                                        ) : (
-                                            <>
-                                                <div className="absolute inset-0 star-layer-1 opacity-30"></div>
-                                                <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
-                                            </>
-                                        )}
+                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img src={RAYQUAZA_IMAGE} alt="Rayquaza" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" />
-                                                    <img src={GROUDON_IMAGE} alt="Groudon" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" />
-                                                    <img src={KYOGRE_IMAGE} alt="Kyogre" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" />
+                                                    <img src={DIALGA_IMAGE} alt="Dialga" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(125,211,252,0.6)] z-10" />
+                                                    <img src={PALKIA_IMAGE} alt="Palkia" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(244,114,182,0.5)] z-20" />
+                                                    <img src={GIRATINA_IMAGE} alt="Giratina" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] z-20" />
                                                 </>
                                             ) : (
-                                                <img src={WAGYU_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]" />
+                                                <img src={ARCEUS_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]" />
                                             )}
                                         </div>
 
                                         <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-sky-500' : 'bg-amber-500 text-white'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
                                         <div className="absolute bottom-8 md:bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
+                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-amber-900'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
                                         <div className="absolute top-0 left-0 right-0 h-6 bg-black/20 border-b border-white/10 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className={`w-1 h-3 rounded-full ${selectedPack === 'lamb' ? 'bg-emerald-500/20' : 'bg-indigo-500/20'}`}></div>)}
+                                            {[...Array(10)].map((_, i) => <div key={i} className={`w-1 h-3 rounded-full ${selectedPack === 'lamb' ? 'bg-sky-500/20' : 'bg-amber-500/20'}`}></div>)}
                                         </div>
-                                        <div className="absolute left-0 w-full h-1 bg-white/50 blur-[1px]" style={{ bottom: `${100 - cutYPercentage}%` }}></div>
                                     </div>
 
-                                    {/* --- BOTTOM HALF (BODY) --- */}
                                     <div 
                                         className={`
                                             absolute inset-0 z-10
                                             rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             ${selectedPack === 'lamb' 
-                                                ? 'from-emerald-900 via-teal-900 to-black border-emerald-500/50' 
-                                                : 'from-[#0f172a] via-[#312e81] to-[#0f172a] border-indigo-400/50'}
+                                                ? 'from-sky-900 via-slate-900 to-black border-sky-500/50' 
+                                                : 'from-[#fde68a] via-white to-[#fde68a] border-amber-400/50'}
                                         `}
                                         style={{
                                             clipPath: `inset(${cutYPercentage}% 0 0 0)`
                                         }}
                                     >
-                                        {selectedPack === 'lamb' ? (
-                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-                                        ) : (
-                                            <>
-                                                <div className="absolute inset-0 star-layer-1 opacity-30"></div>
-                                                <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
-                                            </>
-                                        )}
+                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img src={RAYQUAZA_IMAGE} alt="Rayquaza" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.6)] z-10" />
-                                                    <img src={GROUDON_IMAGE} alt="Groudon" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20" />
-                                                    <img src={KYOGRE_IMAGE} alt="Kyogre" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" />
+                                                    <img src={DIALGA_IMAGE} alt="Dialga" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(125,211,252,0.6)] z-10" />
+                                                    <img src={PALKIA_IMAGE} alt="Palkia" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(244,114,182,0.5)] z-20" />
+                                                    <img src={GIRATINA_IMAGE} alt="Giratina" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] z-20" />
                                                 </>
                                             ) : (
-                                                <img src={WAGYU_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(250,204,21,0.6)]" />
+                                                <img src={ARCEUS_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]" />
                                             )}
                                         </div>
 
                                         <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-emerald-500' : 'bg-indigo-500 text-white'}`}>
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-sky-500' : 'bg-amber-500 text-white'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-indigo-200'}`}>
+                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-amber-900'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
                                         <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/20 border-t border-white/10"></div>
-                                        <div className="absolute left-0 w-full h-1 bg-white/30 blur-[1px]" style={{ top: `${cutYPercentage}%` }}></div>
-                                        
                                         {isCut && (
                                             <div className="absolute left-0 right-0 h-16 bg-gradient-to-b from-black/80 to-transparent pointer-events-none" style={{ top: `${cutYPercentage}%` }}></div>
                                         )}
                                     </div>
 
-                                    {/* INNER GLOW */}
-                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-emerald-500/40' : 'bg-indigo-500/40'}`}
+                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-sky-500/40' : 'bg-amber-500/40'}`}
                                          style={{ 
                                              top: `${cutYPercentage}%`, 
                                              height: '20%', 
                                              opacity: isCut ? 1 : 0 
                                          }}>
                                     </div>
-
                                 </div>
                             </div>
 
@@ -922,7 +845,6 @@ const Gacha: React.FC = () => {
                                     </Link>
                                 </div>
                             )}
-
                         </div>
                     )}
                 </div>
