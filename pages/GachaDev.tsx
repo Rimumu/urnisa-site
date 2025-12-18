@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
@@ -22,11 +21,11 @@ interface Particle {
 }
 
 // --- CONSTANTS ---
-const DIALGA_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/483.png";
-const PALKIA_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/484.png";
-const GIRATINA_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/487.png";
-const ARCEUS_PACK_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/493.png";
-const ARCEUS_ICON_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/493.png";
+const DIALGA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066036/dialgaSTILL_d5h5oc.png";
+const PALKIA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065601/palkiaSTILL_ype3sr.png";
+const GIRATINA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066274/giratinaSTILL2_f2spbc.png";
+const ARCEUS_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065704/arceus_sjunwo.gif";
+const ARCEUS_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065704/arceus_sjunwo.gif";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
