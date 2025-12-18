@@ -25,10 +25,10 @@ export const LAMB_POOL: CardData[] = [
     { id: 442, name: "Spiritomb", type: 'Pokemon', subType: "Forbidden", rarity: 'Rare', hp: 140, description: "Bound to a keystone for 500 years.", weight: 10 },
     { id: 30010, name: "2x Quick Ball", type: 'Item', subType: "Balls", rarity: 'Rare', description: "Catches fast.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/quick-ball.png", weight: 10 },
     
-    // Uncommon Pokemon (Time/Space/Antimatter flavored)
-    { id: 437, name: "Bronzong", type: 'Pokemon', subType: "Bronze Bell", rarity: 'Uncommon', hp: 110, description: "Brought rain in ancient times.", weight: 25 },
-    { id: 121, name: "Starmie", type: 'Pokemon', subType: "Mysterious", rarity: 'Uncommon', hp: 90, description: "Its core glows with 7 colors.", weight: 25 },
-    { id: 429, name: "Mismagius", type: 'Pokemon', subType: "Magical", rarity: 'Uncommon', hp: 100, description: "Mutters incantations of misery.", weight: 25 },
+    // Uncommon Pokemon (Time/Space/Antimatter flavored - Actually Uncommon Tier)
+    { id: 337, name: "Lunatone", type: 'Pokemon', subType: "Meteorite", rarity: 'Uncommon', hp: 90, description: "Came from space in a meteorite.", weight: 25 },
+    { id: 338, name: "Solrock", type: 'Pokemon', subType: "Meteorite", rarity: 'Uncommon', hp: 90, description: "A new species that arrived from space.", weight: 25 },
+    { id: 93, name: "Haunter", type: 'Pokemon', subType: "Gas", rarity: 'Uncommon', hp: 80, description: "Can pass through solid walls.", weight: 25 },
     { id: 178, name: "Xatu", type: 'Pokemon', subType: "Mystic", rarity: 'Uncommon', hp: 100, description: "Sees the past and future simultaneously.", weight: 25 },
     { id: 605, name: "Elgyem", type: 'Pokemon', subType: "Cerebral", rarity: 'Uncommon', hp: 80, description: "Came from far away in space.", weight: 25 },
 
