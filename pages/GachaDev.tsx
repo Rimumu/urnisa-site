@@ -24,8 +24,8 @@ interface Particle {
 const DIALGA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066036/dialgaSTILL_d5h5oc.png";
 const PALKIA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065601/palkiaSTILL_ype3sr.png";
 const GIRATINA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066274/giratinaSTILL2_f2spbc.png";
-const ARCEUS_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065704/arceus_sjunwo.gif";
-const ARCEUS_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065704/arceus_sjunwo.gif";
+const ARCEUS_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png";
+const ARCEUS_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
