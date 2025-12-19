@@ -889,8 +889,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
         try {
             await fetch(`${DISCORD_API_URL}/api/admin/whitelist/approve`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ id })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password }) // Send password for auth
             });
             fetchWhitelistData();
         } catch(e){} finally { setLoading(false); }
@@ -904,8 +904,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
          try {
              await fetch(`${DISCORD_API_URL}/api/admin/whitelist/reject`, {
                  method: 'POST',
-                 headers: { 'Content-Type': 'application/json', Authorization: password },
-                 body: JSON.stringify({ id })
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ id, password })
              });
              fetchWhitelistData();
          } catch(e){} finally { setLoading(false); }
@@ -919,8 +919,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
         try {
             await fetch(`${DISCORD_API_URL}/api/admin/whitelist/revoke`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ id })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password })
             });
             fetchWhitelistData();
         } catch(e){} finally { setLoading(false); }
@@ -1139,22 +1139,70 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <button onClick={() => handleSetStreamStatus('offline')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'offline' ? 'bg-red-600 text-white' : 'text-gray-500 hover:text-white'}`}>OFFLINE</button>
                                 </div>
                             </div>
-                            {/* Logs */}
+                            
+                            {/* Revamped Event Log */}
                             <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl h-[600px] flex flex-col">
-                                <h3 className="font-bold text-white text-lg mb-6 flex items-center gap-2"><span>📜</span> Event Log ({filteredEvents.length})</h3>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
-                                    {filteredEvents.map(evt => (
-                                        <div key={evt._id} className="flex items-center gap-4 bg-white/5 p-3 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group">
-                                            <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                                                <div className="truncate"><div className="font-bold text-white text-sm">{evt.user}</div><div className="text-[10px] text-gray-500 uppercase font-bold">{evt.type}</div></div>
-                                                <div className="text-sm font-mono text-gray-300 truncate">{evt.amountDisplay}</div>
-                                                <div className="text-xs text-gray-500">{new Date(evt.createdAt).toLocaleString()}</div>
-                                            </div>
-                                            <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-gray-600 hover:text-red-500 px-2 py-1 transition-colors opacity-0 group-hover:opacity-100">🗑️</button>
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                    <h3 className="font-bold text-white text-lg flex items-center gap-2"><span>📜</span> Event Log ({filteredEvents.length})</h3>
+                                    
+                                    <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search User..." 
+                                            value={filterUser} 
+                                            onChange={(e) => setFilterUser(e.target.value)} 
+                                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-primary outline-none min-w-[150px] flex-1 md:flex-none"
+                                        />
+                                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/10">
+                                            {[
+                                                { id: 'all', label: 'ALL' },
+                                                { id: 'sub', label: 'SUB' },
+                                                { id: 'gift', label: 'GIFT' },
+                                                { id: 'bits', label: 'BITS' },
+                                                { id: 'dono', label: 'DONO' }
+                                            ].map(f => (
+                                                <button 
+                                                    key={f.id}
+                                                    onClick={() => setFilterType(f.id)} 
+                                                    className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${filterType === f.id ? 'bg-brand-primary text-white' : 'text-gray-500 hover:text-white'}`}
+                                                >
+                                                    {f.label}
+                                                </button>
+                                            ))}
                                         </div>
-                                    ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+                                    {filteredEvents.map(evt => {
+                                        let icon = '✨';
+                                        let colorClass = 'border-white/5';
+                                        if (evt.type === 'sub' || evt.type === 'subscriber') { icon = '⭐'; colorClass = 'border-purple-500/30 bg-purple-900/10'; }
+                                        if (evt.type === 'gift') { icon = '🎁'; colorClass = 'border-pink-500/30 bg-pink-900/10'; }
+                                        if (evt.type === 'bits' || evt.type === 'cheer') { icon = '💎'; colorClass = 'border-cyan-500/30 bg-cyan-900/10'; }
+                                        if (evt.type === 'donation' || evt.type === 'tip') { icon = '💸'; colorClass = 'border-emerald-500/30 bg-emerald-900/10'; }
+
+                                        return (
+                                            <div key={evt._id} className={`flex items-center gap-4 p-3 rounded-xl border transition-colors group ${colorClass}`}>
+                                                <div className="text-xl shrink-0">{icon}</div>
+                                                <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                                                    <div className="truncate">
+                                                        <div className="font-bold text-white text-sm">{evt.user}</div>
+                                                        <div className="text-[10px] text-gray-400 uppercase font-bold">{evt.type}</div>
+                                                    </div>
+                                                    <div className="text-sm font-mono text-brand-accent truncate font-bold">{evt.amountDisplay}</div>
+                                                    <div className="text-[10px] text-gray-500">{new Date(evt.createdAt).toLocaleString()}</div>
+                                                </div>
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs font-bold transition-colors">REVERT</button>
+                                                    <button onClick={() => setConfirmDelete({ id: evt._id, revert: false })} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs font-bold transition-colors">DEL</button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
+
                             {confirmDelete && (
                                 <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
                                     <div className="bg-[#1a0b0e] p-6 rounded-2xl border border-white/10 text-center max-w-sm">
@@ -1385,6 +1433,110 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <button onClick={addArtist} className="w-full py-4 border border-dashed border-white/20 rounded-xl text-brand-primary font-bold hover:bg-brand-primary/10 transition-colors">
                                         + Add New Artist Collection
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'minecraft' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-3xl font-black text-white">Minecraft Whitelist</h2>
+                                <div className="text-xs text-gray-400">Updates every 10s</div>
+                            </div>
+
+                            {/* PENDING */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white text-lg mb-6 flex items-center gap-2">
+                                    <span className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse"></span>
+                                    Pending Applications ({whitelistApps.length})
+                                </h3>
+                                
+                                {whitelistApps.length === 0 ? (
+                                    <div className="text-center py-10 text-gray-500 italic">No pending applications.</div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {whitelistApps.map((app) => (
+                                            <div key={app._id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-3 group hover:border-brand-primary/30 transition-colors">
+                                                <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+                                                    <img src={app.discordAvatar} alt="Disc" className="w-10 h-10 rounded-full" />
+                                                    <div className="min-w-0">
+                                                        <div className="text-sm font-bold text-white truncate">{app.discordUsername}</div>
+                                                        <div className="text-xs text-gray-500">Applied: {new Date(app.appliedAt).toLocaleDateString()}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 bg-black/30 p-2 rounded-lg">
+                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/24`} alt="MC" className="w-6 h-6 rounded" />
+                                                    <span className="font-mono text-sm text-brand-primary font-bold truncate">{app.minecraftUsername}</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 mt-auto">
+                                                    <button onClick={() => handleApproveApp(app._id)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-xs transition-colors">APPROVE</button>
+                                                    <button onClick={() => handleRejectApp(app._id)} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg text-xs transition-colors">REJECT</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* APPROVED */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                    <h3 className="font-bold text-white text-lg">Approved Users ({approvedApps.length})</h3>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search User..." 
+                                        className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full md:w-64"
+                                        value={approvedSearch}
+                                        onChange={(e) => setApprovedSearch(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-gray-400">
+                                        <thead className="text-xs uppercase bg-white/5 text-gray-200">
+                                            <tr>
+                                                <th className="px-4 py-3 rounded-tl-lg">Discord</th>
+                                                <th className="px-4 py-3">Minecraft</th>
+                                                <th className="px-4 py-3">Approved</th>
+                                                <th className="px-4 py-3 rounded-tr-lg text-right">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredApprovedApps.map((app) => (
+                                                <tr key={app._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <td className="px-4 py-3 font-medium text-white flex items-center gap-2">
+                                                        <img src={app.discordAvatar} className="w-6 h-6 rounded-full" />
+                                                        {app.discordUsername}
+                                                    </td>
+                                                    <td className="px-4 py-3 font-mono text-brand-primary">{app.minecraftUsername}</td>
+                                                    <td className="px-4 py-3 text-xs">{app.approvedAt ? new Date(app.approvedAt).toLocaleDateString() : '-'}</td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white hover:bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">REVOKE</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {filteredApprovedApps.length === 0 && (
+                                                <tr><td colSpan={4} className="text-center py-8">No users found.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            {/* BINGO CONFIGURATION */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white text-lg mb-6">Bingo Configuration</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                    <div>
+                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Active Card ID</label>
+                                        <input type="text" value={bingoCardId} onChange={e => setBingoCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono" placeholder="WEEK1" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Win Condition Text</label>
+                                        <input type="text" value={bingoWinCondition} onChange={e => setBingoWinCondition(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="1 Line" />
+                                    </div>
+                                    <button onClick={handleSaveBingoConfig} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-lg h-[50px] transition-colors">Update Config</button>
                                 </div>
                             </div>
                         </div>
