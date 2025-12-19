@@ -714,7 +714,7 @@ const TournamentDev: React.FC = () => {
                       <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
                     </div>
                     <div className="space-y-6">
-                      <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection<span className="text-brand-primary">(Roster)</span></h3>
+                      <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
                         {selectedTeam.map((p, idx) => {
                           const banned = p !== null && isBanned(p.id);
