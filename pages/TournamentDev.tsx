@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import UserProfile, { UserData } from '../components/UserProfile';
@@ -122,6 +121,7 @@ const TournamentDev: React.FC = () => {
   // Team Management State
   const [selectedTeam, setSelectedTeam] = useState<(Pokemon | null)[]>(new Array(6).fill(null));
   const [isLocked, setIsLocked] = useState(false);
+  const [hasStartedRegistration, setHasStartedRegistration] = useState(false); // Controls Step 1 vs Step 2
   const [loadingTeam, setLoadingTeam] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -177,6 +177,11 @@ const TournamentDev: React.FC = () => {
                   while (filledTeam.length < 6) filledTeam.push(null);
                   setSelectedTeam(filledTeam);
                   setIsLocked(data.isLocked || false);
+                  
+                  // If there is ANY existing selection or user is locked, show drafting UI immediately
+                  if (data.isLocked || filledTeam.some(p => p !== null)) {
+                      setHasStartedRegistration(true);
+                  }
               }
           }
       } catch (e) {
@@ -453,8 +458,34 @@ const TournamentDev: React.FC = () => {
                         <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
                         <p className="font-bold text-gray-500">Loading your team...</p>
                     </div>
+                ) : !hasStartedRegistration && !isLocked ? (
+                  /* STEP 1: INITIAL REGISTRATION CALL TO ACTION */
+                  <div className="flex flex-col items-center justify-center py-10 text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-brand-primary/20 blur-2xl rounded-full scale-110 group-hover:bg-brand-primary/30 transition-all"></div>
+                        <img 
+                            src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} 
+                            alt="MC Head Large" 
+                            className="relative w-32 h-32 rounded-3xl border-4 border-brand-primary bg-black shadow-2xl transition-transform group-hover:scale-105" 
+                        />
+                        <div className="absolute -bottom-2 -right-2 bg-green-500 text-black text-xs font-black p-2 rounded-full border-2 border-white shadow-lg">✓</div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Welcome, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2>
+                        <p className="text-gray-400 max-w-md mx-auto">Ready to compete? Click the button below to start drafting your team of 6 for the tournament.</p>
+                    </div>
+
+                    <button
+                        onClick={() => setHasStartedRegistration(true)}
+                        className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-2xl shadow-[0_0_40px_rgba(229,56,59,0.3)] transition-all transform hover:scale-110 active:scale-95 uppercase tracking-widest border-2 border-white/20"
+                    >
+                        Register for Tournament
+                    </button>
+                  </div>
                 ) : (
-                  <div className="space-y-10">
+                  /* STEP 2: DRAFTING INTERFACE */
+                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
                     {/* Locked Banner */}
                     {isLocked && (
                         <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top-4">
@@ -466,7 +497,7 @@ const TournamentDev: React.FC = () => {
                         </div>
                     )}
 
-                    {/* User Intro */}
+                    {/* User Info Sticky Header (Small) */}
                     <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/10 w-fit mx-auto md:mx-0">
                       <div className="relative">
                         <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="MC Head" className="w-16 h-16 rounded-xl border-2 border-brand-primary bg-black shadow-lg" />
