@@ -278,7 +278,7 @@ const Admin: React.FC = () => {
     // --- TOURNAMENT STATE ---
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayer[]>([]);
     const [tournamentSearch, setTournamentSearch] = useState('');
-    const [tournamentLockEnabled, setTournamentLockEnabled] = useState(false);
+    const [tournamentStatus, setTournamentStatus] = useState<'DRAFTING' | 'LOCK_IN' | 'ONGOING'>('DRAFTING');
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -414,7 +414,7 @@ const Admin: React.FC = () => {
             const resConfig = await fetch(`${API_BASE_URL}/api/tournament/config`);
             if(resConfig.ok) {
                 const conf = await resConfig.json();
-                setTournamentLockEnabled(!!conf.lockEnabled);
+                setTournamentStatus(conf.status || 'DRAFTING');
             }
         } catch (e) {}
     }, [password]);
@@ -688,19 +688,23 @@ const Admin: React.FC = () => {
     };
 
     // --- TOURNAMENT HANDLERS ---
-    const handleToggleTournamentLock = async () => {
-        const newState = !tournamentLockEnabled;
+    const handleSetTournamentStatus = async (status: 'DRAFTING' | 'LOCK_IN' | 'ONGOING') => {
         setLoading(true);
         try {
+            const lockVal = status === 'LOCK_IN';
+            
             await fetch(`${API_BASE_URL}/api/admin/tournament/config`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ lockEnabled: newState })
+                body: JSON.stringify({ 
+                    status, 
+                    lockEnabled: lockVal // Legacy compat
+                })
             });
-            setTournamentLockEnabled(newState);
-            setManagerStatus({ type: 'success', message: `Tournament Lock-ins ${newState ? 'ENABLED' : 'DISABLED'}` });
+            setTournamentStatus(status);
+            setManagerStatus({ type: 'success', message: `Tournament Status set to ${status}` });
         } catch(e) {
-            setManagerStatus({ type: 'error', message: "Failed to update lock status" });
+            setManagerStatus({ type: 'error', message: "Failed to update status" });
         } finally {
             setLoading(false);
         }
@@ -719,7 +723,7 @@ const Admin: React.FC = () => {
             const data = await res.json();
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentData(); // Changed to use common fetch function
+                fetchTournamentData(); 
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to unlock team." });
             }
@@ -743,7 +747,7 @@ const Admin: React.FC = () => {
             const data = await res.json();
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentData(); // Changed to use common fetch function
+                fetchTournamentData(); 
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to revoke." });
             }
@@ -791,50 +795,26 @@ const RAW_SPAWN_DATA = {
 };
 
 // Helper to format technical names into readable text
-// e.g. "minecraft:deep_cold_ocean" -> "Deep Cold Ocean"
-// e.g. "myths_and_legends:blue_orb" -> "Blue Orb"
 const formatName = (str: string): string => {
     if (!str) return "";
-    
-    // Remove namespace prefixes (minecraft:, mod_name:, #tag:)
     let clean = str.replace(/^.*:/, '');
-    
-    // Remove hash if it was a tag but didn't have a colon
     if (clean.startsWith('#')) clean = clean.substring(1);
-
-    // Remove 'is_' prefix common in tags (e.g. is_ocean -> ocean)
     if (clean.startsWith('is_')) clean = clean.substring(3);
-
-    // Replace underscores with spaces
     clean = clean.replace(/_/g, ' ');
-
-    // Title Case
     return clean.replace(/\\b\\w/g, (char) => char.toUpperCase());
 };
 
 export const getSpawnInfo = (pokemonName: string): string | null => {
     const target = pokemonName.toLowerCase().trim();
-    
-    // 1. Filter entries for this pokemon
     const entries = RAW_SPAWN_DATA.spawns.filter(s => s.pokemon.toLowerCase() === target);
-    
     if (entries.length === 0) return null;
-
-    // 2. Aggregate Data (using Sets to remove duplicates)
     const biomes = new Set<string>();
     const keyItems = new Set<string>();
-
     entries.forEach(entry => {
-        // Add Biomes
         if (entry.condition && entry.condition.biomes) {
-            entry.condition.biomes.forEach(b => {
-                biomes.add(formatName(b));
-            });
+            entry.condition.biomes.forEach(b => { biomes.add(formatName(b)); });
         }
-        
-        // Add Key Item
         if (entry.condition && entry.condition.key_item) {
-            // Handle if key_item is an array or string (json usually string, but being safe)
             const item = entry.condition.key_item;
             if (Array.isArray(item)) {
                 item.forEach(i => keyItems.add(formatName(i)));
@@ -843,21 +823,11 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
             }
         }
     });
-
-    // 3. Construct Output String
     const biomeList = Array.from(biomes).sort().join(', ');
     const itemList = Array.from(keyItems).join(' or ');
-
     let result = "";
-    
-    if (itemList) {
-        result += \`Requires: \${itemList}. \`;
-    }
-    
-    if (biomeList) {
-        result += \`Biomes: \${biomeList}.\`;
-    }
-
+    if (itemList) { result += \`Requires: \${itemList}. \`; }
+    if (biomeList) { result += \`Biomes: \${biomeList}.\`; }
     return result.trim();
 };
 `;
@@ -982,17 +952,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
     // FILTER LOGIC
     const filteredEvents = recentEvents.filter(evt => {
-        // Filter By Type
         const typeMatch = (filterType === 'all') 
             || (filterType === 'sub' && (evt.type === 'sub' || evt.type === 'subscriber'))
             || (filterType === 'gift' && evt.type === 'gift')
             || (filterType === 'bits' && (evt.type === 'bits' || evt.type === 'cheer'))
             || (filterType === 'dono' && (evt.type === 'donation' || evt.type === 'tip'))
             || (filterType === 'follow' && (evt.type === 'follower' || evt.type === 'follow'));
-
-        // Filter By User
         const userMatch = filterUser.trim() === '' || evt.user.toLowerCase().includes(filterUser.toLowerCase().trim());
-
         return typeMatch && userMatch;
     });
 
@@ -1087,12 +1053,10 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         </div>
                     ))}
 
-                    {/* ... (Existing tabs: nisathon_mgr, countdown, schedule, event, profile, gallery, minecraft, codes) ... */}
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* LIVE HEADER STATS */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {/* Live Timer */}
                                 <div className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 ${isDoubleTimer ? 'bg-gradient-to-br from-yellow-900/40 to-black border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.2)]' : 'bg-black/40 border-white/10'}`}>
                                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1 flex justify-between items-center">
                                         Time Remaining
@@ -1102,17 +1066,11 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className={`text-3xl font-black font-mono tracking-tight ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300`}>
                                         {timeLeftString}
                                     </div>
-                                    {timeBump && <div className="absolute right-4 bottom-4 text-green-500 font-bold text-xs animate-ping">+ TIME</div>}
                                 </div>
-
-                                {/* Total Nisaballs */}
                                 <div className="bg-black/40 p-4 rounded-2xl border border-white/10 relative overflow-hidden group">
                                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Total Nisaballs</div>
                                     <div className="text-3xl font-black text-brand-primary">{Math.floor(stats.totalNisaballs)}</div>
-                                    <div className="absolute -right-4 -bottom-4 text-6xl opacity-5 group-hover:opacity-10 transition-opacity">🏐</div>
                                 </div>
-
-                                {/* Recent Activity */}
                                 <div className="bg-black/40 p-4 rounded-2xl border border-white/10 relative overflow-hidden group">
                                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Recent Activity</div>
                                     {latestActivity ? (
@@ -1121,11 +1079,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             <div className="text-xs font-mono text-green-400">{latestActivity.amountDisplay}</div>
                                         </div>
                                     ) : (
-                                        <div className="text-sm text-gray-500 italic">Waiting for events...</div>
+                                        <div className="text-sm text-gray-500 italic">Waiting...</div>
                                     )}
                                 </div>
-
-                                {/* Stream Status */}
                                 <div className="bg-black/40 p-4 rounded-2xl border border-white/10 flex flex-col justify-between">
                                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Stream Status</div>
                                     <div className={`text-xl font-black uppercase tracking-wide ${streamStatusOverride === 'live' ? 'text-green-500' : streamStatusOverride === 'offline' ? 'text-red-500' : 'text-blue-400'}`}>
@@ -1133,20 +1089,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Timer Controls & Event Trigger */}
+                            {/* Controls */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 <div className="lg:col-span-2 bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="font-bold text-white text-lg">Timer Management</h3>
-                                        <button 
-                                            onClick={handleToggleDoubleTimer}
-                                            className={`text-xs px-4 py-2 rounded-full font-bold border transition-all ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}
-                                        >
-                                            {stats.activeEvent === 'DOUBLE_TIMER' ? '🔥 2x Active' : 'Enable 2x Event'}
-                                        </button>
+                                        <button onClick={handleToggleDoubleTimer} className={`text-xs px-4 py-2 rounded-full font-bold border transition-all ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>{stats.activeEvent === 'DOUBLE_TIMER' ? '🔥 2x Active' : 'Enable 2x Event'}</button>
                                     </div>
-                                    
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-4">
                                             <label className="text-xs text-gray-500 font-bold uppercase">Set Absolute Time</label>
@@ -1157,148 +1106,71 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             </div>
                                             <button onClick={handleSetTimer} className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-bold transition-colors">Set Time</button>
                                         </div>
-                                        
                                         <div className="space-y-4">
                                             <label className="text-xs text-gray-500 font-bold uppercase">Quick Adjust</label>
-                                            <div className="flex gap-2">
-                                                <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={addM} onChange={e => setAddM(parseInt(e.target.value)||0)} />
-                                            </div>
+                                            <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={addM} onChange={e => setAddM(parseInt(e.target.value)||0)} />
                                             <div className="grid grid-cols-3 gap-2">
                                                 <button onClick={handleAddTimer} className="bg-green-600/80 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition-colors">+</button>
                                                 <button onClick={handleRemoveTimer} className="bg-red-600/80 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors">-</button>
-                                                <button onClick={handlePauseTimer} className={`py-3 rounded-xl font-bold text-white transition-colors ${stats.isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-yellow-600 hover:bg-yellow-500'}`}>
-                                                    {stats.isPaused ? 'RESUME' : 'PAUSE'}
-                                                </button>
+                                                <button onClick={handlePauseTimer} className={`py-3 rounded-xl font-bold text-white transition-colors ${stats.isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-yellow-600 hover:bg-yellow-500'}`}>{stats.isPaused ? 'RESUME' : 'PAUSE'}</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col justify-between">
-                                    <div>
-                                        <h3 className="font-bold text-white mb-4">Manual Event Trigger</h3>
-                                        <div className="space-y-3">
-                                            <input type="text" placeholder="Username" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white" value={testUser} onChange={e => setTestUser(e.target.value)} />
-                                            <div className="flex gap-2">
-                                                <select className="bg-black/40 border border-white/10 rounded-xl p-3 text-white flex-1" value={testType} onChange={e => setTestType(e.target.value)}>
-                                                    <option value="sub">Sub</option>
-                                                    <option value="gift">Gift</option>
-                                                    <option value="bits">Bits</option>
-                                                    <option value="donation">Dono</option>
-                                                </select>
-                                                <input type="number" placeholder="Amt" className="bg-black/40 border border-white/10 rounded-xl p-3 text-white w-20 text-center" value={testAmount} onChange={e => setTestAmount(e.target.value)} />
-                                            </div>
-                                        </div>
+                                    <h3 className="font-bold text-white mb-4">Manual Event Trigger</h3>
+                                    <input type="text" placeholder="Username" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white mb-3" value={testUser} onChange={e => setTestUser(e.target.value)} />
+                                    <div className="flex gap-2 mb-4">
+                                        <select className="bg-black/40 border border-white/10 rounded-xl p-3 text-white flex-1" value={testType} onChange={e => setTestType(e.target.value)}>
+                                            <option value="sub">Sub</option><option value="gift">Gift</option><option value="bits">Bits</option><option value="donation">Dono</option>
+                                        </select>
+                                        <input type="number" placeholder="Amt" className="bg-black/40 border border-white/10 rounded-xl p-3 text-white w-20 text-center" value={testAmount} onChange={e => setTestAmount(e.target.value)} />
                                     </div>
-                                    <button onClick={handleSimulateEvent} className="w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-xl mt-4 transition-colors">Trigger Event</button>
+                                    <button onClick={handleSimulateEvent} className="w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-colors">Trigger Event</button>
                                 </div>
                             </div>
-
-                            {/* Stream Status Override */}
-                            <div className="bg-black/30 backdrop-blur-lg p-4 rounded-2xl border border-white/10 shadow-xl flex items-center justify-between gap-4">
+                            {/* Stream Status */}
+                            <div className="bg-black/30 p-4 rounded-2xl border border-white/10 flex items-center justify-between gap-4">
                                 <h3 className="font-bold text-gray-400 text-sm uppercase tracking-wider ml-2">Stream Status Override</h3>
                                 <div className="flex gap-2 bg-black/40 p-1 rounded-xl">
-                                    <button onClick={() => handleSetStreamStatus('auto')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'auto' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>AUTO</button>
-                                    <button onClick={() => handleSetStreamStatus('live')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'live' ? 'bg-green-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>LIVE</button>
-                                    <button onClick={() => handleSetStreamStatus('offline')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'offline' ? 'bg-red-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>OFFLINE</button>
+                                    <button onClick={() => handleSetStreamStatus('auto')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'auto' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-white'}`}>AUTO</button>
+                                    <button onClick={() => handleSetStreamStatus('live')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'live' ? 'bg-green-600 text-white' : 'text-gray-500 hover:text-white'}`}>LIVE</button>
+                                    <button onClick={() => handleSetStreamStatus('offline')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'offline' ? 'bg-red-600 text-white' : 'text-gray-500 hover:text-white'}`}>OFFLINE</button>
                                 </div>
                             </div>
-
-                            {/* REVAMPED EVENT LOGS */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl h-[600px] flex flex-col">
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                                    <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                                        <span>📜</span> Event Log ({filteredEvents.length})
-                                    </h3>
-                                    
-                                    <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
-                                        <div className="relative flex-1 md:w-64">
-                                            <input 
-                                                type="text" 
-                                                placeholder="Search username..." 
-                                                className="w-full bg-black/40 border border-white/10 rounded-lg pl-3 pr-10 py-2 text-sm text-white focus:border-brand-primary outline-none"
-                                                value={filterUser}
-                                                onChange={(e) => setFilterUser(e.target.value)}
-                                            />
-                                            {filterUser && (
-                                                <button onClick={() => setFilterUser('')} className="absolute right-3 top-2 text-gray-500 hover:text-white">✕</button>
-                                            )}
-                                        </div>
-                                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
-                                            {['all', 'sub', 'gift', 'bits', 'dono', 'follow'].map(f => (
-                                                <button 
-                                                    key={f}
-                                                    onClick={() => setFilterType(f)} 
-                                                    className={`px-3 py-1.5 rounded-md text-xs font-bold capitalize transition-all ${filterType === f ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-white'}`}
-                                                >
-                                                    {f === 'dono' ? '$' : f}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
+                            {/* Logs */}
+                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl h-[600px] flex flex-col">
+                                <h3 className="font-bold text-white text-lg mb-6 flex items-center gap-2"><span>📜</span> Event Log ({filteredEvents.length})</h3>
                                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
                                     {filteredEvents.map(evt => (
                                         <div key={evt._id} className="flex items-center gap-4 bg-white/5 p-3 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0 ${
-                                                evt.type === 'sub' || evt.type === 'subscriber' ? 'bg-purple-500/20 text-purple-400' :
-                                                evt.type === 'gift' ? 'bg-pink-500/20 text-pink-400' :
-                                                evt.type === 'bits' || evt.type === 'cheer' ? 'bg-cyan-500/20 text-cyan-400' :
-                                                evt.type === 'donation' || evt.type === 'tip' ? 'bg-green-500/20 text-green-400' :
-                                                'bg-blue-500/20 text-blue-400'
-                                            }`}>
-                                                {evt.type === 'gift' ? '🎁' : evt.type.includes('sub') ? '⭐' : evt.type.includes('bit') ? '💎' : evt.type.includes('don') || evt.type.includes('tip') ? '💸' : '👤'}
-                                            </div>
-                                            
                                             <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                                                <div className="truncate">
-                                                    <div className="font-bold text-white text-sm">{evt.user}</div>
-                                                    <div className="text-[10px] text-gray-500 uppercase font-bold">{evt.type}</div>
-                                                </div>
-                                                <div className="text-sm font-mono text-gray-300 truncate">
-                                                    {evt.amountDisplay}
-                                                </div>
-                                                <div className="text-xs text-gray-500 text-right md:text-left">
-                                                    {new Date(evt.createdAt).toLocaleString()}
-                                                </div>
+                                                <div className="truncate"><div className="font-bold text-white text-sm">{evt.user}</div><div className="text-[10px] text-gray-500 uppercase font-bold">{evt.type}</div></div>
+                                                <div className="text-sm font-mono text-gray-300 truncate">{evt.amountDisplay}</div>
+                                                <div className="text-xs text-gray-500">{new Date(evt.createdAt).toLocaleString()}</div>
                                             </div>
-
-                                            {confirmDelete?.id === evt._id ? (
-                                                <div className="flex gap-2 animate-in fade-in slide-in-from-right shrink-0">
-                                                    <button onClick={() => handleDeleteEvent(evt._id, true)} className="bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-red-700">Revert & Delete</button>
-                                                    <button onClick={() => handleDeleteEvent(evt._id, false)} className="bg-gray-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-gray-700">Del Only</button>
-                                                    <button onClick={() => setConfirmDelete(null)} className="text-gray-400 hover:text-white px-2">✕</button>
-                                                </div>
-                                            ) : (
-                                                <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-gray-600 hover:text-red-500 px-2 py-1 transition-colors opacity-0 group-hover:opacity-100">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            )}
+                                            <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="text-gray-600 hover:text-red-500 px-2 py-1 transition-colors opacity-0 group-hover:opacity-100">🗑️</button>
                                         </div>
                                     ))}
-                                    {filteredEvents.length === 0 && (
-                                        <div className="text-center py-20 text-gray-500">No events found matching filters.</div>
-                                    )}
                                 </div>
                             </div>
-
-                            {/* Danger Zone */}
-                            <div className="bg-red-900/10 border border-red-900/30 p-6 rounded-2xl">
-                                <h3 className="font-bold text-red-400 mb-4 uppercase tracking-widest text-xs">Danger Zone</h3>
-                                <div className="flex flex-wrap gap-4">
-                                    <button onClick={handleResetData} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmReset ? 'bg-red-600 w-full' : 'bg-red-900/40 hover:bg-red-900/60'}`}>
-                                        {confirmReset ? "CONFIRM RESET ALL DATA?" : "Reset Nisathon Data"}
-                                    </button>
-                                    <button onClick={handleForceSync} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmSync ? 'bg-blue-600' : 'bg-blue-900/40 hover:bg-blue-900/60'}`}>
-                                        {confirmSync ? "Confirm Force Sync?" : "Force Sync (StreamElements)"}
-                                    </button>
-                                    <button onClick={handleRebuild} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmRebuild ? 'bg-orange-600' : 'bg-orange-900/40 hover:bg-orange-900/60'}`}>
-                                        {confirmRebuild ? "Confirm Rebuild?" : "Rebuild from History"}
-                                    </button>
+                            {confirmDelete && (
+                                <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+                                    <div className="bg-[#1a0b0e] p-6 rounded-2xl border border-white/10 text-center max-w-sm">
+                                        <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
+                                        <div className="flex flex-col gap-2">
+                                            <button onClick={() => handleDeleteEvent(confirmDelete.id, true)} className="bg-red-600 text-white py-3 rounded-xl font-bold">REVERT NB & DELETE</button>
+                                            <button onClick={() => handleDeleteEvent(confirmDelete.id, false)} className="bg-gray-600 text-white py-3 rounded-xl font-bold">DELETE LOG ONLY</button>
+                                            <button onClick={() => setConfirmDelete(null)} className="text-gray-400 mt-2">Cancel</button>
+                                        </div>
+                                    </div>
                                 </div>
+                            )}
+                            {/* Danger Zone */}
+                            <div className="bg-red-900/10 border border-red-900/30 p-6 rounded-2xl flex flex-wrap gap-4">
+                                <button onClick={handleResetData} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmReset ? 'bg-red-600 w-full' : 'bg-red-900/40'}`}>{confirmReset ? "CONFIRM RESET ALL DATA?" : "Reset Nisathon Data"}</button>
+                                <button onClick={handleForceSync} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmSync ? 'bg-blue-600' : 'bg-blue-900/40'}`}>{confirmSync ? "Confirm Force Sync?" : "Force Sync (StreamElements)"}</button>
+                                <button onClick={handleRebuild} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmRebuild ? 'bg-orange-600' : 'bg-orange-900/40'}`}>{confirmRebuild ? "Confirm Rebuild?" : "Rebuild from History"}</button>
                             </div>
                         </div>
                     )}
@@ -1495,7 +1367,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 </div>
                                                 <button onClick={() => removeArtist(i)} className="bg-red-900/20 hover:bg-red-900/40 text-red-400 p-2 rounded-lg h-fit">Delete Artist</button>
                                             </div>
-                                            
                                             <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-4">
                                                 {artist.images.map((img, imgIdx) => (
                                                     <div key={imgIdx} className="relative group aspect-square rounded-lg overflow-hidden border border-white/10">
@@ -1504,7 +1375,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     </div>
                                                 ))}
                                             </div>
-                                            
                                             <div className="flex gap-2">
                                                 <input type="text" placeholder="Add Image URL" className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-2 text-white text-sm" onKeyDown={(e) => { if(e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; }}} />
                                                 <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0" />
@@ -1522,44 +1392,42 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'tournament' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Tournament Management</h2>
-                            
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[700px]">
                                 <div className="flex flex-col gap-6 border-b border-white/10 pb-6 mb-6">
-                                    {/* Global Lock Controls */}
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="font-bold text-white text-lg">Registration Status</h3>
-                                            <p className="text-xs text-gray-400">Control if players can lock in their teams.</p>
+                                    <div>
+                                        <h3 className="font-bold text-white text-lg mb-2">Tournament Phase</h3>
+                                        <p className="text-xs text-gray-400 mb-4">Control the tournament flow: Signups, Locking, and Active gameplay.</p>
+                                        <div className="flex flex-wrap gap-3">
+                                            {[
+                                                { id: 'DRAFTING', label: 'Drafting', icon: '📝', color: 'bg-blue-600', desc: 'Signups Open' },
+                                                { id: 'LOCK_IN', label: 'Lock-In', icon: '🔒', color: 'bg-green-600', desc: 'Allowing Locks' },
+                                                { id: 'ONGOING', label: 'Ongoing', icon: '⚔️', color: 'bg-red-600', desc: 'Signups Closed' }
+                                            ].map(s => (
+                                                <button 
+                                                    key={s.id}
+                                                    onClick={() => handleSetTournamentStatus(s.id as any)}
+                                                    className={`
+                                                        flex-1 flex flex-col items-center justify-center p-4 rounded-xl border transition-all
+                                                        ${tournamentStatus === s.id 
+                                                            ? `${s.color} border-white/40 shadow-lg scale-105 z-10` 
+                                                            : 'bg-black/40 border-white/5 opacity-60 hover:opacity-100'}
+                                                    `}
+                                                >
+                                                    <span className="text-2xl mb-1">{s.icon}</span>
+                                                    <span className="text-xs font-black uppercase tracking-widest">{s.label}</span>
+                                                    <span className="text-[8px] font-bold opacity-70 mt-1">{s.desc}</span>
+                                                </button>
+                                            ))}
                                         </div>
-                                        <button 
-                                            onClick={handleToggleTournamentLock}
-                                            className={`
-                                                px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg transition-all border
-                                                ${tournamentLockEnabled 
-                                                    ? 'bg-green-600 border-green-400 text-white hover:bg-green-500' 
-                                                    : 'bg-red-900/40 border-red-500/50 text-red-400 hover:bg-red-900/60'}
-                                            `}
-                                        >
-                                            {tournamentLockEnabled ? 'LOCK-INS ENABLED' : 'LOCK-INS DISABLED'}
-                                        </button>
                                     </div>
-
-                                    {/* Search Bar */}
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                         <h3 className="font-bold text-white flex items-center gap-2">
                                             <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
                                             Player Teams ({tournamentPlayers.length})
                                         </h3>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search MC User or Discord ID..." 
-                                            value={tournamentSearch} 
-                                            onChange={e => setTournamentSearch(e.target.value)} 
-                                            className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full sm:w-64" 
-                                        />
+                                        <input type="text" placeholder="Search..." value={tournamentSearch} onChange={e => setTournamentSearch(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full sm:w-64" />
                                     </div>
                                 </div>
-
                                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
                                     {filteredTournamentPlayers.length === 0 ? (
                                         <div className="text-center py-20 text-gray-500">No players found.</div>
@@ -1570,37 +1438,19 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     <img src={`https://mc-heads.net/avatar/${p.minecraftUsername}/48`} className="w-12 h-12 rounded-xl border border-white/20" alt={p.minecraftUsername} />
                                                     <div className="truncate">
                                                         <div className="font-bold text-white truncate">{p.minecraftUsername}</div>
-                                                        <div className={`text-[10px] font-black uppercase tracking-widest ${p.isLocked ? 'text-green-500' : 'text-gray-500'}`}>
-                                                            {p.isLocked ? 'Locked' : 'Drafting'}
-                                                        </div>
+                                                        <div className={`text-[10px] font-black uppercase tracking-widest ${p.isLocked ? 'text-green-500' : 'text-gray-500'}`}>{p.isLocked ? 'Locked' : 'Drafting'}</div>
                                                     </div>
                                                 </div>
-
                                                 <div className="flex-1 grid grid-cols-6 gap-2 w-full">
                                                     {p.team.map((poke, idx) => (
                                                         <div key={idx} className="aspect-square bg-black/40 rounded-lg border border-white/5 flex items-center justify-center p-1" title={poke?.name || "Empty"}>
-                                                            {poke ? (
-                                                                <img src={`https://cobblemon.tools/pokedex/pokemon/${poke.name.toLowerCase().replace(/\s+/g, '-')}/sprite.png`} className="w-full h-full object-contain" alt={poke.name} />
-                                                            ) : (
-                                                                <span className="text-[8px] text-gray-700">•</span>
-                                                            )}
+                                                            {poke ? <img src={`https://cobblemon.tools/pokedex/pokemon/${poke.name.toLowerCase().replace(/\s+/g, '-')}/sprite.png`} className="w-full h-full object-contain" alt={poke.name} /> : <span className="text-[8px] text-gray-700">•</span>}
                                                         </div>
                                                     ))}
                                                 </div>
-
                                                 <div className="shrink-0 flex gap-2 w-full lg:w-auto flex-col">
-                                                    <button 
-                                                        onClick={() => handleUnlockTeam(p.discordId, p.minecraftUsername)}
-                                                        className="bg-yellow-900/20 hover:bg-yellow-600 text-yellow-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-yellow-500/30 w-full"
-                                                    >
-                                                        Unlock Team
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleRevokeRegistration(p.discordId, p.minecraftUsername)}
-                                                        className="bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-red-500/30 w-full"
-                                                    >
-                                                        Revoke Registration
-                                                    </button>
+                                                    <button onClick={() => handleUnlockTeam(p.discordId, p.minecraftUsername)} className="bg-yellow-900/20 hover:bg-yellow-600 text-yellow-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase transition-all border border-yellow-500/30 w-full">Unlock Team</button>
+                                                    <button onClick={() => handleRevokeRegistration(p.discordId, p.minecraftUsername)} className="bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase transition-all border border-red-500/30 w-full">Revoke Reg</button>
                                                 </div>
                                             </div>
                                         ))
@@ -1615,105 +1465,31 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             <h2 className="text-3xl font-black text-white">Gacha Code Generator</h2>
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
-                                    <div className="lg:col-span-1">
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Type</label>
-                                        <select value={genType} onChange={e => setGenType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white">
-                                            <option value="lamb">Lamb Chop</option>
-                                            <option value="wagyu">Wagyu A5</option>
-                                        </select>
-                                    </div>
-                                    <div className="lg:col-span-1">
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Packs per Code</label>
-                                        <input type="number" value={genPackAmount} onChange={e => setGenPackAmount(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" />
-                                    </div>
-                                    <div className="lg:col-span-1">
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Qty of Codes</label>
-                                        <input type="number" value={genAmount} onChange={e => setGenAmount(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" max="50" />
-                                    </div>
-                                    <div className="lg:col-span-1">
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Usage Type</label>
-                                        <select value={genUsageType} onChange={e => setGenUsageType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm">
-                                            <option value="once_global">One Use (Global)</option>
-                                            <option value="once_per_user">Once Per User (Global)</option>
-                                            <option value="time_limited">Time Limited (Unlimited)</option>
-                                        </select>
-                                    </div>
-                                    {genUsageType === 'time_limited' && (
-                                        <div className="lg:col-span-1">
-                                            <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Hours Valid</label>
-                                            <input type="number" value={genHours} onChange={e => setGenHours(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" />
-                                        </div>
-                                    )}
+                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Type</label><select value={genType} onChange={e => setGenType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white"><option value="lamb">Lamb Chop</option><option value="wagyu">Wagyu A5</option></select></div>
+                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Packs per Code</label><input type="number" value={genPackAmount} onChange={e => setGenPackAmount(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>
+                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Qty of Codes</label><input type="number" value={genAmount} onChange={e => setGenAmount(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" max="50" /></div>
+                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Usage Type</label><select value={genUsageType} onChange={e => setGenUsageType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm"><option value="once_global">One Use (Global)</option><option value="once_per_user">Once Per User (Global)</option><option value="time_limited">Time Limited (Unlimited)</option></select></div>
+                                    {genUsageType === 'time_limited' && (<div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Hours Valid</label><input type="number" value={genHours} onChange={e => setGenHours(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>)}
                                     <button onClick={handleGenerateCodes} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all h-[40px] lg:col-span-1">Generate</button>
                                 </div>
-                                {generatedCodes.length > 0 && (
-                                    <div className="mt-6 bg-green-900/20 p-4 rounded-xl border border-green-500/30">
-                                        <h4 className="text-green-400 font-bold mb-2">New Codes:</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {generatedCodes.map(c => <code key={c} className="bg-black/40 px-3 py-1 rounded text-white font-mono border border-white/10">{c}</code>)}
-                                        </div>
-                                    </div>
-                                )}
+                                {generatedCodes.length > 0 && (<div className="mt-6 bg-green-900/20 p-4 rounded-xl border border-green-500/30"><h4 className="text-green-400 font-bold mb-2">New Codes:</h4><div className="flex flex-wrap gap-2">{generatedCodes.map(c => <code key={c} className="bg-black/40 px-3 py-1 rounded text-white font-mono border border-white/10">{c}</code>)}</div></div>)}
                             </div>
-
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white mb-4">Existing Codes (Recent 100)</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left text-gray-300">
-                                        <thead className="text-xs text-gray-500 uppercase bg-black/20">
-                                            <tr>
-                                                <th className="px-4 py-3">Code</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Pack Qty</th><th className="px-4 py-3">Usage</th><th className="px-4 py-3">Redeemed</th><th className="px-4 py-3">Expires</th><th className="px-4 py-3">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {existingCodes.map(c => (
-                                                <tr key={c._id} className="border-b border-white/5 hover:bg-white/5">
-                                                    <td className="px-4 py-3 font-mono font-bold text-white">{c.code}</td>
-                                                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${c.type === 'lamb' ? 'bg-purple-900 text-purple-200' : 'bg-pink-900 text-pink-200'}`}>{c.type}</span></td>
-                                                    <td className="px-4 py-3">{c.packAmount}</td>
-                                                    <td className="px-4 py-3 text-xs">{c.usageType}</td>
-                                                    <td className="px-4 py-3">{c.usageCount}</td>
-                                                    <td className="px-4 py-3 text-xs text-gray-500">{c.expiresAt ? new Date(c.expiresAt).toLocaleString() : '-'}</td>
-                                                    <td className="px-4 py-3"><button onClick={() => handleDeleteCode(c._id)} className="text-red-500 hover:text-white hover:bg-red-600 px-2 py-1 rounded transition-colors text-xs font-bold">Del</button></td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl"><h3 className="font-bold text-white mb-4">Existing Codes (Recent 100)</h3><div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-300"><thead className="text-xs text-gray-500 uppercase bg-black/20"><tr><th className="px-4 py-3">Code</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Pack Qty</th><th className="px-4 py-3">Usage</th><th className="px-4 py-3">Redeemed</th><th className="px-4 py-3">Expires</th><th className="px-4 py-3">Action</th></tr></thead><tbody>{existingCodes.map(c => (<tr key={c._id} className="border-b border-white/5 hover:bg-white/5"><td className="px-4 py-3 font-mono font-bold text-white">{c.code}</td><td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${c.type === 'lamb' ? 'bg-purple-900 text-purple-200' : 'bg-pink-900 text-pink-200'}`}>{c.type}</span></td><td className="px-4 py-3">{c.packAmount}</td><td className="px-4 py-3 text-xs">{c.usageType}</td><td className="px-4 py-3">{c.usageCount}</td><td className="px-4 py-3 text-xs text-gray-500">{c.expiresAt ? new Date(c.expiresAt).toLocaleString() : '-'}</td><td className="px-4 py-3"><button onClick={() => handleDeleteCode(c._id)} className="text-red-500 hover:text-white hover:bg-red-600 px-2 py-1 rounded transition-colors text-xs font-bold">Del</button></td></tr>))}</tbody></table></div></div>
                         </div>
                     )}
 
                     {activeTab === 'users' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">User Management</h2>
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white mb-4">Reset Daily Check-In</h3>
-                                <div className="flex gap-4">
-                                    <input type="text" placeholder="Discord ID or Minecraft Username" value={userQuery} onChange={e => setUserQuery(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-white" />
-                                    <button onClick={handleResetDaily} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg transition-all">Reset Timer</button>
-                                </div>
-                            </div>
-
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white mb-4">User Merge Tool</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <input type="text" value={mergeSource} onChange={e => setMergeSource(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Source Username" />
-                                    <input type="text" value={mergeTarget} onChange={e => setMergeTarget(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Target Username" />
-                                </div>
-                                <button onClick={handleMergeUsers} className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-lg transition-all">Merge Data</button>
-                            </div>
+                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl"><h3 className="font-bold text-white mb-4">Reset Daily Check-In</h3><div className="flex gap-4"><input type="text" placeholder="Discord ID or Minecraft Username" value={userQuery} onChange={e => setUserQuery(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-white" /><button onClick={handleResetDaily} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg transition-all">Reset Timer</button></div></div>
+                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl"><h3 className="font-bold text-white mb-4">User Merge Tool</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><input type="text" value={mergeSource} onChange={e => setMergeSource(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Source Username" /><input type="text" value={mergeTarget} onChange={e => setMergeTarget(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Target Username" /></div><button onClick={handleMergeUsers} className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-lg transition-all">Merge Data</button></div>
                         </div>
                     )}
 
                     {activeTab === 'merger' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">JSON Merger Tool</h2>
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <input type="file" multiple accept=".json" onChange={handleJsonUpload} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-brand-primary/80 mb-6" />
-                                <textarea readOnly value={mergedOutput} className="w-full h-96 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-xs text-gray-300 focus:outline-none" placeholder="Merged output will appear here..." />
-                                <button onClick={() => navigator.clipboard.writeText(mergedOutput)} className="mt-4 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-lg transition-all w-full" disabled={!mergedOutput}>Copy Code</button>
-                            </div>
+                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl"><input type="file" multiple accept=".json" onChange={handleJsonUpload} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-brand-primary/80 mb-6" /><textarea readOnly value={mergedOutput} className="w-full h-96 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-xs text-gray-300 focus:outline-none" placeholder="Merged output..." /><button onClick={() => navigator.clipboard.writeText(mergedOutput)} className="mt-4 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-lg transition-all w-full" disabled={!mergedOutput}>Copy Code</button></div>
                         </div>
                     )}
 
