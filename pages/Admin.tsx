@@ -1091,7 +1091,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                 <div className="max-w-6xl mx-auto space-y-8">
                     
                     {/* --- STATUS TOASTS (STACKED & POINTER-EVENTS CONTROLLED) --- */}
-                    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+                    <div className="fixed top-24 right-4 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-sm">
                         {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus].map((status, i) => status && (
                              <div key={i} className={`pointer-events-auto p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
                                 {status.message}
