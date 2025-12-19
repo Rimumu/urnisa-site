@@ -1185,26 +1185,42 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
                                     {filteredEvents.map(evt => {
                                         let icon = '✨';
-                                        let colorClass = 'border-white/5';
-                                        if (evt.type === 'sub' || evt.type === 'subscriber') { icon = '⭐'; colorClass = 'border-purple-500/30 bg-purple-900/10'; }
-                                        if (evt.type === 'gift') { icon = '🎁'; colorClass = 'border-pink-500/30 bg-pink-900/10'; }
-                                        if (evt.type === 'bits' || evt.type === 'cheer') { icon = '💎'; colorClass = 'border-cyan-500/30 bg-cyan-900/10'; }
-                                        if (evt.type === 'donation' || evt.type === 'tip') { icon = '💸'; colorClass = 'border-emerald-500/30 bg-emerald-900/10'; }
+                                        let colorClass = 'text-gray-400 bg-gray-500/10 border-gray-500/20';
+                                        
+                                        if (evt.type === 'sub' || evt.type === 'subscriber') { icon = '⭐'; colorClass = 'text-purple-400 bg-purple-500/10 border-purple-500/20'; }
+                                        else if (evt.type === 'gift') { icon = '🎁'; colorClass = 'text-pink-400 bg-pink-500/10 border-pink-500/20'; }
+                                        else if (evt.type === 'bits' || evt.type === 'cheer') { icon = '💎'; colorClass = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'; }
+                                        else if (evt.type === 'donation' || evt.type === 'tip') { icon = '💸'; colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'; }
+
+                                        // Time ago calc
+                                        const date = new Date(evt.createdAt);
+                                        const now = new Date();
+                                        const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+                                        let timeAgo = "Just now";
+                                        if (seconds > 60) {
+                                            const mins = Math.floor(seconds / 60);
+                                            timeAgo = mins < 60 ? `${mins}m ago` : `${Math.floor(mins / 60)}h ago`;
+                                        }
 
                                         return (
-                                            <div key={evt._id} className={`flex items-center gap-4 p-3 rounded-xl border transition-colors group ${colorClass}`}>
-                                                <div className="text-xl shrink-0">{icon}</div>
-                                                <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
-                                                    <div className="truncate">
-                                                        <div className="font-bold text-white text-sm">{evt.user}</div>
-                                                        <div className="text-[10px] text-gray-400 uppercase font-bold">{evt.type}</div>
+                                            <div key={evt._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all gap-4 group">
+                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg border ${colorClass}`}>
+                                                        {icon}
                                                     </div>
-                                                    <div className="text-sm font-mono text-brand-accent truncate font-bold">{evt.amountDisplay}</div>
-                                                    <div className="text-[10px] text-gray-500">{new Date(evt.createdAt).toLocaleString()}</div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <div className="font-bold text-white text-sm truncate">{evt.user}</div>
+                                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{evt.type} • {timeAgo}</div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs font-bold transition-colors">REVERT</button>
-                                                    <button onClick={() => setConfirmDelete({ id: evt._id, revert: false })} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-xs font-bold transition-colors">DEL</button>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="font-mono font-bold text-brand-accent text-sm whitespace-nowrap bg-black/30 px-2 py-1 rounded border border-white/5">
+                                                        {evt.amountDisplay}
+                                                    </div>
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-[10px] font-bold transition-colors">REV</button>
+                                                        <button onClick={() => setConfirmDelete({ id: evt._id, revert: false })} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] font-bold transition-colors">DEL</button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
@@ -1505,8 +1521,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <table className="w-full text-left text-sm text-gray-400">
                                         <thead className="text-xs uppercase bg-white/5 text-gray-200">
                                             <tr>
-                                                <th className="px-4 py-3 rounded-tl-lg">Discord</th>
-                                                <th className="px-4 py-3">Minecraft</th>
+                                                <th className="px-4 py-3 rounded-tl-lg">User</th>
                                                 <th className="px-4 py-3">Approved</th>
                                                 <th className="px-4 py-3 rounded-tr-lg text-right">Action</th>
                                             </tr>
@@ -1514,13 +1529,19 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         <tbody>
                                             {filteredApprovedApps.map((app) => (
                                                 <tr key={app._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                    <td className="px-4 py-3 font-medium text-white flex items-center gap-2">
-                                                        <img src={app.discordAvatar} className="w-6 h-6 rounded-full" />
-                                                        {app.discordUsername}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-mono text-brand-primary flex items-center gap-2">
-                                                        <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/24`} alt="" className="w-6 h-6 rounded bg-black/50" />
-                                                        {app.minecraftUsername}
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="relative w-10 h-10 shrink-0">
+                                                                <img src={app.discordAvatar} className="w-10 h-10 rounded-full border border-white/10 object-cover" />
+                                                                <div className="absolute -bottom-1 -right-1 bg-black rounded-md p-0.5 border border-white/10">
+                                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/24`} className="w-4 h-4 object-contain" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="font-bold text-white text-sm truncate">{app.discordUsername}</span>
+                                                                <span className="font-mono text-xs text-brand-primary truncate">{app.minecraftUsername}</span>
+                                                            </div>
+                                                        </div>
                                                     </td>
                                                     <td className="px-4 py-3 text-xs">{app.approvedAt ? new Date(app.approvedAt).toLocaleDateString() : '-'}</td>
                                                     <td className="px-4 py-3 text-right">
@@ -1529,7 +1550,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 </tr>
                                             ))}
                                             {filteredApprovedApps.length === 0 && (
-                                                <tr><td colSpan={4} className="text-center py-8">No users found.</td></tr>
+                                                <tr><td colSpan={3} className="text-center py-8">No users found.</td></tr>
                                             )}
                                         </tbody>
                                     </table>
