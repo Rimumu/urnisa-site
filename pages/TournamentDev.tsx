@@ -111,9 +111,23 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
     );
 };
 
+const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNode; color?: string }> = ({ title, icon, children, color = "border-white/10" }) => (
+    <div className={`bg-black/40 backdrop-blur-md rounded-2xl border ${color} p-6 shadow-xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300`}>
+        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl pointer-events-none group-hover:scale-110 transition-transform">
+            {icon}
+        </div>
+        <h3 className="text-xl font-black text-white mb-4 uppercase tracking-wider flex items-center gap-3 relative z-10">
+            <span className="text-2xl">{icon}</span> {title}
+        </h3>
+        <div className="text-gray-300 text-sm space-y-2 relative z-10 leading-relaxed">
+            {children}
+        </div>
+    </div>
+);
+
 const TournamentDev: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
-  const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('signup');
+  const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('rules');
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
   const [loadingPokemon, setLoadingPokemon] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -380,74 +394,167 @@ const TournamentDev: React.FC = () => {
             <span>←</span> Back to Dashboard
         </Link>
 
-        <div className="max-w-6xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter drop-shadow-2xl">
+          <div className="text-center space-y-6">
+            <h1 className="text-5xl md:text-8xl font-black tracking-tighter drop-shadow-2xl">
               COBBLEMON <span className="text-brand-primary">TOURNAMENT</span>
             </h1>
-            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-              Battle for the title of the STEAK House Champion. 
-              Register your team of 6 and climb the brackets!
-            </p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex justify-center gap-2 md:gap-4 bg-black/40 p-1.5 rounded-2xl border border-white/10 backdrop-blur-xl w-fit mx-auto overflow-x-auto max-w-full">
-            {(['rules', 'brackets', 'signup', 'players'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
-              >
-                {tab === 'players' ? 'Players' : tab}
-              </button>
-            ))}
+            
+            {/* Main Navigation Buttons */}
+            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+                <button 
+                    onClick={() => setActiveTab('rules')}
+                    className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-105 shadow-xl ${activeTab === 'rules' ? 'bg-white text-black border-2 border-white' : 'bg-black/60 text-gray-400 border-2 border-white/10 hover:text-white hover:border-white/30'}`}
+                >
+                    <span className="text-2xl">📜</span> Rules
+                </button>
+                <button 
+                    onClick={() => setActiveTab('signup')}
+                    className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-105 shadow-xl ${activeTab === 'signup' ? 'bg-brand-primary text-white border-2 border-brand-primary' : 'bg-black/60 text-gray-400 border-2 border-white/10 hover:text-white hover:border-brand-primary/50'}`}
+                >
+                    <span className="text-2xl">📝</span> Sign Up
+                </button>
+                <button 
+                    onClick={() => setActiveTab('brackets')}
+                    className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-105 shadow-xl ${activeTab === 'brackets' ? 'bg-brand-accent text-black border-2 border-brand-accent' : 'bg-black/60 text-gray-400 border-2 border-white/10 hover:text-white hover:border-brand-accent/50'}`}
+                >
+                    <span className="text-2xl">📊</span> Bracket
+                </button>
+                <button 
+                    onClick={() => setActiveTab('players')}
+                    className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all transform hover:scale-105 shadow-xl ${activeTab === 'players' ? 'bg-purple-600 text-white border-2 border-purple-600' : 'bg-black/60 text-gray-400 border-2 border-white/10 hover:text-white hover:border-purple-600/50'}`}
+                >
+                    <span className="text-2xl">👥</span> Players
+                </button>
+            </div>
           </div>
 
           {/* Content Area */}
-          <div className="bg-black/30 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden min-h-[500px]">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
+          <div className="min-h-[500px] animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none fixed"></div>
 
+            {/* --- RULES SECTION --- */}
             {activeTab === 'rules' && (
-              <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-3xl font-black text-brand-primary mb-6 flex items-center gap-3">
-                  <span>📜</span> Tournament Rules
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-gray-300">
-                  <div className="space-y-4">
-                    <h3 className="text-white font-bold text-xl border-b border-white/10 pb-2">Battle Format</h3>
-                    <ul className="list-disc list-inside space-y-2 marker:text-brand-primary">
-                      <li>Standard 6v6 Level 50 Singles.</li>
-                      <li>Species Clause: Only one of each Pokemon species.</li>
-                      <li>Item Clause: No duplicate held items.</li>
-                      <li>Sleep Clause: Limit 1 Pokemon asleep at a time.</li>
-                      <li className="text-red-400 font-bold">Ban List: No Mythicals, No Legendaries, No Ultra Beasts.</li>
-                    </ul>
-                  </div>
-                  <div className="space-y-4">
-                    <h3 className="text-white font-bold text-xl border-b border-white/10 pb-2">General Conduct</h3>
-                    <ul className="list-disc list-inside space-y-2 marker:text-brand-primary">
-                      <li>Be respectful to your opponents.</li>
-                      <li>No intentional stalling or DC abuse.</li>
-                      <li>Matches must be reported within 10 mins of completion.</li>
-                      <li>Admin decisions are final.</li>
-                    </ul>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* Hero Format Card */}
+                <div className="md:col-span-2 lg:col-span-3 bg-gradient-to-r from-brand-primary/20 to-black/60 backdrop-blur-xl rounded-[2.5rem] border border-brand-primary/50 p-8 md:p-12 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute right-0 top-0 w-64 h-64 bg-brand-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                        <div className="text-6xl md:text-8xl">⚔️</div>
+                        <div className="text-center md:text-left">
+                            <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-2">Singles 4v4 Showdown</h2>
+                            <p className="text-gray-200 text-lg md:text-xl font-medium max-w-2xl leading-relaxed">
+                                Single-elimination bracket. Bring a roster of <span className="text-brand-primary font-bold">6 Pokémon</span>, 
+                                but select only <span className="text-brand-primary font-bold">4 for each battle</span>. 
+                                Level cap is set to <span className="text-brand-accent font-bold">50</span>!
+                            </p>
+                        </div>
+                    </div>
                 </div>
+
+                {/* Banned Gimmicks */}
+                <RuleCard title="Banned Gimmicks" icon="🚫" color="border-red-500/30">
+                    <ul className="list-disc list-inside space-y-2 font-bold text-red-200">
+                        <li>Tera</li>
+                        <li>Z-Move</li>
+                        <li>Dynamax</li>
+                        <li>Mega-Evolution</li>
+                    </ul>
+                </RuleCard>
+
+                {/* Pokémon Restrictions */}
+                <RuleCard title="Restricted Mons" icon="🔒" color="border-orange-500/30">
+                    <ul className="list-disc list-inside space-y-2 font-bold text-orange-200">
+                        <li>No Legendary Pokémon</li>
+                        <li>No Mythical Pokémon</li>
+                        <li>No Ultra Beasts</li>
+                    </ul>
+                </RuleCard>
+
+                {/* Battle Clauses */}
+                <RuleCard title="Clauses" icon="⚖️" color="border-blue-500/30">
+                    <ul className="space-y-3">
+                        <li><strong className="text-blue-300">Species Clause:</strong> No duplicate Pokémon species.</li>
+                        <li><strong className="text-blue-300">Item Clause:</strong> No duplicate held items.</li>
+                        <li><strong className="text-blue-300">Sleep Clause:</strong> Cannot put more than 1 opponent to sleep.</li>
+                        <li><strong className="text-blue-300">Endless Battle:</strong> No intentional infinite loops (e.g. Leppa + Recycle).</li>
+                    </ul>
+                </RuleCard>
+
+                {/* Move Bans */}
+                <div className="md:col-span-2 lg:col-span-2">
+                    <RuleCard title="Move & Ability Bans" icon="🛑" color="border-purple-500/30">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 className="font-bold text-purple-300 mb-2 border-b border-purple-500/30 pb-1">Clauses</h4>
+                                <ul className="list-disc list-inside space-y-1 text-gray-300">
+                                    <li><strong className="text-white">Evasion:</strong> No Double Team/Minimize.</li>
+                                    <li><strong className="text-white">OHKO:</strong> No Fissure, Guillotine, etc.</li>
+                                    <li><strong className="text-white">Moody:</strong> Ability Banned (RNG).</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-purple-300 mb-2 border-b border-purple-500/30 pb-1">Specific Moves</h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Revival Blessing', 'Arena Trap', 'Power Construct', 'Shadow Tag', 'Baton Pass', 'Assist', 'Last Respects', 'Shed Tail'].map(m => (
+                                        <span key={m} className="bg-purple-500/20 text-purple-200 px-2 py-1 rounded text-xs font-bold border border-purple-500/30">{m}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </RuleCard>
+                </div>
+
+                {/* Item Bans */}
+                <RuleCard title="Item Bans" icon="🎒" color="border-yellow-500/30">
+                    <div className="flex flex-wrap gap-2">
+                        {['Bright Powder', 'Lax Incense', "King's Rock", 'Razor Fang', 'Quick Claw'].map(m => (
+                            <span key={m} className="bg-yellow-500/20 text-yellow-200 px-3 py-1 rounded-full text-xs font-bold border border-yellow-500/30">{m}</span>
+                        ))}
+                    </div>
+                    <p className="mt-4 text-xs text-gray-400 italic">RNG-based items are generally removed to ensure skill-based competition.</p>
+                </RuleCard>
+
+                {/* General & Spectator */}
+                <div className="md:col-span-2 lg:col-span-3">
+                    <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 p-8 flex flex-col md:flex-row gap-8">
+                        <div className="flex-1">
+                            <h3 className="text-lg font-black text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">🚨 General Rules</h3>
+                            <ul className="space-y-2 text-sm text-gray-300">
+                                <li className="flex gap-2"><span className="text-red-500 font-bold">!</span> Break rules = Instant Disqualification.</li>
+                                <li className="flex gap-2"><span className="text-red-500 font-bold">!</span> No stalling or disconnect abuse.</li>
+                                <li className="flex gap-2"><span className="text-green-500 font-bold">✓</span> Valid disconnects allow restart with SAME team.</li>
+                                <li className="flex gap-2"><span className="text-brand-primary font-bold">⌚</span> Report matches within 10 mins.</li>
+                                <li className="flex gap-2"><span className="text-white font-bold">⚖️</span> Admin decisions are final.</li>
+                            </ul>
+                        </div>
+                        <div className="w-px bg-white/10 hidden md:block"></div>
+                        <div className="flex-1">
+                            <h3 className="text-lg font-black text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">👀 Spectator Etiquette</h3>
+                            <ul className="space-y-2 text-sm text-gray-300">
+                                <li className="flex gap-2"><span>🔇</span> Mute mic / Push-to-talk during matches.</li>
+                                <li className="flex gap-2"><span>🎉</span> Cheering is allowed, distraction is not.</li>
+                                <li className="flex gap-2"><span>🐾</span> Keep Pokémon in balls or on shoulders.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
               </div>
             )}
 
             {activeTab === 'brackets' && (
-              <div className="relative z-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center justify-center py-20">
-                <div className="text-6xl mb-6 opacity-20">📊</div>
-                <h2 className="text-3xl font-black text-gray-600 uppercase tracking-widest">Brackets coming soon</h2>
-                <p className="text-gray-500 mt-2">The bracket will be generated once sign-ups close.</p>
+              <div className="relative z-10 text-center flex flex-col items-center justify-center py-20 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 shadow-2xl">
+                <div className="text-8xl mb-6 opacity-20">📊</div>
+                <h2 className="text-4xl font-black text-white uppercase tracking-widest mb-2">Brackets coming soon</h2>
+                <p className="text-gray-400 text-lg">The bracket will be generated once sign-ups close.</p>
               </div>
             )}
 
             {activeTab === 'players' && (
-              <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl">
                   <h2 className="text-3xl font-black text-white mb-8 text-center uppercase tracking-tighter">Registered Players</h2>
                   {loadingPlayers ? (
                       <div className="text-center py-20 text-gray-500 animate-pulse font-bold">Loading participants...</div>
@@ -456,7 +563,7 @@ const TournamentDev: React.FC = () => {
                   ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {playersList.map((entry, idx) => (
-                              <div key={idx} className="bg-black/40 border border-white/10 rounded-3xl p-5 flex flex-col gap-4">
+                              <div key={idx} className="bg-white/5 border border-white/10 rounded-3xl p-5 flex flex-col gap-4">
                                   <div className="flex items-center gap-4 border-b border-white/5 pb-3">
                                       <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-12 h-12 rounded-xl border border-white/20" alt={entry.minecraftUsername} />
                                       <div>
@@ -469,7 +576,7 @@ const TournamentDev: React.FC = () => {
                                   <div className="grid grid-cols-6 gap-2">
                                       {entry.isLocked ? (
                                           entry.team.map((p, pIdx) => (
-                                              <div key={pIdx} className="aspect-square bg-white/5 rounded-lg border border-white/5 p-1 relative" title={p?.name || "Empty"}>
+                                              <div key={pIdx} className="aspect-square bg-black/20 rounded-lg border border-white/5 p-1 relative" title={p?.name || "Empty"}>
                                                   {p ? (
                                                       <PokemonTeamImage pokemon={p} />
                                                   ) : (
@@ -480,7 +587,7 @@ const TournamentDev: React.FC = () => {
                                       ) : (
                                           // Masked Team for Drafting Players
                                           Array(6).fill(null).map((_, i) => (
-                                              <div key={i} className="aspect-square bg-white/5 rounded-lg border border-white/5 flex items-center justify-center text-gray-600 font-black text-xl select-none">?</div>
+                                              <div key={i} className="aspect-square bg-black/20 rounded-lg border border-white/5 flex items-center justify-center text-gray-600 font-black text-xl select-none">?</div>
                                           ))
                                       )}
                                   </div>
@@ -492,7 +599,7 @@ const TournamentDev: React.FC = () => {
             )}
 
             {activeTab === 'signup' && (
-              <div className="relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl">
                 {!user ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
                     <div className="text-6xl grayscale opacity-30">🔒</div>
