@@ -413,7 +413,7 @@ const TournamentDev: React.FC = () => {
                   { id: 'rules', label: 'RULES', icon: '📜' },
                   { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked },
                   { id: 'brackets', label: 'BRACKET', icon: '📊' },
-                  { id: 'players', label: 'ROSTER', icon: '👥' }
+                  { id: 'players', label: 'PLAYERS', icon: '👥' }
                 ].map((tab) => (
                   <button 
                     key={tab.id}
@@ -452,7 +452,7 @@ const TournamentDev: React.FC = () => {
 
             <div className="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
                 <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
-                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Entrants</span>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Players</span>
                     <span className="text-xl font-black text-white">{playersList.length}</span>
                 </div>
                 <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
