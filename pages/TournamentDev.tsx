@@ -303,11 +303,9 @@ const TournamentDev: React.FC = () => {
       }
   }, [user]);
 
-  // Fetch Players Logic
+  // Fetch Players Logic - Fetches on mount and on tab changes to keep dashboard count updated
   useEffect(() => {
-      if (activeTab === 'players') {
-          fetchPlayers();
-      }
+      fetchPlayers();
   }, [activeTab]);
 
   const fetchMyTeam = async () => {
@@ -333,7 +331,7 @@ const TournamentDev: React.FC = () => {
   };
 
   const fetchPlayers = async () => {
-      setLoadingPlayers(true);
+      if (playersList.length === 0) setLoadingPlayers(true);
       try {
           const res = await fetch(`${API_BASE_URL}/api/tournament/players`);
           if (res.ok) {
