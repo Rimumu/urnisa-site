@@ -154,37 +154,60 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
 
     if (!revealed || !pokemon) {
         return (
-            <div className="aspect-[3/4] bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                <span className="text-4xl font-black text-gray-700 select-none">?</span>
+            <div className="aspect-[3/4] bg-black/40 rounded-[2rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-500">
+                    <span className="text-4xl font-black text-gray-700 select-none">?</span>
+                </div>
+                <div className="h-2 w-16 bg-white/5 rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className="aspect-[3/4] bg-black/60 rounded-2xl border border-white/10 flex flex-col relative overflow-hidden group shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+        <div className="aspect-[3/4] bg-[#120507] rounded-[2rem] border-2 border-white/10 flex flex-col relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
+            {/* Background Texture */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
             
+            {/* ID Badge */}
+            <div className="absolute top-4 right-4 z-20">
+                <span className="text-[10px] font-black text-white/30 bg-black/40 px-2 py-1 rounded-lg border border-white/5 font-mono tracking-wider">
+                    #{pokemon.id.toString().padStart(3, '0')}
+                </span>
+            </div>
+
             {/* Image Area */}
-            <div className="flex-1 p-2 flex items-center justify-center relative z-10">
-                <div className="w-full h-full drop-shadow-2xl filter group-hover:brightness-110 transition-all">
+            <div className="flex-1 p-6 flex items-center justify-center relative z-10">
+                <div className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] filter group-hover:scale-110 transition-transform duration-500 ease-out">
                     <PokemonTeamImage pokemon={pokemon} />
                 </div>
             </div>
 
             {/* Info Area */}
-            <div className="p-3 bg-black/40 backdrop-blur-md border-t border-white/5 flex flex-col gap-2">
+            <div className="p-4 bg-black/40 backdrop-blur-xl border-t border-white/5 flex flex-col gap-3 z-20">
                 <div className="text-center">
-                    <h4 className="text-white font-black uppercase text-sm tracking-wide truncate">{pokemon.name}</h4>
-                    <span className="text-[10px] text-gray-500 font-mono">#{pokemon.id.toString().padStart(3, '0')}</span>
+                    <h4 className="text-white font-black uppercase text-lg tracking-wider truncate drop-shadow-md">
+                        {pokemon.name}
+                    </h4>
                 </div>
                 
-                <div className="flex justify-center gap-1 flex-wrap">
-                    {types.map(t => (
-                        <span key={t} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}`}>
+                {/* Types - Rounded Pills, Centered, Wrapped */}
+                <div className="flex justify-center flex-wrap gap-2 w-full">
+                    {types.length > 0 ? types.map(t => (
+                        <span 
+                            key={t} 
+                            className={`
+                                px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg border border-white/10
+                                ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}
+                            `}
+                        >
                             {t}
                         </span>
-                    ))}
+                    )) : (
+                        // Skeleton loader for types
+                        <div className="h-6 w-24 bg-white/10 rounded-full animate-pulse"></div>
+                    )}
                 </div>
             </div>
         </div>
@@ -487,6 +510,24 @@ const TournamentDev: React.FC = () => {
             position: relative;
             color: #e5383b !important;
             background: rgba(229, 56, 59, 0.1);
+        }
+
+        /* Custom Scrollbar for Modal - Red Thumb, Dark Track */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(20, 10, 10, 0.6);
+            border-radius: 8px;
+            margin: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5383b;
+            border-radius: 8px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #ff4d4d;
         }
       `}</style>
 
@@ -848,29 +889,48 @@ const TournamentDev: React.FC = () => {
 
       {/* PLAYER DETAILS MODAL */}
       {selectedPlayer && (
-          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-              <div className="bg-[#1a0b0e] w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
+          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+              <div className="bg-[#120507] w-full max-w-5xl max-h-[90vh] rounded-[3rem] border-2 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
                   
+                  {/* Decorative Header Background */}
+                  <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-primary/10 to-transparent pointer-events-none"></div>
+
                   {/* Modal Header */}
-                  <div className="p-8 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/40">
+                  <div className="p-8 md:p-10 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/20 relative z-10">
                       <div className="flex items-center gap-6">
-                          <img src={`https://mc-heads.net/avatar/${selectedPlayer.minecraftUsername}/128`} className="w-24 h-24 rounded-[2rem] border-4 border-brand-primary shadow-xl" alt={selectedPlayer.minecraftUsername} />
+                          <div className="relative">
+                              <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full"></div>
+                              <img src={`https://mc-heads.net/avatar/${selectedPlayer.minecraftUsername}/128`} className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] border-4 border-brand-primary shadow-2xl relative z-10" alt={selectedPlayer.minecraftUsername} />
+                          </div>
                           <div>
-                              <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-1">{selectedPlayer.minecraftUsername}</h2>
-                              <div className={`text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${selectedPlayer.isLocked ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
-                                  {selectedPlayer.isLocked ? 'Ready to Battle' : 'Drafting Phase'}
+                              <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg">{selectedPlayer.minecraftUsername}</h2>
+                              <div className={`
+                                flex items-center gap-2 px-4 py-1.5 rounded-full w-fit border shadow-lg
+                                ${selectedPlayer.isLocked 
+                                    ? 'bg-green-500/10 text-green-400 border-green-500/30' 
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}
+                              `}>
+                                  <span className={`w-2 h-2 rounded-full ${selectedPlayer.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
+                                  <span className="text-xs font-black uppercase tracking-widest">{selectedPlayer.isLocked ? 'Ready for Battle' : 'Drafting Phase'}</span>
                               </div>
                           </div>
                       </div>
-                      <button onClick={() => setSelectedPlayer(null)} className="p-4 rounded-full bg-white/5 hover:bg-white/10 hover:text-brand-primary transition-colors">
-                          <span className="text-2xl leading-none">✕</span>
+                      <button 
+                        onClick={() => setSelectedPlayer(null)} 
+                        className="group p-4 rounded-full bg-white/5 hover:bg-red-600 hover:text-white text-gray-400 transition-all duration-300 border border-white/10 hover:border-red-500 hover:rotate-90 hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]"
+                      >
+                          <span className="text-2xl leading-none font-bold">✕</span>
                       </button>
                   </div>
 
                   {/* Modal Content - Team Grid */}
-                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-gradient-to-b from-black/20 to-transparent">
-                      <h3 className="text-xl font-black text-gray-400 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Active Team</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#120507]">
+                      <div className="flex items-center gap-4 mb-8">
+                          <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Active Roster</h3>
+                          <div className="h-px bg-white/10 flex-1"></div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
                           {(tournamentStatus === 'ONGOING' && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
                               <PokemonDetailCard 
                                   key={idx} 
