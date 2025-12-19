@@ -125,6 +125,7 @@ const TournamentDev: React.FC = () => {
   const [loadingTeam, setLoadingTeam] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [lockEnabled, setLockEnabled] = useState(false); // Global Lock Status
 
   // Players List State
   const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
@@ -148,6 +149,14 @@ const TournamentDev: React.FC = () => {
       }
     };
     fetchPokemon();
+  }, []);
+
+  // Fetch Tournament Config (Lock Status)
+  useEffect(() => {
+      fetch(`${API_BASE_URL}/api/tournament/config`)
+          .then(res => res.json())
+          .then(data => setLockEnabled(!!data.lockEnabled))
+          .catch(e => console.error("Config fetch error", e));
   }, []);
 
   // Fetch User Team Logic
@@ -283,6 +292,7 @@ const TournamentDev: React.FC = () => {
   };
 
   const handleLockIn = async () => {
+      if (!lockEnabled) return;
       if (selectedTeam.filter(p => p !== null).length < 1) {
           alert("You cannot lock an empty team!");
           return;
@@ -302,6 +312,9 @@ const TournamentDev: React.FC = () => {
           if (res.ok) {
               setIsLocked(true);
               setSaveStatus('success');
+          } else {
+              const err = await res.json();
+              alert(err.error || "Lock failed.");
           }
       } catch(e) { alert("Lock failed."); }
       finally { setSaving(false); }
@@ -671,15 +684,15 @@ const TournamentDev: React.FC = () => {
 
                         <button
                             onClick={handleLockIn}
-                            disabled={saving || selectedTeam.includes(null) || hasBannedPokemon}
+                            disabled={saving || selectedTeam.includes(null) || hasBannedPokemon || !lockEnabled}
                             className={`
                             px-12 py-4 rounded-xl text-lg font-black uppercase tracking-widest shadow-2xl transition-all transform flex-[2]
-                            ${selectedTeam.includes(null) || hasBannedPokemon
+                            ${selectedTeam.includes(null) || hasBannedPokemon || !lockEnabled
                                 ? 'bg-gray-800 text-gray-600 cursor-not-allowed' 
                                 : 'bg-green-600 hover:bg-green-500 hover:scale-105 active:scale-95 text-white shadow-green-900/20'}
                             `}
                         >
-                            🔒 LOCK IN TEAM
+                            {!lockEnabled ? "Lock-ins unavailable right now!" : "🔒 LOCK IN TEAM"}
                         </button>
                         </div>
                     )}

@@ -278,6 +278,7 @@ const Admin: React.FC = () => {
     // --- TOURNAMENT STATE ---
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayer[]>([]);
     const [tournamentSearch, setTournamentSearch] = useState('');
+    const [tournamentLockEnabled, setTournamentLockEnabled] = useState(false);
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -400,13 +401,20 @@ const Admin: React.FC = () => {
         } catch(e) {}
     }, []);
 
-    const fetchTournamentPlayers = useCallback(async () => {
+    const fetchTournamentData = useCallback(async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/all-players`, {
+            const resPlayers = await fetch(`${API_BASE_URL}/api/admin/tournament/all-players`, {
                 headers: { Authorization: password }
             });
-            if (res.ok) {
-                setTournamentPlayers(await res.json());
+            if (resPlayers.ok) {
+                setTournamentPlayers(await resPlayers.json());
+            }
+            
+            // Config
+            const resConfig = await fetch(`${API_BASE_URL}/api/tournament/config`);
+            if(resConfig.ok) {
+                const conf = await resConfig.json();
+                setTournamentLockEnabled(!!conf.lockEnabled);
             }
         } catch (e) {}
     }, [password]);
@@ -422,12 +430,12 @@ const Admin: React.FC = () => {
             } else if (activeTab === 'codes') {
                 fetchCodes();
             } else if (activeTab === 'tournament') {
-                fetchTournamentPlayers();
-                interval = window.setInterval(fetchTournamentPlayers, 15000);
+                fetchTournamentData();
+                interval = window.setInterval(fetchTournamentData, 15000);
             }
         }
         return () => { if(interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchTournamentPlayers]);
+    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchTournamentData]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -680,6 +688,24 @@ const Admin: React.FC = () => {
     };
 
     // --- TOURNAMENT HANDLERS ---
+    const handleToggleTournamentLock = async () => {
+        const newState = !tournamentLockEnabled;
+        setLoading(true);
+        try {
+            await fetch(`${API_BASE_URL}/api/admin/tournament/config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ lockEnabled: newState })
+            });
+            setTournamentLockEnabled(newState);
+            setManagerStatus({ type: 'success', message: `Tournament Lock-ins ${newState ? 'ENABLED' : 'DISABLED'}` });
+        } catch(e) {
+            setManagerStatus({ type: 'error', message: "Failed to update lock status" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleUnlockTeam = async (discordId: string, username: string) => {
         if (!window.confirm(`Are you sure you want to UNLOCK and RESET the team for "${username}"? They will lose their current selection but can select again.`)) return;
 
@@ -693,7 +719,7 @@ const Admin: React.FC = () => {
             const data = await res.json();
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentPlayers();
+                fetchTournamentData(); // Changed to use common fetch function
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to unlock team." });
             }
@@ -717,7 +743,7 @@ const Admin: React.FC = () => {
             const data = await res.json();
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentPlayers();
+                fetchTournamentData(); // Changed to use common fetch function
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to revoke." });
             }
@@ -1493,101 +1519,45 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         </div>
                     )}
 
-                    {activeTab === 'minecraft' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            
-                            {/* Whitelist Management */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                {/* Pending Applications */}
-                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
-                                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                                        <span className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></span>
-                                        Pending Applications
-                                    </h3>
-                                    <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                        {whitelistApps.length === 0 ? <div className="text-gray-500 italic text-sm text-center py-10">No pending applications</div> : whitelistApps.map(app => (
-                                            <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                                                <div className="relative shrink-0">
-                                                    <img src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" alt="Discord" />
-                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800" alt="MC" />
-                                                </div>
-                                                <div className="flex-1 min-w-0 w-full">
-                                                    <div className="flex justify-between items-baseline">
-                                                        <div className="text-sm font-bold text-white truncate">{app.discordUsername}</div>
-                                                        <div className="text-[10px] text-gray-500 font-mono">{new Date(app.appliedAt).toLocaleDateString()}</div>
-                                                    </div>
-                                                    <div className="text-xs font-mono text-brand-primary truncate mt-0.5">MC: <span className="text-green-400">{app.minecraftUsername}</span></div>
-                                                </div>
-                                                <div className="flex gap-2 w-full sm:w-auto shrink-0">
-                                                    <button onClick={() => handleApproveApp(app._id)} className="flex-1 sm:flex-none bg-green-600 hover:bg-green-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors">Approve</button>
-                                                    <button onClick={() => handleRejectApp(app._id)} className="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors">Reject</button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Approved List */}
-                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
-                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                                        <h3 className="font-bold text-white flex items-center gap-2"><span className="w-3 h-3 bg-green-500 rounded-full"></span>Approved History</h3>
-                                        <input type="text" placeholder="Search..." value={approvedSearch} onChange={e => setApprovedSearch(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none" />
-                                    </div>
-                                    <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                        {filteredApprovedApps.map(app => (
-                                            <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                                                <div className="relative shrink-0">
-                                                    <img src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" alt="Discord" />
-                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800" alt="MC" />
-                                                </div>
-                                                <div className="flex-1 min-w-0 w-full">
-                                                    <div className="text-sm font-bold text-white truncate opacity-80">{app.discordUsername}</div>
-                                                    <div className="text-xs font-mono text-gray-400 truncate mt-0.5">MC: {app.minecraftUsername}</div>
-                                                </div>
-                                                <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white text-xs font-bold px-3 py-1.5 bg-red-900/10 rounded hover:bg-red-600 transition-colors">Revoke</button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Bingo Config */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white mb-4">Bingo Configuration</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Active Seed ID</label>
-                                        <input type="text" value={bingoCardId} onChange={e => setBingoCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white font-mono" placeholder="WEEK1" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Win Condition</label>
-                                        <input type="text" value={bingoWinCondition} onChange={e => setBingoWinCondition(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" placeholder="1 Line / Blackout" />
-                                    </div>
-                                    <button onClick={handleSaveBingoConfig} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all h-[42px]">
-                                        Update Config
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {activeTab === 'tournament' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Tournament Management</h2>
                             
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[700px]">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                                    <h3 className="font-bold text-white flex items-center gap-2">
-                                        <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                                        Player Teams ({tournamentPlayers.length})
-                                    </h3>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search MC User or Discord ID..." 
-                                        value={tournamentSearch} 
-                                        onChange={e => setTournamentSearch(e.target.value)} 
-                                        className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full sm:w-64" 
-                                    />
+                                <div className="flex flex-col gap-6 border-b border-white/10 pb-6 mb-6">
+                                    {/* Global Lock Controls */}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="font-bold text-white text-lg">Registration Status</h3>
+                                            <p className="text-xs text-gray-400">Control if players can lock in their teams.</p>
+                                        </div>
+                                        <button 
+                                            onClick={handleToggleTournamentLock}
+                                            className={`
+                                                px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg transition-all border
+                                                ${tournamentLockEnabled 
+                                                    ? 'bg-green-600 border-green-400 text-white hover:bg-green-500' 
+                                                    : 'bg-red-900/40 border-red-500/50 text-red-400 hover:bg-red-900/60'}
+                                            `}
+                                        >
+                                            {tournamentLockEnabled ? 'LOCK-INS ENABLED' : 'LOCK-INS DISABLED'}
+                                        </button>
+                                    </div>
+
+                                    {/* Search Bar */}
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                        <h3 className="font-bold text-white flex items-center gap-2">
+                                            <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                                            Player Teams ({tournamentPlayers.length})
+                                        </h3>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search MC User or Discord ID..." 
+                                            value={tournamentSearch} 
+                                            onChange={e => setTournamentSearch(e.target.value)} 
+                                            className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full sm:w-64" 
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
