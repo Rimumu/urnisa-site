@@ -704,6 +704,30 @@ const Admin: React.FC = () => {
         }
     };
 
+    const handleRevokeRegistration = async (discordId: string, username: string) => {
+        if (!window.confirm(`Are you sure you want to completely REVOKE registration for "${username}"? This removes them from the tournament list.`)) return;
+
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/revoke-registration`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ discordId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setManagerStatus({ type: 'success', message: data.message });
+                fetchTournamentPlayers();
+            } else {
+                setManagerStatus({ type: 'error', message: data.error || "Failed to revoke." });
+            }
+        } catch (e) {
+            setManagerStatus({ type: 'error', message: "Network error." });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // --- JSON MERGER HANDLER ---
     const handleJsonUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -1594,12 +1618,18 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     ))}
                                                 </div>
 
-                                                <div className="shrink-0 flex gap-2 w-full lg:w-auto">
+                                                <div className="shrink-0 flex gap-2 w-full lg:w-auto flex-col">
                                                     <button 
                                                         onClick={() => handleUnlockTeam(p.discordId, p.minecraftUsername)}
-                                                        className="flex-1 lg:flex-none bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-red-500/30"
+                                                        className="bg-yellow-900/20 hover:bg-yellow-600 text-yellow-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-yellow-500/30 w-full"
                                                     >
-                                                        Unlock & Reset
+                                                        Unlock Team
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleRevokeRegistration(p.discordId, p.minecraftUsername)}
+                                                        className="bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-red-500/30 w-full"
+                                                    >
+                                                        Revoke Registration
                                                     </button>
                                                 </div>
                                             </div>

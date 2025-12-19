@@ -171,17 +171,13 @@ const TournamentDev: React.FC = () => {
           const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${user.id}`);
           if (res.ok) {
               const data = await res.json();
-              if (data && data.team) {
+              if (data && data.registered) {
                   // Ensure team is always 6 slots even if backend sends fewer
-                  const filledTeam = [...data.team];
+                  const filledTeam = [...(data.team || [])];
                   while (filledTeam.length < 6) filledTeam.push(null);
                   setSelectedTeam(filledTeam);
                   setIsLocked(data.isLocked || false);
-                  
-                  // If there is ANY existing selection or user is locked, show drafting UI immediately
-                  if (data.isLocked || filledTeam.some(p => p !== null)) {
-                      setHasStartedRegistration(true);
-                  }
+                  setHasStartedRegistration(true);
               }
           }
       } catch (e) {
@@ -230,7 +226,35 @@ const TournamentDev: React.FC = () => {
       return selectedTeam.some(p => p !== null && isBanned(p.id));
   }, [selectedTeam]);
 
-  const handleRegister = async () => {
+  // Initial Registration (Empty Team)
+  const handleInitialRegister = async () => {
+      if (!user) return;
+      setLoadingTeam(true);
+      try {
+          // Register with empty team
+          const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  discordId: user.id,
+                  minecraftUsername: user.minecraftUsername,
+                  team: new Array(6).fill(null)
+              })
+          });
+          
+          if (res.ok) {
+              setHasStartedRegistration(true);
+          } else {
+              alert("Registration failed. Please try again.");
+          }
+      } catch (e) {
+          alert("Network error.");
+      } finally {
+          setLoadingTeam(false);
+      }
+  };
+
+  const handleSaveDraft = async () => {
     if (!user || hasBannedPokemon) return;
     setSaving(true);
     setSaveStatus('idle');
@@ -266,7 +290,7 @@ const TournamentDev: React.FC = () => {
       if (!window.confirm("Are you sure you want to LOCK IN your team? You will NOT be able to edit it afterwards.")) return;
 
       // Ensure save first
-      await handleRegister();
+      await handleSaveDraft();
 
       setSaving(true);
       try {
@@ -363,7 +387,7 @@ const TournamentDev: React.FC = () => {
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
               >
-                {tab === 'players' ? 'Players (Locked)' : tab}
+                {tab === 'players' ? 'Players' : tab}
               </button>
             ))}
           </div>
@@ -415,7 +439,7 @@ const TournamentDev: React.FC = () => {
                   {loadingPlayers ? (
                       <div className="text-center py-20 text-gray-500 animate-pulse font-bold">Loading participants...</div>
                   ) : playersList.length === 0 ? (
-                      <div className="text-center py-20 text-gray-600">No players have locked in their teams yet.</div>
+                      <div className="text-center py-20 text-gray-600">No players registered yet.</div>
                   ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {playersList.map((entry, idx) => (
@@ -424,19 +448,28 @@ const TournamentDev: React.FC = () => {
                                       <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-12 h-12 rounded-xl border border-white/20" alt={entry.minecraftUsername} />
                                       <div>
                                           <div className="font-bold text-white text-lg">{entry.minecraftUsername}</div>
-                                          <div className="text-xs text-green-500 font-mono font-bold uppercase tracking-wider">LOCKED IN</div>
+                                          <div className={`text-xs font-mono font-bold uppercase tracking-wider ${entry.isLocked ? 'text-green-500' : 'text-gray-500'}`}>
+                                              {entry.isLocked ? 'LOCKED IN' : 'DRAFTING'}
+                                          </div>
                                       </div>
                                   </div>
                                   <div className="grid grid-cols-6 gap-2">
-                                      {entry.team.map((p, pIdx) => (
-                                          <div key={pIdx} className="aspect-square bg-white/5 rounded-lg border border-white/5 p-1 relative" title={p?.name || "Empty"}>
-                                              {p ? (
-                                                  <PokemonTeamImage pokemon={p} />
-                                              ) : (
-                                                  <div className="w-full h-full flex items-center justify-center text-white/10 text-xs">•</div>
-                                              )}
-                                          </div>
-                                      ))}
+                                      {entry.isLocked ? (
+                                          entry.team.map((p, pIdx) => (
+                                              <div key={pIdx} className="aspect-square bg-white/5 rounded-lg border border-white/5 p-1 relative" title={p?.name || "Empty"}>
+                                                  {p ? (
+                                                      <PokemonTeamImage pokemon={p} />
+                                                  ) : (
+                                                      <div className="w-full h-full flex items-center justify-center text-white/10 text-xs">•</div>
+                                                  )}
+                                              </div>
+                                          ))
+                                      ) : (
+                                          // Masked Team for Drafting Players
+                                          Array(6).fill(null).map((_, i) => (
+                                              <div key={i} className="aspect-square bg-white/5 rounded-lg border border-white/5 flex items-center justify-center text-gray-600 font-black text-xl select-none">?</div>
+                                          ))
+                                      )}
                                   </div>
                               </div>
                           ))}
@@ -477,7 +510,7 @@ const TournamentDev: React.FC = () => {
                     </div>
 
                     <button
-                        onClick={() => setHasStartedRegistration(true)}
+                        onClick={handleInitialRegister}
                         className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-2xl shadow-[0_0_40px_rgba(229,56,59,0.3)] transition-all transform hover:scale-110 active:scale-95 uppercase tracking-widest border-2 border-white/20"
                     >
                         Register for Tournament
@@ -626,7 +659,7 @@ const TournamentDev: React.FC = () => {
                             </p>
                         )}
                         <button
-                            onClick={handleRegister}
+                            onClick={handleSaveDraft}
                             disabled={saving || hasBannedPokemon}
                             className={`
                             px-8 py-4 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg transition-all transform flex-1
