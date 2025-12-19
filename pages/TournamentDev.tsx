@@ -418,8 +418,8 @@ const TournamentDev: React.FC = () => {
           {/* Header Dashboard */}
           <div className="flex flex-col md:flex-row justify-between items-center bg-black/40 border border-white/10 rounded-[2.5rem] p-6 md:p-8 gap-6 backdrop-blur-md">
             <div className="flex items-center gap-6">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-brand-primary/20 rounded-3xl flex items-center justify-center text-4xl shadow-inner border border-brand-primary/30">
-                    ⚔️
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-black/40 rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border border-brand-primary/30 p-1">
+                    <img src="https://res.cloudinary.com/dsencimjn/image/upload/v1764270717/kqscgxvjwrpoycewo2im.jpg" alt="Tournament Logo" className="w-full h-full object-cover rounded-2xl" />
                 </div>
                 <div>
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1">
@@ -459,7 +459,7 @@ const TournamentDev: React.FC = () => {
                 <div className="md:col-span-2 lg:col-span-3 bg-gradient-to-r from-brand-primary/20 to-black/60 backdrop-blur-xl rounded-[2.5rem] border border-brand-primary/50 p-8 md:p-12 shadow-2xl relative overflow-hidden group">
                     <div className="absolute right-0 top-0 w-64 h-64 bg-brand-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
                     <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                        <div className="text-6xl md:text-8xl">📜</div>
+                        <div className="text-6xl md:text-8xl">⚔️</div>
                         <div className="text-center md:text-left">
                             <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-2">Tournament Structure</h2>
                             <p className="text-gray-200 text-lg md:text-xl font-medium max-w-2xl leading-relaxed">
