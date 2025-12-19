@@ -381,25 +381,15 @@ const TournamentDev: React.FC = () => {
             -webkit-backdrop-filter: blur(25px) saturate(160%);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 
-                0 20px 40px -10px rgba(0, 0, 0, 0.6),
+                0 10px 30px -5px rgba(0, 0, 0, 0.5),
                 inset 0 0 12px rgba(255, 255, 255, 0.03);
+            height: 40px;
         }
         
         .nav-link-active {
             position: relative;
             color: #e5383b !important;
-        }
-        .nav-link-active::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 4px;
-            height: 4px;
-            background: #e5383b;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #e5383b;
+            background: rgba(229, 56, 59, 0.1);
         }
       `}</style>
 
@@ -411,9 +401,37 @@ const TournamentDev: React.FC = () => {
       <UserProfile onUserChange={setUser} className="!absolute top-4 right-4" />
 
       <div className="relative z-20 container mx-auto px-4 pt-12">
-        <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md mb-6">
-            <span>←</span> Back to Dashboard
-        </Link>
+        {/* Top Utility Bar (Aligned Level) */}
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md h-10">
+                <span>←</span> Back to Dashboard
+            </Link>
+
+            {/* Navigation Center (Compact Pill) */}
+            <div className="dock-pill rounded-full p-1 flex items-center gap-1 shadow-xl">
+                {[
+                  { id: 'rules', label: 'RULES', icon: '📜' },
+                  { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked },
+                  { id: 'brackets', label: 'BRACKET', icon: '📊' },
+                  { id: 'players', label: 'ROSTER', icon: '👥' }
+                ].map((tab) => (
+                  <button 
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`
+                      relative flex items-center gap-2 px-3 h-full transition-all duration-300 rounded-full
+                      ${activeTab === tab.id 
+                          ? 'nav-link-active' 
+                          : 'text-gray-500 hover:text-white group'}
+                    `}
+                  >
+                      <span className="text-sm md:text-base transition-transform group-hover:scale-110">{tab.icon}</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.05em]">{tab.label}</span>
+                      {tab.notify && <div className="absolute top-1 right-1 w-1 h-1 bg-brand-primary rounded-full animate-pulse shadow-[0_0_8px_#e5383b]"></div>}
+                  </button>
+                ))}
+            </div>
+        </div>
 
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header Dashboard */}
@@ -448,33 +466,6 @@ const TournamentDev: React.FC = () => {
                     </span>
                 </div>
             </div>
-          </div>
-
-          {/* Navigation Center (Relocated to top, non-sticky) */}
-          <div className="w-full flex justify-center py-4">
-              <div className="max-w-[360px] md:max-w-[420px] w-full dock-pill rounded-full p-1.5 flex items-center justify-around shadow-xl">
-                  {[
-                    { id: 'rules', label: 'RULES', icon: '📜' },
-                    { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked },
-                    { id: 'brackets', label: 'BRACKET', icon: '📊' },
-                    { id: 'players', label: 'ROSTER', icon: '👥' }
-                  ].map((tab) => (
-                    <button 
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`
-                        relative flex flex-col items-center justify-center flex-1 py-2.5 transition-all duration-300 rounded-full
-                        ${activeTab === tab.id 
-                            ? 'nav-link-active' 
-                            : 'text-gray-500 hover:text-white group'}
-                      `}
-                    >
-                        <span className="text-xl md:text-2xl mb-0.5 transition-transform group-hover:scale-110">{tab.icon}</span>
-                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.05em]">{tab.label}</span>
-                        {tab.notify && <div className="absolute top-2 right-[20%] w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse shadow-[0_0_8px_#e5383b]"></div>}
-                    </button>
-                  ))}
-              </div>
           </div>
 
           {/* Content Viewport */}
@@ -660,7 +651,7 @@ const TournamentDev: React.FC = () => {
                         <p className="font-black text-gray-500 uppercase tracking-widest text-[10px]">Retrieving Roster...</p>
                     </div>
                 ) : !hasStartedRegistration && !isLocked ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                  <div className="flex flex-col items-center justify-center py-10 text-center space-y-8 animate-in fade-in zoom-in-95 duration-200">
                     <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
                     <div className="space-y-3">
                         <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Greetings, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2>
@@ -681,7 +672,6 @@ const TournamentDev: React.FC = () => {
                       <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
                       <div className="text-left">
                         <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3>
-                        {/* Fix: Added missing closing brace '}' for the className attribute */}
                         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${isLocked ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
                             {isLocked ? 'Deployed' : 'Drafting'}
                         </span>
@@ -759,10 +749,8 @@ const TournamentDev: React.FC = () => {
                                                 title={p.name}
                                             >
                                                 <div className="w-full h-full relative">
-                                                    <div className="w-full h-full relative">
-                                                        <PokemonTeamImage pokemon={p} />
-                                                        {banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}
-                                                    </div>
+                                                    <PokemonTeamImage pokemon={p} />
+                                                    {banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}
                                                 </div>
                                                 {banned && <div className="banned-tooltip">BANNED</div>}
                                             </button>
