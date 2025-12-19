@@ -152,6 +152,7 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
         }
     }, [pokemon, revealed]);
 
+    // Render Logic
     if (!revealed || !pokemon) {
         return (
             <div className="aspect-square bg-black/40 rounded-[2rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group shadow-lg">
@@ -165,48 +166,48 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
     }
 
     return (
-        <div className="aspect-square bg-[#120507] rounded-[2rem] border-2 border-white/10 flex flex-col relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
+        <div className="aspect-square bg-[#120507] rounded-[2rem] border-2 border-white/10 relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
             {/* Background Texture */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
             
             {/* ID Badge */}
-            <div className="absolute top-4 right-4 z-20">
-                <span className="text-[10px] font-black text-white/30 bg-black/40 px-2 py-1 rounded-lg border border-white/5 font-mono tracking-wider">
+            <div className="absolute top-3 right-3 z-30">
+                <span className="text-[9px] font-black text-white/40 bg-black/60 px-2 py-0.5 rounded-lg border border-white/5 font-mono tracking-wider backdrop-blur-sm">
                     #{pokemon.id.toString().padStart(3, '0')}
                 </span>
             </div>
 
-            {/* Image Area */}
-            <div className="flex-1 p-6 flex items-center justify-center relative z-10">
+            {/* Image Area - Taking up most space but padded bottom for text */}
+            <div className="absolute inset-0 z-10 p-4 pb-14 flex items-center justify-center">
                 <div className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] filter group-hover:scale-110 transition-transform duration-500 ease-out">
                     <PokemonTeamImage pokemon={pokemon} />
                 </div>
             </div>
 
-            {/* Info Area */}
-            <div className="p-4 bg-black/40 backdrop-blur-xl border-t border-white/5 flex flex-col gap-3 z-20">
-                <div className="text-center">
-                    <h4 className="text-white font-black uppercase text-lg tracking-wider truncate drop-shadow-md">
-                        {pokemon.name}
-                    </h4>
-                </div>
+            {/* Info Area - Absolute Bottom Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/10 z-20 flex flex-col items-center justify-center py-2 px-1">
+                <h4 className="text-white font-black uppercase text-sm tracking-wider truncate drop-shadow-md mb-1.5 w-full text-center">
+                    {pokemon.name}
+                </h4>
                 
-                {/* Types - Rounded Pills, Centered, Wrapped */}
-                <div className="flex justify-center flex-wrap gap-2 w-full">
+                {/* Types - Rounded Pills */}
+                <div className="flex justify-center flex-wrap gap-1.5 w-full">
                     {types.length > 0 ? types.map(t => (
                         <span 
                             key={t} 
                             className={`
-                                px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg border border-white/10
+                                px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md border border-white/10
                                 ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}
                             `}
                         >
                             {t}
                         </span>
                     )) : (
-                        // Skeleton loader for types
-                        <div className="h-6 w-24 bg-white/10 rounded-full animate-pulse"></div>
+                        <div className="flex gap-1">
+                            <div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div>
+                            <div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div>
+                        </div>
                     )}
                 </div>
             </div>
@@ -935,7 +936,7 @@ const TournamentDev: React.FC = () => {
                               <PokemonDetailCard 
                                   key={idx} 
                                   pokemon={pokemon} 
-                                  revealed={tournamentStatus === 'ONGOING' && selectedPlayer.isLocked}
+                                  revealed={true}
                               />
                           ))}
                       </div>
