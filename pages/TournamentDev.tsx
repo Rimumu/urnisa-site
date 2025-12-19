@@ -475,20 +475,27 @@ const TournamentDev: React.FC = () => {
                 <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Phase</span>
                     <span className={`text-xl font-black uppercase ${tournamentStatus === 'ONGOING' ? 'text-red-500' : tournamentStatus === 'LOCK_IN' ? 'text-green-500' : 'text-amber-500'}`}>
-                        {tournamentStatus.replace('_', '-')}
+                        {tournamentStatus === 'DRAFTING' ? 'SIGNUPS' : tournamentStatus.replace('_', '-')}
                     </span>
                 </div>
                 <button 
-                    onClick={() => setActiveTab('signup')}
-                    disabled={tournamentStatus === 'ONGOING' && !hasStartedRegistration}
+                    onClick={() => {
+                        if (tournamentStatus === 'ONGOING') {
+                            setActiveTab('brackets');
+                        } else {
+                            setActiveTab('signup');
+                        }
+                    }}
                     className={`
                         text-white font-black px-8 h-14 rounded-2xl shadow-lg transition-all uppercase tracking-widest text-sm border-b-4 flex items-center justify-center flex-1 md:flex-none min-w-[140px]
-                        ${tournamentStatus === 'ONGOING' && !hasStartedRegistration 
-                            ? 'bg-gray-800 border-gray-900 cursor-not-allowed text-gray-500' 
-                            : 'bg-brand-primary hover:bg-red-600 hover:scale-105 border-red-800'}
+                        ${tournamentStatus === 'ONGOING' 
+                            ? 'bg-red-600 hover:bg-red-500 border-red-800' 
+                            : tournamentStatus === 'LOCK_IN'
+                                ? 'bg-green-600 hover:bg-green-500 border-green-800'
+                                : 'bg-brand-primary hover:bg-red-600 hover:scale-105 border-red-800'}
                     `}
                 >
-                    {tournamentStatus === 'ONGOING' && !hasStartedRegistration ? 'Closed' : 'Sign Up'}
+                    {tournamentStatus === 'ONGOING' ? 'Play' : tournamentStatus === 'LOCK_IN' ? 'Lock-In' : 'Sign Up'}
                 </button>
             </div>
           </div>
