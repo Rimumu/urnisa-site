@@ -113,14 +113,14 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
 };
 
 const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNode; color?: string }> = ({ title, icon, children, color = "border-white/10" }) => (
-    <div className={`bg-black/40 backdrop-blur-md rounded-2xl border ${color} p-6 shadow-xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300`}>
+    <div className={`bg-black/40 backdrop-blur-md rounded-2xl border ${color} p-6 shadow-xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300 h-full`}>
         <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl pointer-events-none group-hover:scale-110 transition-transform">
             {icon}
         </div>
         <h3 className="text-xl font-black text-white mb-4 uppercase tracking-wider flex items-center gap-3 relative z-10">
             <span className="text-2xl">{icon}</span> {title}
         </h3>
-        <div className="text-gray-300 text-sm space-y-2 relative z-10 leading-relaxed">
+        <div className="text-gray-300 text-xs md:text-sm space-y-3 relative z-10 leading-relaxed">
             {children}
         </div>
     </div>
@@ -463,34 +463,86 @@ const TournamentDev: React.FC = () => {
                         <div className="text-center md:text-left">
                             <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-2">Tournament Protocol</h2>
                             <p className="text-gray-200 text-lg md:text-xl font-medium max-w-2xl leading-relaxed">
-                                Singles 4v4 Showdown. Level 50 Cap. 
-                                Standard competitive clauses apply. Ensure you read the banned list before drafting!
+                                Single-elimination bracket of a <span className="text-white font-black underline">Singles 4v4</span> showdown. Roster of 6 but pick 4 each battle. Level 50 Cap.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <RuleCard title="Format" icon="⚔️" color="border-red-500/30">
-                    <ul className="list-disc list-inside space-y-2 font-bold">
-                        <li>Roster Size: <span className="text-white">6 Pokémon</span></li>
-                        <li>Battle Size: <span className="text-white">4 Pokémon</span></li>
-                        <li>Cap: <span className="text-brand-accent">Level 50</span></li>
-                        <li>Format: <span className="text-white">Single Elimination</span></li>
-                    </ul>
-                </RuleCard>
-
                 <RuleCard title="Banned Gimmicks" icon="🚫" color="border-red-500/30">
                     <ul className="list-disc list-inside space-y-2 font-bold text-red-200">
-                        <li>Tera, Z-Move, Dynamax, Mega</li>
+                        <li>Tera</li>
+                        <li>Z-Move</li>
+                        <li>Dynamax</li>
+                        <li>Mega-Evolution</li>
                     </ul>
                 </RuleCard>
 
-                <RuleCard title="Restricted Mons" icon="🔒" color="border-orange-500/30">
-                    <ul className="list-disc list-inside space-y-2 font-bold text-orange-200">
-                        <li>No Legendary Pokémon</li>
-                        <li>No Mythical Pokémon</li>
-                        <li>No Ultra Beasts</li>
+                <RuleCard title="Pokemon Restrictions" icon="🔒" color="border-orange-500/30">
+                    <div className="space-y-4">
+                        <ul className="list-disc list-inside space-y-1 font-bold text-orange-200">
+                            <li>No Legendary Pokémon</li>
+                            <li>No Mythical Pokémon</li>
+                            <li>No Ultra Beasts</li>
+                        </ul>
+                        <div className="pt-2 border-t border-white/10">
+                            <p className="font-black text-white mb-1">Species Clause:</p>
+                            <p>Cannot have two Pokémon of the same Dex number (e.g., no two Charizard).</p>
+                        </div>
+                    </div>
+                </RuleCard>
+
+                <RuleCard title="Competitive Clauses" icon="⚖️" color="border-blue-500/30">
+                    <ul className="space-y-3">
+                        <li><span className="font-bold text-white">Item Clause:</span> No two Pokémon may hold the same item.</li>
+                        <li><span className="font-bold text-white">Sleep Clause:</span> Cannot put more than one opponent to sleep at the same time.</li>
+                        <li><span className="font-bold text-white">Endless Battle Clause:</span> No intentional infinite loops (e.g. Leppa + Recycle + Heal Pulse).</li>
                     </ul>
+                </RuleCard>
+
+                <RuleCard title="Move & Ability Bans" icon="🪄" color="border-purple-500/30">
+                    <div className="grid grid-cols-1 gap-4">
+                        <div>
+                            <p className="font-black text-white text-[10px] uppercase mb-1">Move Bans:</p>
+                            <p className="text-xs">Evasion moves (Double Team, Minimize), OHKO moves (Guillotine, Fissure, etc), Baton Pass, Revival Blessing, Arena Trap, Shadow Tag, Last Respects, Shed Tail, Assist.</p>
+                        </div>
+                        <div className="pt-2 border-t border-white/10">
+                            <p className="font-black text-white text-[10px] uppercase mb-1">Ability Ban:</p>
+                            <p className="text-xs font-bold text-purple-200">Moody ability is banned.</p>
+                        </div>
+                    </div>
+                </RuleCard>
+
+                <RuleCard title="Item Bans" icon="📦" color="border-amber-500/30">
+                    <ul className="grid grid-cols-2 gap-2 font-bold text-amber-200">
+                        <li>• Bright Powder</li>
+                        <li>• Lax Incense</li>
+                        <li>• King's Rock</li>
+                        <li>• Razor Fang</li>
+                        <li>• Quick Claw</li>
+                    </ul>
+                </RuleCard>
+
+                <RuleCard title="Conduct & Etiquette" icon="📋" color="border-green-500/30">
+                    <div className="space-y-4">
+                        <div>
+                            <p className="font-black text-white mb-1">General Rules:</p>
+                            <ul className="list-disc list-inside text-xs space-y-1">
+                                <li>Instant DQ for rule breaking</li>
+                                <li>No intentional stalling/disconnects</li>
+                                <li>Report matches within 10 mins</li>
+                                <li>Admin decisions are FINAL</li>
+                            </ul>
+                        </div>
+                        <div className="pt-2 border-t border-white/10">
+                            <p className="font-black text-white mb-1">Spectator Rules:</p>
+                            <ul className="list-disc list-inside text-xs space-y-1">
+                                <li>Mute mic / Use Push-to-Talk</li>
+                                <li>No distracting contestants</li>
+                                <li>Keep Pokemon in balls/on shoulder</li>
+                            </ul>
+                        </div>
+                    </div>
                 </RuleCard>
               </div>
             )}
