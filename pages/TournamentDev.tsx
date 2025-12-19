@@ -446,25 +446,27 @@ const TournamentDev: React.FC = () => {
                     </h1>
                     <div className="flex items-center gap-3">
                         <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">1st Iteration</span>
-                        <div className="flex items-center gap-1.5 text-green-400 text-[10px] font-black uppercase tracking-widest">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            Live Stats Active
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="flex gap-3 w-full md:w-auto">
-                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px]">
+            <div className="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
+                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Entrants</span>
                     <span className="text-xl font-black text-white">{playersList.length}</span>
                 </div>
-                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px]">
+                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Status</span>
                     <span className={`text-xl font-black ${lockEnabled ? 'text-green-500' : 'text-amber-500'}`}>
                         {lockEnabled ? 'LOCK-IN' : 'DRAFTING'}
                     </span>
                 </div>
+                <button 
+                    onClick={() => setActiveTab('signup')}
+                    className="bg-brand-primary hover:bg-red-600 text-white font-black px-8 h-14 rounded-2xl shadow-lg transition-all hover:scale-105 uppercase tracking-widest text-sm border-b-4 border-red-800 flex items-center justify-center flex-1 md:flex-none min-w-[140px]"
+                >
+                    Sign Up
+                </button>
             </div>
           </div>
 
