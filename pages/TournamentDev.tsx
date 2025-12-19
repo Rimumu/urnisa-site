@@ -115,7 +115,7 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
 
 // IMPROVED RULE CARD
 const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNode; color?: string }> = ({ title, icon, children, color = "border-white/10" }) => (
-    <div className={`bg-black/40 backdrop-blur-xl rounded-2xl border-2 ${color} p-5 shadow-2xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300 h-full`}>
+    <div className={`bg-black/40 backdrop-blur-xl rounded-2xl border-2 ${color} p-6 shadow-2xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300 h-full flex flex-col justify-start`}>
         {/* Background Gradient Tint */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 pointer-events-none"></div>
         
@@ -124,14 +124,18 @@ const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNod
             {icon}
         </div>
 
-        <h3 className="text-xl font-black mb-4 uppercase tracking-wider flex items-center gap-3 relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm">
-            <span className="text-2xl filter drop-shadow-none grayscale-0">
+        {/* Header - Explicit Left Alignment */}
+        <div className="flex items-center gap-3 mb-4 relative z-10 w-full justify-start">
+             <span className="text-3xl filter drop-shadow-lg grayscale-0">
                 {icon}
             </span> 
-            {title}
-        </h3>
+            <h3 className="text-xl font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm text-left">
+                {title}
+            </h3>
+        </div>
         
-        <div className="text-gray-300 text-xs md:text-sm space-y-2 relative z-10 leading-relaxed font-medium">
+        {/* Content - Explicit Left Alignment */}
+        <div className="text-gray-300 text-xs md:text-sm space-y-2 relative z-10 leading-relaxed font-medium text-left w-full">
             {children}
         </div>
     </div>
@@ -505,26 +509,30 @@ const TournamentDev: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* CARD 2: BANNED GIMMICKS */}
-                    <RuleCard title="Banned Gimmicks" icon="🚫" color="border-red-500/40 bg-red-900/10">
-                        <ul className="space-y-1 list-disc list-inside text-red-200 font-bold">
-                            <li>Tera</li>
-                            <li>Z-Move</li>
-                            <li>Dynamax</li>
-                            <li>Mega-Evolution</li>
-                        </ul>
+                    {/* CARD 2: RESTRICTIONS & BANS (COMBINED) */}
+                    <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
+                        <div className="space-y-4">
+                            <div>
+                                <strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong>
+                                <ul className="space-y-1 list-disc list-inside text-gray-300 font-bold">
+                                    <li>Tera</li>
+                                    <li>Z-Move</li>
+                                    <li>Dynamax</li>
+                                    <li>Mega-Evolution</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong>
+                                <ul className="space-y-1 font-bold text-orange-200">
+                                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Legendary Pokémon</li>
+                                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li>
+                                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li>
+                                </ul>
+                            </div>
+                        </div>
                     </RuleCard>
 
-                    {/* CARD 3: POKEMON RESTRICTIONS */}
-                    <RuleCard title="Pokémon Restrictions" icon="⚠️" color="border-orange-500/40 bg-orange-900/10">
-                        <ul className="space-y-2 font-bold text-orange-200">
-                            <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Legendary Pokémon</li>
-                            <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li>
-                            <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li>
-                        </ul>
-                    </RuleCard>
-
-                    {/* CARD 4: CLAUSES */}
+                    {/* CARD 3: CLAUSES */}
                     <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
                         <ul className="space-y-2">
                             <li>
@@ -546,7 +554,7 @@ const TournamentDev: React.FC = () => {
                         </ul>
                     </RuleCard>
 
-                    {/* CARD 5: MOVE BANS */}
+                    {/* CARD 4: MOVE BANS */}
                     <RuleCard title="Move Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
                         <div className="space-y-3">
                             <div>
@@ -568,7 +576,7 @@ const TournamentDev: React.FC = () => {
                         </div>
                     </RuleCard>
 
-                    {/* CARD 6: ITEM BANS */}
+                    {/* CARD 5: ITEM BANS */}
                     <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
                         <ul className="space-y-1 list-disc list-inside font-bold text-pink-200">
                             <li>Bright Powder</li>
@@ -579,28 +587,33 @@ const TournamentDev: React.FC = () => {
                         </ul>
                     </RuleCard>
 
-                    {/* CARD 7: GENERAL RULES */}
+                    {/* CARD 6: GENERAL RULES (CLEANED UP) */}
                     <RuleCard title="General Rules" icon="⚖️">
-                        <ul className="space-y-2">
-                            <li className="flex gap-2">
-                                <span className="text-brand-primary">•</span> Break any of the tournament rules above and you will be <span className="text-red-500 font-bold">instantly disqualified</span>.
+                        <ul className="space-y-3">
+                            <li className="flex gap-3">
+                                <span className="text-red-500 font-bold text-lg leading-none">•</span>
+                                <span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span>
                             </li>
-                            <li className="flex gap-2">
-                                <span className="text-brand-primary">•</span> No intentional stalling or disconnect abuse.
+                            <li className="flex gap-3">
+                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
+                                <span>No intentional stalling or disconnect abuse.</span>
                             </li>
-                            <li className="flex gap-2">
-                                <span className="text-brand-primary">•</span> If valid disconnect then a match restart is allowed <span className="text-white font-bold">WITH</span> the same team.
+                            <li className="flex gap-3">
+                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
+                                <span>Valid disconnect? Restart match <strong className="text-white">WITH SAME TEAM</strong>.</span>
                             </li>
-                            <li className="flex gap-2">
-                                <span className="text-brand-primary">•</span> Matches must be reported within 10 mins of completion.
+                            <li className="flex gap-3">
+                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
+                                <span>Report matches within <strong className="text-white">10 minutes</strong>.</span>
                             </li>
-                            <li className="flex gap-2">
-                                <span className="text-brand-primary">•</span> Admin decisions are final.
+                            <li className="flex gap-3">
+                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
+                                <span className="italic opacity-80">Admin decisions are final.</span>
                             </li>
                         </ul>
                     </RuleCard>
 
-                    {/* CARD 8: SPECTATOR RULES */}
+                    {/* CARD 7: SPECTATOR RULES */}
                     <RuleCard title="Spectator Rules" icon="👀" color="border-green-500/40 bg-green-900/10">
                         <ul className="space-y-2">
                             <li className="flex gap-2">
