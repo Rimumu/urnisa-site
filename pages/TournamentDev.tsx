@@ -68,9 +68,7 @@ const BANNED_IDS = new Set([
 
 const isBanned = (id: number) => BANNED_IDS.has(id);
 
-// --- CACHE & HELPERS ---
-const clientImageCache = new Map<string, boolean>();
-
+// --- HELPERS ---
 const getFormattedName = (name: string) => {
     return name.toLowerCase()
         .replace(/[.']/g, '')
@@ -82,46 +80,33 @@ const getFormattedName = (name: string) => {
 // --- COMPONENTS ---
 
 const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ pokemon, className = "" }) => {
-    const [imgSrc, setImgSrc] = useState<string>("");
+    // Optimistic Image Loading Strategy
+    // 1. Cobblemon Sprite (Best match for server)
+    // 2. PokeAPI Home (High Quality 3D)
+    // 3. PokeAPI Official Artwork (High Quality 2D)
+    // 4. Placeholder
+    
+    const cobbleName = getFormattedName(pokemon.name);
+    const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+    const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
+    const fallback2d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
+    const placeholder = `https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`;
+
+    const [imgSrc, setImgSrc] = useState<string>(primaryUrl);
 
     useEffect(() => {
-        const verifyImage = async () => {
-            const cobbleName = getFormattedName(pokemon.name);
-            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
-
-            if (clientImageCache.has(primaryUrl)) {
-                const isValid = clientImageCache.get(primaryUrl);
-                setImgSrc(isValid ? primaryUrl : fallback3d);
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
-                const data = await response.json();
-                clientImageCache.set(primaryUrl, data.valid);
-
-                if (data.valid) {
-                    setImgSrc(primaryUrl);
-                } else {
-                    setImgSrc(fallback3d);
-                }
-            } catch (error) {
-                setImgSrc(fallback3d);
-            }
-        };
-
-        verifyImage();
-    }, [pokemon]);
+        setImgSrc(primaryUrl);
+    }, [pokemon, primaryUrl]);
 
     const handleImageError = () => {
-        if (imgSrc.includes('cobblemon.tools')) {
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`);
-        } else if (imgSrc.includes('other/home')) {
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`);
-        } else {
-            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`);
+        if (imgSrc === primaryUrl) {
+            setImgSrc(fallback3d);
+        } else if (imgSrc === fallback3d) {
+            setImgSrc(fallback2d);
+        } else if (imgSrc === fallback2d) {
+            setImgSrc(placeholder);
         }
+        // If placeholder fails, we stay on placeholder to avoid loops
     };
 
     return (
@@ -131,6 +116,7 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
             className={`w-full h-full object-contain ${className}`}
             contain
             onError={handleImageError}
+            loading="lazy"
         />
     );
 };
