@@ -11,6 +11,33 @@ interface Pokemon {
   name: string;
 }
 
+// --- BAN LIST LOGIC ---
+// Standard IDs for Legendaries, Mythicals, and Ultra Beasts
+const BANNED_IDS = new Set([
+    // Gen 1
+    144, 145, 146, 150, 151,
+    // Gen 2
+    243, 244, 245, 249, 250, 251,
+    // Gen 3
+    377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
+    // Gen 4
+    480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494,
+    // Gen 5
+    638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
+    // Gen 6
+    716, 717, 718, 719, 720, 721,
+    // Gen 7 (Incl. Ultra Beasts)
+    772, 773, 785, 786, 787, 788, 789, 790, 791, 792, 
+    793, 794, 795, 796, 797, 798, 799, // UBs
+    800, 801, 802, 803, 804, 805, 806, 807, 808, 809,
+    // Gen 8
+    888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898, 905,
+    // Gen 9
+    1001, 1002, 1003, 1004, 1007, 1008, 1009, 1010, 1014, 1015, 1016, 1017, 1024, 1025
+]);
+
+const isBanned = (id: number) => BANNED_IDS.has(id);
+
 // --- CACHE & HELPERS ---
 const clientImageCache = new Map<string, boolean>();
 
@@ -109,10 +136,10 @@ const TournamentDev: React.FC = () => {
   }, []);
 
   const filteredPokemon = useMemo(() => {
-    if (!searchQuery) return pokemonList.slice(0, 50); // Small initial batch
+    if (!searchQuery) return pokemonList.slice(0, 50);
     return pokemonList.filter(p => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 100); // Limit rendered for performance like in Bingo
+    ).slice(0, 100);
   }, [pokemonList, searchQuery]);
 
   const handleSelectPokemon = (pokemon: Pokemon) => {
@@ -130,8 +157,12 @@ const TournamentDev: React.FC = () => {
     setSelectedTeam(newTeam);
   };
 
+  const hasBannedPokemon = useMemo(() => {
+      return selectedTeam.some(p => p !== null && isBanned(p.id));
+  }, [selectedTeam]);
+
   const handleSignup = async () => {
-    if (!user || selectedTeam.includes(null)) return;
+    if (!user || selectedTeam.includes(null) || hasBannedPokemon) return;
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 1500));
     setSubmitting(false);
@@ -147,6 +178,42 @@ const TournamentDev: React.FC = () => {
         .pokemon-grid::-webkit-scrollbar { width: 6px; }
         .pokemon-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         .pokemon-grid::-webkit-scrollbar-thumb { background: #e5383b; border-radius: 10px; }
+        
+        .banned-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 50;
+            pointer-events: none;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .banned-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #ef4444 transparent transparent transparent;
+        }
+        .group:hover .banned-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
       `}</style>
 
       {/* Dev Header */}
@@ -204,6 +271,7 @@ const TournamentDev: React.FC = () => {
                       <li>Species Clause: Only one of each Pokemon species.</li>
                       <li>Item Clause: No duplicate held items.</li>
                       <li>Sleep Clause: Limit 1 Pokemon asleep at a time.</li>
+                      <li className="text-red-400 font-bold">Ban List: No Mythicals, No Legendaries, No Ultra Beasts.</li>
                     </ul>
                   </div>
                   <div className="space-y-4">
@@ -263,36 +331,57 @@ const TournamentDev: React.FC = () => {
                         <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">{selectedTeam.filter(p => p !== null).length}/6 Selected</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                        {selectedTeam.map((p, idx) => (
-                          <div 
-                            key={idx} 
-                            className={`aspect-square rounded-[2rem] border-2 flex flex-col items-center justify-center relative group transition-all duration-300 ${p ? 'bg-white/10 border-brand-primary shadow-xl scale-[1.02]' : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}
-                          >
-                            {p ? (
-                              <>
-                                <div className="w-4/5 h-4/5">
-                                    <PokemonTeamImage pokemon={p} />
-                                </div>
-                                <span className="text-[10px] font-black uppercase text-center truncate w-full px-2 mb-1">{p.name}</span>
-                                <button 
-                                  onClick={() => handleRemovePokemon(idx)}
-                                  className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  ✕
-                                </button>
-                              </>
-                            ) : (
-                              <span className="text-3xl text-gray-700">+</span>
-                            )}
-                          </div>
-                        ))}
+                        {selectedTeam.map((p, idx) => {
+                          const banned = p !== null && isBanned(p.id);
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`aspect-square rounded-[2rem] border-2 flex flex-col items-center justify-center relative group transition-all duration-300 ${p ? (banned ? 'bg-red-900/20 border-red-500 shadow-lg shadow-red-500/20' : 'bg-white/10 border-brand-primary shadow-xl scale-[1.02]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}
+                            >
+                              {p ? (
+                                <>
+                                  <div className="w-4/5 h-4/5 relative">
+                                      <PokemonTeamImage pokemon={p} />
+                                      {banned && (
+                                          <div className="absolute inset-0 bg-red-600/30 backdrop-blur-[1px] rounded-full flex items-center justify-center">
+                                              <span className="text-white text-2xl font-black drop-shadow-md">✕</span>
+                                          </div>
+                                      )}
+                                  </div>
+                                  <span className={`text-[10px] font-black uppercase text-center truncate w-full px-2 mb-1 ${banned ? 'text-red-400' : 'text-white'}`}>{p.name}</span>
+                                  
+                                  {/* Tooltip for Banned Pokemon */}
+                                  {banned && (
+                                      <div className="banned-tooltip">
+                                          This Pokémon is not allowed!
+                                      </div>
+                                  )}
+
+                                  <button 
+                                    onClick={() => handleRemovePokemon(idx)}
+                                    className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity z-50"
+                                  >
+                                    ✕
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-3xl text-gray-700">+</span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
                     {/* Pokemon Selector */}
                     <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6">
                       <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                        <h4 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Pokemon Database</h4>
+                        <div className="flex flex-col md:flex-row items-center gap-4">
+                            <h4 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400">Pokemon Database</h4>
+                            <span className="text-[10px] bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                                Legendaries/UBs Banned
+                            </span>
+                        </div>
                         <div className="relative w-full md:w-80">
                           <input 
                             type="text" 
@@ -314,17 +403,24 @@ const TournamentDev: React.FC = () => {
                           filteredPokemon.map(p => {
                             const isSelected = selectedTeam.some(sp => sp?.id === p.id);
                             const isFull = !selectedTeam.includes(null);
+                            const banned = isBanned(p.id);
                             return (
                               <button
                                 key={p.id}
                                 disabled={isSelected || isFull}
                                 onClick={() => handleSelectPokemon(p)}
-                                className={`aspect-square rounded-2xl flex items-center justify-center p-1 transition-all ${isSelected ? 'bg-brand-primary/20 border-brand-primary border opacity-50 cursor-not-allowed' : isFull ? 'bg-gray-800 opacity-20 cursor-not-allowed' : 'bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20'}`}
+                                className={`aspect-square rounded-2xl flex items-center justify-center p-1 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border opacity-50 cursor-not-allowed' : isFull ? 'bg-gray-800 opacity-20 cursor-not-allowed' : 'bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20'}`}
                                 title={p.name}
                               >
-                                <div className="w-full h-full">
+                                <div className="w-full h-full relative">
                                     <PokemonTeamImage pokemon={p} />
+                                    {banned && (
+                                        <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-sm"></div>
+                                    )}
                                 </div>
+                                {banned && (
+                                    <div className="banned-tooltip">Banned Tier</div>
+                                )}
                               </button>
                             );
                           })
@@ -333,13 +429,18 @@ const TournamentDev: React.FC = () => {
                     </div>
 
                     {/* Final Action */}
-                    <div className="pt-4 flex justify-center">
+                    <div className="pt-4 flex flex-col items-center gap-4">
+                      {hasBannedPokemon && (
+                          <p className="text-red-500 font-black uppercase text-sm tracking-widest animate-pulse">
+                              Please remove banned Pokémon to register!
+                          </p>
+                      )}
                       <button
                         onClick={handleSignup}
-                        disabled={submitting || selectedTeam.includes(null)}
+                        disabled={submitting || selectedTeam.includes(null) || hasBannedPokemon}
                         className={`
                           px-12 py-5 rounded-2xl text-xl font-black uppercase tracking-widest shadow-2xl transition-all transform
-                          ${selectedTeam.includes(null) 
+                          ${selectedTeam.includes(null) || hasBannedPokemon
                             ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
                             : 'bg-brand-primary hover:bg-red-600 hover:scale-105 active:scale-95 text-white shadow-brand-primary/20'}
                         `}
