@@ -476,11 +476,14 @@ const Admin: React.FC = () => {
             if (response.ok) {
                 setScheduleStatus({ type: 'success', message: 'Schedule updated!' });
                 setNewScheduleUrl(processedUrl);
+                setTimeout(() => setScheduleStatus(null), 3000);
             } else {
                 setScheduleStatus({ type: 'error', message: 'Failed to update.' });
+                setTimeout(() => setScheduleStatus(null), 3000);
             }
         } catch (error) {
             setScheduleStatus({ type: 'error', message: 'Network error.' });
+            setTimeout(() => setScheduleStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -501,13 +504,16 @@ const Admin: React.FC = () => {
                 body: JSON.stringify({ type, data })
             });
             if (response.ok) {
-                setProfileStatus({ type: 'success', message: `${type === 'artworks' ? 'Gallery' : type} saved!` });
+                setProfileStatus({ type: 'success', message: `${type === 'artworks' ? 'Gallery' : 'Profile'} saved!` });
                 refetchProfile();
+                setTimeout(() => setProfileStatus(null), 3000);
             } else {
                 setProfileStatus({ type: 'error', message: 'Failed to save.' });
+                setTimeout(() => setProfileStatus(null), 3000);
             }
         } catch (error) {
             setProfileStatus({ type: 'error', message: 'Network error.' });
+            setTimeout(() => setProfileStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -525,11 +531,14 @@ const Admin: React.FC = () => {
             if (response.ok) {
                 setGoalsStatus({ type: 'success', message: 'Goals saved!' });
                 refetchGoals();
+                setTimeout(() => setGoalsStatus(null), 3000);
             } else {
                 setGoalsStatus({ type: 'error', message: 'Failed to save goals.' });
+                setTimeout(() => setGoalsStatus(null), 3000);
             }
         } catch (error) {
             setGoalsStatus({ type: 'error', message: 'Network error.' });
+            setTimeout(() => setGoalsStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -547,11 +556,14 @@ const Admin: React.FC = () => {
             if (response.ok) {
                 setWheelStatus({ type: 'success', message: 'Wheel saved!' });
                 refetchWheel();
+                setTimeout(() => setWheelStatus(null), 3000);
             } else {
                 setWheelStatus({ type: 'error', message: 'Failed to save wheel.' });
+                setTimeout(() => setWheelStatus(null), 3000);
             }
         } catch (error) {
             setWheelStatus({ type: 'error', message: 'Network error.' });
+            setTimeout(() => setWheelStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -568,9 +580,11 @@ const Admin: React.FC = () => {
             if (response.ok) {
                 setStreamStatusOverride(override);
                 setManagerStatus({ type: 'success', message: `Stream Status set to ${override.toUpperCase()}` });
+                setTimeout(() => setManagerStatus(null), 3000);
             }
         } catch (error) {
             setManagerStatus({ type: 'error', message: 'Failed to update status.' });
+            setTimeout(() => setManagerStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -622,11 +636,14 @@ const Admin: React.FC = () => {
             const data = await response.json();
             if (response.ok) {
                 setUserActionStatus({ type: 'success', message: data.message });
+                setTimeout(() => setUserActionStatus(null), 3000);
             } else {
                 setUserActionStatus({ type: 'error', message: data.error || "Failed" });
+                setTimeout(() => setUserActionStatus(null), 3000);
             }
         } catch (e) {
             setUserActionStatus({ type: 'error', message: "Network Error" });
+            setTimeout(() => setUserActionStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -656,11 +673,14 @@ const Admin: React.FC = () => {
                 // FORCE REFRESH DATA
                 fetchEventLog();
                 refetchStats();
+                setTimeout(() => setUserActionStatus(null), 3000);
             } else {
                 setUserActionStatus({ type: 'error', message: data.error || "Failed" });
+                setTimeout(() => setUserActionStatus(null), 3000);
             }
         } catch (e) {
             setUserActionStatus({ type: 'error', message: "Network Error" });
+            setTimeout(() => setUserActionStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -677,11 +697,14 @@ const Admin: React.FC = () => {
             });
             if (response.ok) {
                 setBingoStatus({ type: 'success', message: "Bingo config updated!" });
+                setTimeout(() => setBingoStatus(null), 3000);
             } else {
                 setBingoStatus({ type: 'error', message: "Failed to update config" });
+                setTimeout(() => setBingoStatus(null), 3000);
             }
         } catch(e) {
             setBingoStatus({ type: 'error', message: "Network Error" });
+            setTimeout(() => setBingoStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -704,8 +727,10 @@ const Admin: React.FC = () => {
             });
             setTournamentStatus(status);
             setManagerStatus({ type: 'success', message: `Tournament Status set to ${status}` });
+            setTimeout(() => setManagerStatus(null), 3000);
         } catch(e) {
             setManagerStatus({ type: 'error', message: "Failed to update status" });
+            setTimeout(() => setManagerStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -725,11 +750,14 @@ const Admin: React.FC = () => {
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
                 fetchTournamentData(); 
+                setTimeout(() => setManagerStatus(null), 3000);
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to unlock team." });
+                setTimeout(() => setManagerStatus(null), 3000);
             }
         } catch (e) {
             setManagerStatus({ type: 'error', message: "Network error." });
+            setTimeout(() => setManagerStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -749,11 +777,14 @@ const Admin: React.FC = () => {
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
                 fetchTournamentData(); 
+                setTimeout(() => setManagerStatus(null), 3000);
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to revoke." });
+                setTimeout(() => setManagerStatus(null), 3000);
             }
         } catch (e) {
             setManagerStatus({ type: 'error', message: "Network error." });
+            setTimeout(() => setManagerStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -847,13 +878,16 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
             });
             if (response.ok) {
                 setManagerStatus({ type: 'success', message: 'Action executed successfully!' });
+                setTimeout(() => setManagerStatus(null), 3000);
                 if (endpoint.includes('nisathon')) refetchStats();
                 if (endpoint.includes('delete-event') || endpoint.includes('test-event') || endpoint.includes('rebuild')) fetchEventLog();
             } else {
                 setManagerStatus({ type: 'error', message: 'Action failed.' });
+                setTimeout(() => setManagerStatus(null), 3000);
             }
         } catch (error) {
             setManagerStatus({ type: 'error', message: 'Network error.' });
+            setTimeout(() => setManagerStatus(null), 3000);
         } finally {
             setLoading(false);
         }
@@ -1056,12 +1090,14 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
             <div className="flex-1 p-6 md:p-10 overflow-y-auto min-h-screen">
                 <div className="max-w-6xl mx-auto space-y-8">
                     
-                    {/* --- STATUS TOASTS --- */}
-                    {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus].map((status, i) => status && (
-                         <div key={i} className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
-                            {status.message}
-                        </div>
-                    ))}
+                    {/* --- STATUS TOASTS (STACKED & POINTER-EVENTS CONTROLLED) --- */}
+                    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+                        {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus].map((status, i) => status && (
+                             <div key={i} className={`pointer-events-auto p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
+                                {status.message}
+                            </div>
+                        ))}
+                    </div>
 
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -1192,16 +1228,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         else if (evt.type === 'bits' || evt.type === 'cheer') { icon = '💎'; colorClass = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'; }
                                         else if (evt.type === 'donation' || evt.type === 'tip') { icon = '💸'; colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'; }
 
-                                        // Time ago calc
-                                        const date = new Date(evt.createdAt);
-                                        const now = new Date();
-                                        const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-                                        let timeAgo = "Just now";
-                                        if (seconds > 60) {
-                                            const mins = Math.floor(seconds / 60);
-                                            timeAgo = mins < 60 ? `${mins}m ago` : `${Math.floor(mins / 60)}h ago`;
-                                        }
-
                                         return (
                                             <div key={evt._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all gap-4 group">
                                                 <div className="flex items-center gap-3 overflow-hidden">
@@ -1210,7 +1236,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <div className="font-bold text-white text-sm truncate">{evt.user}</div>
-                                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{evt.type} • {timeAgo}</div>
+                                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
+                                                            {evt.type} • {new Date(evt.createdAt).toLocaleString()}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
@@ -1532,9 +1560,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     <td className="px-4 py-3">
                                                         <div className="flex items-center gap-3">
                                                             <div className="relative w-10 h-10 shrink-0">
-                                                                <img src={app.discordAvatar} className="w-10 h-10 rounded-full border border-white/10 object-cover" />
-                                                                <div className="absolute -bottom-1 -right-1 bg-black rounded-md p-0.5 border border-white/10">
-                                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/24`} className="w-4 h-4 object-contain" />
+                                                                <img src={app.discordAvatar} className="w-10 h-10 rounded-full border-2 border-white/10 object-cover" />
+                                                                <div className="absolute -bottom-1 -right-1 bg-[#1a0b0e] rounded-md p-0.5 border border-white/10 shadow-sm">
+                                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/16`} className="w-4 h-4 object-contain" />
                                                                 </div>
                                                             </div>
                                                             <div className="flex flex-col min-w-0">
