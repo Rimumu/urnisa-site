@@ -106,6 +106,18 @@ const BingoDefinition = mongoose.model('BingoDefinition', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
+// NEW: Tournament Entry Schema
+const TournamentEntry = mongoose.model('TournamentEntry', new mongoose.Schema({
+    discordId: { type: String, required: true, unique: true },
+    minecraftUsername: { type: String, required: true },
+    team: [{
+        id: Number,
+        name: String
+    }],
+    isLocked: { type: Boolean, default: false },
+    updatedAt: { type: Date, default: Date.now }
+}));
+
 const roundOneDecimal = (num) => Math.round(num * 10) / 10;
 
 // ==========================================
@@ -875,6 +887,82 @@ app.post('/api/bingo/definition', async (req, res) => {
              return res.json({ success: true, data: existing });
         }
         res.status(500).json({ error: "Error saving definition" });
+    }
+});
+
+// ==========================================
+// TOURNAMENT API ROUTES
+// ==========================================
+
+// Get My Team
+app.get('/api/tournament/my-team', async (req, res) => {
+    const { discordId } = req.query;
+    if (!discordId) return res.status(400).json({ error: "Missing Discord ID" });
+
+    try {
+        const entry = await TournamentEntry.findOne({ discordId });
+        res.json(entry || { team: new Array(6).fill(null), isLocked: false });
+    } catch (e) {
+        res.status(500).json({ error: "Fetch failed" });
+    }
+});
+
+// Register/Save Team
+app.post('/api/tournament/register', async (req, res) => {
+    const { discordId, minecraftUsername, team } = req.body;
+    if (!discordId || !minecraftUsername || !team) return res.status(400).json({ error: "Missing Data" });
+
+    try {
+        // Check if locked
+        const existing = await TournamentEntry.findOne({ discordId });
+        if (existing && existing.isLocked) {
+            return res.status(403).json({ error: "Team is locked and cannot be edited." });
+        }
+
+        await TournamentEntry.findOneAndUpdate(
+            { discordId },
+            { 
+                minecraftUsername, 
+                team, 
+                updatedAt: new Date() 
+            },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Save failed" });
+    }
+});
+
+// Lock Team
+app.post('/api/tournament/lock', async (req, res) => {
+    const { discordId } = req.body;
+    if (!discordId) return res.status(400).json({ error: "Missing ID" });
+
+    try {
+        const entry = await TournamentEntry.findOne({ discordId });
+        if (!entry) return res.status(404).json({ error: "No team found to lock." });
+        
+        // Basic Validation: Ensure team is somewhat valid (not completely empty)
+        // Adjust logic if strict 6 pokemon rule applies
+        const validPokemon = entry.team.filter(p => p !== null).length;
+        if (validPokemon === 0) return res.status(400).json({ error: "Cannot lock an empty team." });
+
+        entry.isLocked = true;
+        await entry.save();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Lock failed" });
+    }
+});
+
+// Get All Locked Players
+app.get('/api/tournament/players', async (req, res) => {
+    try {
+        const players = await TournamentEntry.find({ isLocked: true }).sort({ updatedAt: -1 });
+        res.json(players);
+    } catch (e) {
+        res.status(500).json({ error: "Fetch failed" });
     }
 });
 
