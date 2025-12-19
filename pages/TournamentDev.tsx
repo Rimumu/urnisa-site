@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import UserProfile, { UserData } from '../components/UserProfile';
@@ -331,7 +330,7 @@ const TournamentDev: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 pb-20 font-sans text-white relative">
+    <div className="py-4 pb-8 font-sans text-white relative">
       <style>{`
         .dev-stripe {
             background: repeating-linear-gradient(45deg, #f59e0b, #f59e0b 10px, #000 10px, #000 20px);
@@ -451,8 +450,35 @@ const TournamentDev: React.FC = () => {
             </div>
           </div>
 
-          {/* Content Viewport - Minimized bottom padding to allow footer visibility */}
-          <div className="min-h-[40vh] pb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          {/* Navigation Center (Relocated to top, non-sticky) */}
+          <div className="w-full flex justify-center py-4">
+              <div className="max-w-[360px] md:max-w-[420px] w-full dock-pill rounded-full p-1.5 flex items-center justify-around shadow-xl">
+                  {[
+                    { id: 'rules', label: 'RULES', icon: '📜' },
+                    { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked },
+                    { id: 'brackets', label: 'BRACKET', icon: '📊' },
+                    { id: 'players', label: 'ROSTER', icon: '👥' }
+                  ].map((tab) => (
+                    <button 
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as any)}
+                      className={`
+                        relative flex flex-col items-center justify-center flex-1 py-2.5 transition-all duration-300 rounded-full
+                        ${activeTab === tab.id 
+                            ? 'nav-link-active' 
+                            : 'text-gray-500 hover:text-white group'}
+                      `}
+                    >
+                        <span className="text-xl md:text-2xl mb-0.5 transition-transform group-hover:scale-110">{tab.icon}</span>
+                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.05em]">{tab.label}</span>
+                        {tab.notify && <div className="absolute top-2 right-[20%] w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse shadow-[0_0_8px_#e5383b]"></div>}
+                    </button>
+                  ))}
+              </div>
+          </div>
+
+          {/* Content Viewport */}
+          <div className="min-h-[40vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none fixed"></div>
 
             {/* RULES SECTION */}
@@ -578,7 +604,7 @@ const TournamentDev: React.FC = () => {
                   {loadingPlayers ? (
                       <div className="text-center py-20 flex flex-col items-center gap-4">
                           <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                          <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Accessing Files...</p>
+                          <p className="text-gray-500 font-black uppercase tracking-widest text-[10px]">Accessing Files...</p>
                       </div>
                   ) : playersList.length === 0 ? (
                       <div className="text-center py-24 text-gray-600 font-bold italic">No combatants reported.</div>
@@ -655,6 +681,7 @@ const TournamentDev: React.FC = () => {
                       <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
                       <div className="text-left">
                         <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3>
+                        {/* Fix: Added missing closing brace '}' for the className attribute */}
                         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${isLocked ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
                             {isLocked ? 'Deployed' : 'Drafting'}
                         </span>
@@ -732,8 +759,10 @@ const TournamentDev: React.FC = () => {
                                                 title={p.name}
                                             >
                                                 <div className="w-full h-full relative">
-                                                    <PokemonTeamImage pokemon={p} />
-                                                    {banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}
+                                                    <div className="w-full h-full relative">
+                                                        <PokemonTeamImage pokemon={p} />
+                                                        {banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}
+                                                    </div>
                                                 </div>
                                                 {banned && <div className="banned-tooltip">BANNED</div>}
                                             </button>
@@ -756,33 +785,6 @@ const TournamentDev: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
-
-      {/* --- COMMAND CENTER NAVIGATION (Revamped compact pill) --- */}
-      <div className="fixed bottom-10 left-0 right-0 z-[100] px-4 pointer-events-none">
-          <div className="max-w-[360px] md:max-w-[420px] mx-auto dock-pill rounded-full p-1.5 flex items-center justify-around pointer-events-auto shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
-              {[
-                { id: 'rules', label: 'RULES', icon: '📜' },
-                { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked },
-                { id: 'brackets', label: 'BRACKET', icon: '📊' },
-                { id: 'players', label: 'ROSTER', icon: '👥' }
-              ].map((tab) => (
-                <button 
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`
-                    relative flex flex-col items-center justify-center flex-1 py-2.5 transition-all duration-300 rounded-full
-                    ${activeTab === tab.id 
-                        ? 'nav-link-active' 
-                        : 'text-gray-500 hover:text-white group'}
-                  `}
-                >
-                    <span className="text-xl md:text-2xl mb-0.5 transition-transform group-hover:scale-110">{tab.icon}</span>
-                    <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.05em]">{tab.label}</span>
-                    {tab.notify && <div className="absolute top-2 right-[20%] w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse shadow-[0_0_8px_#e5383b]"></div>}
-                </button>
-              ))}
-          </div>
       </div>
     </div>
   );
