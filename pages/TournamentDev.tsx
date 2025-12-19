@@ -767,14 +767,14 @@ const TournamentDev: React.FC = () => {
               <div className="relative z-10 text-center flex flex-col items-center justify-center py-20 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
                 <div className="text-9xl mb-8 opacity-20">📊</div>
                 <h2 className="text-5xl font-black text-white uppercase tracking-widest mb-4">Bracket Pending</h2>
-                <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after Phase 2 ends.</p>
+                <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after lock-ins!</p>
               </div>
             )}
 
             {activeTab === 'players' && (
               <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-left-4 duration-500">
                   <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-                    <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Combatant Roster</h2>
+                    <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Players List</h2>
                     <div className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-4 py-1.5 rounded-full font-black uppercase tracking-widest">{playersList.length} Registered</div>
                   </div>
                   {loadingPlayers ? (<div className="text-center py-20 animate-spin">⌛</div>) : playersList.length === 0 ? (<div className="text-center py-24 text-gray-600 font-bold italic">No combatants reported.</div>) : (
@@ -821,7 +821,7 @@ const TournamentDev: React.FC = () => {
                     ) : (
                         <>
                             <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
-                            <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Greetings, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">Verified. Click below to begin drafting.</p></div>
+                            <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">Click below to register and begin drafting your team!</p></div>
                             <button onClick={handleInitialRegister} className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-[2rem] shadow-xl transition-all transform hover:scale-105 uppercase tracking-widest border-b-4 border-red-800">JOIN TOURNAMENT</button>
                         </>
                     )}
@@ -839,7 +839,7 @@ const TournamentDev: React.FC = () => {
                       <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
                     </div>
                     <div className="space-y-6">
-                      <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Combat Team <span className="text-brand-primary">(Roster)</span></h3>
+                      <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
                         {selectedTeam.map((p, idx) => {
                           const banned = p !== null && isBanned(p.id);
@@ -853,7 +853,7 @@ const TournamentDev: React.FC = () => {
                     </div>
                     {!isLocked && tournamentStatus !== 'ONGOING' && (
                         <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl">
-                            <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Tactical Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
+                            <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Pokemon Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
                             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
                                 {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
                                         const isSelected = selectedTeam.some(sp => sp?.id === p.id);
