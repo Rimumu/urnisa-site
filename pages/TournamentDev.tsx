@@ -154,7 +154,7 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
 
     if (!revealed || !pokemon) {
         return (
-            <div className="aspect-[3/4] bg-black/40 rounded-[2rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="aspect-square bg-black/40 rounded-[2.5rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-500">
                     <span className="text-4xl font-black text-gray-700 select-none">?</span>
@@ -165,7 +165,7 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
     }
 
     return (
-        <div className="aspect-[3/4] bg-[#120507] rounded-[2rem] border-2 border-white/10 flex flex-col relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
+        <div className="aspect-square bg-[#120507] rounded-[2.5rem] border-2 border-white/10 flex flex-col relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
             {/* Background Texture */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
@@ -513,20 +513,20 @@ const TournamentDev: React.FC = () => {
         }
 
         /* Custom Scrollbar for Modal - Red Thumb, Dark Track */
-        .custom-scrollbar::-webkit-scrollbar {
+        ::-webkit-scrollbar {
             width: 8px;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
+        ::-webkit-scrollbar-track {
             background: rgba(20, 10, 10, 0.6);
             border-radius: 8px;
             margin: 4px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
+        ::-webkit-scrollbar-thumb {
             background: #e5383b;
             border-radius: 8px;
             border: 2px solid rgba(0, 0, 0, 0.2);
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        ::-webkit-scrollbar-thumb:hover {
             background: #ff4d4d;
         }
       `}</style>
@@ -792,7 +792,7 @@ const TournamentDev: React.FC = () => {
                                       </div>
                                   </div>
                                   <div className="grid grid-cols-6 gap-2 w-full">
-                                      {tournamentStatus === 'ONGOING' && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
+                                      {tournamentStatus === 'ONGOING' && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
                                   </div>
                               </button>
                           ))}
