@@ -423,10 +423,10 @@ const TournamentDev: React.FC = () => {
                 </div>
                 <div>
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1">
-                        TOURNAMENT <span className="text-brand-primary">HUB</span>
+                        NISAMON <span className="text-brand-primary">TOURNAMENT</span>
                     </h1>
                     <div className="flex items-center gap-3">
-                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">Season 1</span>
+                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">1st Iteration</span>
                         <div className="flex items-center gap-1.5 text-green-400 text-[10px] font-black uppercase tracking-widest">
                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                             Live Stats Active
@@ -443,7 +443,7 @@ const TournamentDev: React.FC = () => {
                 <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px]">
                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Status</span>
                     <span className={`text-xl font-black ${lockEnabled ? 'text-green-500' : 'text-amber-500'}`}>
-                        {lockEnabled ? 'OPEN' : 'STANDBY'}
+                        {lockEnabled ? 'LOCK-IN' : 'DRAFTING'}
                     </span>
                 </div>
             </div>
@@ -461,7 +461,7 @@ const TournamentDev: React.FC = () => {
                     <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
                         <div className="text-6xl md:text-8xl">📜</div>
                         <div className="text-center md:text-left">
-                            <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-2">Tournament Protocol</h2>
+                            <h2 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-2">Tournament Structure</h2>
                             <p className="text-gray-200 text-lg md:text-xl font-medium max-w-2xl leading-relaxed">
                                 Single-elimination bracket of a <span className="text-white font-black underline">Singles 4v4</span> showdown. Roster of 6 but pick 4 each battle. Level 50 Cap.
                             </p>
@@ -504,7 +504,7 @@ const TournamentDev: React.FC = () => {
                     <div className="grid grid-cols-1 gap-4">
                         <div>
                             <p className="font-black text-white text-[10px] uppercase mb-1">Move Clauses:</p>
-                            <p className="text-xs">Evasion moves (Double Team, Minimize), OHKO moves (Guillotine, Horn Drill, Sheer Cold, Fissure).</p>
+                            <p className="text-xs">Evasion Clause (Double Team, Minimize), OHKO Clause (Guillotine, Horn Drill, Sheer Cold, Fissure).</p>
                         </div>
                         <div className="pt-2 border-t border-white/10">
                             <p className="font-black text-white text-[10px] uppercase mb-1">Specific Move Bans:</p>
