@@ -154,7 +154,7 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
 
     if (!revealed || !pokemon) {
         return (
-            <div className="aspect-square bg-black/40 rounded-[2.5rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="aspect-square bg-black/40 rounded-[2rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group shadow-lg">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-500">
                     <span className="text-4xl font-black text-gray-700 select-none">?</span>
@@ -165,7 +165,7 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
     }
 
     return (
-        <div className="aspect-square bg-[#120507] rounded-[2.5rem] border-2 border-white/10 flex flex-col relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
+        <div className="aspect-square bg-[#120507] rounded-[2rem] border-2 border-white/10 flex flex-col relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
             {/* Background Texture */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
@@ -514,17 +514,17 @@ const TournamentDev: React.FC = () => {
 
         /* Custom Scrollbar for Modal - Red Thumb, Dark Track */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(20, 10, 10, 0.6);
-            border-radius: 8px;
+            background: #1f090c;
+            border-radius: 10px;
             margin: 4px;
         }
         ::-webkit-scrollbar-thumb {
             background: #e5383b;
-            border-radius: 8px;
-            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 2px solid #1f090c;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #ff4d4d;
