@@ -1063,7 +1063,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         </div>
                     ))}
 
-                    {/* ... (Previous Tabs Omitted for Brevity - No Changes) ... */}
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* LIVE HEADER STATS */}
@@ -1234,7 +1233,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         </div>
                     )}
 
-                    {/* ... (Countdown, Schedule, Event, Profile, Gallery Tabs Omitted - No Changes) ... */}
                     {activeTab === 'countdown' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Standalone Countdown</h2>
@@ -1258,6 +1256,192 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             <button onClick={handleCountdownReset} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold">Reset</button>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'schedule' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Schedule Manager</h2>
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <form onSubmit={handleUpdateSchedule} className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-400 mb-2">Schedule Image URL</label>
+                                        <input 
+                                            type="text" 
+                                            value={newScheduleUrl} 
+                                            onChange={(e) => setNewScheduleUrl(e.target.value)} 
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors"
+                                            placeholder="https://..."
+                                        />
+                                        <LinkWarning url={newScheduleUrl} />
+                                    </div>
+                                    <ImageUploader onUploadSuccess={setNewScheduleUrl} />
+                                    
+                                    {newScheduleUrl && (
+                                        <div className="rounded-xl overflow-hidden border border-white/10">
+                                            <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-auto" />
+                                        </div>
+                                    )}
+                                    <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-8 rounded-xl transition-all">
+                                        Save Changes
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'event' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* Goals */}
+                            <div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-3xl font-black text-white">Goals Roadmap</h2>
+                                    <button onClick={handleSaveGoals} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Goals</button>
+                                </div>
+                                <div className="space-y-4">
+                                    {localGoals.map((goal, i) => (
+                                        <div key={i} className="flex gap-4 items-start bg-black/30 p-4 rounded-xl border border-white/5">
+                                            <div className="w-24 shrink-0">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500">NB Count</label>
+                                                <input type="number" value={goal.count} onChange={(e) => updateGoal(i, 'count', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-center font-mono" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500">Reward Description</label>
+                                                <input type="text" value={goal.reward} onChange={(e) => updateGoal(i, 'reward', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" />
+                                            </div>
+                                            <div className="w-20 shrink-0 flex flex-col items-center">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500 mb-2">Secret?</label>
+                                                <input type="checkbox" checked={goal.secret} onChange={(e) => updateGoal(i, 'secret', e.target.checked)} className="w-5 h-5 accent-brand-primary" />
+                                            </div>
+                                            <button onClick={() => removeGoal(i)} className="text-red-500 hover:text-red-400 mt-6 px-2">✕</button>
+                                        </div>
+                                    ))}
+                                    <button onClick={addGoal} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors flex items-center justify-center gap-2">
+                                        <span>+</span> Add Goal
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Wheel Settings */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="font-bold text-white">Wheel Items</h3>
+                                    <button onClick={handleSaveWheel} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Wheel</button>
+                                </div>
+                                <div className="space-y-4">
+                                    {localWheel.map((item, i) => (
+                                        <div key={i} className="flex gap-4 items-center bg-black/30 p-4 rounded-xl border border-white/5">
+                                            <div className="flex-1">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500">Label</label>
+                                                <input type="text" value={item.label} onChange={(e) => updateWheelItem(i, 'label', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" />
+                                            </div>
+                                            <div className="w-24 shrink-0">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500">Weight</label>
+                                                <input type="number" value={item.weight} onChange={(e) => updateWheelItem(i, 'weight', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-center font-mono" />
+                                            </div>
+                                            <button onClick={() => removeWheelItem(i)} className="text-red-500 hover:text-red-400 mt-6 px-2">✕</button>
+                                        </div>
+                                    ))}
+                                    <button onClick={addWheelItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors flex items-center justify-center gap-2">
+                                        <span>+</span> Add Item
+                                    </button>
+                                    <div className="text-right text-xs text-gray-500">Total Weight: {totalWheelWeight}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'profile' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* About Section */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-black text-white">About Section</h2>
+                                    <button onClick={() => handleSaveProfile('about')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save About</button>
+                                </div>
+                                <div className="space-y-8">
+                                    {localAbout.map((item, i) => (
+                                        <div key={item.id} className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                            <div className="flex justify-between mb-2">
+                                                <input type="text" value={item.title} onChange={(e) => updateAboutItem(i, 'title', e.target.value)} className="bg-transparent font-bold text-lg text-white border-b border-transparent focus:border-brand-primary outline-none" placeholder="Section Title" />
+                                                <button onClick={() => removeAboutItem(i)} className="text-red-500 hover:text-red-300">✕</button>
+                                            </div>
+                                            <RichTextEditor value={item.text} onChange={(val) => updateAboutItem(i, 'text', val)} />
+                                        </div>
+                                    ))}
+                                    <button onClick={addAboutItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors">
+                                        + Add Section
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Credits Section */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-black text-white">Credits</h2>
+                                    <button onClick={() => handleSaveProfile('credits')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Credits</button>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {localCredits.map((credit, i) => (
+                                        <div key={credit.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-3">
+                                            <div className="flex gap-3">
+                                                <div className="w-12 h-12 shrink-0 bg-black/40 rounded-full overflow-hidden border border-white/10">
+                                                    {credit.image ? <img src={credit.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white font-bold" style={{backgroundColor: credit.color}}>{credit.initial}</div>}
+                                                </div>
+                                                <div className="flex-1 grid grid-cols-2 gap-2">
+                                                    <input type="text" value={credit.name} onChange={(e) => updateCreditItem(i, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm" placeholder="Name" />
+                                                    <input type="text" value={credit.role} onChange={(e) => updateCreditItem(i, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm" placeholder="Role" />
+                                                    <input type="text" value={credit.link} onChange={(e) => updateCreditItem(i, 'link', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm col-span-2" placeholder="Link (Optional)" />
+                                                    <input type="text" value={credit.image || ''} onChange={(e) => updateCreditItem(i, 'image', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm col-span-2" placeholder="Image URL" />
+                                                </div>
+                                                <button onClick={() => removeCreditItem(i)} className="text-red-500 hover:text-red-300 self-start">✕</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <button onClick={addCreditItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors">
+                                        + Add Credit
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'gallery' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-black text-white">Art Gallery</h2>
+                                    <button onClick={() => handleSaveProfile('artworks')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Gallery</button>
+                                </div>
+                                <div className="space-y-8">
+                                    {localArtworks.map((artist, i) => (
+                                        <div key={artist.id} className="bg-white/5 p-6 rounded-xl border border-white/5">
+                                            <div className="flex gap-4 mb-4">
+                                                <div className="flex-1 space-y-2">
+                                                    <input type="text" value={artist.artistName} onChange={(e) => updateArtistName(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-white font-bold" placeholder="Artist Name" />
+                                                    <input type="text" value={artist.artistLink || ''} onChange={(e) => updateArtistLink(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-white text-sm" placeholder="Artist Social Link" />
+                                                </div>
+                                                <button onClick={() => removeArtist(i)} className="bg-red-900/20 hover:bg-red-900/40 text-red-400 p-2 rounded-lg h-fit">Delete Artist</button>
+                                            </div>
+                                            <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+                                                {artist.images.map((img, imgIdx) => (
+                                                    <div key={imgIdx} className="relative group aspect-square rounded-lg overflow-hidden border border-white/10">
+                                                        <img src={img} className="w-full h-full object-cover" />
+                                                        <button onClick={() => removeImageFromArtist(i, imgIdx)} className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <input type="text" placeholder="Add Image URL" className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-2 text-white text-sm" onKeyDown={(e) => { if(e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; }}} />
+                                                <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <button onClick={addArtist} className="w-full py-4 border border-dashed border-white/20 rounded-xl text-brand-primary font-bold hover:bg-brand-primary/10 transition-colors">
+                                        + Add New Artist Collection
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1370,7 +1554,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         </div>
                     )}
 
-                    {/* ... (Tournament, Codes, Users, Merger Tabs Omitted - No Changes) ... */}
                     {activeTab === 'tournament' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Tournament Management</h2>
