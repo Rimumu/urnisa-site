@@ -419,7 +419,7 @@ const TournamentDev: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center bg-black/40 border border-white/10 rounded-[2.5rem] p-6 md:p-8 gap-6 backdrop-blur-md">
             <div className="flex items-center gap-6">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-black/40 rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border border-brand-primary/30 p-1">
-                    <img src="https://res.cloudinary.com/dsencimjn/image/upload/v1764270717/kqscgxvjwrpoycewo2im.jpg" alt="Tournament Logo" className="w-full h-full object-cover rounded-2xl" />
+                    <img src="https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif" alt="Tournament Logo" className="w-full h-full object-cover rounded-2xl" />
                 </div>
                 <div>
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1">
@@ -532,7 +532,7 @@ const TournamentDev: React.FC = () => {
                         <div>
                             <p className="font-black text-white mb-1">General Rules:</p>
                             <ul className="list-disc list-inside text-xs space-y-1">
-                                <li>Instant DQ for rule breaking</li>
+                               <li>Instant DQ for rule breaking</li>
                                 <li>No intentional stalling/disconnects</li>
                                 <li>Report matches within 10 mins</li>
                                 <li>Admin decisions are FINAL</li>
