@@ -1,15 +1,82 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import UserProfile, { UserData } from '../components/UserProfile';
 import OptimizedImage from '../components/OptimizedImage';
+import { API_BASE_URL } from '../constants';
 
-// Types
+// --- TYPES ---
 interface Pokemon {
   id: number;
   name: string;
-  sprite: string;
 }
+
+// --- CACHE & HELPERS ---
+const clientImageCache = new Map<string, boolean>();
+
+const getFormattedName = (name: string) => {
+    return name.toLowerCase()
+        .replace(/[.']/g, '')
+        .replace(/♀/g, '-f')
+        .replace(/♂/g, '-m')
+        .replace(/\s+/g, '-');
+};
+
+// --- COMPONENTS ---
+
+const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ pokemon, className = "" }) => {
+    const [imgSrc, setImgSrc] = useState<string>("");
+
+    useEffect(() => {
+        const verifyImage = async () => {
+            const cobbleName = getFormattedName(pokemon.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
+
+            if (clientImageCache.has(primaryUrl)) {
+                const isValid = clientImageCache.get(primaryUrl);
+                setImgSrc(isValid ? primaryUrl : fallback3d);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+                clientImageCache.set(primaryUrl, data.valid);
+
+                if (data.valid) {
+                    setImgSrc(primaryUrl);
+                } else {
+                    setImgSrc(fallback3d);
+                }
+            } catch (error) {
+                setImgSrc(fallback3d);
+            }
+        };
+
+        verifyImage();
+    }, [pokemon]);
+
+    const handleImageError = () => {
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`);
+        } else {
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`);
+        }
+    };
+
+    return (
+        <OptimizedImage 
+            src={imgSrc} 
+            alt={pokemon.name} 
+            className={`w-full h-full object-contain ${className}`}
+            contain
+            onError={handleImageError}
+        />
+    );
+};
 
 const TournamentDev: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
@@ -21,17 +88,15 @@ const TournamentDev: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Fetch all Pokemon from PokeAPI for the selector
+  // Fetch all Pokemon from PokeAPI for the database
   useEffect(() => {
     const fetchPokemon = async () => {
       try {
-        // Limit to ~1000 for efficiency while staying "Full" for Cobblemon
         const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025');
         const data = await response.json();
         const formatted = data.results.map((p: any, idx: number) => ({
           id: idx + 1,
-          name: p.name.charAt(0).toUpperCase() + p.name.slice(1).replace(/-/g, ' '),
-          sprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${idx + 1}.png`
+          name: p.name.charAt(0).toUpperCase() + p.name.slice(1).replace(/-/g, ' ')
         }));
         setPokemonList(formatted);
       } catch (e) {
@@ -44,10 +109,10 @@ const TournamentDev: React.FC = () => {
   }, []);
 
   const filteredPokemon = useMemo(() => {
-    if (!searchQuery) return pokemonList.slice(0, 100); // Default view
+    if (!searchQuery) return pokemonList.slice(0, 50); // Small initial batch
     return pokemonList.filter(p => 
       p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).slice(0, 100); // Limit rendered for performance
+    ).slice(0, 100); // Limit rendered for performance like in Bingo
   }, [pokemonList, searchQuery]);
 
   const handleSelectPokemon = (pokemon: Pokemon) => {
@@ -68,7 +133,6 @@ const TournamentDev: React.FC = () => {
   const handleSignup = async () => {
     if (!user || selectedTeam.includes(null)) return;
     setSubmitting(true);
-    // Simulate API call
     await new Promise(r => setTimeout(r, 1500));
     setSubmitting(false);
     setSubmitted(true);
@@ -181,12 +245,12 @@ const TournamentDev: React.FC = () => {
                 ) : (
                   <div className="space-y-10">
                     {/* User Intro */}
-                    <div className="flex items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/10 w-fit mx-auto md:mx-0">
+                    <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-white/5 rounded-3xl border border-white/10 w-fit mx-auto md:mx-0">
                       <div className="relative">
                         <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="MC Head" className="w-16 h-16 rounded-xl border-2 border-brand-primary bg-black shadow-lg" />
                         <div className="absolute -top-2 -right-2 bg-green-500 text-black text-[10px] font-black p-1 rounded-full border border-white">✓</div>
                       </div>
-                      <div>
+                      <div className="text-center md:text-left">
                         <h3 className="text-xl font-black text-white leading-none mb-1 uppercase tracking-tight">{user.minecraftUsername}</h3>
                         <p className="text-xs text-gray-500 font-mono">Status: Connected & Ready</p>
                       </div>
@@ -194,11 +258,11 @@ const TournamentDev: React.FC = () => {
 
                     {/* Team Preview */}
                     <div className="space-y-4">
-                      <div className="flex justify-between items-end px-2">
+                      <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end px-2 gap-2">
                         <h3 className="text-2xl font-black uppercase tracking-tight">Your Team <span className="text-brand-primary">(6 Slots)</span></h3>
                         <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">{selectedTeam.filter(p => p !== null).length}/6 Selected</span>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
                         {selectedTeam.map((p, idx) => (
                           <div 
                             key={idx} 
@@ -206,7 +270,9 @@ const TournamentDev: React.FC = () => {
                           >
                             {p ? (
                               <>
-                                <img src={p.sprite} alt={p.name} className="w-4/5 h-4/5 object-contain" />
+                                <div className="w-4/5 h-4/5">
+                                    <PokemonTeamImage pokemon={p} />
+                                </div>
                                 <span className="text-[10px] font-black uppercase text-center truncate w-full px-2 mb-1">{p.name}</span>
                                 <button 
                                   onClick={() => handleRemovePokemon(idx)}
@@ -235,11 +301,11 @@ const TournamentDev: React.FC = () => {
                             onChange={e => setSearchQuery(e.target.value)}
                             className="w-full bg-black/60 border border-white/10 rounded-full py-3 px-6 text-sm text-white focus:border-brand-primary outline-none transition-all placeholder:text-gray-700"
                           />
-                          <span className="absolute right-5 top-3.5 opacity-30">🔍</span>
+                          <span className="absolute right-5 top-3.5 opacity-30 pointer-events-none">🔍</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2">
                         {loadingPokemon ? (
                           <div className="col-span-full py-10 text-center animate-pulse text-gray-600 font-bold uppercase tracking-widest">Updating Pokedex...</div>
                         ) : filteredPokemon.length === 0 ? (
@@ -256,7 +322,9 @@ const TournamentDev: React.FC = () => {
                                 className={`aspect-square rounded-2xl flex items-center justify-center p-1 transition-all ${isSelected ? 'bg-brand-primary/20 border-brand-primary border opacity-50 cursor-not-allowed' : isFull ? 'bg-gray-800 opacity-20 cursor-not-allowed' : 'bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20'}`}
                                 title={p.name}
                               >
-                                <img src={p.sprite} alt={p.name} className="w-full h-full object-contain" />
+                                <div className="w-full h-full">
+                                    <PokemonTeamImage pokemon={p} />
+                                </div>
                               </button>
                             );
                           })
