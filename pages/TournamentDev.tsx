@@ -503,8 +503,12 @@ const TournamentDev: React.FC = () => {
                 <RuleCard title="Move & Ability Bans" icon="🪄" color="border-purple-500/30">
                     <div className="grid grid-cols-1 gap-4">
                         <div>
-                            <p className="font-black text-white text-[10px] uppercase mb-1">Move Bans:</p>
-                            <p className="text-xs">Evasion moves (Double Team, Minimize), OHKO moves (Guillotine, Fissure, etc), Baton Pass, Revival Blessing, Arena Trap, Shadow Tag, Last Respects, Shed Tail, Assist.</p>
+                            <p className="font-black text-white text-[10px] uppercase mb-1">Move Clauses:</p>
+                            <p className="text-xs">Evasion moves (Double Team, Minimize), OHKO moves (Guillotine, Horn Drill, Sheer Cold, Fissure).</p>
+                        </div>
+                        <div className="pt-2 border-t border-white/10">
+                            <p className="font-black text-white text-[10px] uppercase mb-1">Specific Move Bans:</p>
+                            <p className="text-xs">Baton Pass, Revival Blessing, Arena Trap, Shadow Tag, Last Respects, Shed Tail, Assist.</p>
                         </div>
                         <div className="pt-2 border-t border-white/10">
                             <p className="font-black text-white text-[10px] uppercase mb-1">Ability Ban:</p>
