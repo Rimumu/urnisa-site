@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE_URL, DISCORD_API_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
@@ -178,6 +177,15 @@ interface Code {
     createdAt: string;
 }
 
+// Interface for Tournament Player
+interface TournamentPlayer {
+    discordId: string;
+    minecraftUsername: string;
+    team: (any | null)[];
+    isLocked: boolean;
+    updatedAt: string;
+}
+
 const Admin: React.FC = () => {
     // --- AUTH STATE ---
     const [password, setPassword] = useState('');
@@ -186,7 +194,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -266,6 +274,10 @@ const Admin: React.FC = () => {
     // --- MERGER TOOL STATE ---
     const [mergedOutput, setMergedOutput] = useState('');
     const [mergerStats, setMergerStats] = useState({ files: 0, spawns: 0 });
+
+    // --- TOURNAMENT STATE ---
+    const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayer[]>([]);
+    const [tournamentSearch, setTournamentSearch] = useState('');
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -388,19 +400,34 @@ const Admin: React.FC = () => {
         } catch(e) {}
     }, []);
 
-    // Fetch Whitelist Apps
+    const fetchTournamentPlayers = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/all-players`, {
+                headers: { Authorization: password }
+            });
+            if (res.ok) {
+                setTournamentPlayers(await res.json());
+            }
+        } catch (e) {}
+    }, [password]);
+
+    // Tab Data Fetching
     useEffect(() => {
         let interval: number;
-        if (isAuthenticated && activeTab === 'minecraft') {
-            fetchWhitelistData();
-            fetchBingoConfig();
-            interval = window.setInterval(fetchWhitelistData, 10000);
-        }
-        if (isAuthenticated && activeTab === 'codes') {
-            fetchCodes();
+        if (isAuthenticated) {
+            if (activeTab === 'minecraft') {
+                fetchWhitelistData();
+                fetchBingoConfig();
+                interval = window.setInterval(fetchWhitelistData, 10000);
+            } else if (activeTab === 'codes') {
+                fetchCodes();
+            } else if (activeTab === 'tournament') {
+                fetchTournamentPlayers();
+                interval = window.setInterval(fetchTournamentPlayers, 15000);
+            }
         }
         return () => { if(interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig]);
+    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchTournamentPlayers]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -647,6 +674,31 @@ const Admin: React.FC = () => {
             }
         } catch(e) {
             setBingoStatus({ type: 'error', message: "Network Error" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- TOURNAMENT HANDLERS ---
+    const handleUnlockTeam = async (discordId: string, username: string) => {
+        if (!window.confirm(`Are you sure you want to UNLOCK and RESET the team for "${username}"? They will lose their current selection but can select again.`)) return;
+
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/unlock-team`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ discordId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setManagerStatus({ type: 'success', message: data.message });
+                fetchTournamentPlayers();
+            } else {
+                setManagerStatus({ type: 'error', message: data.error || "Failed to unlock team." });
+            }
+        } catch (e) {
+            setManagerStatus({ type: 'error', message: "Network error." });
         } finally {
             setLoading(false);
         }
@@ -902,6 +954,14 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
         );
     });
 
+    const filteredTournamentPlayers = tournamentPlayers.filter(p => {
+        const term = tournamentSearch.toLowerCase();
+        return (
+            (p.minecraftUsername && p.minecraftUsername.toLowerCase().includes(term)) ||
+            (p.discordId && p.discordId.includes(term))
+        );
+    });
+
     const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
     const latestActivity = recentEvents.length > 0 ? recentEvents[0] : null;
 
@@ -929,7 +989,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     <span className="text-2xl">⚡</span>
                     <h1 className="text-xl font-extrabold text-white">Admin <span className="text-brand-primary">Panel</span></h1>
                 </div>
-                <nav className="p-4 space-y-2 flex md:block overflow-x-auto md:overflow-visible">
+                <nav className="p-4 space-y-2 flex md:block overflow-x-auto md:overflow-visible custom-scrollbar">
                     <button onClick={() => setActiveTab('nisathon_mgr')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'nisathon_mgr' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>⏲️</span> Nisathon
                     </button>
@@ -950,6 +1010,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     </button>
                     <button onClick={() => setActiveTab('minecraft')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'minecraft' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>⛏️</span> Minecraft
+                    </button>
+                    <button onClick={() => setActiveTab('tournament')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'tournament' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                        <span>🏆</span> Tournament
                     </button>
                     <button onClick={() => setActiveTab('codes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'codes' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>🎁</span> Gacha Codes
@@ -999,7 +1062,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className="absolute -right-4 -bottom-4 text-6xl opacity-5 group-hover:opacity-10 transition-opacity">🏐</div>
                                 </div>
 
-                                {/* Recent Activity (Replaced Subs Counter) */}
+                                {/* Recent Activity */}
                                 <div className="bg-black/40 p-4 rounded-2xl border border-white/10 relative overflow-hidden group">
                                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Recent Activity</div>
                                     {latestActivity ? (
@@ -1420,35 +1483,17 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
                                         {whitelistApps.length === 0 ? <div className="text-gray-500 italic text-sm text-center py-10">No pending applications</div> : whitelistApps.map(app => (
                                             <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                                                {/* Avatars */}
                                                 <div className="relative shrink-0">
-                                                    <img 
-                                                        src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
-                                                        className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" 
-                                                        alt="Discord"
-                                                    />
-                                                    <img 
-                                                        src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} 
-                                                        className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800"
-                                                        alt="MC"
-                                                    />
+                                                    <img src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" alt="Discord" />
+                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800" alt="MC" />
                                                 </div>
-                                                
                                                 <div className="flex-1 min-w-0 w-full">
                                                     <div className="flex justify-between items-baseline">
                                                         <div className="text-sm font-bold text-white truncate">{app.discordUsername}</div>
-                                                        <div className="text-[10px] text-gray-500 font-mono">
-                                                            {new Date(app.appliedAt).toLocaleDateString()}
-                                                        </div>
+                                                        <div className="text-[10px] text-gray-500 font-mono">{new Date(app.appliedAt).toLocaleDateString()}</div>
                                                     </div>
-                                                    <div className="text-xs font-mono text-brand-primary truncate mt-0.5">
-                                                        MC: <span className="text-green-400">{app.minecraftUsername}</span>
-                                                    </div>
-                                                    <div className="text-[10px] text-gray-600 mt-1">
-                                                        Applied: {new Date(app.appliedAt).toLocaleTimeString()}
-                                                    </div>
+                                                    <div className="text-xs font-mono text-brand-primary truncate mt-0.5">MC: <span className="text-green-400">{app.minecraftUsername}</span></div>
                                                 </div>
-
                                                 <div className="flex gap-2 w-full sm:w-auto shrink-0">
                                                     <button onClick={() => handleApproveApp(app._id)} className="flex-1 sm:flex-none bg-green-600 hover:bg-green-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors">Approve</button>
                                                     <button onClick={() => handleRejectApp(app._id)} className="flex-1 sm:flex-none bg-red-600 hover:bg-red-500 text-white py-2 px-3 rounded-lg text-xs font-bold transition-colors">Reject</button>
@@ -1461,57 +1506,23 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 {/* Approved List */}
                                 <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[500px]">
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                                        <h3 className="font-bold text-white flex items-center gap-2">
-                                            <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                                            Approved History <span className="text-gray-500 text-sm ml-1">({approvedApps.length})</span>
-                                        </h3>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search username..." 
-                                            value={approvedSearch}
-                                            onChange={(e) => setApprovedSearch(e.target.value)}
-                                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:border-green-500 outline-none w-full sm:w-auto"
-                                        />
+                                        <h3 className="font-bold text-white flex items-center gap-2"><span className="w-3 h-3 bg-green-500 rounded-full"></span>Approved History</h3>
+                                        <input type="text" placeholder="Search..." value={approvedSearch} onChange={e => setApprovedSearch(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none" />
                                     </div>
                                     <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                        {filteredApprovedApps.length === 0 ? (
-                                            <div className="text-center text-gray-500 text-sm py-4">No matching users found.</div>
-                                        ) : (
-                                            filteredApprovedApps.map(app => (
-                                                <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                                                    {/* Avatars */}
-                                                    <div className="relative shrink-0">
-                                                        <img 
-                                                            src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
-                                                            className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" 
-                                                            alt="Discord"
-                                                        />
-                                                        <img 
-                                                            src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} 
-                                                            className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800"
-                                                            alt="MC"
-                                                        />
-                                                        <div className="absolute top-0 left-0 bg-green-500 rounded-full w-4 h-4 flex items-center justify-center border border-black">
-                                                            <span className="text-[8px] text-black font-bold">✓</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex-1 min-w-0 w-full">
-                                                        <div className="text-sm font-bold text-white truncate opacity-80">{app.discordUsername}</div>
-                                                        <div className="text-xs font-mono text-gray-400 truncate mt-0.5">
-                                                            MC: {app.minecraftUsername}
-                                                        </div>
-                                                        <div className="text-[10px] text-green-500/70 mt-1 font-bold">
-                                                            Approved: {app.approvedAt ? new Date(app.approvedAt).toLocaleString() : 'Unknown'}
-                                                        </div>
-                                                    </div>
-
-                                                    <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white text-xs font-bold px-3 py-1.5 bg-red-900/10 rounded hover:bg-red-600 transition-colors shrink-0 self-start sm:self-center">
-                                                        Revoke
-                                                    </button>
+                                        {filteredApprovedApps.map(app => (
+                                            <div key={app._id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                                <div className="relative shrink-0">
+                                                    <img src={app.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} className="w-12 h-12 rounded-full border-2 border-black bg-gray-800" alt="Discord" />
+                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/50`} className="w-8 h-8 absolute -bottom-1 -right-1 rounded-md border-2 border-black bg-gray-800" alt="MC" />
                                                 </div>
-                                            ))
-                                        )}
+                                                <div className="flex-1 min-w-0 w-full">
+                                                    <div className="text-sm font-bold text-white truncate opacity-80">{app.discordUsername}</div>
+                                                    <div className="text-xs font-mono text-gray-400 truncate mt-0.5">MC: {app.minecraftUsername}</div>
+                                                </div>
+                                                <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white text-xs font-bold px-3 py-1.5 bg-red-900/10 rounded hover:bg-red-600 transition-colors">Revoke</button>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -1536,10 +1547,72 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         </div>
                     )}
 
+                    {activeTab === 'tournament' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <h2 className="text-3xl font-black text-white">Tournament Management</h2>
+                            
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[700px]">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                                    <h3 className="font-bold text-white flex items-center gap-2">
+                                        <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                                        Player Teams ({tournamentPlayers.length})
+                                    </h3>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search MC User or Discord ID..." 
+                                        value={tournamentSearch} 
+                                        onChange={e => setTournamentSearch(e.target.value)} 
+                                        className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full sm:w-64" 
+                                    />
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
+                                    {filteredTournamentPlayers.length === 0 ? (
+                                        <div className="text-center py-20 text-gray-500">No players found.</div>
+                                    ) : (
+                                        filteredTournamentPlayers.map(p => (
+                                            <div key={p.discordId} className="bg-white/5 p-5 rounded-2xl border border-white/5 flex flex-col lg:flex-row gap-6 items-start lg:items-center">
+                                                <div className="flex items-center gap-4 shrink-0 min-w-0 w-full lg:w-48">
+                                                    <img src={`https://mc-heads.net/avatar/${p.minecraftUsername}/48`} className="w-12 h-12 rounded-xl border border-white/20" alt={p.minecraftUsername} />
+                                                    <div className="truncate">
+                                                        <div className="font-bold text-white truncate">{p.minecraftUsername}</div>
+                                                        <div className={`text-[10px] font-black uppercase tracking-widest ${p.isLocked ? 'text-green-500' : 'text-gray-500'}`}>
+                                                            {p.isLocked ? 'Locked' : 'Drafting'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex-1 grid grid-cols-6 gap-2 w-full">
+                                                    {p.team.map((poke, idx) => (
+                                                        <div key={idx} className="aspect-square bg-black/40 rounded-lg border border-white/5 flex items-center justify-center p-1" title={poke?.name || "Empty"}>
+                                                            {poke ? (
+                                                                <img src={`https://cobblemon.tools/pokedex/pokemon/${poke.name.toLowerCase().replace(/\s+/g, '-')}/sprite.png`} className="w-full h-full object-contain" alt={poke.name} />
+                                                            ) : (
+                                                                <span className="text-[8px] text-gray-700">•</span>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="shrink-0 flex gap-2 w-full lg:w-auto">
+                                                    <button 
+                                                        onClick={() => handleUnlockTeam(p.discordId, p.minecraftUsername)}
+                                                        className="flex-1 lg:flex-none bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-red-500/30"
+                                                    >
+                                                        Unlock & Reset
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'codes' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Gacha Code Generator</h2>
-                            
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                                     <div className="lg:col-span-1">
@@ -1571,18 +1644,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             <input type="number" value={genHours} onChange={e => setGenHours(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" />
                                         </div>
                                     )}
-                                    <button onClick={handleGenerateCodes} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all h-[40px] lg:col-span-1">
-                                        Generate
-                                    </button>
+                                    <button onClick={handleGenerateCodes} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all h-[40px] lg:col-span-1">Generate</button>
                                 </div>
-
                                 {generatedCodes.length > 0 && (
                                     <div className="mt-6 bg-green-900/20 p-4 rounded-xl border border-green-500/30">
                                         <h4 className="text-green-400 font-bold mb-2">New Codes:</h4>
                                         <div className="flex flex-wrap gap-2">
-                                            {generatedCodes.map(c => (
-                                                <code key={c} className="bg-black/40 px-3 py-1 rounded text-white font-mono border border-white/10">{c}</code>
-                                            ))}
+                                            {generatedCodes.map(c => <code key={c} className="bg-black/40 px-3 py-1 rounded text-white font-mono border border-white/10">{c}</code>)}
                                         </div>
                                     </div>
                                 )}
@@ -1594,33 +1662,19 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <table className="w-full text-sm text-left text-gray-300">
                                         <thead className="text-xs text-gray-500 uppercase bg-black/20">
                                             <tr>
-                                                <th className="px-4 py-3">Code</th>
-                                                <th className="px-4 py-3">Type</th>
-                                                <th className="px-4 py-3">Pack Qty</th>
-                                                <th className="px-4 py-3">Usage</th>
-                                                <th className="px-4 py-3">Redeemed</th>
-                                                <th className="px-4 py-3">Expires</th>
-                                                <th className="px-4 py-3">Action</th>
+                                                <th className="px-4 py-3">Code</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Pack Qty</th><th className="px-4 py-3">Usage</th><th className="px-4 py-3">Redeemed</th><th className="px-4 py-3">Expires</th><th className="px-4 py-3">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {existingCodes.map(c => (
                                                 <tr key={c._id} className="border-b border-white/5 hover:bg-white/5">
                                                     <td className="px-4 py-3 font-mono font-bold text-white">{c.code}</td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${c.type === 'lamb' ? 'bg-purple-900 text-purple-200' : 'bg-pink-900 text-pink-200'}`}>
-                                                            {c.type}
-                                                        </span>
-                                                    </td>
+                                                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${c.type === 'lamb' ? 'bg-purple-900 text-purple-200' : 'bg-pink-900 text-pink-200'}`}>{c.type}</span></td>
                                                     <td className="px-4 py-3">{c.packAmount}</td>
                                                     <td className="px-4 py-3 text-xs">{c.usageType}</td>
                                                     <td className="px-4 py-3">{c.usageCount}</td>
-                                                    <td className="px-4 py-3 text-xs text-gray-500">
-                                                        {c.expiresAt ? new Date(c.expiresAt).toLocaleString() : '-'}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <button onClick={() => handleDeleteCode(c._id)} className="text-red-500 hover:text-white hover:bg-red-600 px-2 py-1 rounded transition-colors text-xs font-bold">Del</button>
-                                                    </td>
+                                                    <td className="px-4 py-3 text-xs text-gray-500">{c.expiresAt ? new Date(c.expiresAt).toLocaleString() : '-'}</td>
+                                                    <td className="px-4 py-3"><button onClick={() => handleDeleteCode(c._id)} className="text-red-500 hover:text-white hover:bg-red-600 px-2 py-1 rounded transition-colors text-xs font-bold">Del</button></td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -1633,42 +1687,21 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'users' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">User Management</h2>
-                            
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="font-bold text-white mb-4">Reset Daily Check-In</h3>
                                 <div className="flex gap-4">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Discord ID or Minecraft Username" 
-                                        value={userQuery} 
-                                        onChange={e => setUserQuery(e.target.value)} 
-                                        className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-white" 
-                                    />
-                                    <button onClick={handleResetDaily} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg transition-all">
-                                        Reset Timer
-                                    </button>
+                                    <input type="text" placeholder="Discord ID or Minecraft Username" value={userQuery} onChange={e => setUserQuery(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-white" />
+                                    <button onClick={handleResetDaily} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg transition-all">Reset Timer</button>
                                 </div>
-                                <p className="text-gray-500 text-xs mt-2">Allows the user to claim their daily reward again immediately.</p>
                             </div>
 
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="font-bold text-white mb-4">User Merge Tool</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Source User (To be removed/merged)</label>
-                                        <input type="text" value={mergeSource} onChange={e => setMergeSource(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Username (Exact)" />
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Target User (Receiver)</label>
-                                        <input type="text" value={mergeTarget} onChange={e => setMergeTarget(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Username (Exact)" />
-                                    </div>
+                                    <input type="text" value={mergeSource} onChange={e => setMergeSource(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Source Username" />
+                                    <input type="text" value={mergeTarget} onChange={e => setMergeTarget(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Target Username" />
                                 </div>
-                                <div className="flex justify-end">
-                                    <button onClick={handleMergeUsers} className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-lg transition-all">
-                                        Merge Data
-                                    </button>
-                                </div>
-                                <p className="text-orange-400 text-xs mt-2 font-bold">⚠️ Warning: This transfers all event history, wheel spins, and totals. Cannot be undone easily.</p>
+                                <button onClick={handleMergeUsers} className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-lg transition-all">Merge Data</button>
                             </div>
                         </div>
                     )}
@@ -1677,38 +1710,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">JSON Merger Tool</h2>
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <p className="text-gray-400 mb-4">Upload multiple JSON spawn config files to merge them into a single `rawSpawnData.ts` format.</p>
-                                <input 
-                                    type="file" 
-                                    multiple 
-                                    accept=".json" 
-                                    onChange={handleJsonUpload} 
-                                    className="block w-full text-sm text-gray-400
-                                    file:mr-4 file:py-2 file:px-4
-                                    file:rounded-full file:border-0
-                                    file:text-sm file:font-semibold
-                                    file:bg-brand-primary file:text-white
-                                    hover:file:bg-brand-primary/80
-                                    mb-6"
-                                />
-                                {mergerStats.files > 0 && (
-                                    <div className="mb-4 text-green-400 text-sm font-bold">
-                                        Processed {mergerStats.files} files containing {mergerStats.spawns} spawn entries.
-                                    </div>
-                                )}
-                                <textarea 
-                                    readOnly 
-                                    value={mergedOutput} 
-                                    className="w-full h-96 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-xs text-gray-300 focus:outline-none"
-                                    placeholder="Merged output will appear here..."
-                                />
-                                <button 
-                                    onClick={() => navigator.clipboard.writeText(mergedOutput)}
-                                    className="mt-4 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-lg transition-all w-full"
-                                    disabled={!mergedOutput}
-                                >
-                                    Copy Code
-                                </button>
+                                <input type="file" multiple accept=".json" onChange={handleJsonUpload} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-brand-primary/80 mb-6" />
+                                <textarea readOnly value={mergedOutput} className="w-full h-96 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-xs text-gray-300 focus:outline-none" placeholder="Merged output will appear here..." />
+                                <button onClick={() => navigator.clipboard.writeText(mergedOutput)} className="mt-4 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-lg transition-all w-full" disabled={!mergedOutput}>Copy Code</button>
                             </div>
                         </div>
                     )}
