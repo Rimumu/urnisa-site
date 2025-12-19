@@ -68,7 +68,9 @@ const BANNED_IDS = new Set([
 
 const isBanned = (id: number) => BANNED_IDS.has(id);
 
-// --- HELPERS ---
+// --- CACHE & HELPERS ---
+const clientImageCache = new Map<string, boolean>();
+
 const getFormattedName = (name: string) => {
     return name.toLowerCase()
         .replace(/[.']/g, '')
@@ -80,33 +82,55 @@ const getFormattedName = (name: string) => {
 // --- COMPONENTS ---
 
 const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ pokemon, className = "" }) => {
-    // Optimistic Image Loading Strategy
-    // 1. Cobblemon Sprite (Best match for server)
-    // 2. PokeAPI Home (High Quality 3D)
-    // 3. PokeAPI Official Artwork (High Quality 2D)
-    // 4. Placeholder
-    
-    const cobbleName = getFormattedName(pokemon.name);
-    const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
-    const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
-    const fallback2d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
-    const placeholder = `https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`;
-
-    const [imgSrc, setImgSrc] = useState<string>(primaryUrl);
+    const [imgSrc, setImgSrc] = useState<string>("");
 
     useEffect(() => {
-        setImgSrc(primaryUrl);
-    }, [pokemon, primaryUrl]);
+        let isMounted = true;
+
+        const verifyImage = async () => {
+            const cobbleName = getFormattedName(pokemon.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
+            const fallback2d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
+
+            // 1. Check Memory Cache
+            if (clientImageCache.has(primaryUrl)) {
+                if (isMounted) {
+                    const isValid = clientImageCache.get(primaryUrl);
+                    setImgSrc(isValid ? primaryUrl : fallback3d);
+                }
+                return;
+            }
+
+            // 2. Perform Check via Backend Proxy (checks file size to detect placeholder)
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+                
+                clientImageCache.set(primaryUrl, data.valid);
+
+                if (isMounted) {
+                    setImgSrc(data.valid ? primaryUrl : fallback3d);
+                }
+            } catch (error) {
+                // On verification error, assume invalid -> fallback
+                if (isMounted) setImgSrc(fallback3d);
+            }
+        };
+
+        verifyImage();
+
+        return () => { isMounted = false; };
+    }, [pokemon]);
 
     const handleImageError = () => {
-        if (imgSrc === primaryUrl) {
-            setImgSrc(fallback3d);
-        } else if (imgSrc === fallback3d) {
-            setImgSrc(fallback2d);
-        } else if (imgSrc === fallback2d) {
-            setImgSrc(placeholder);
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`);
+        } else {
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`);
         }
-        // If placeholder fails, we stay on placeholder to avoid loops
     };
 
     return (
