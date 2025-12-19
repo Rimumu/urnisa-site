@@ -331,7 +331,7 @@ const TournamentDev: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 pb-48 font-sans text-white relative">
+    <div className="min-h-screen py-4 pb-20 font-sans text-white relative">
       <style>{`
         .dev-stripe {
             background: repeating-linear-gradient(45deg, #f59e0b, #f59e0b 10px, #000 10px, #000 20px);
@@ -376,32 +376,31 @@ const TournamentDev: React.FC = () => {
             transform: translateX(-50%) translateY(-4px);
         }
 
-        .command-center {
-            background: rgba(18, 5, 7, 0.7);
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
+        .dock-pill {
+            background: rgba(18, 5, 7, 0.65);
+            backdrop-filter: blur(25px) saturate(160%);
+            -webkit-backdrop-filter: blur(25px) saturate(160%);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.7),
-                inset 0 0 10px rgba(255, 255, 255, 0.05);
+                0 20px 40px -10px rgba(0, 0, 0, 0.6),
+                inset 0 0 12px rgba(255, 255, 255, 0.03);
         }
         
         .nav-link-active {
             position: relative;
             color: #e5383b !important;
-            transform: scale(1.1);
         }
         .nav-link-active::after {
             content: '';
             position: absolute;
-            bottom: -6px;
+            bottom: -4px;
             left: 50%;
             transform: translateX(-50%);
-            width: 6px;
-            height: 6px;
+            width: 4px;
+            height: 4px;
             background: #e5383b;
             border-radius: 50%;
-            box-shadow: 0 0 12px #e5383b;
+            box-shadow: 0 0 10px #e5383b;
         }
       `}</style>
 
@@ -452,8 +451,8 @@ const TournamentDev: React.FC = () => {
             </div>
           </div>
 
-          {/* Content Viewport - Reduced min-height to pull footer up */}
-          <div className="min-h-[35vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          {/* Content Viewport - Minimized bottom padding to allow footer visibility */}
+          <div className="min-h-[40vh] pb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none fixed"></div>
 
             {/* RULES SECTION */}
@@ -556,18 +555,13 @@ const TournamentDev: React.FC = () => {
 
             {/* BRACKET SECTION */}
             {activeTab === 'brackets' && (
-              <div className="relative z-10 text-center flex flex-col items-center justify-center py-24 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+              <div className="relative z-10 text-center flex flex-col items-center justify-center py-20 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
                 <div className="text-9xl mb-8 opacity-20 filter drop-shadow-[0_0_30px_rgba(247,197,72,0.3)]">📊</div>
                 <h2 className="text-5xl font-black text-white uppercase tracking-widest mb-4">Bracket Pending</h2>
                 <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">
                     The combat matrix is being generated. <br/>
                     Brackets will go live once <span className="text-brand-accent font-bold">Registration Phase</span> concludes.
                 </p>
-                <div className="mt-12 flex gap-4">
-                    <div className="w-3 h-3 rounded-full bg-brand-accent animate-bounce"></div>
-                    <div className="w-3 h-3 rounded-full bg-brand-accent animate-bounce delay-100"></div>
-                    <div className="w-3 h-3 rounded-full bg-brand-accent animate-bounce delay-200"></div>
-                </div>
               </div>
             )}
 
@@ -582,12 +576,12 @@ const TournamentDev: React.FC = () => {
                   </div>
 
                   {loadingPlayers ? (
-                      <div className="text-center py-24 flex flex-col items-center gap-4">
+                      <div className="text-center py-20 flex flex-col items-center gap-4">
                           <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                          <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Accessing Personnel Files...</p>
+                          <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Accessing Files...</p>
                       </div>
                   ) : playersList.length === 0 ? (
-                      <div className="text-center py-24 text-gray-600 font-bold italic">No combatants have reported for duty.</div>
+                      <div className="text-center py-24 text-gray-600 font-bold italic">No combatants reported.</div>
                   ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {playersList.map((entry, idx) => (
@@ -626,87 +620,54 @@ const TournamentDev: React.FC = () => {
             {activeTab === 'signup' && (
               <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {!user ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-center space-y-8">
-                    <div className="w-24 h-24 bg-red-900/20 rounded-full flex items-center justify-center text-6xl shadow-inner border border-red-500/20 grayscale opacity-40">🔒</div>
+                  <div className="flex flex-col items-center justify-center py-16 text-center space-y-8">
+                    <div className="w-20 h-20 bg-red-900/20 rounded-full flex items-center justify-center text-5xl shadow-inner border border-red-500/20 grayscale opacity-40">🔒</div>
                     <div className="space-y-2">
-                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Registration Locked</h2>
-                        <p className="text-gray-400 max-w-sm mx-auto">Access denied. Identification required via Discord to join the active tournament roster.</p>
+                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Registration Locked</h2>
+                        <p className="text-gray-400 max-w-sm mx-auto text-sm">Access denied. Identification required via Discord to join the active tournament roster.</p>
                     </div>
                     <UserProfile className="scale-110" />
                   </div>
                 ) : loadingTeam ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
-                        <div className="w-16 h-16 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
-                        <p className="font-black text-gray-500 uppercase tracking-widest text-xs">Retrieving Team Config...</p>
+                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
+                        <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p className="font-black text-gray-500 uppercase tracking-widest text-[10px]">Retrieving Roster...</p>
                     </div>
                 ) : !hasStartedRegistration && !isLocked ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-center space-y-10 animate-in fade-in zoom-in-95 duration-500">
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-brand-primary/20 blur-3xl rounded-full scale-125 group-hover:bg-brand-primary/30 transition-all"></div>
-                        <img 
-                            src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} 
-                            alt="MC Head Large" 
-                            className="relative w-40 h-40 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl transition-transform group-hover:scale-105" 
-                        />
-                        <div className="absolute -bottom-3 -right-3 bg-green-500 text-black text-xs font-black p-3 rounded-full border-4 border-[#1a0b0e] shadow-xl">READY</div>
-                    </div>
-                    
+                  <div className="flex flex-col items-center justify-center py-10 text-center space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                    <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
                     <div className="space-y-3">
-                        <h2 className="text-5xl font-black text-white uppercase tracking-tighter">Greetings, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2>
-                        <p className="text-gray-400 max-w-lg mx-auto text-lg leading-relaxed font-medium">Your account is verified. Deploy your roster below to participate in the upcoming combat season.</p>
+                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Greetings, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2>
+                        <p className="text-gray-400 max-w-lg mx-auto text-base leading-relaxed">Your account is verified. Deploy your roster below to participate.</p>
                     </div>
-
-                    <button
-                        onClick={handleInitialRegister}
-                        className="bg-brand-primary hover:bg-red-600 text-white font-black text-2xl py-6 px-16 rounded-[2rem] shadow-[0_20px_50px_rgba(229,56,59,0.4)] transition-all transform hover:scale-110 active:scale-95 uppercase tracking-widest border-b-4 border-red-800"
-                    >
-                        INITIATE REGISTRATION
-                    </button>
+                    <button onClick={handleInitialRegister} className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-[2rem] shadow-xl transition-all transform hover:scale-105 uppercase tracking-widest border-b-4 border-red-800">INITIATE REGISTRATION</button>
                   </div>
                 ) : (
-                  <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                  <div className="space-y-10">
                     {isLocked && (
-                        <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2rem] p-6 flex items-center justify-center gap-4 animate-in fade-in slide-in-from-top-4 shadow-[0_0_30px_rgba(34,197,94,0.1)]">
-                            <span className="text-4xl">🛡️</span>
-                            <div>
-                                <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">Combat Roster Secured</h3>
-                                <p className="text-green-200/60 text-sm">Deployment confirmed. Your selection is locked and synced with the tournament database.</p>
-                            </div>
+                        <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2rem] p-6 text-center shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+                            <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">🛡️ Combat Roster Secured</h3>
+                            <p className="text-green-200/60 text-xs">Selection locked and synced with tournament database.</p>
                         </div>
                     )}
 
-                    <div className="flex flex-col md:flex-row items-center gap-8 p-8 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
-                      <div className="relative">
-                        <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="MC Head" className="w-20 h-20 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
-                        <div className="absolute -top-3 -right-3 bg-brand-primary text-white text-[10px] font-black p-2 rounded-full border-4 border-[#1a0b0e]">USR</div>
-                      </div>
-                      <div className="text-center md:text-left">
-                        <h3 className="text-3xl font-black text-white leading-none mb-2 uppercase tracking-tighter">{user.minecraftUsername}</h3>
-                        <div className="flex items-center justify-center md:justify-start gap-3">
-                            <span className="text-[10px] font-mono font-bold text-gray-500 border border-white/10 px-2 py-0.5 rounded">ID: {user.id.substring(0,8)}...</span>
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${isLocked ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                                {isLocked ? 'Deployed' : 'Drafting'}
-                            </span>
-                        </div>
+                    <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
+                      <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
+                      <div className="text-left">
+                        <h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3>
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${isLocked ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                            {isLocked ? 'Deployed' : 'Drafting'}
+                        </span>
                       </div>
                     </div>
 
                     <div className="space-y-6">
-                      <div className="flex flex-col sm:flex-row justify-between items-center sm:items-end px-4 gap-4">
-                        <h3 className="text-3xl font-black uppercase tracking-tighter">Combat Team <span className="text-brand-primary">(Roster)</span></h3>
-                        <div className="flex items-center gap-4 bg-black/40 px-4 py-2 rounded-full border border-white/10">
-                            <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Active Slots</span>
-                            <span className="text-lg font-black text-brand-primary font-mono">{selectedTeam.filter(p => p !== null).length}/6</span>
-                        </div>
-                      </div>
-
+                      <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Combat Team <span className="text-brand-primary">(Roster)</span></h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
                         {selectedTeam.map((p, idx) => {
                           const banned = p !== null && isBanned(p.id);
                           return (
-                            <div 
-                              key={idx} 
-                              className={`aspect-square rounded-[2.5rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 
+                            <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 
                                 ${p 
                                     ? (banned ? 'bg-red-900/20 border-red-500 shadow-lg shadow-red-500/20' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') 
                                     : 'bg-black/40 border-white/5 border-dashed opacity-50 hover:opacity-100 hover:border-white/20'}`}
@@ -721,27 +682,20 @@ const TournamentDev: React.FC = () => {
                                           </div>
                                       )}
                                   </div>
-                                  <div className="absolute bottom-4 left-0 right-0 px-3 z-20">
-                                     <div className={`text-[9px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-white/20' : 'bg-black/60 text-white border-white/10'}`}>
+                                  <div className="absolute bottom-3 left-0 right-0 px-2 z-20">
+                                     <div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-white/20' : 'bg-black/60 text-white border-white/10'}`}>
                                         {p.name}
                                      </div>
                                   </div>
                                   
-                                  {banned && (
-                                      <div className="banned-tooltip">RESTRICTED POKEMON</div>
-                                  )}
+                                  {banned && <div className="banned-tooltip">RESTRICTED POKEMON</div>}
 
                                   {!isLocked && (
-                                      <button 
-                                        onClick={() => handleRemovePokemon(idx)}
-                                        className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xs font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 hover:scale-110 active:scale-90 border-2 border-white"
-                                      >
-                                        ✕
-                                      </button>
+                                      <button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 hover:scale-110 border-2 border-white">✕</button>
                                   )}
                                 </>
                               ) : (
-                                <span className="text-4xl text-gray-800 font-black">+</span>
+                                <span className="text-3xl text-gray-800 font-black">+</span>
                               )}
                             </div>
                           );
@@ -750,33 +704,17 @@ const TournamentDev: React.FC = () => {
                     </div>
 
                     {!isLocked && (
-                        <div className="bg-black/40 rounded-[3rem] border border-white/10 p-8 space-y-8 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-primary/50 to-transparent"></div>
-                            
+                        <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl relative overflow-hidden">
                             <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
-                                <div className="flex flex-col gap-1">
-                                    <h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Tactical Database</h4>
-                                    <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider bg-red-950/40 px-3 py-1 rounded-full w-fit">
-                                        Legendaries & Paradox Mons Prohibited
-                                    </p>
-                                </div>
-                                <div className="relative w-full md:w-96">
-                                    <input 
-                                        type="text" 
-                                        placeholder="SEARCH POKEMON UNIT..." 
-                                        value={searchQuery}
-                                        onChange={e => setSearchQuery(e.target.value)}
-                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-8 text-sm font-bold text-white focus:border-brand-primary outline-none transition-all placeholder:text-gray-700 tracking-wider shadow-inner"
-                                    />
-                                    <span className="absolute right-6 top-4 opacity-30 pointer-events-none text-xl">🔍</span>
-                                </div>
+                                <h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Tactical Database</h4>
+                                <input type="text" placeholder="SEARCH POKEMON UNIT..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none transition-all placeholder:text-gray-700 shadow-inner" />
                             </div>
 
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-4 max-h-[450px] overflow-y-auto pokemon-grid pr-4 py-2">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
                                 {loadingPokemon ? (
-                                    <div className="col-span-full py-10 text-center animate-pulse text-gray-600 font-black uppercase tracking-widest text-xs">Accessing Pokedex Core...</div>
+                                    <div className="col-span-full py-10 text-center animate-pulse text-gray-600 font-black uppercase text-[10px]">Accessing Pokedex...</div>
                                 ) : filteredPokemon.length === 0 ? (
-                                    <div className="col-span-full py-10 text-center text-gray-700 font-bold italic">No match found in archive.</div>
+                                    <div className="col-span-full py-10 text-center text-gray-700 font-bold italic">No match found.</div>
                                 ) : (
                                     filteredPokemon.map(p => {
                                         const isSelected = selectedTeam.some(sp => sp?.id === p.id);
@@ -787,7 +725,7 @@ const TournamentDev: React.FC = () => {
                                                 key={p.id}
                                                 disabled={isSelected || isFull || banned}
                                                 onClick={() => handleSelectPokemon(p)}
-                                                className={`aspect-square rounded-[1.5rem] flex items-center justify-center p-2 transition-all relative group 
+                                                className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group 
                                                     ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50 cursor-not-allowed' : 
                                                       (isFull || banned) ? 'bg-gray-900 border-white/5 opacity-30 cursor-not-allowed grayscale' : 
                                                       'bg-white/5 border border-white/10 hover:border-brand-primary/50 hover:bg-brand-primary/10 hover:scale-110 active:scale-95 shadow-lg'}`}
@@ -795,13 +733,9 @@ const TournamentDev: React.FC = () => {
                                             >
                                                 <div className="w-full h-full relative">
                                                     <PokemonTeamImage pokemon={p} />
-                                                    {banned && (
-                                                        <div className="absolute top-0 right-0 bg-red-600 rounded-full w-4 h-4 border-2 border-black shadow-md flex items-center justify-center text-[10px] font-black">!</div>
-                                                    )}
+                                                    {banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}
                                                 </div>
-                                                {banned && (
-                                                    <div className="banned-tooltip">BANNED</div>
-                                                )}
+                                                {banned && <div className="banned-tooltip">BANNED</div>}
                                             </button>
                                         );
                                     })
@@ -811,35 +745,9 @@ const TournamentDev: React.FC = () => {
                     )}
 
                     {!isLocked && (
-                        <div className="pt-8 flex flex-col md:flex-row justify-center items-center gap-6">
-                            {hasBannedPokemon && (
-                                <p className="text-red-500 font-black uppercase text-xs tracking-[0.2em] animate-pulse w-full text-center mb-2">
-                                    CRITICAL ERROR: Restricted Units detected in roster!
-                                </p>
-                            )}
-                            <button
-                                onClick={handleSaveDraft}
-                                disabled={saving || hasBannedPokemon}
-                                className={`
-                                    px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl transition-all transform flex-1 min-w-[200px] border-b-4
-                                    ${saving ? 'bg-gray-700 text-gray-500 border-gray-800' : 'bg-white/10 hover:bg-white/20 text-white border-white/20 hover:scale-105 active:scale-95'}
-                                `}
-                            >
-                                {saveStatus === 'success' ? 'DATA SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE TACTICAL DRAFT'}
-                            </button>
-
-                            <button
-                                onClick={handleLockIn}
-                                disabled={saving || selectedTeam.includes(null) || hasBannedPokemon || !lockEnabled}
-                                className={`
-                                    px-16 py-5 rounded-2xl text-xl font-black uppercase tracking-tighter shadow-2xl transition-all transform flex-[2] min-w-[300px] border-b-4
-                                    ${selectedTeam.includes(null) || hasBannedPokemon || !lockEnabled
-                                        ? 'bg-gray-800 text-gray-600 border-gray-900 cursor-not-allowed' 
-                                        : 'bg-green-600 hover:bg-green-500 hover:scale-105 active:scale-95 text-white border-green-800 shadow-green-900/40'}
-                                `}
-                            >
-                                {!lockEnabled ? "LOCK-INS UNAVAILABLE" : "🔒 FINALIZE & LOCK TEAM"}
-                            </button>
+                        <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
+                            <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1 min-w-[180px]">{saveStatus === 'success' ? 'DATA SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE TACTICAL DRAFT'}</button>
+                            <button onClick={handleLockIn} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon || !lockEnabled} className={`px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] min-w-[280px] border-b-4 ${selectedTeam.includes(null) || hasBannedPokemon || !lockEnabled ? 'bg-gray-800 text-gray-600 border-gray-900' : 'bg-green-600 hover:bg-green-500 text-white border-green-800'}`}>🔒 FINALIZE & LOCK TEAM</button>
                         </div>
                     )}
                   </div>
@@ -850,9 +758,9 @@ const TournamentDev: React.FC = () => {
         </div>
       </div>
 
-      {/* --- REVAMPED COMMAND CENTER NAV --- */}
-      <div className="fixed bottom-12 left-0 right-0 z-[100] px-4 pointer-events-none">
-          <div className="max-w-lg mx-auto command-center rounded-full p-2 flex items-center justify-around pointer-events-auto border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+      {/* --- COMMAND CENTER NAVIGATION (Revamped compact pill) --- */}
+      <div className="fixed bottom-10 left-0 right-0 z-[100] px-4 pointer-events-none">
+          <div className="max-w-[360px] md:max-w-[420px] mx-auto dock-pill rounded-full p-1.5 flex items-center justify-around pointer-events-auto shadow-[0_15px_40px_rgba(0,0,0,0.6)]">
               {[
                 { id: 'rules', label: 'RULES', icon: '📜' },
                 { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked },
@@ -863,17 +771,15 @@ const TournamentDev: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`
-                    relative flex flex-col items-center justify-center flex-1 py-3 transition-all duration-300 rounded-full
+                    relative flex flex-col items-center justify-center flex-1 py-2.5 transition-all duration-300 rounded-full
                     ${activeTab === tab.id 
                         ? 'nav-link-active' 
                         : 'text-gray-500 hover:text-white group'}
                   `}
                 >
-                    <span className="text-xl md:text-2xl mb-0.5 group-hover:scale-110 transition-transform">{tab.icon}</span>
-                    <span className="text-[9px] font-black uppercase tracking-[0.1em]">{tab.label}</span>
-                    {tab.notify && (
-                        <div className="absolute top-2 right-1/4 w-2 h-2 bg-brand-primary rounded-full animate-ping"></div>
-                    )}
+                    <span className="text-xl md:text-2xl mb-0.5 transition-transform group-hover:scale-110">{tab.icon}</span>
+                    <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.05em]">{tab.label}</span>
+                    {tab.notify && <div className="absolute top-2 right-[20%] w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse shadow-[0_0_8px_#e5383b]"></div>}
                 </button>
               ))}
           </div>
