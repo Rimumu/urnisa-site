@@ -19,6 +19,28 @@ interface TournamentEntry {
 
 type TournamentStatus = 'DRAFTING' | 'LOCK_IN' | 'ONGOING';
 
+// --- CONSTANTS ---
+const TYPE_COLORS: Record<string, string> = {
+    normal: 'bg-stone-400 text-stone-900',
+    fire: 'bg-red-500 text-white',
+    water: 'bg-blue-500 text-white',
+    grass: 'bg-green-500 text-white',
+    electric: 'bg-yellow-400 text-black',
+    ice: 'bg-cyan-300 text-black',
+    fighting: 'bg-red-700 text-white',
+    poison: 'bg-purple-500 text-white',
+    ground: 'bg-yellow-700 text-white',
+    flying: 'bg-indigo-300 text-black',
+    psychic: 'bg-pink-500 text-white',
+    bug: 'bg-lime-500 text-white',
+    rock: 'bg-yellow-800 text-white',
+    ghost: 'bg-indigo-800 text-white',
+    dragon: 'bg-violet-600 text-white',
+    steel: 'bg-slate-400 text-slate-900',
+    fairy: 'bg-pink-300 text-black',
+    dark: 'bg-neutral-800 text-white',
+};
+
 // --- BAN LIST LOGIC ---
 // STRICTLY Legendaries, Mythicals, Ultra Beasts. Paradox are ALLOWED.
 const BANNED_IDS = new Set([
@@ -113,6 +135,62 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
     );
 };
 
+// Detailed Card for Popup
+const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }> = ({ pokemon, revealed }) => {
+    const [types, setTypes] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (revealed && pokemon) {
+            fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    setTypes(data.types.map((t: any) => t.type.name));
+                })
+                .catch(() => setTypes([]));
+        } else {
+            setTypes([]);
+        }
+    }, [pokemon, revealed]);
+
+    if (!revealed || !pokemon) {
+        return (
+            <div className="aspect-[3/4] bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                <span className="text-4xl font-black text-gray-700 select-none">?</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="aspect-[3/4] bg-black/60 rounded-2xl border border-white/10 flex flex-col relative overflow-hidden group shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+            
+            {/* Image Area */}
+            <div className="flex-1 p-2 flex items-center justify-center relative z-10">
+                <div className="w-full h-full drop-shadow-2xl filter group-hover:brightness-110 transition-all">
+                    <PokemonTeamImage pokemon={pokemon} />
+                </div>
+            </div>
+
+            {/* Info Area */}
+            <div className="p-3 bg-black/40 backdrop-blur-md border-t border-white/5 flex flex-col gap-2">
+                <div className="text-center">
+                    <h4 className="text-white font-black uppercase text-sm tracking-wide truncate">{pokemon.name}</h4>
+                    <span className="text-[10px] text-gray-500 font-mono">#{pokemon.id.toString().padStart(3, '0')}</span>
+                </div>
+                
+                <div className="flex justify-center gap-1 flex-wrap">
+                    {types.map(t => (
+                        <span key={t} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}`}>
+                            {t}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // IMPROVED RULE CARD
 const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNode; color?: string }> = ({ title, icon, children, color = "border-white/10" }) => (
     <div className={`bg-black/40 backdrop-blur-xl rounded-2xl border-2 ${color} p-6 shadow-2xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300 h-full flex flex-col justify-start`}>
@@ -162,6 +240,7 @@ const TournamentDev: React.FC = () => {
   // Players List State
   const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<TournamentEntry | null>(null);
 
   // Fetch all Pokemon
   useEffect(() => {
@@ -659,18 +738,22 @@ const TournamentDev: React.FC = () => {
                   {loadingPlayers ? (<div className="text-center py-20 animate-spin">⌛</div>) : playersList.length === 0 ? (<div className="text-center py-24 text-gray-600 font-bold italic">No combatants reported.</div>) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {playersList.map((entry, idx) => (
-                              <div key={idx} className="bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5">
-                                  <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                              <button 
+                                key={idx} 
+                                onClick={() => setSelectedPlayer(entry)}
+                                className="bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02]"
+                              >
+                                  <div className="flex items-center gap-4 border-b border-white/5 pb-4 w-full">
                                       <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-14 h-14 rounded-2xl border-2 border-white/10" alt={entry.minecraftUsername} />
                                       <div className="flex-1 min-w-0">
                                           <div className="font-black text-white text-xl truncate">{entry.minecraftUsername}</div>
                                           <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${entry.isLocked ? 'text-green-400' : 'text-amber-400'}`}><span className={`w-2 h-2 rounded-full ${entry.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>{entry.isLocked ? 'Ready' : 'Drafting'}</div>
                                       </div>
                                   </div>
-                                  <div className="grid grid-cols-6 gap-2">
+                                  <div className="grid grid-cols-6 gap-2 w-full">
                                       {tournamentStatus === 'ONGOING' && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
                                   </div>
-                              </div>
+                              </button>
                           ))}
                       </div>
                   )}
@@ -762,6 +845,44 @@ const TournamentDev: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* PLAYER DETAILS MODAL */}
+      {selectedPlayer && (
+          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+              <div className="bg-[#1a0b0e] w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
+                  
+                  {/* Modal Header */}
+                  <div className="p-8 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/40">
+                      <div className="flex items-center gap-6">
+                          <img src={`https://mc-heads.net/avatar/${selectedPlayer.minecraftUsername}/128`} className="w-24 h-24 rounded-[2rem] border-4 border-brand-primary shadow-xl" alt={selectedPlayer.minecraftUsername} />
+                          <div>
+                              <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-1">{selectedPlayer.minecraftUsername}</h2>
+                              <div className={`text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit ${selectedPlayer.isLocked ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                                  {selectedPlayer.isLocked ? 'Ready to Battle' : 'Drafting Phase'}
+                              </div>
+                          </div>
+                      </div>
+                      <button onClick={() => setSelectedPlayer(null)} className="p-4 rounded-full bg-white/5 hover:bg-white/10 hover:text-brand-primary transition-colors">
+                          <span className="text-2xl leading-none">✕</span>
+                      </button>
+                  </div>
+
+                  {/* Modal Content - Team Grid */}
+                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-gradient-to-b from-black/20 to-transparent">
+                      <h3 className="text-xl font-black text-gray-400 uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Active Team</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                          {(tournamentStatus === 'ONGOING' && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
+                              <PokemonDetailCard 
+                                  key={idx} 
+                                  pokemon={pokemon} 
+                                  revealed={tournamentStatus === 'ONGOING' && selectedPlayer.isLocked}
+                              />
+                          ))}
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
