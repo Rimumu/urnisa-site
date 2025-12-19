@@ -474,7 +474,11 @@ const TournamentDev: React.FC = () => {
                 </div>
                 <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Phase</span>
-                    <span className={`text-xl font-black uppercase ${tournamentStatus === 'ONGOING' ? 'text-red-500' : tournamentStatus === 'LOCK_IN' ? 'text-green-500' : 'text-amber-500'}`}>
+                    <span className={`text-xl font-black uppercase ${
+                        tournamentStatus === 'DRAFTING' ? 'text-red-500' : 
+                        tournamentStatus === 'LOCK_IN' ? 'text-orange-500' : 
+                        'text-green-500'
+                    }`}>
                         {tournamentStatus === 'DRAFTING' ? 'SIGNUPS' : tournamentStatus.replace('_', '-')}
                     </span>
                 </div>
@@ -488,11 +492,11 @@ const TournamentDev: React.FC = () => {
                     }}
                     className={`
                         text-white font-black px-8 h-14 rounded-2xl shadow-lg transition-all uppercase tracking-widest text-sm border-b-4 flex items-center justify-center flex-1 md:flex-none min-w-[140px]
-                        ${tournamentStatus === 'ONGOING' 
-                            ? 'bg-red-600 hover:bg-red-500 border-red-800' 
+                        ${tournamentStatus === 'DRAFTING' 
+                            ? 'bg-red-600 hover:bg-red-500 border-red-800 hover:scale-105' 
                             : tournamentStatus === 'LOCK_IN'
-                                ? 'bg-green-600 hover:bg-green-500 border-green-800'
-                                : 'bg-brand-primary hover:bg-red-600 hover:scale-105 border-red-800'}
+                                ? 'bg-orange-600 hover:bg-orange-500 border-orange-800'
+                                : 'bg-green-600 hover:bg-green-500 border-green-800'}
                     `}
                 >
                     {tournamentStatus === 'ONGOING' ? 'Play' : tournamentStatus === 'LOCK_IN' ? 'Lock-In' : 'Sign Up'}
