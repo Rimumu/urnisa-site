@@ -19,7 +19,6 @@ interface TournamentEntry {
 }
 
 // --- BAN LIST LOGIC ---
-// Standard IDs for Legendaries, Mythicals, and Ultra Beasts
 const BANNED_IDS = new Set([
     // Gen 1
     144, 145, 146, 150, 151,
@@ -136,11 +135,11 @@ const TournamentDev: React.FC = () => {
   // Team Management State
   const [selectedTeam, setSelectedTeam] = useState<(Pokemon | null)[]>(new Array(6).fill(null));
   const [isLocked, setIsLocked] = useState(false);
-  const [hasStartedRegistration, setHasStartedRegistration] = useState(false); // Controls Step 1 vs Step 2
+  const [hasStartedRegistration, setHasStartedRegistration] = useState(false); 
   const [loadingTeam, setLoadingTeam] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [lockEnabled, setLockEnabled] = useState(false); // Global Lock Status
+  const [lockEnabled, setLockEnabled] = useState(false); 
 
   // Players List State
   const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
@@ -249,7 +248,6 @@ const TournamentDev: React.FC = () => {
       return selectedTeam.some(p => p !== null && isBanned(p.id));
   }, [selectedTeam]);
 
-  // Initial Registration (Empty Team)
   const handleInitialRegister = async () => {
       if (!user) return;
       setLoadingTeam(true);
@@ -333,7 +331,7 @@ const TournamentDev: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-4 pb-32 font-sans text-white relative">
+    <div className="min-h-screen py-4 pb-48 font-sans text-white relative">
       <style>{`
         .dev-stripe {
             background: repeating-linear-gradient(45deg, #f59e0b, #f59e0b 10px, #000 10px, #000 20px);
@@ -378,27 +376,32 @@ const TournamentDev: React.FC = () => {
             transform: translateX(-50%) translateY(-4px);
         }
 
-        .command-dock {
-            background: rgba(18, 5, 7, 0.85);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+        .command-center {
+            background: rgba(18, 5, 7, 0.7);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.7),
+                inset 0 0 10px rgba(255, 255, 255, 0.05);
         }
         
-        .nav-btn-active {
+        .nav-link-active {
             position: relative;
+            color: #e5383b !important;
+            transform: scale(1.1);
         }
-        .nav-btn-active::after {
+        .nav-link-active::after {
             content: '';
             position: absolute;
-            bottom: -8px;
+            bottom: -6px;
             left: 50%;
             transform: translateX(-50%);
-            width: 40%;
-            height: 3px;
-            background: currentColor;
-            border-radius: 99px;
-            box-shadow: 0 0 10px currentColor;
+            width: 6px;
+            height: 6px;
+            background: #e5383b;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #e5383b;
         }
       `}</style>
 
@@ -422,7 +425,7 @@ const TournamentDev: React.FC = () => {
                     <img src="https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif" alt="Tournament Logo" className="w-full h-full object-cover rounded-2xl" />
                 </div>
                 <div>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1">
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1 text-white">
                         NISAMON <span className="text-brand-primary">TOURNAMENT</span>
                     </h1>
                     <div className="flex items-center gap-3">
@@ -449,8 +452,8 @@ const TournamentDev: React.FC = () => {
             </div>
           </div>
 
-          {/* Content Viewport */}
-          <div className="min-h-[60vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          {/* Content Viewport - Reduced min-height to pull footer up */}
+          <div className="min-h-[35vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none fixed"></div>
 
             {/* RULES SECTION */}
@@ -532,7 +535,7 @@ const TournamentDev: React.FC = () => {
                         <div>
                             <p className="font-black text-white mb-1">General Rules:</p>
                             <ul className="list-disc list-inside text-xs space-y-1">
-                               <li>Instant DQ for rule breaking</li>
+                                <li>Instant DQ for rule breaking</li>
                                 <li>No intentional stalling/disconnects</li>
                                 <li>Report matches within 10 mins</li>
                                 <li>Admin decisions are FINAL</li>
@@ -847,43 +850,32 @@ const TournamentDev: React.FC = () => {
         </div>
       </div>
 
-      {/* --- COMMAND DOCK (Floating Bottom Navigation) --- */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] px-4 pb-4 pointer-events-none">
-          <div className="max-w-4xl mx-auto command-dock rounded-[2.5rem] p-2 flex items-center justify-around pointer-events-auto shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10">
-              <button 
-                  onClick={() => setActiveTab('rules')}
-                  className={`flex flex-col items-center justify-center flex-1 py-3 px-2 transition-all duration-300 gap-1 rounded-2xl ${activeTab === 'rules' ? 'text-white bg-white/5 nav-btn-active scale-105' : 'text-gray-500 hover:text-gray-300'}`}
-              >
-                  <span className="text-xl md:text-2xl">📜</span>
-                  <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Rules</span>
-              </button>
-              
-              <button 
-                  onClick={() => setActiveTab('signup')}
-                  className={`flex flex-col items-center justify-center flex-1 py-3 px-2 transition-all duration-300 gap-1 rounded-2xl ${activeTab === 'signup' ? 'text-brand-primary bg-brand-primary/10 nav-btn-active scale-110' : 'text-gray-500 hover:text-gray-300'}`}
-              >
-                  <span className="text-xl md:text-2xl">📝</span>
-                  <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Sign Up</span>
-                  {hasStartedRegistration && !isLocked && (
-                      <div className="absolute top-2 right-4 w-2 h-2 bg-amber-500 rounded-full animate-ping"></div>
-                  )}
-              </button>
-
-              <button 
-                  onClick={() => setActiveTab('brackets')}
-                  className={`flex flex-col items-center justify-center flex-1 py-3 px-2 transition-all duration-300 gap-1 rounded-2xl ${activeTab === 'brackets' ? 'text-brand-accent bg-brand-accent/10 nav-btn-active scale-105' : 'text-gray-500 hover:text-gray-300'}`}
-              >
-                  <span className="text-xl md:text-2xl">📊</span>
-                  <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Bracket</span>
-              </button>
-
-              <button 
-                  onClick={() => setActiveTab('players')}
-                  className={`flex flex-col items-center justify-center flex-1 py-3 px-2 transition-all duration-300 gap-1 rounded-2xl ${activeTab === 'players' ? 'text-purple-400 bg-purple-500/10 nav-btn-active scale-105' : 'text-gray-500 hover:text-gray-300'}`}
-              >
-                  <span className="text-xl md:text-2xl">👥</span>
-                  <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest">Players</span>
-              </button>
+      {/* --- REVAMPED COMMAND CENTER NAV --- */}
+      <div className="fixed bottom-12 left-0 right-0 z-[100] px-4 pointer-events-none">
+          <div className="max-w-lg mx-auto command-center rounded-full p-2 flex items-center justify-around pointer-events-auto border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+              {[
+                { id: 'rules', label: 'RULES', icon: '📜' },
+                { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked },
+                { id: 'brackets', label: 'BRACKET', icon: '📊' },
+                { id: 'players', label: 'ROSTER', icon: '👥' }
+              ].map((tab) => (
+                <button 
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`
+                    relative flex flex-col items-center justify-center flex-1 py-3 transition-all duration-300 rounded-full
+                    ${activeTab === tab.id 
+                        ? 'nav-link-active' 
+                        : 'text-gray-500 hover:text-white group'}
+                  `}
+                >
+                    <span className="text-xl md:text-2xl mb-0.5 group-hover:scale-110 transition-transform">{tab.icon}</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.1em]">{tab.label}</span>
+                    {tab.notify && (
+                        <div className="absolute top-2 right-1/4 w-2 h-2 bg-brand-primary rounded-full animate-ping"></div>
+                    )}
+                </button>
+              ))}
           </div>
       </div>
     </div>
