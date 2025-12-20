@@ -1,9 +1,33 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import UserProfile, { UserData } from '../components/UserProfile';
+import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
+
+// --- TYPES ---
+interface Pokemon {
+  id: number;
+  name: string;
+}
+
+interface TournamentEntry {
+    discordId: string;
+    minecraftUsername: string;
+    team: (Pokemon | null)[];
+    isLocked: boolean;
+}
+
+interface TournamentPlayer {
+    discordId: string;
+    minecraftUsername: string;
+    isLocked: boolean;
+    isDev: boolean;
+}
 
 interface TournamentMatch {
     id: string;
+    bracketGroup?: string; // 'winners' | 'losers' | 'finals'
     round: number;
     matchIndex: number;
     player1: string | null;
@@ -14,13 +38,204 @@ interface TournamentMatch {
     nextMatchId: string | null;
 }
 
-interface TournamentPlayer {
-    discordId: string;
-    minecraftUsername: string;
-    isLocked: boolean;
-    isDev: boolean;
-}
+type TournamentStatus = 'DRAFTING' | 'LOCK_IN' | 'ONGOING';
 
+// --- CONSTANTS ---
+const TYPE_COLORS: Record<string, string> = {
+    normal: 'bg-stone-400 text-stone-900',
+    fire: 'bg-red-500 text-white',
+    water: 'bg-blue-500 text-white',
+    grass: 'bg-green-500 text-white',
+    electric: 'bg-yellow-400 text-black',
+    ice: 'bg-cyan-300 text-black',
+    fighting: 'bg-red-700 text-white',
+    poison: 'bg-purple-500 text-white',
+    ground: 'bg-yellow-700 text-white',
+    flying: 'bg-indigo-300 text-black',
+    psychic: 'bg-pink-500 text-white',
+    bug: 'bg-lime-500 text-white',
+    rock: 'bg-yellow-800 text-white',
+    ghost: 'bg-indigo-800 text-white',
+    dragon: 'bg-violet-600 text-white',
+    steel: 'bg-slate-400 text-slate-900',
+    fairy: 'bg-pink-300 text-black',
+    dark: 'bg-neutral-800 text-white',
+};
+
+// --- BAN LIST LOGIC ---
+const BANNED_IDS = new Set([
+    // Gen 1
+    144, 145, 146, 150, 151,
+    // Gen 2
+    243, 244, 245, 249, 250, 251,
+    // Gen 3
+    377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
+    // Gen 4
+    480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494,
+    // Gen 5
+    638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
+    // Gen 6
+    716, 717, 718, 719, 720, 721,
+    // Gen 7 (Incl. Ultra Beasts)
+    772, 773, 785, 786, 787, 789, 790, 791, 792, 
+    793, 794, 795, 796, 797, 798, 799, // UBs
+    800, 801, 802, 803, 804, 805, 806, 807, 808, 809,
+    // Gen 8
+    888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898, 905,
+    // Gen 9 (Treasures of Ruin + Box Legends + DLC Legends/Mythics)
+    1001, 1002, 1003, 1004, 1007, 1008, 1014, 1015, 1016, 1017, 1024, 1025
+]);
+
+const isBanned = (id: number) => BANNED_IDS.has(id);
+
+// --- CACHE & HELPERS ---
+const clientImageCache = new Map<string, boolean>();
+
+const getFormattedName = (name: string) => {
+    return name.toLowerCase()
+        .replace(/[.']/g, '')
+        .replace(/♀/g, '-f')
+        .replace(/♂/g, '-m')
+        .replace(/\s+/g, '-');
+};
+
+// --- COMPONENTS ---
+
+const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ pokemon, className = "" }) => {
+    const [imgSrc, setImgSrc] = useState<string>("");
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const verifyImage = async () => {
+            const cobbleName = getFormattedName(pokemon.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
+
+            if (clientImageCache.has(primaryUrl)) {
+                if (isMounted) {
+                    const isValid = clientImageCache.get(primaryUrl);
+                    setImgSrc(isValid ? primaryUrl : fallback3d);
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+                
+                clientImageCache.set(primaryUrl, data.valid);
+
+                if (isMounted) {
+                    setImgSrc(data.valid ? primaryUrl : fallback3d);
+                }
+            } catch (error) {
+                if (isMounted) setImgSrc(fallback3d);
+            }
+        };
+
+        verifyImage();
+
+        return () => { isMounted = false; };
+    }, [pokemon]);
+
+    const handleImageError = () => {
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`);
+        } else {
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`);
+        }
+    };
+
+    return (
+        <OptimizedImage 
+            src={imgSrc} 
+            alt={pokemon.name} 
+            className={`w-full h-full object-contain ${className}`}
+            contain
+            onError={handleImageError}
+            loading="lazy"
+        />
+    );
+};
+
+const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }> = ({ pokemon, revealed }) => {
+    const [types, setTypes] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (revealed && pokemon) {
+            fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    setTypes(data.types.map((t: any) => t.type.name));
+                })
+                .catch(() => setTypes([]));
+        } else {
+            setTypes([]);
+        }
+    }, [pokemon, revealed]);
+
+    if (!revealed || !pokemon) {
+        return (
+            <div className="aspect-square bg-black/40 rounded-[2rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group shadow-lg">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-500">
+                    <span className="text-4xl font-black text-gray-700 select-none">?</span>
+                </div>
+                <div className="h-2 w-16 bg-white/5 rounded-full"></div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="aspect-square bg-[#120507] rounded-[2rem] border-2 border-white/10 relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+            <div className="absolute top-3 right-3 z-30">
+                <span className="text-[9px] font-black text-white/40 bg-black/60 px-2 py-0.5 rounded-lg border border-white/5 font-mono tracking-wider backdrop-blur-sm">
+                    #{pokemon.id.toString().padStart(3, '0')}
+                </span>
+            </div>
+            <div className="absolute inset-0 z-10 p-4 pb-14 flex items-center justify-center">
+                <div className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] filter group-hover:scale-110 transition-transform duration-500 ease-out">
+                    <PokemonTeamImage pokemon={pokemon} />
+                </div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/10 z-20 flex flex-col items-center justify-center py-2 px-1">
+                <h4 className="text-white font-black uppercase text-sm tracking-wider truncate drop-shadow-md mb-1.5 w-full text-center">
+                    {pokemon.name}
+                </h4>
+                <div className="flex justify-center flex-wrap gap-1.5 w-full">
+                    {types.length > 0 ? types.map(t => (
+                        <span key={t} className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md border border-white/10 ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}`}>
+                            {t}
+                        </span>
+                    )) : (
+                        <div className="flex gap-1"><div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div><div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div></div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNode; color?: string }> = ({ title, icon, children, color = "border-white/10" }) => (
+    <div className={`bg-black/40 backdrop-blur-xl rounded-2xl border-2 ${color} p-6 shadow-2xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300 h-full flex flex-col justify-start`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 pointer-events-none"></div>
+        <div className="absolute -top-2 -right-2 p-4 opacity-10 text-7xl pointer-events-none group-hover:scale-110 transition-transform">{icon}</div>
+        <div className="flex items-center gap-3 mb-4 relative z-10 w-full justify-start">
+             <span className="text-3xl filter drop-shadow-lg grayscale-0">{icon}</span> 
+            <h3 className="text-xl font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm text-left">{title}</h3>
+        </div>
+        <div className="text-gray-300 text-xs md:text-sm space-y-2 relative z-10 leading-relaxed font-medium text-left w-full">
+            {children}
+        </div>
+    </div>
+);
+
+// --- BRACKET COMPONENT ---
 const BracketMatchCard: React.FC<{ 
     match: TournamentMatch; 
     onEdit: (m: TournamentMatch) => void; 
@@ -340,42 +555,52 @@ const AdminTournamentDev: React.FC = () => {
         setIsDragging(false);
     };
 
-    // --- BRACKET RENDERING LOGIC ---
-    const rounds = useMemo(() => {
+    // --- BRACKET LAYOUT HELPERS ---
+    const CARD_HEIGHT = 120;
+    const VERTICAL_GAP = 20;
+    const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
+    const COLUMN_WIDTH = 280;
+    const COLUMN_GAP = 60;
+
+    const getMatchOffsetBinary = (round: number, index: number): number => {
+        if (round === 1) {
+            return index * CARD_TOTAL_H;
+        }
+        const prevRound = round - 1;
+        const src1 = getMatchOffsetBinary(prevRound, index * 2);
+        const src2 = getMatchOffsetBinary(prevRound, index * 2 + 1);
+        return (src1 + src2) / 2;
+    };
+
+    const organizeByRound = (matchList: TournamentMatch[]) => {
         const grouped: Record<number, TournamentMatch[]> = {};
-        if (!matches || matches.length === 0) return grouped;
-        
-        matches.forEach(m => {
+        matchList.forEach(m => {
             if (!grouped[m.round]) grouped[m.round] = [];
             grouped[m.round].push(m);
         });
-        
-        // Sort within rounds
         Object.keys(grouped).forEach(r => {
             grouped[Number(r)].sort((a,b) => a.matchIndex - b.matchIndex);
         });
         return grouped;
-    }, [matches]);
-
-    const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
-
-    // Calculate layout metrics
-    // Increased Height to accommodate new layout comfortably
-    const CARD_HEIGHT = 120; 
-    const VERTICAL_GAP = 20;
-    const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
-
-    const getMatchOffset = (round: number, index: number): number => {
-        if (round === 1) {
-            return index * CARD_TOTAL_H;
-        }
-        // Recursive center alignment logic
-        const prevRound = round - 1;
-        const src1 = getMatchOffset(prevRound, index * 2);
-        const src2 = getMatchOffset(prevRound, index * 2 + 1);
-        
-        return (src1 + src2) / 2;
     };
+
+    // Derived State for Layout
+    const winners = useMemo(() => matches.filter(m => m.bracketGroup === 'winners'), [matches]);
+    const losers = useMemo(() => matches.filter(m => m.bracketGroup === 'losers'), [matches]);
+    const finals = useMemo(() => matches.filter(m => m.bracketGroup === 'finals'), [matches]);
+
+    const winnerRounds = useMemo(() => organizeByRound(winners), [winners]);
+    const loserRounds = useMemo(() => organizeByRound(losers), [losers]);
+    
+    const wRoundKeys = Object.keys(winnerRounds).map(Number).sort((a,b) => a-b);
+    const lRoundKeys = Object.keys(loserRounds).map(Number).sort((a,b) => a-b);
+
+    // Calculate max height of winners bracket to offset losers bracket below
+    const winnersHeight = useMemo(() => {
+        if (winners.length === 0) return 0;
+        const r1Count = winnerRounds[1]?.length || 0;
+        return r1Count * CARD_TOTAL_H;
+    }, [winners, winnerRounds]);
 
     if (!isAuthenticated) {
         return (
@@ -490,6 +715,7 @@ const AdminTournamentDev: React.FC = () => {
                         <div className="flex gap-4">
                             <select value={bracketType} onChange={e => setBracketType(e.target.value)} className="bg-black/40 border border-white/10 p-2 rounded text-white text-sm">
                                 <option value="SINGLE_ELIMINATION">Single Elimination</option>
+                                <option value="DOUBLE_ELIMINATION">Double Elimination</option>
                             </select>
                             <button onClick={handleClear} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded text-sm transition-colors">CLEAR ALL</button>
                         </div>
@@ -525,66 +751,135 @@ const AdminTournamentDev: React.FC = () => {
                                 }}
                                 className="w-full h-full origin-top-left"
                             >
-                                <div className="flex p-10 min-w-max relative h-full">
-                                    {roundKeys.map((round) => {
-                                        const roundMatches = rounds[round];
-                                        return (
-                                            <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
-                                                <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
-                                                    Round {round}
-                                                </div>
-                                                
-                                                {/* Render Matches for this Round */}
-                                                <div className="relative h-full">
-                                                    {roundMatches.map((m) => {
-                                                        const top = getMatchOffset(round, m.matchIndex);
-                                                        return (
-                                                            <div 
-                                                                key={m.id} 
-                                                                className="absolute left-0 w-full"
-                                                                style={{ top: `${top}px` }}
-                                                            >
-                                                                <BracketMatchCard 
-                                                                    match={m} 
-                                                                    onEdit={openEditModal}
-                                                                    onResult={handleUpdateMatchResult}
-                                                                />
-                                                                
-                                                                {/* SVG Connector to Next Round */}
-                                                                {/* Only draw if not the final round */}
-                                                                {round < roundKeys.length && (
-                                                                    <svg 
-                                                                        className="absolute top-0 left-full overflow-visible pointer-events-none z-0" 
-                                                                        width="64" 
-                                                                        height="1" // Height doesn't matter as we draw relative
-                                                                        style={{ top: '50%' }}
-                                                                    >
-                                                                        {m.matchIndex % 2 === 0 ? (
-                                                                            // Top of pair: Curve down
-                                                                            <path 
-                                                                                d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                                fill="none" 
-                                                                                stroke="rgba(255,255,255,0.1)" 
-                                                                                strokeWidth="2"
-                                                                            />
-                                                                        ) : (
-                                                                            // Bottom of pair: Curve up
-                                                                            <path 
-                                                                                d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                                fill="none" 
-                                                                                stroke="rgba(255,255,255,0.1)" 
-                                                                                strokeWidth="2"
-                                                                            />
+                                <div className="flex flex-col gap-20 p-10 min-w-max relative h-full">
+                                    
+                                    {/* WINNERS BRACKET */}
+                                    <div className="relative">
+                                        {bracketType === 'DOUBLE_ELIMINATION' && (
+                                            <div className="absolute -top-8 left-0 font-black text-brand-primary uppercase tracking-widest text-lg opacity-80">Upper Bracket</div>
+                                        )}
+                                        <div className="flex">
+                                            {wRoundKeys.map((round) => {
+                                                const roundMatches = winnerRounds[round];
+                                                return (
+                                                    <div key={round} className="flex flex-col relative" style={{ width: `${COLUMN_WIDTH}px`, marginRight: `${COLUMN_GAP}px` }}>
+                                                        <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30 border border-white/5">
+                                                            Round {round}
+                                                        </div>
+                                                        <div className="relative h-full">
+                                                            {roundMatches.map((m) => {
+                                                                const top = getMatchOffsetBinary(round, m.matchIndex);
+                                                                return (
+                                                                    <div key={m.id} className="absolute left-0 w-full" style={{ top: `${top}px` }}>
+                                                                        <BracketMatchCard 
+                                                                            match={m} 
+                                                                            onEdit={openEditModal}
+                                                                            onResult={handleUpdateMatchResult}
+                                                                        />
+                                                                        {/* Binary SVG Lines */}
+                                                                        {round < wRoundKeys.length && m.matchIndex % 2 === 0 && (
+                                                                            <svg className="absolute top-0 left-full overflow-visible pointer-events-none z-0" width={COLUMN_GAP} height="1" style={{ top: '50%' }}>
+                                                                                <path 
+                                                                                    d={`M 0 0 H ${COLUMN_GAP/2} V ${getMatchOffsetBinary(round+1, Math.floor(m.matchIndex/2)) - top} H ${COLUMN_GAP}`}
+                                                                                    fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2"
+                                                                                />
+                                                                            </svg>
                                                                         )}
-                                                                    </svg>
-                                                                )}
+                                                                        {round < wRoundKeys.length && m.matchIndex % 2 !== 0 && (
+                                                                            <svg className="absolute top-0 left-full overflow-visible pointer-events-none z-0" width={COLUMN_GAP} height="1" style={{ top: '50%' }}>
+                                                                                <path 
+                                                                                    d={`M 0 0 H ${COLUMN_GAP/2} V ${getMatchOffsetBinary(round+1, Math.floor(m.matchIndex/2)) - top} H ${COLUMN_GAP}`}
+                                                                                    fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2"
+                                                                                />
+                                                                            </svg>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* LOSERS BRACKET */}
+                                    {bracketType === 'DOUBLE_ELIMINATION' && losers.length > 0 && (
+                                        <div className="relative mt-12 pt-12 border-t border-white/5">
+                                            <div className="absolute -top-8 left-0 font-black text-red-500 uppercase tracking-widest text-lg opacity-80">Losers Bracket</div>
+                                            <div className="flex">
+                                                {lRoundKeys.map((round) => {
+                                                    const roundMatches = loserRounds[round];
+                                                    return (
+                                                        <div key={`L-${round}`} className="flex flex-col relative" style={{ width: `${COLUMN_WIDTH}px`, marginRight: `${COLUMN_GAP}px` }}>
+                                                            <div className="text-center font-black text-red-500 uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30 border border-white/5">
+                                                                L-Round {round}
                                                             </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                            <div className="relative h-full">
+                                                                {roundMatches.map((m, idx) => {
+                                                                    // Linear stacking for Losers
+                                                                    const top = idx * CARD_TOTAL_H;
+                                                                    
+                                                                    // Explicit Line Calculation to Next Match
+                                                                    let lineSvg = null;
+                                                                    if (m.nextMatchId) {
+                                                                        const targetMatch = losers.find(lm => lm.id === m.nextMatchId);
+                                                                        if (targetMatch) {
+                                                                            // Calculate relative Y distance to target
+                                                                            const targetIdx = loserRounds[targetMatch.round].findIndex(tm => tm.id === targetMatch.id);
+                                                                            const targetTop = targetIdx * CARD_TOTAL_H;
+                                                                            const diffY = targetTop - top;
+                                                                            
+                                                                            // Check if target is in immediate next round column
+                                                                            const roundDiff = targetMatch.round - round;
+                                                                            const width = (roundDiff * (COLUMN_WIDTH + COLUMN_GAP)) - COLUMN_WIDTH;
+                                                                            
+                                                                            lineSvg = (
+                                                                                <svg className="absolute top-0 left-full overflow-visible pointer-events-none z-0" width={width} height="1" style={{ top: '50%' }}>
+                                                                                    <path 
+                                                                                        d={`M 0 0 C ${width/2} 0, ${width/2} ${diffY}, ${width} ${diffY}`}
+                                                                                        fill="none" stroke="rgba(239,68,68,0.3)" strokeWidth="2"
+                                                                                    />
+                                                                                </svg>
+                                                                            );
+                                                                        }
+                                                                    }
+
+                                                                    return (
+                                                                        <div key={m.id} className="absolute left-0 w-full" style={{ top: `${top}px` }}>
+                                                                            <BracketMatchCard 
+                                                                                match={m} 
+                                                                                onEdit={openEditModal}
+                                                                                onResult={handleUpdateMatchResult}
+                                                                            />
+                                                                            {lineSvg}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
-                                        );
-                                    })}
+                                        </div>
+                                    )}
+
+                                    {/* FINALS (Standalone Block positioned relative to end of brackets) */}
+                                    {finals.length > 0 && (
+                                        <div className="absolute top-0 right-0 flex flex-col justify-center h-full pl-20 border-l border-white/5" style={{ left: `${(wRoundKeys.length) * (COLUMN_WIDTH + COLUMN_GAP)}px` }}>
+                                            <div className="font-black text-yellow-400 uppercase tracking-widest mb-6 text-xl text-center">Grand Finals</div>
+                                            {finals.map(m => (
+                                                <div key={m.id} className="mb-4">
+                                                    <BracketMatchCard 
+                                                        match={m} 
+                                                        onEdit={openEditModal}
+                                                        onResult={handleUpdateMatchResult}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
                         )}
