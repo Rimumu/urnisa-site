@@ -12,6 +12,7 @@ import GachaDev from './pages/GachaDev'; // Import Dev Page
 import TournamentDev from './pages/TournamentDev'; // New Import
 import Tournament from './pages/Tournament'; // Prod Tournament Page
 import AdminTournamentDev from './pages/AdminTournamentDev'; // New Admin Tournament Dev Page
+import AdminTournament from './pages/AdminTournament'; // New Admin Tournament Production Page
 import Bingo from './pages/Bingo';
 import BingoDashboard from './pages/BingoDashboard';
 import Inventory from './pages/Inventory';
@@ -81,6 +82,9 @@ const App: React.FC = () => {
             <Route path="/dev/gacha" element={<GachaDev />} />
             <Route path="/dev/tournament" element={<TournamentDev />} />
             <Route path="/dev/admintournament" element={<AdminTournamentDev />} />
+            {/* Prod Admin Routes */}
+            <Route path="/admin/tournament" element={<AdminTournament />} />
+            
             <Route path="/minecraft/bingo" element={<BingoDashboard />} />
             <Route path="/minecraft/bingo/card" element={<Bingo />} />
             <Route path="/inventory" element={<Inventory />} />

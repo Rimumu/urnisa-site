@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE_URL, DISCORD_API_URL } from '../constants';
 import { useSchedule } from '../hooks/useSchedule';
@@ -7,6 +8,7 @@ import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
 import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
+import { Link } from 'react-router-dom';
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
 const processImageUrl = (url: string): string => {
@@ -1634,6 +1636,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             ))}
                                         </div>
                                     </div>
+                                    
+                                    {/* Link to Live Bracket Manager */}
+                                    <Link to="/admin/tournament" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 border border-purple-400/50">
+                                        <span className="text-xl">🎮</span>
+                                        <span>Manage Live Bracket Visuals</span>
+                                    </Link>
+
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                         <h3 className="font-bold text-white flex items-center gap-2">
                                             <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
