@@ -359,7 +359,8 @@ const TournamentDev: React.FC = () => {
   const fetchPlayers = async () => {
       if (playersList.length === 0) setLoadingPlayers(true);
       try {
-          const res = await fetch(`${API_BASE_URL}/api/tournament/players`);
+          // Dev page fetches dev players too
+          const res = await fetch(`${API_BASE_URL}/api/tournament/players?dev=true`);
           if (res.ok) {
               setPlayersList(await res.json());
           }
