@@ -6,6 +6,7 @@ import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/u
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
+import OptimizedImage from '../components/OptimizedImage';
 import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
 import { Link } from 'react-router-dom';
@@ -167,6 +168,77 @@ const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void 
     );
 };
 
+// --- POKEMON IMAGE UTILS & COMPONENT ---
+const clientImageCache = new Map<string, boolean>();
+
+const getFormattedName = (name: string) => {
+    return name.toLowerCase()
+        .replace(/[.']/g, '')
+        .replace(/♀/g, '-f')
+        .replace(/♂/g, '-m')
+        .replace(/\s+/g, '-');
+};
+
+const PokemonAdminImage: React.FC<{ pokemon: { id: number; name: string } }> = ({ pokemon }) => {
+    const [imgSrc, setImgSrc] = useState<string>("");
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const verifyImage = async () => {
+            const cobbleName = getFormattedName(pokemon.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
+
+            if (clientImageCache.has(primaryUrl)) {
+                if (isMounted) {
+                    const isValid = clientImageCache.get(primaryUrl);
+                    setImgSrc(isValid ? primaryUrl : fallback3d);
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+                
+                clientImageCache.set(primaryUrl, data.valid);
+
+                if (isMounted) {
+                    setImgSrc(data.valid ? primaryUrl : fallback3d);
+                }
+            } catch (error) {
+                if (isMounted) setImgSrc(fallback3d);
+            }
+        };
+
+        verifyImage();
+
+        return () => { isMounted = false; };
+    }, [pokemon]);
+
+    const handleImageError = () => {
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`);
+        } else {
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`);
+        }
+    };
+
+    return (
+        <OptimizedImage 
+            src={imgSrc} 
+            alt={pokemon.name} 
+            className={`w-full h-full object-contain`}
+            contain
+            onError={handleImageError}
+            loading="lazy"
+        />
+    );
+};
+
 // Interface for Code List
 interface Code {
     _id: string;
@@ -183,7 +255,7 @@ interface Code {
 interface TournamentPlayer {
     discordId: string;
     minecraftUsername: string;
-    team: (any | null)[];
+    team: ({ id: number; name: string } | null)[];
     isLocked: boolean;
     updatedAt: string;
 }
@@ -1667,7 +1739,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 <div className="flex-1 grid grid-cols-6 gap-2 w-full">
                                                     {p.team.map((poke, idx) => (
                                                         <div key={idx} className="aspect-square bg-black/40 rounded-lg border border-white/5 flex items-center justify-center p-1" title={poke?.name || "Empty"}>
-                                                            {poke ? <img src={`https://cobblemon.tools/pokedex/pokemon/${poke.name.toLowerCase().replace(/\s+/g, '-')}/sprite.png`} className="w-full h-full object-contain" alt={poke.name} /> : <span className="text-[8px] text-gray-700">•</span>}
+                                                            {poke ? <PokemonAdminImage pokemon={poke} /> : <span className="text-[8px] text-gray-700">•</span>}
                                                         </div>
                                                     ))}
                                                 </div>
