@@ -336,6 +336,13 @@ const TournamentDev: React.FC = () => {
   const [loadingPlayers, setLoadingPlayers] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<TournamentEntry | null>(null);
 
+  // --- ZOOM & PAN STATE ---
+  const [zoomScale, setZoomScale] = useState(1);
+  const [panPos, setPanPos] = useState({ x: 50, y: 50 }); // Initial padding
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const fetchPokemon = async () => {
       try {
@@ -536,6 +543,49 @@ const TournamentDev: React.FC = () => {
       finally { setSaving(false); }
   };
 
+  // --- ZOOM & PAN HANDLERS ---
+  const handleWheel = (e: React.WheelEvent) => {
+      if(matches.length === 0) return;
+      // e.preventDefault(); 
+      const zoomSensitivity = 0.001;
+      const delta = -e.deltaY * zoomSensitivity; 
+      const newScale = Math.min(Math.max(0.2, zoomScale + delta), 3);
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Zoom towards mouse pointer
+      const newX = mouseX - (mouseX - panPos.x) * (newScale / zoomScale);
+      const newY = mouseY - (mouseY - panPos.y) * (newScale / zoomScale);
+
+      setZoomScale(newScale);
+      setPanPos({ x: newX, y: newY });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+      if(matches.length === 0) return;
+      if(e.button !== 0) return;
+      
+      setIsDragging(true);
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+      e.preventDefault(); 
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastMousePos.x;
+      const dy = e.clientY - lastMousePos.y;
+      setPanPos(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+      setIsDragging(false);
+  };
+
   // Group Matches By Round for Bracket Display
   const rounds = useMemo(() => {
       const grouped: Record<number, TournamentMatch[]> = {};
@@ -556,7 +606,6 @@ const TournamentDev: React.FC = () => {
   const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
 
   // Calculate layout metrics
-  // Height must align with Admin panel to ensure consistency
   const CARD_HEIGHT = 120; 
   const VERTICAL_GAP = 20;
   const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
@@ -805,7 +854,9 @@ const TournamentDev: React.FC = () => {
             )}
 
             {activeTab === 'brackets' && (
-              <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-500 min-h-[600px] overflow-x-auto custom-scrollbar">
+              <div 
+                className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-0 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-500 h-[600px] flex flex-col"
+              >
                 {loadingBracket ? (
                     <div className="flex flex-col items-center justify-center h-full text-center">
                         <div className="animate-spin text-4xl mb-4">⌛</div>
@@ -818,62 +869,90 @@ const TournamentDev: React.FC = () => {
                         <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after lock-ins!</p>
                     </div>
                 ) : (
-                    <div className="flex p-10 min-w-max relative h-full">
-                        {roundKeys.map((round) => {
-                            const roundMatches = rounds[round];
-                            return (
-                                <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
-                                    <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
-                                        Round {round}
-                                    </div>
-                                    
-                                    {/* Render Matches for this Round */}
-                                    <div className="relative h-full">
-                                        {roundMatches.map((m) => {
-                                            const top = getMatchOffset(round, m.matchIndex);
-                                            return (
-                                                <div 
-                                                    key={m.id} 
-                                                    className="absolute left-0 w-full"
-                                                    style={{ top: `${top}px` }}
-                                                >
-                                                    <BracketMatch match={m} />
-                                                    
-                                                    {/* SVG Connector to Next Round */}
-                                                    {/* Only draw if not the final round */}
-                                                    {round < roundKeys.length && (
-                                                        <svg 
-                                                            className="absolute top-0 left-full overflow-visible pointer-events-none z-0" 
-                                                            width="64" 
-                                                            height="1" // Height doesn't matter as we draw relative
-                                                            style={{ top: '50%' }}
+                    <div 
+                        className="flex-1 overflow-hidden relative cursor-move bg-[#1a0b0e]/50 select-none"
+                        ref={containerRef}
+                        onWheel={handleWheel}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                    >
+                        {/* Control Indicator */}
+                        <div className="absolute top-4 right-4 z-50 bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 text-xs text-gray-300 flex items-center gap-3 pointer-events-none shadow-xl">
+                            <span className="text-xl">🔍</span>
+                            <div className="flex flex-col gap-0.5">
+                                <div className="font-bold text-white">Interactive Map</div>
+                                <div className="text-[10px] text-gray-400">Scroll to Zoom • Drag to Pan</div>
+                            </div>
+                        </div>
+
+                        <div 
+                            style={{ 
+                                transform: `translate(${panPos.x}px, ${panPos.y}px) scale(${zoomScale})`, 
+                                transformOrigin: '0 0',
+                                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                            }}
+                            className="w-full h-full origin-top-left"
+                        >
+                            <div className="flex p-10 min-w-max relative h-full">
+                                {roundKeys.map((round) => {
+                                    const roundMatches = rounds[round];
+                                    return (
+                                        <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
+                                            <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
+                                                Round {round}
+                                            </div>
+                                            
+                                            {/* Render Matches for this Round */}
+                                            <div className="relative h-full">
+                                                {roundMatches.map((m) => {
+                                                    const top = getMatchOffset(round, m.matchIndex);
+                                                    return (
+                                                        <div 
+                                                            key={m.id} 
+                                                            className="absolute left-0 w-full"
+                                                            style={{ top: `${top}px` }}
                                                         >
-                                                            {m.matchIndex % 2 === 0 ? (
-                                                                // Top of pair: Curve down
-                                                                <path 
-                                                                    d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                    fill="none" 
-                                                                    stroke="rgba(255,255,255,0.1)" 
-                                                                    strokeWidth="2"
-                                                                />
-                                                            ) : (
-                                                                // Bottom of pair: Curve up
-                                                                <path 
-                                                                    d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                    fill="none" 
-                                                                    stroke="rgba(255,255,255,0.1)" 
-                                                                    strokeWidth="2"
-                                                                />
+                                                            <BracketMatch match={m} />
+                                                            
+                                                            {/* SVG Connector to Next Round */}
+                                                            {/* Only draw if not the final round */}
+                                                            {round < roundKeys.length && (
+                                                                <svg 
+                                                                    className="absolute top-0 left-full overflow-visible pointer-events-none z-0" 
+                                                                    width="64" 
+                                                                    height="1" // Height doesn't matter as we draw relative
+                                                                    style={{ top: '50%' }}
+                                                                >
+                                                                    {m.matchIndex % 2 === 0 ? (
+                                                                        // Top of pair: Curve down
+                                                                        <path 
+                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
+                                                                            fill="none" 
+                                                                            stroke="rgba(255,255,255,0.1)" 
+                                                                            strokeWidth="2"
+                                                                        />
+                                                                    ) : (
+                                                                        // Bottom of pair: Curve up
+                                                                        <path 
+                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
+                                                                            fill="none" 
+                                                                            stroke="rgba(255,255,255,0.1)" 
+                                                                            strokeWidth="2"
+                                                                        />
+                                                                    )}
+                                                                </svg>
                                                             )}
-                                                        </svg>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 )}
               </div>
