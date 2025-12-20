@@ -149,6 +149,42 @@ const AdminTournamentDev: React.FC = () => {
     const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // Keep track of current state in ref for event listener
+    const stateRef = useRef({ zoomScale, panPos });
+    useEffect(() => {
+        stateRef.current = { zoomScale, panPos };
+    }, [zoomScale, panPos]);
+
+    // Attach native wheel listener to prevent default scrolling
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const onWheel = (e: WheelEvent) => {
+            if (matches.length === 0) return;
+            e.preventDefault();
+
+            const { zoomScale: currentZoom, panPos: currentPan } = stateRef.current;
+            const zoomSensitivity = 0.001;
+            const delta = -e.deltaY * zoomSensitivity; 
+            const newScale = Math.min(Math.max(0.2, currentZoom + delta), 3);
+
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const newX = mouseX - (mouseX - currentPan.x) * (newScale / currentZoom);
+            const newY = mouseY - (mouseY - currentPan.y) * (newScale / currentZoom);
+
+            setZoomScale(newScale);
+            setPanPos({ x: newX, y: newY });
+        };
+
+        // { passive: false } is required to use preventDefault()
+        container.addEventListener('wheel', onWheel, { passive: false });
+        return () => container.removeEventListener('wheel', onWheel);
+    }, [matches.length]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -265,30 +301,9 @@ const AdminTournamentDev: React.FC = () => {
         setSelectedParticipants(shuffled);
     };
 
-    // --- ZOOM & PAN HANDLERS ---
-    const handleWheel = (e: React.WheelEvent) => {
-        // e.preventDefault(); 
-        const zoomSensitivity = 0.001;
-        const delta = -e.deltaY * zoomSensitivity; 
-        const newScale = Math.min(Math.max(0.2, zoomScale + delta), 3);
-
-        const rect = containerRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        // Zoom towards mouse pointer
-        const newX = mouseX - (mouseX - panPos.x) * (newScale / zoomScale);
-        const newY = mouseY - (mouseY - panPos.y) * (newScale / zoomScale);
-
-        setZoomScale(newScale);
-        setPanPos({ x: newX, y: newY });
-    };
-
+    // Drag Handlers
     const handleMouseDown = (e: React.MouseEvent) => {
         if(matches.length === 0) return;
-        // Only start dragging if left click (button 0)
         if(e.button !== 0) return;
         
         setIsDragging(true);
@@ -466,7 +481,6 @@ const AdminTournamentDev: React.FC = () => {
                     <div 
                         className="flex-1 overflow-hidden relative cursor-move bg-[#1a0b0e]/50 select-none rounded-xl border border-white/5"
                         ref={containerRef}
-                        onWheel={handleWheel}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
