@@ -262,6 +262,13 @@ const BracketMatch: React.FC<{ match: TournamentMatch }> = ({ match }) => {
                         className={`px-3 py-2.5 flex items-center justify-between border-b border-white/5 transition-colors ${isP1Winner ? 'bg-brand-primary/10' : ''}`}
                     >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {match.player1 && (
+                                <img 
+                                    src={`https://mc-heads.net/avatar/${match.player1}/24`} 
+                                    alt="" 
+                                    className="w-5 h-5 rounded-sm shadow-sm"
+                                />
+                            )}
                             <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
                                 {match.player1 || <span className="text-gray-600 italic">TBD</span>}
                             </span>
@@ -283,6 +290,13 @@ const BracketMatch: React.FC<{ match: TournamentMatch }> = ({ match }) => {
                         className={`px-3 py-2.5 flex items-center justify-between transition-colors ${isP2Winner ? 'bg-brand-primary/10' : ''}`}
                     >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {match.player2 && (
+                                <img 
+                                    src={`https://mc-heads.net/avatar/${match.player2}/24`} 
+                                    alt="" 
+                                    className="w-5 h-5 rounded-sm shadow-sm"
+                                />
+                            )}
                             <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
                                 {match.player2 || <span className="text-gray-600 italic">TBD</span>}
                             </span>
