@@ -227,40 +227,70 @@ const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNod
     </div>
 );
 
-// Bracket Components
+// --- BRACKET COMPONENT ---
 const BracketMatch: React.FC<{ match: TournamentMatch }> = ({ match }) => {
+    // Parse Score
+    const scoreObj = useMemo(() => {
+        if (!match.score) return { p1: '', p2: '', raw: '' };
+        const parts = match.score.match(/^(\d+)\s*[-:,\s]\s*(\d+)$/);
+        if (parts) return { p1: parts[1], p2: parts[2], raw: '' };
+        return { p1: '', p2: '', raw: match.score };
+    }, [match.score]);
+
+    const isP1Winner = match.winner === match.player1 && match.winner;
+    const isP2Winner = match.winner === match.player2 && match.winner;
+
     return (
-        <div className="flex flex-col w-48 relative group">
+        <div className="relative group w-60 z-10">
             <div className={`
-                bg-[#1a0b0e] border-2 rounded-lg overflow-hidden shadow-lg transition-all duration-300
-                ${match.status === 'COMPLETED' ? 'border-brand-primary/50' : 'border-white/10'}
-                group-hover:border-white/30 group-hover:shadow-brand-primary/20
+                bg-[#120507] border-2 rounded-xl overflow-hidden shadow-xl transition-all duration-300
+                ${match.status === 'COMPLETED' ? 'border-brand-primary/60 shadow-brand-primary/10' : 'border-white/10'}
+                hover:border-white/30
             `}>
                 {/* Header */}
-                <div className="bg-black/40 px-2 py-1 flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">
+                <div className="bg-black/40 px-3 py-1.5 flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
                     <span>{match.id}</span>
-                    <span className={match.status === 'COMPLETED' ? 'text-green-500' : 'text-yellow-500'}>{match.status === 'COMPLETED' ? 'Done' : 'Pending'}</span>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${match.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-500'}`}>
+                        {match.status === 'COMPLETED' ? 'Finished' : match.status}
+                    </span>
                 </div>
-                
-                {/* Player 1 */}
-                <div className={`px-3 py-2 flex justify-between items-center border-b border-white/5 transition-colors ${match.winner === match.player1 && match.winner ? 'bg-brand-primary/10 text-brand-primary font-bold' : 'text-gray-300'}`}>
-                    <span className="truncate">{match.player1 || "TBD"}</span>
-                    {match.winner === match.player1 && match.winner && <span>👑</span>}
+
+                {/* Content */}
+                <div className="flex flex-col">
+                    {/* Player 1 */}
+                    <div 
+                        className={`px-3 py-2 flex justify-between items-center border-b border-white/5 transition-colors ${isP1Winner ? 'bg-brand-primary/10' : ''}`}
+                    >
+                        <span className={`text-sm font-bold truncate flex-1 mr-2 ${isP1Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
+                            {match.player1 || <span className="text-gray-600 italic">TBD</span>}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            {scoreObj.p1 && <span className="font-mono font-black text-white">{scoreObj.p1}</span>}
+                            {isP1Winner && <span className="text-sm">👑</span>}
+                        </div>
+                    </div>
+
+                    {/* Player 2 */}
+                    <div 
+                        className={`px-3 py-2 flex justify-between items-center transition-colors ${isP2Winner ? 'bg-brand-primary/10' : ''}`}
+                    >
+                        <span className={`text-sm font-bold truncate flex-1 mr-2 ${isP2Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
+                            {match.player2 || <span className="text-gray-600 italic">TBD</span>}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            {scoreObj.p2 && <span className="font-mono font-black text-white">{scoreObj.p2}</span>}
+                            {isP2Winner && <span className="text-sm">👑</span>}
+                        </div>
+                    </div>
                 </div>
-                
-                {/* Player 2 */}
-                <div className={`px-3 py-2 flex justify-between items-center transition-colors ${match.winner === match.player2 && match.winner ? 'bg-brand-primary/10 text-brand-primary font-bold' : 'text-gray-300'}`}>
-                    <span className="truncate">{match.player2 || "TBD"}</span>
-                    {match.winner === match.player2 && match.winner && <span>👑</span>}
-                </div>
+
+                {/* Raw Score Fallback */}
+                {scoreObj.raw && (
+                    <div className="bg-black/60 py-1 text-center border-t border-white/5">
+                        <span className="text-[10px] font-mono font-bold text-gray-400">{scoreObj.raw}</span>
+                    </div>
+                )}
             </div>
-            
-            {/* Score Bubble */}
-            {match.status === 'COMPLETED' && match.score && (
-                <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 bg-black border border-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md z-10">
-                    {match.score}
-                </div>
-            )}
         </div>
     );
 };
@@ -493,14 +523,37 @@ const TournamentDev: React.FC = () => {
   // Group Matches By Round for Bracket Display
   const rounds = useMemo(() => {
       const grouped: Record<number, TournamentMatch[]> = {};
+      if (!matches || matches.length === 0) return grouped;
+      
       matches.forEach(m => {
           if (!grouped[m.round]) grouped[m.round] = [];
           grouped[m.round].push(m);
+      });
+      
+      // Sort within rounds
+      Object.keys(grouped).forEach(r => {
+          grouped[Number(r)].sort((a,b) => a.matchIndex - b.matchIndex);
       });
       return grouped;
   }, [matches]);
 
   const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
+
+  // Calculate layout metrics
+  const CARD_HEIGHT = 100; 
+  const VERTICAL_GAP = 20;
+  const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
+
+  const getMatchOffset = (round: number, index: number): number => {
+      if (round === 1) {
+          return index * CARD_TOTAL_H;
+      }
+      const prevRound = round - 1;
+      const src1 = getMatchOffset(prevRound, index * 2);
+      const src2 = getMatchOffset(prevRound, index * 2 + 1);
+      
+      return (src1 + src2) / 2;
+  };
 
   return (
     <div className="py-4 pb-8 font-sans text-white relative">
@@ -748,35 +801,59 @@ const TournamentDev: React.FC = () => {
                         <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after lock-ins!</p>
                     </div>
                 ) : (
-                    <div className="flex gap-16 min-w-max p-10 items-center justify-center">
+                    <div className="flex p-10 min-w-max relative h-full">
                         {roundKeys.map((round) => {
-                            const roundMatches = rounds[round].sort((a,b) => a.matchIndex - b.matchIndex);
+                            const roundMatches = rounds[round];
                             return (
-                                <div key={round} className="flex flex-col justify-around gap-8">
-                                    <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-4 text-xs">Round {round}</div>
-                                    {roundMatches.map((m, i) => {
-                                        // Visual spacing logic: margins increase with rounds
-                                        const spacing = Math.pow(2, round - 1) * 30;
-                                        return (
-                                            <div key={m.id} style={{ marginTop: i > 0 ? spacing : 0, marginBottom: spacing }} className="relative">
-                                                <BracketMatch match={m} />
-                                                {/* Connectors (CSS Magic) */}
-                                                {m.nextMatchId && (
-                                                    <>
-                                                        <div className="bracket-connector-right"></div>
-                                                        {m.matchIndex % 2 === 0 ? (
-                                                            // Top match in pair: Line goes DOWN
-                                                            <div className="bracket-connector-vertical" style={{ top: '50%', height: 'calc(100% + ' + (spacing + 65) + 'px)' }}></div>
-                                                        ) : (
-                                                            // Bottom match in pair: Line goes UP (handled by top match vertical line usually, or explicit logic)
-                                                            // Actually with absolute positioning, simple top match line covering distance is easier.
-                                                            null
-                                                        )}
-                                                    </>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+                                <div key={round} className="flex flex-col relative mr-16" style={{ width: '240px' }}>
+                                    <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
+                                        Round {round}
+                                    </div>
+                                    
+                                    {/* Render Matches for this Round */}
+                                    <div className="relative h-full">
+                                        {roundMatches.map((m) => {
+                                            const top = getMatchOffset(round, m.matchIndex);
+                                            return (
+                                                <div 
+                                                    key={m.id} 
+                                                    className="absolute left-0 w-full"
+                                                    style={{ top: `${top}px` }}
+                                                >
+                                                    <BracketMatch match={m} />
+                                                    
+                                                    {/* SVG Connector to Next Round */}
+                                                    {/* Only draw if not the final round */}
+                                                    {round < roundKeys.length && (
+                                                        <svg 
+                                                            className="absolute top-0 left-full overflow-visible pointer-events-none z-0" 
+                                                            width="64" 
+                                                            height="1" // Height doesn't matter as we draw relative
+                                                            style={{ top: '50%' }}
+                                                        >
+                                                            {m.matchIndex % 2 === 0 ? (
+                                                                // Top of pair: Curve down
+                                                                <path 
+                                                                    d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
+                                                                    fill="none" 
+                                                                    stroke="rgba(255,255,255,0.1)" 
+                                                                    strokeWidth="2"
+                                                                />
+                                                            ) : (
+                                                                // Bottom of pair: Curve up
+                                                                <path 
+                                                                    d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
+                                                                    fill="none" 
+                                                                    stroke="rgba(255,255,255,0.1)" 
+                                                                    strokeWidth="2"
+                                                                />
+                                                            )}
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             );
                         })}
