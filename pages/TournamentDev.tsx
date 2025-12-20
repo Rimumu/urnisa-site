@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import UserProfile, { UserData } from '../components/UserProfile';
@@ -15,6 +16,18 @@ interface TournamentEntry {
     minecraftUsername: string;
     team: (Pokemon | null)[];
     isLocked: boolean;
+}
+
+interface TournamentMatch {
+    id: string;
+    round: number;
+    matchIndex: number;
+    player1: string | null;
+    player2: string | null;
+    winner: string | null;
+    score: string;
+    status: string;
+    nextMatchId: string | null;
 }
 
 type TournamentStatus = 'DRAFTING' | 'LOCK_IN' | 'ONGOING';
@@ -42,7 +55,6 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 // --- BAN LIST LOGIC ---
-// STRICTLY Legendaries, Mythicals, Ultra Beasts. Paradox are ALLOWED.
 const BANNED_IDS = new Set([
     // Gen 1
     144, 145, 146, 150, 151,
@@ -91,9 +103,7 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
             const cobbleName = getFormattedName(pokemon.name);
             const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
             const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
-            const fallback2d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`;
 
-            // 1. Check Memory Cache
             if (clientImageCache.has(primaryUrl)) {
                 if (isMounted) {
                     const isValid = clientImageCache.get(primaryUrl);
@@ -102,7 +112,6 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
                 return;
             }
 
-            // 2. Perform Check via Backend Proxy (checks file size to detect placeholder)
             try {
                 const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
                 const data = await response.json();
@@ -113,7 +122,6 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
                     setImgSrc(data.valid ? primaryUrl : fallback3d);
                 }
             } catch (error) {
-                // On verification error, assume invalid -> fallback
                 if (isMounted) setImgSrc(fallback3d);
             }
         };
@@ -145,7 +153,6 @@ const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ 
     );
 };
 
-// Detailed Card for Popup
 const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }> = ({ pokemon, revealed }) => {
     const [types, setTypes] = useState<string[]>([]);
 
@@ -162,7 +169,6 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
         }
     }, [pokemon, revealed]);
 
-    // Render Logic
     if (!revealed || !pokemon) {
         return (
             <div className="aspect-square bg-black/40 rounded-[2rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group shadow-lg">
@@ -177,47 +183,29 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
 
     return (
         <div className="aspect-square bg-[#120507] rounded-[2rem] border-2 border-white/10 relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
-            {/* Background Texture */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-            
-            {/* ID Badge */}
             <div className="absolute top-3 right-3 z-30">
                 <span className="text-[9px] font-black text-white/40 bg-black/60 px-2 py-0.5 rounded-lg border border-white/5 font-mono tracking-wider backdrop-blur-sm">
                     #{pokemon.id.toString().padStart(3, '0')}
                 </span>
             </div>
-
-            {/* Image Area - Taking up most space but padded bottom for text */}
             <div className="absolute inset-0 z-10 p-4 pb-14 flex items-center justify-center">
                 <div className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] filter group-hover:scale-110 transition-transform duration-500 ease-out">
                     <PokemonTeamImage pokemon={pokemon} />
                 </div>
             </div>
-
-            {/* Info Area - Absolute Bottom Overlay */}
             <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/10 z-20 flex flex-col items-center justify-center py-2 px-1">
                 <h4 className="text-white font-black uppercase text-sm tracking-wider truncate drop-shadow-md mb-1.5 w-full text-center">
                     {pokemon.name}
                 </h4>
-                
-                {/* Types - Rounded Pills */}
                 <div className="flex justify-center flex-wrap gap-1.5 w-full">
                     {types.length > 0 ? types.map(t => (
-                        <span 
-                            key={t} 
-                            className={`
-                                px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md border border-white/10
-                                ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}
-                            `}
-                        >
+                        <span key={t} className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md border border-white/10 ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}`}>
                             {t}
                         </span>
                     )) : (
-                        <div className="flex gap-1">
-                            <div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div>
-                            <div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div>
-                        </div>
+                        <div className="flex gap-1"><div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div><div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div></div>
                     )}
                 </div>
             </div>
@@ -225,33 +213,57 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
     );
 };
 
-// IMPROVED RULE CARD
 const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNode; color?: string }> = ({ title, icon, children, color = "border-white/10" }) => (
     <div className={`bg-black/40 backdrop-blur-xl rounded-2xl border-2 ${color} p-6 shadow-2xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300 h-full flex flex-col justify-start`}>
-        {/* Background Gradient Tint */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 pointer-events-none"></div>
-        
-        {/* Icon Watermark */}
-        <div className="absolute -top-2 -right-2 p-4 opacity-10 text-7xl pointer-events-none group-hover:scale-110 transition-transform">
-            {icon}
-        </div>
-
-        {/* Header - Explicit Left Alignment */}
+        <div className="absolute -top-2 -right-2 p-4 opacity-10 text-7xl pointer-events-none group-hover:scale-110 transition-transform">{icon}</div>
         <div className="flex items-center gap-3 mb-4 relative z-10 w-full justify-start">
-             <span className="text-3xl filter drop-shadow-lg grayscale-0">
-                {icon}
-            </span> 
-            <h3 className="text-xl font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm text-left">
-                {title}
-            </h3>
+             <span className="text-3xl filter drop-shadow-lg grayscale-0">{icon}</span> 
+            <h3 className="text-xl font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm text-left">{title}</h3>
         </div>
-        
-        {/* Content - Explicit Left Alignment */}
         <div className="text-gray-300 text-xs md:text-sm space-y-2 relative z-10 leading-relaxed font-medium text-left w-full">
             {children}
         </div>
     </div>
 );
+
+// Bracket Components
+const BracketMatch: React.FC<{ match: TournamentMatch }> = ({ match }) => {
+    return (
+        <div className="flex flex-col w-48 relative group">
+            <div className={`
+                bg-[#1a0b0e] border-2 rounded-lg overflow-hidden shadow-lg transition-all duration-300
+                ${match.status === 'COMPLETED' ? 'border-brand-primary/50' : 'border-white/10'}
+                group-hover:border-white/30 group-hover:shadow-brand-primary/20
+            `}>
+                {/* Header */}
+                <div className="bg-black/40 px-2 py-1 flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5">
+                    <span>{match.id}</span>
+                    <span className={match.status === 'COMPLETED' ? 'text-green-500' : 'text-yellow-500'}>{match.status === 'COMPLETED' ? 'Done' : 'Pending'}</span>
+                </div>
+                
+                {/* Player 1 */}
+                <div className={`px-3 py-2 flex justify-between items-center border-b border-white/5 transition-colors ${match.winner === match.player1 && match.winner ? 'bg-brand-primary/10 text-brand-primary font-bold' : 'text-gray-300'}`}>
+                    <span className="truncate">{match.player1 || "TBD"}</span>
+                    {match.winner === match.player1 && match.winner && <span>👑</span>}
+                </div>
+                
+                {/* Player 2 */}
+                <div className={`px-3 py-2 flex justify-between items-center transition-colors ${match.winner === match.player2 && match.winner ? 'bg-brand-primary/10 text-brand-primary font-bold' : 'text-gray-300'}`}>
+                    <span className="truncate">{match.player2 || "TBD"}</span>
+                    {match.winner === match.player2 && match.winner && <span>👑</span>}
+                </div>
+            </div>
+            
+            {/* Score Bubble */}
+            {match.status === 'COMPLETED' && match.score && (
+                <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 bg-black border border-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md z-10">
+                    {match.score}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const TournamentDev: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
@@ -268,15 +280,16 @@ const TournamentDev: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
-  // Tournament Config State
+  // Tournament Config & State
   const [tournamentStatus, setTournamentStatus] = useState<TournamentStatus>('DRAFTING');
+  const [matches, setMatches] = useState<TournamentMatch[]>([]);
+  const [loadingBracket, setLoadingBracket] = useState(false);
 
   // Players List State
   const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<TournamentEntry | null>(null);
 
-  // Fetch all Pokemon
   useEffect(() => {
     const fetchPokemon = async () => {
       try {
@@ -296,7 +309,6 @@ const TournamentDev: React.FC = () => {
     fetchPokemon();
   }, []);
 
-  // Fetch Tournament Config
   useEffect(() => {
       fetch(`${API_BASE_URL}/api/tournament/config`)
           .then(res => res.json())
@@ -306,16 +318,20 @@ const TournamentDev: React.FC = () => {
           .catch(e => console.error("Config fetch error", e));
   }, []);
 
-  // Fetch User Team Logic
   useEffect(() => {
       if (user?.id) {
           fetchMyTeam();
       }
   }, [user]);
 
-  // Fetch Players Logic - Fetches on mount and on tab changes to keep dashboard count updated
   useEffect(() => {
       fetchPlayers();
+  }, [activeTab]);
+
+  useEffect(() => {
+      if (activeTab === 'brackets') {
+          fetchBracket();
+      }
   }, [activeTab]);
 
   const fetchMyTeam = async () => {
@@ -349,6 +365,18 @@ const TournamentDev: React.FC = () => {
           }
       } catch (e) { console.error(e); } 
       finally { setLoadingPlayers(false); }
+  };
+
+  const fetchBracket = async () => {
+      setLoadingBracket(true);
+      try {
+          const res = await fetch(`${API_BASE_URL}/api/dev/tournament/bracket`);
+          if (res.ok) {
+              const data = await res.json();
+              setMatches(data.matches || []);
+          }
+      } catch(e) {}
+      finally { setLoadingBracket(false); }
   };
 
   const filteredPokemon = useMemo(() => {
@@ -461,6 +489,18 @@ const TournamentDev: React.FC = () => {
       finally { setSaving(false); }
   };
 
+  // Group Matches By Round for Bracket Display
+  const rounds = useMemo(() => {
+      const grouped: Record<number, TournamentMatch[]> = {};
+      matches.forEach(m => {
+          if (!grouped[m.round]) grouped[m.round] = [];
+          grouped[m.round].push(m);
+      });
+      return grouped;
+  }, [matches]);
+
+  const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
+
   return (
     <div className="py-4 pb-8 font-sans text-white relative">
       <style>{`
@@ -521,22 +561,25 @@ const TournamentDev: React.FC = () => {
             background: rgba(229, 56, 59, 0.1);
         }
 
-        /* Custom Scrollbar for Modal - Red Thumb, Dark Track */
-        ::-webkit-scrollbar {
-            width: 10px;
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #1f090c; border-radius: 10px; margin: 4px; }
+        ::-webkit-scrollbar-thumb { background: #e5383b; border-radius: 10px; border: 2px solid #1f090c; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff4d4d; }
+
+        /* Bracket Connectors */
+        .bracket-connector-right {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background-color: rgba(255,255,255,0.1);
         }
-        ::-webkit-scrollbar-track {
-            background: #1f090c;
-            border-radius: 10px;
-            margin: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #e5383b;
-            border-radius: 10px;
-            border: 2px solid #1f090c;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #ff4d4d;
+        .bracket-connector-vertical {
+            position: absolute;
+            right: -20px;
+            width: 2px;
+            background-color: rgba(255,255,255,0.1);
         }
       `}</style>
 
@@ -637,8 +680,6 @@ const TournamentDev: React.FC = () => {
           <div className="min-h-[40vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {activeTab === 'rules' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    
-                    {/* CARD 1: FORMAT */}
                     <div className="md:col-span-2 lg:col-span-3">
                         <div className="bg-gradient-to-br from-brand-primary/20 to-black border-2 border-brand-primary/40 p-8 rounded-[2rem] relative overflow-hidden shadow-2xl">
                             <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl pointer-events-none text-brand-primary">🏆</div>
@@ -648,134 +689,98 @@ const TournamentDev: React.FC = () => {
                             </p>
                         </div>
                     </div>
-
-                    {/* CARD 2: RESTRICTIONS & BANS (COMBINED) */}
                     <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
                         <div className="space-y-4">
-                            <div>
-                                <strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong>
-                                <ul className="space-y-1 list-disc list-inside text-gray-300 font-bold">
-                                    <li>Tera</li>
-                                    <li>Z-Move</li>
-                                    <li>Dynamax</li>
-                                    <li>Mega-Evolution</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong>
-                                <ul className="space-y-1 font-bold text-orange-200">
-                                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Legendary Pokémon</li>
-                                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li>
-                                    <li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li>
-                                </ul>
-                            </div>
+                            <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
+                            <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Legendary Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li></ul></div>
                         </div>
                     </RuleCard>
-
-                    {/* CARD 3: CLAUSES */}
                     <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
                         <ul className="space-y-2">
-                            <li>
-                                <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong>
-                                <span className="text-gray-400 text-xs">A player cannot have two Pokémon of the same National Pokédex number on their team (e.g., you cannot bring two Charizard).</span>
-                            </li>
-                            <li>
-                                <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong>
-                                <span className="text-gray-400 text-xs">No two Pokémon may hold the same item.</span>
-                            </li>
-                            <li>
-                                <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong>
-                                <span className="text-gray-400 text-xs">A player cannot put more than one of the opponent's Pokémon to sleep at the same time.</span>
-                            </li>
-                            <li>
-                                <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong>
-                                <span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span>
-                            </li>
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A player cannot have two Pokémon of the same National Pokédex number.</span></li>
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item.</span></li>
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A player cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
                         </ul>
                     </RuleCard>
-
-                    {/* CARD 4: MOVE BANS */}
                     <RuleCard title="Move Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
                         <div className="space-y-3">
-                            <div>
-                                <strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong>
-                                <span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span>
-                            </div>
-                            <div>
-                                <strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong>
-                                <span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span>
-                            </div>
-                            <div>
-                                <strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong>
-                                <span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span>
-                            </div>
-                            <div>
-                                <strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong>
-                                <span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span>
-                            </div>
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
                         </div>
                     </RuleCard>
-
-                    {/* CARD 5: ITEM BANS */}
                     <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
-                        <ul className="space-y-1 list-disc list-inside font-bold text-pink-200">
-                            <li>Bright Powder</li>
-                            <li>Lax Incense</li>
-                            <li>King's Rock</li>
-                            <li>Razor Fang</li>
-                            <li>Quick Claw</li>
-                        </ul>
+                        <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
                     </RuleCard>
-
-                    {/* CARD 6: GENERAL RULES (CLEANED UP) */}
                     <RuleCard title="General Rules" icon="⚖️">
                         <ul className="space-y-3">
-                            <li className="flex gap-3">
-                                <span className="text-red-500 font-bold text-lg leading-none">•</span>
-                                <span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
-                                <span>No intentional stalling or disconnect abuse.</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
-                                <span>Valid disconnect? Restart match <strong className="text-white">WITH SAME TEAM</strong>.</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
-                                <span>Report matches within <strong className="text-white">10 minutes</strong>.</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-brand-primary font-bold text-lg leading-none">•</span>
-                                <span className="italic opacity-80">Admin decisions are final.</span>
-                            </li>
+                            <li className="flex gap-3"><span className="text-red-500 font-bold text-lg leading-none">•</span><span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>No intentional stalling or disconnect abuse.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Valid disconnect? Restart match <strong className="text-white">WITH SAME TEAM</strong>.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Report matches within <strong className="text-white">10 minutes</strong>.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span className="italic opacity-80">Admin decisions are final.</span></li>
                         </ul>
                     </RuleCard>
-
-                    {/* CARD 7: SPECTATOR RULES */}
                     <RuleCard title="Spectator Rules" icon="👀" color="border-green-500/40 bg-green-900/10">
                         <ul className="space-y-2">
-                            <li className="flex gap-2">
-                                <span className="text-green-400">•</span> When the matches start mute your mic/ use push to talk.
-                            </li>
-                            <li className="flex gap-2">
-                                <span className="text-green-400">•</span> Cheering is allowed but do not distract/disrupt the contestants and matches.
-                            </li>
-                            <li className="flex gap-2">
-                                <span className="text-green-400">•</span> Keep your pokemon on your shoulders or in your balls.
-                            </li>
+                            <li className="flex gap-2"><span className="text-green-400">•</span> When the matches start mute your mic/ use push to talk.</li>
+                            <li className="flex gap-2"><span className="text-green-400">•</span> Cheering is allowed but do not distract/disrupt the contestants and matches.</li>
+                            <li className="flex gap-2"><span className="text-green-400">•</span> Keep your pokemon on your shoulders or in your balls.</li>
                         </ul>
                     </RuleCard>
-
                 </div>
             )}
 
             {activeTab === 'brackets' && (
-              <div className="relative z-10 text-center flex flex-col items-center justify-center py-20 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
-                <div className="text-9xl mb-8 opacity-20">📊</div>
-                <h2 className="text-5xl font-black text-white uppercase tracking-widest mb-4">Bracket Pending</h2>
-                <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after lock-ins!</p>
+              <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-500 min-h-[600px] overflow-x-auto custom-scrollbar">
+                {loadingBracket ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                        <div className="animate-spin text-4xl mb-4">⌛</div>
+                        <div className="font-bold text-white">Loading Bracket...</div>
+                    </div>
+                ) : matches.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-20">
+                        <div className="text-9xl mb-8 opacity-20">📊</div>
+                        <h2 className="text-5xl font-black text-white uppercase tracking-widest mb-4">Bracket Pending</h2>
+                        <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after lock-ins!</p>
+                    </div>
+                ) : (
+                    <div className="flex gap-16 min-w-max p-10 items-center justify-center">
+                        {roundKeys.map((round) => {
+                            const roundMatches = rounds[round].sort((a,b) => a.matchIndex - b.matchIndex);
+                            return (
+                                <div key={round} className="flex flex-col justify-around gap-8">
+                                    <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-4 text-xs">Round {round}</div>
+                                    {roundMatches.map((m, i) => {
+                                        // Visual spacing logic: margins increase with rounds
+                                        const spacing = Math.pow(2, round - 1) * 30;
+                                        return (
+                                            <div key={m.id} style={{ marginTop: i > 0 ? spacing : 0, marginBottom: spacing }} className="relative">
+                                                <BracketMatch match={m} />
+                                                {/* Connectors (CSS Magic) */}
+                                                {m.nextMatchId && (
+                                                    <>
+                                                        <div className="bracket-connector-right"></div>
+                                                        {m.matchIndex % 2 === 0 ? (
+                                                            // Top match in pair: Line goes DOWN
+                                                            <div className="bracket-connector-vertical" style={{ top: '50%', height: 'calc(100% + ' + (spacing + 65) + 'px)' }}></div>
+                                                        ) : (
+                                                            // Bottom match in pair: Line goes UP (handled by top match vertical line usually, or explicit logic)
+                                                            // Actually with absolute positioning, simple top match line covering distance is easier.
+                                                            null
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
               </div>
             )}
 
@@ -885,7 +890,7 @@ const TournamentDev: React.FC = () => {
                         <div className="bg-amber-900/20 border-2 border-amber-500/30 p-8 rounded-[2.5rem] text-center">
                             <span className="text-4xl mb-4 block">⌛</span>
                             <h3 className="text-2xl font-black text-white uppercase italic mb-2">Phase Expired</h3>
-                            <p className="text-gray-400">The tournament has started. Drafting is closed, and unfinalized teams have been disqualified.</p>
+                            <p className="text-gray-400">The tournament has already begun. Drafting is closed, and unfinalized teams have been disqualified.</p>
                         </div>
                     )}
                   </div>
