@@ -20,6 +20,7 @@ interface TournamentEntry {
 
 interface TournamentMatch {
     id: string;
+    bracketGroup: 'winners' | 'losers' | 'finals';
     round: number;
     matchIndex: number;
     player1: string | null;
@@ -325,6 +326,75 @@ const BracketMatch: React.FC<{ match: TournamentMatch }> = ({ match }) => {
     );
 };
 
+// Component to render a bracket tree (Winners or Losers)
+const BracketTree: React.FC<{ matches: TournamentMatch[], label: string }> = ({ matches, label }) => {
+    const rounds = useMemo(() => {
+        const grouped: Record<number, TournamentMatch[]> = {};
+        if (!matches || matches.length === 0) return grouped;
+        
+        matches.forEach(m => {
+            if (!grouped[m.round]) grouped[m.round] = [];
+            grouped[m.round].push(m);
+        });
+        
+        Object.keys(grouped).forEach(r => {
+            grouped[Number(r)].sort((a,b) => a.matchIndex - b.matchIndex);
+        });
+        return grouped;
+    }, [matches]);
+
+    const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
+    const CARD_HEIGHT = 120; 
+    const VERTICAL_GAP = 20;
+    const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
+
+    const getMatchOffset = (round: number, index: number): number => {
+        if (round === 1) return index * CARD_TOTAL_H;
+        
+        const prevRoundMatches = rounds[round - 1] || [];
+        const feedingMatches = prevRoundMatches.filter(m => m.nextMatchId === matches.find(cm => cm.round === round && cm.matchIndex === index)?.id);
+        
+        if (feedingMatches.length > 0) {
+            const firstFeedIndex = feedingMatches[0].matchIndex;
+            const lastFeedIndex = feedingMatches[feedingMatches.length - 1].matchIndex;
+            const topY = getMatchOffset(round - 1, firstFeedIndex);
+            const bottomY = getMatchOffset(round - 1, lastFeedIndex);
+            return (topY + bottomY) / 2;
+        }
+        
+        return index * CARD_TOTAL_H * Math.pow(1.5, round-1); 
+    };
+
+    return (
+        <div className="mb-20">
+             <h3 className="text-xl font-black text-brand-primary mb-6 uppercase tracking-widest border-b border-brand-primary/20 pb-2 inline-block">
+                {label}
+            </h3>
+            <div className="flex relative min-h-[400px]">
+                {roundKeys.map((round) => (
+                    <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
+                        <div className="text-center font-black text-gray-500 uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
+                            Round {round}
+                        </div>
+                        <div className="relative h-full">
+                            {rounds[round].map((m) => {
+                                const top = getMatchOffset(round, m.matchIndex);
+                                return (
+                                    <div key={m.id} className="absolute left-0 w-full" style={{ top: `${top}px` }}>
+                                        <BracketMatch match={m} />
+                                        {/* Simple connector line */}
+                                        <div className="absolute top-1/2 left-full w-8 h-0.5 bg-white/10"></div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 const Tournament: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('rules');
@@ -623,40 +693,10 @@ const Tournament: React.FC = () => {
       setIsDragging(false);
   };
 
-  // Group Matches By Round for Bracket Display
-  const rounds = useMemo(() => {
-      const grouped: Record<number, TournamentMatch[]> = {};
-      if (!matches || matches.length === 0) return grouped;
-      
-      matches.forEach(m => {
-          if (!grouped[m.round]) grouped[m.round] = [];
-          grouped[m.round].push(m);
-      });
-      
-      // Sort within rounds
-      Object.keys(grouped).forEach(r => {
-          grouped[Number(r)].sort((a,b) => a.matchIndex - b.matchIndex);
-      });
-      return grouped;
-  }, [matches]);
-
-  const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
-
-  // Calculate layout metrics
-  const CARD_HEIGHT = 120; 
-  const VERTICAL_GAP = 20;
-  const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
-
-  const getMatchOffset = (round: number, index: number): number => {
-      if (round === 1) {
-          return index * CARD_TOTAL_H;
-      }
-      const prevRound = round - 1;
-      const src1 = getMatchOffset(prevRound, index * 2);
-      const src2 = getMatchOffset(prevRound, index * 2 + 1);
-      
-      return (src1 + src2) / 2;
-  };
+  // Group Matches
+  const winnersMatches = matches.filter(m => !m.bracketGroup || m.bracketGroup === 'winners');
+  const losersMatches = matches.filter(m => m.bracketGroup === 'losers');
+  const finalsMatches = matches.filter(m => m.bracketGroup === 'finals');
 
   return (
     <div className="py-4 pb-8 font-sans text-white relative">
@@ -924,64 +964,29 @@ const Tournament: React.FC = () => {
                                 transformOrigin: '0 0',
                                 transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                             }}
-                            className="w-full h-full origin-top-left"
+                            className="w-full h-full origin-top-left flex flex-col p-10"
                         >
-                            <div className="flex p-10 min-w-max relative h-full">
-                                {roundKeys.map((round) => {
-                                    const roundMatches = rounds[round];
-                                    return (
-                                        <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
-                                            <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
-                                                Round {round}
-                                            </div>
-                                            
-                                            {/* Render Matches for this Round */}
-                                            <div className="relative h-full">
-                                                {roundMatches.map((m) => {
-                                                    const top = getMatchOffset(round, m.matchIndex);
-                                                    return (
-                                                        <div 
-                                                            key={m.id} 
-                                                            className="absolute left-0 w-full"
-                                                            style={{ top: `${top}px` }}
-                                                        >
-                                                            <BracketMatch match={m} />
-                                                            
-                                                            {/* SVG Connector to Next Round */}
-                                                            {/* Only draw if not the final round */}
-                                                            {round < roundKeys.length && (
-                                                                <svg 
-                                                                    className="absolute top-0 left-full overflow-visible pointer-events-none z-0" 
-                                                                    width="64" 
-                                                                    height="1" // Height doesn't matter as we draw relative
-                                                                    style={{ top: '50%' }}
-                                                                >
-                                                                    {m.matchIndex % 2 === 0 ? (
-                                                                        // Top of pair: Curve down
-                                                                        <path 
-                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                            fill="none" 
-                                                                            stroke="rgba(255,255,255,0.1)" 
-                                                                            strokeWidth="2"
-                                                                        />
-                                                                    ) : (
-                                                                        // Bottom of pair: Curve up
-                                                                        <path 
-                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                            fill="none" 
-                                                                            stroke="rgba(255,255,255,0.1)" 
-                                                                            strokeWidth="2"
-                                                                        />
-                                                                    )}
-                                                                </svg>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
+                             <div className="flex flex-row gap-20">
+                                <div className="flex flex-col gap-10">
+                                    <BracketTree matches={winnersMatches} label="Winners Bracket" />
+                                    
+                                    {losersMatches.length > 0 && (
+                                        <BracketTree matches={losersMatches} label="Losers Bracket" />
+                                    )}
+                                </div>
+
+                                {finalsMatches.length > 0 && (
+                                    <div className="flex flex-col justify-center">
+                                        <h3 className="text-xl font-black text-yellow-500 mb-6 uppercase tracking-widest text-center">Grand Finals</h3>
+                                        <div className="relative">
+                                            {finalsMatches.map(m => (
+                                                <div key={m.id} className="mb-4">
+                                                    <BracketMatch match={m} />
+                                                </div>
+                                            ))}
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
