@@ -785,7 +785,7 @@ const TournamentDev: React.FC = () => {
                     <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Players List</h2>
                     <div className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-4 py-1.5 rounded-full font-black uppercase tracking-widest">{playersList.length} Registered</div>
                   </div>
-                  {loadingPlayers ? (<div className="text-center py-20 animate-spin">⌛</div>) : playersList.length === 0 ? (<div className="text-center py-24 text-gray-600 font-bold italic">No combatants reported.</div>) : (
+                  {loadingPlayers ? (<div className="text-center py-20 animate-spin">⌛</div>) : playersList.length === 0 ? (<div className="text-center py-24 text-gray-600 font-bold italic">No players yet!</div>) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {playersList.map((entry, idx) => (
                               <button 
