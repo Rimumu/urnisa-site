@@ -285,6 +285,26 @@ const Minecraft: React.FC = () => {
                         Open Packs <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                     </div>
                 </Link>
+
+                {/* Tournament - NEW ACTIVE */}
+                <Link to="/minecraft/tournament" className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 hover:border-brand-primary/50 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-red-500/10 transition-colors"></div>
+                    
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-red-500/20 flex items-center justify-center text-2xl shadow-inner text-red-500">
+                            ⚔️
+                        </div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-red-500 transition-colors">Tournament</h2>
+                    </div>
+                    
+                    <p className="text-gray-400 font-medium leading-relaxed">
+                        Compete and work your way up the brackets to be crowned the STEAK House Nisamon Champion!
+                    </p>
+
+                    <div className="mt-6 flex items-center text-brand-primary font-bold text-sm uppercase tracking-wider">
+                        VIEW HUB <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
+                </Link>
             </div>
 
             {/* How to Join Section - UPDATED */}
