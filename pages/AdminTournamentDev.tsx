@@ -38,7 +38,7 @@ const BracketMatchCard: React.FC<{
     const isP2Winner = match.winner === match.player2 && match.winner;
 
     return (
-        <div className="relative group w-60 z-10">
+        <div className="relative group w-64 z-10">
             <div className={`
                 bg-[#120507] border-2 rounded-xl overflow-hidden shadow-xl transition-all duration-300
                 ${match.status === 'COMPLETED' ? 'border-brand-primary/60 shadow-brand-primary/10' : 'border-white/10'}
@@ -56,32 +56,48 @@ const BracketMatchCard: React.FC<{
                 <div className="flex flex-col">
                     {/* Player 1 */}
                     <div 
-                        className={`px-3 py-2 flex justify-between items-center border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors ${isP1Winner ? 'bg-brand-primary/10' : ''}`}
+                        className={`px-3 py-2.5 flex items-center justify-between border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors ${isP1Winner ? 'bg-brand-primary/10' : ''}`}
                         onClick={() => match.player1 && onResult(match.id, match.player1, match.score || "1-0")}
                         title="Click to set as winner"
                     >
-                        <span className={`text-sm font-bold truncate flex-1 mr-2 ${isP1Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
-                            {match.player1 || <span className="text-gray-600 italic">TBD</span>}
-                        </span>
-                        <div className="flex items-center gap-2">
-                            {scoreObj.p1 && <span className="font-mono font-black text-white">{scoreObj.p1}</span>}
-                            {isP1Winner && <span className="text-sm">👑</span>}
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
+                                {match.player1 || <span className="text-gray-600 italic">TBD</span>}
+                            </span>
+                            {scoreObj.p1 && (
+                                <span className={`
+                                    flex items-center justify-center w-6 h-6 rounded-md bg-black/40 border border-white/10 
+                                    text-xs font-bold font-mono shrink-0 shadow-inner
+                                    ${isP1Winner ? 'text-brand-primary border-brand-primary/30' : 'text-gray-400'}
+                                `}>
+                                    {scoreObj.p1}
+                                </span>
+                            )}
                         </div>
+                        {isP1Winner && <span className="text-sm shrink-0 ml-2">👑</span>}
                     </div>
 
                     {/* Player 2 */}
                     <div 
-                        className={`px-3 py-2 flex justify-between items-center cursor-pointer hover:bg-white/5 transition-colors ${isP2Winner ? 'bg-brand-primary/10' : ''}`}
+                        className={`px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors ${isP2Winner ? 'bg-brand-primary/10' : ''}`}
                         onClick={() => match.player2 && onResult(match.id, match.player2, match.score || "0-1")}
                         title="Click to set as winner"
                     >
-                        <span className={`text-sm font-bold truncate flex-1 mr-2 ${isP2Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
-                            {match.player2 || <span className="text-gray-600 italic">TBD</span>}
-                        </span>
-                        <div className="flex items-center gap-2">
-                            {scoreObj.p2 && <span className="font-mono font-black text-white">{scoreObj.p2}</span>}
-                            {isP2Winner && <span className="text-sm">👑</span>}
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
+                                {match.player2 || <span className="text-gray-600 italic">TBD</span>}
+                            </span>
+                            {scoreObj.p2 && (
+                                <span className={`
+                                    flex items-center justify-center w-6 h-6 rounded-md bg-black/40 border border-white/10 
+                                    text-xs font-bold font-mono shrink-0 shadow-inner
+                                    ${isP2Winner ? 'text-brand-primary border-brand-primary/30' : 'text-gray-400'}
+                                `}>
+                                    {scoreObj.p2}
+                                </span>
+                            )}
                         </div>
+                        {isP2Winner && <span className="text-sm shrink-0 ml-2">👑</span>}
                     </div>
                 </div>
 
@@ -262,8 +278,8 @@ const AdminTournamentDev: React.FC = () => {
     const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
 
     // Calculate layout metrics
-    // We assume a fixed card height + margin for Round 1
-    const CARD_HEIGHT = 100; // Approx height including margin
+    // Increased Height to accommodate new layout comfortably
+    const CARD_HEIGHT = 120; 
     const VERTICAL_GAP = 20;
     const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
 
@@ -272,12 +288,8 @@ const AdminTournamentDev: React.FC = () => {
             return index * CARD_TOTAL_H;
         }
         // Recursive center alignment logic
-        // Current match 'i' in Round 'R' is fed by '2i' and '2i+1' in Round 'R-1'
         const prevRound = round - 1;
         const src1 = getMatchOffset(prevRound, index * 2);
-        // Sometimes odd number of players means no second source, handle gracefully?
-        // Our generator ensures binary tree structure (powers of 2), so 2i+1 should exist if bracket is full.
-        // If empty slots (Byes), they still exist in the structure.
         const src2 = getMatchOffset(prevRound, index * 2 + 1);
         
         return (src1 + src2) / 2;
@@ -411,7 +423,7 @@ const AdminTournamentDev: React.FC = () => {
                                 {roundKeys.map((round) => {
                                     const roundMatches = rounds[round];
                                     return (
-                                        <div key={round} className="flex flex-col relative mr-16" style={{ width: '240px' }}>
+                                        <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
                                             <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
                                                 Round {round}
                                             </div>
