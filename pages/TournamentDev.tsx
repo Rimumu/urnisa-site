@@ -436,6 +436,8 @@ const TournamentDev: React.FC = () => {
   useEffect(() => {
       if (activeTab === 'brackets') {
           fetchBracket();
+          const interval = setInterval(() => fetchBracket(true), 5000);
+          return () => clearInterval(interval);
       }
   }, [activeTab]);
 
@@ -473,8 +475,8 @@ const TournamentDev: React.FC = () => {
       finally { setLoadingPlayers(false); }
   };
 
-  const fetchBracket = async () => {
-      setLoadingBracket(true);
+  const fetchBracket = async (silent = false) => {
+      if (!silent) setLoadingBracket(true);
       try {
           const res = await fetch(`${API_BASE_URL}/api/dev/tournament/bracket`);
           if (res.ok) {
@@ -482,7 +484,9 @@ const TournamentDev: React.FC = () => {
               setMatches(data.matches || []);
           }
       } catch(e) {}
-      finally { setLoadingBracket(false); }
+      finally { 
+          if (!silent) setLoadingBracket(false); 
+      }
   };
 
   const filteredPokemon = useMemo(() => {
