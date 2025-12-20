@@ -341,6 +341,7 @@ const TournamentDev: React.FC = () => {
   const [panPos, setPanPos] = useState({ x: 50, y: 50 }); // Initial padding
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [hasInteracted, setHasInteracted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Keep track of current state in ref for event listener
@@ -357,6 +358,7 @@ const TournamentDev: React.FC = () => {
       const onWheel = (e: WheelEvent) => {
           if (matches.length === 0) return;
           e.preventDefault();
+          setHasInteracted(true);
 
           const { zoomScale: currentZoom, panPos: currentPan } = stateRef.current;
           const zoomSensitivity = 0.001;
@@ -585,6 +587,7 @@ const TournamentDev: React.FC = () => {
       if(e.button !== 0) return;
       
       setIsDragging(true);
+      setHasInteracted(true);
       setLastMousePos({ x: e.clientX, y: e.clientY });
       e.preventDefault(); 
   };
@@ -893,7 +896,7 @@ const TournamentDev: React.FC = () => {
                         onMouseLeave={handleMouseUp}
                     >
                         {/* Control Indicator */}
-                        <div className="absolute top-4 right-4 z-50 bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 text-xs text-gray-300 flex items-center gap-3 pointer-events-none shadow-xl">
+                        <div className={`absolute top-4 right-4 z-50 bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 text-xs text-gray-300 flex items-center gap-3 pointer-events-none shadow-xl transition-opacity duration-500 ${hasInteracted ? 'opacity-0' : 'opacity-100'}`}>
                             <span className="text-xl">🔍</span>
                             <div className="flex flex-col gap-0.5">
                                 <div className="font-bold text-white">Interactive Map</div>
