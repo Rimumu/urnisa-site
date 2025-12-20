@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import UserProfile, { UserData } from '../components/UserProfile';
 import OptimizedImage from '../components/OptimizedImage';
@@ -16,18 +16,6 @@ interface TournamentEntry {
     minecraftUsername: string;
     team: (Pokemon | null)[];
     isLocked: boolean;
-}
-
-interface TournamentMatch {
-    id: string;
-    round: number;
-    matchIndex: number;
-    player1: string | null;
-    player2: string | null;
-    winner: string | null;
-    score: string;
-    status: string;
-    nextMatchId: string | null;
 }
 
 type TournamentStatus = 'DRAFTING' | 'LOCK_IN' | 'ONGOING';
@@ -69,7 +57,7 @@ const BANNED_IDS = new Set([
     // Gen 6
     716, 717, 718, 719, 720, 721,
     // Gen 7 (Incl. Ultra Beasts)
-    772, 773, 785, 786, 787, 788, 789, 790, 791, 792, 
+    772, 773, 785, 786, 787, 789, 790, 791, 792, 
     793, 794, 795, 796, 797, 798, 799, // UBs
     800, 801, 802, 803, 804, 805, 806, 807, 808, 809,
     // Gen 8
@@ -227,104 +215,6 @@ const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNod
     </div>
 );
 
-// --- BRACKET COMPONENT ---
-const BracketMatch: React.FC<{ match: TournamentMatch }> = ({ match }) => {
-    // Parse Score
-    const scoreObj = useMemo(() => {
-        if (!match.score) return { p1: '', p2: '', raw: '' };
-        const parts = match.score.match(/^(\d+)\s*[-:,\s]\s*(\d+)$/);
-        if (parts) return { p1: parts[1], p2: parts[2], raw: '' };
-        return { p1: '', p2: '', raw: match.score };
-    }, [match.score]);
-
-    const isP1Winner = match.winner === match.player1 && match.winner;
-    const isP2Winner = match.winner === match.player2 && match.winner;
-
-    return (
-        <div className="relative group w-64 z-10">
-            <div className={`
-                bg-[#120507] border-2 rounded-xl overflow-hidden shadow-xl transition-all duration-300
-                ${match.status === 'COMPLETED' ? 'border-brand-primary/60 shadow-brand-primary/10' : 'border-white/10'}
-                hover:border-white/30
-            `}>
-                {/* Header */}
-                <div className="bg-black/40 px-3 py-1.5 flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
-                    <span>{match.id}</span>
-                    <span className={`text-[9px] font-bold uppercase tracking-wider ${match.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-500'}`}>
-                        {match.status === 'COMPLETED' ? 'Finished' : match.status}
-                    </span>
-                </div>
-
-                {/* Content */}
-                <div className="flex flex-col">
-                    {/* Player 1 */}
-                    <div 
-                        className={`px-3 py-2.5 flex items-center justify-between border-b border-white/5 transition-colors ${isP1Winner ? 'bg-brand-primary/10' : ''}`}
-                    >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {match.player1 && (
-                                <img 
-                                    src={`https://mc-heads.net/avatar/${match.player1}/24`} 
-                                    alt="" 
-                                    className="w-5 h-5 rounded-sm shadow-sm"
-                                />
-                            )}
-                            <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
-                                {match.player1 || <span className="text-gray-600 italic">TBD</span>}
-                            </span>
-                            {scoreObj.p1 && (
-                                <span className={`
-                                    flex items-center justify-center w-6 h-6 rounded-md bg-black/40 border border-white/10 
-                                    text-xs font-bold font-mono shrink-0 shadow-inner
-                                    ${isP1Winner ? 'text-brand-primary border-brand-primary/30' : 'text-gray-400'}
-                                `}>
-                                    {scoreObj.p1}
-                                </span>
-                            )}
-                        </div>
-                        {isP1Winner && <span className="text-sm shrink-0 ml-2">👑</span>}
-                    </div>
-
-                    {/* Player 2 */}
-                    <div 
-                        className={`px-3 py-2.5 flex items-center justify-between transition-colors ${isP2Winner ? 'bg-brand-primary/10' : ''}`}
-                    >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {match.player2 && (
-                                <img 
-                                    src={`https://mc-heads.net/avatar/${match.player2}/24`} 
-                                    alt="" 
-                                    className="w-5 h-5 rounded-sm shadow-sm"
-                                />
-                            )}
-                            <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
-                                {match.player2 || <span className="text-gray-600 italic">TBD</span>}
-                            </span>
-                            {scoreObj.p2 && (
-                                <span className={`
-                                    flex items-center justify-center w-6 h-6 rounded-md bg-black/40 border border-white/10 
-                                    text-xs font-bold font-mono shrink-0 shadow-inner
-                                    ${isP2Winner ? 'text-brand-primary border-brand-primary/30' : 'text-gray-400'}
-                                `}>
-                                    {scoreObj.p2}
-                                </span>
-                            )}
-                        </div>
-                        {isP2Winner && <span className="text-sm shrink-0 ml-2">👑</span>}
-                    </div>
-                </div>
-
-                {/* Raw Score Fallback */}
-                {scoreObj.raw && (
-                    <div className="bg-black/60 py-1 text-center border-t border-white/5">
-                        <span className="text-[10px] font-mono font-bold text-gray-400">{scoreObj.raw}</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
 const Tournament: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('rules');
@@ -342,58 +232,11 @@ const Tournament: React.FC = () => {
   
   // Tournament Config & State
   const [tournamentStatus, setTournamentStatus] = useState<TournamentStatus>('DRAFTING');
-  const [matches, setMatches] = useState<TournamentMatch[]>([]);
-  const [loadingBracket, setLoadingBracket] = useState(false);
 
   // Players List State
   const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<TournamentEntry | null>(null);
-
-  // --- ZOOM & PAN STATE ---
-  const [zoomScale, setZoomScale] = useState(1);
-  const [panPos, setPanPos] = useState({ x: 50, y: 50 }); // Initial padding
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Keep track of current state in ref for event listener
-  const stateRef = useRef({ zoomScale, panPos });
-  useEffect(() => {
-      stateRef.current = { zoomScale, panPos };
-  }, [zoomScale, panPos]);
-
-  // Attach native wheel listener to prevent default scrolling
-  useEffect(() => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const onWheel = (e: WheelEvent) => {
-          if (matches.length === 0) return;
-          e.preventDefault();
-          setHasInteracted(true);
-
-          const { zoomScale: currentZoom, panPos: currentPan } = stateRef.current;
-          const zoomSensitivity = 0.001;
-          const delta = -e.deltaY * zoomSensitivity; 
-          const newScale = Math.min(Math.max(0.2, currentZoom + delta), 3);
-
-          const rect = container.getBoundingClientRect();
-          const mouseX = e.clientX - rect.left;
-          const mouseY = e.clientY - rect.top;
-
-          const newX = mouseX - (mouseX - currentPan.x) * (newScale / currentZoom);
-          const newY = mouseY - (mouseY - currentPan.y) * (newScale / currentZoom);
-
-          setZoomScale(newScale);
-          setPanPos({ x: newX, y: newY });
-      };
-
-      // { passive: false } is required to use preventDefault()
-      container.addEventListener('wheel', onWheel, { passive: false });
-      return () => container.removeEventListener('wheel', onWheel);
-  }, [matches.length]);
 
   useEffect(() => {
     const fetchPokemon = async () => {
@@ -433,14 +276,6 @@ const Tournament: React.FC = () => {
       fetchPlayers();
   }, [activeTab]);
 
-  useEffect(() => {
-      if (activeTab === 'brackets') {
-          fetchBracket();
-          const interval = setInterval(() => fetchBracket(true), 5000);
-          return () => clearInterval(interval);
-      }
-  }, [activeTab]);
-
   const fetchMyTeam = async () => {
       if (!user?.id) return;
       setLoadingTeam(true);
@@ -473,21 +308,6 @@ const Tournament: React.FC = () => {
           }
       } catch (e) { console.error(e); } 
       finally { setLoadingPlayers(false); }
-  };
-
-  const fetchBracket = async (silent = false) => {
-      if (!silent) setLoadingBracket(true);
-      try {
-          // PRODUCTION API ENDPOINT
-          const res = await fetch(`${API_BASE_URL}/api/tournament/bracket`);
-          if (res.ok) {
-              const data = await res.json();
-              setMatches(data.matches || []);
-          }
-      } catch(e) {}
-      finally { 
-          if (!silent) setLoadingBracket(false); 
-      }
   };
 
   const filteredPokemon = useMemo(() => {
@@ -600,64 +420,6 @@ const Tournament: React.FC = () => {
       finally { setSaving(false); }
   };
 
-  // Drag Handlers
-  const handleMouseDown = (e: React.MouseEvent) => {
-      if(matches.length === 0) return;
-      if(e.button !== 0) return;
-      
-      setIsDragging(true);
-      setHasInteracted(true);
-      setLastMousePos({ x: e.clientX, y: e.clientY });
-      e.preventDefault(); 
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-      if (!isDragging) return;
-      const dx = e.clientX - lastMousePos.x;
-      const dy = e.clientY - lastMousePos.y;
-      setPanPos(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-      setLastMousePos({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleMouseUp = () => {
-      setIsDragging(false);
-  };
-
-  // Group Matches By Round for Bracket Display
-  const rounds = useMemo(() => {
-      const grouped: Record<number, TournamentMatch[]> = {};
-      if (!matches || matches.length === 0) return grouped;
-      
-      matches.forEach(m => {
-          if (!grouped[m.round]) grouped[m.round] = [];
-          grouped[m.round].push(m);
-      });
-      
-      // Sort within rounds
-      Object.keys(grouped).forEach(r => {
-          grouped[Number(r)].sort((a,b) => a.matchIndex - b.matchIndex);
-      });
-      return grouped;
-  }, [matches]);
-
-  const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
-
-  // Calculate layout metrics
-  const CARD_HEIGHT = 120; 
-  const VERTICAL_GAP = 20;
-  const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
-
-  const getMatchOffset = (round: number, index: number): number => {
-      if (round === 1) {
-          return index * CARD_TOTAL_H;
-      }
-      const prevRound = round - 1;
-      const src1 = getMatchOffset(prevRound, index * 2);
-      const src2 = getMatchOffset(prevRound, index * 2 + 1);
-      
-      return (src1 + src2) / 2;
-  };
-
   return (
     <div className="py-4 pb-8 font-sans text-white relative">
       <style>{`
@@ -722,22 +484,6 @@ const Tournament: React.FC = () => {
         ::-webkit-scrollbar-track { background: #1f090c; border-radius: 10px; margin: 4px; }
         ::-webkit-scrollbar-thumb { background: #e5383b; border-radius: 10px; border: 2px solid #1f090c; }
         ::-webkit-scrollbar-thumb:hover { background: #ff4d4d; }
-
-        /* Bracket Connectors */
-        .bracket-connector-right {
-            position: absolute;
-            right: -20px;
-            top: 50%;
-            width: 20px;
-            height: 2px;
-            background-color: rgba(255,255,255,0.1);
-        }
-        .bracket-connector-vertical {
-            position: absolute;
-            right: -20px;
-            width: 2px;
-            background-color: rgba(255,255,255,0.1);
-        }
       `}</style>
 
       <UserProfile onUserChange={setUser} className="!absolute top-4 right-4" />
@@ -886,106 +632,26 @@ const Tournament: React.FC = () => {
             )}
 
             {activeTab === 'brackets' && (
-              <div 
-                className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-0 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-500 h-[600px] flex flex-col"
-              >
-                {loadingBracket ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                        <div className="animate-spin text-4xl mb-4">⌛</div>
-                        <div className="font-bold text-white">Loading Bracket...</div>
-                    </div>
-                ) : matches.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                        <div className="text-9xl mb-8 opacity-20">📊</div>
-                        <h2 className="text-5xl font-black text-white uppercase tracking-widest mb-4">Bracket Pending</h2>
-                        <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after lock-ins!</p>
-                    </div>
-                ) : (
-                    <div 
-                        className="flex-1 overflow-hidden relative cursor-move bg-[#1a0b0e]/50 select-none"
-                        ref={containerRef}
-                        onMouseDown={handleMouseDown}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
-                    >
-                        {/* Control Indicator */}
-                        <div className={`absolute top-4 right-4 z-50 bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 text-xs text-gray-300 flex items-center gap-3 pointer-events-none shadow-xl transition-opacity duration-500 ${hasInteracted ? 'opacity-0' : 'opacity-100'}`}>
-                            <span className="text-xl">🔍</span>
-                            <div className="flex flex-col gap-0.5">
-                                <div className="font-bold text-white">Interactive Map</div>
-                                <div className="text-[10px] text-gray-400">Scroll to Zoom • Drag to Pan</div>
-                            </div>
-                        </div>
-
-                        <div 
-                            style={{ 
-                                transform: `translate(${panPos.x}px, ${panPos.y}px) scale(${zoomScale})`, 
-                                transformOrigin: '0 0',
-                                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-                            }}
-                            className="w-full h-full origin-top-left"
-                        >
-                            <div className="flex p-10 min-w-max relative h-full">
-                                {roundKeys.map((round) => {
-                                    const roundMatches = rounds[round];
-                                    return (
-                                        <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
-                                            <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
-                                                Round {round}
-                                            </div>
-                                            
-                                            {/* Render Matches for this Round */}
-                                            <div className="relative h-full">
-                                                {roundMatches.map((m) => {
-                                                    const top = getMatchOffset(round, m.matchIndex);
-                                                    return (
-                                                        <div 
-                                                            key={m.id} 
-                                                            className="absolute left-0 w-full"
-                                                            style={{ top: `${top}px` }}
-                                                        >
-                                                            <BracketMatch match={m} />
-                                                            
-                                                            {/* SVG Connector to Next Round */}
-                                                            {/* Only draw if not the final round */}
-                                                            {round < roundKeys.length && (
-                                                                <svg 
-                                                                    className="absolute top-0 left-full overflow-visible pointer-events-none z-0" 
-                                                                    width="64" 
-                                                                    height="1" // Height doesn't matter as we draw relative
-                                                                    style={{ top: '50%' }}
-                                                                >
-                                                                    {m.matchIndex % 2 === 0 ? (
-                                                                        // Top of pair: Curve down
-                                                                        <path 
-                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                            fill="none" 
-                                                                            stroke="rgba(255,255,255,0.1)" 
-                                                                            strokeWidth="2"
-                                                                        />
-                                                                    ) : (
-                                                                        // Bottom of pair: Curve up
-                                                                        <path 
-                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
-                                                                            fill="none" 
-                                                                            stroke="rgba(255,255,255,0.1)" 
-                                                                            strokeWidth="2"
-                                                                        />
-                                                                    )}
-                                                                </svg>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
+              <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-500 h-[850px] flex flex-col">
+                  <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Live Bracket</h2>
+                      <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Powered by Challonge</span>
+                      </div>
+                  </div>
+                  
+                  <div className="flex-1 w-full bg-white/90 rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507]">
+                    <iframe 
+                        src="https://challonge.com/nisamon1/module" 
+                        width="100%" 
+                        height="100%" 
+                        frameBorder="0" 
+                        scrolling="auto" 
+                        allowTransparency={true}
+                        className="w-full h-full"
+                    ></iframe>
+                  </div>
               </div>
             )}
 
