@@ -219,7 +219,8 @@ const AdminTournament: React.FC = () => {
 
     const fetchBracket = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/dev/tournament/bracket`);
+            // Production Route
+            const res = await fetch(`${API_BASE_URL}/api/tournament/bracket`);
             if (res.ok) {
                 const data = await res.json();
                 setMatches(data.matches || []);
@@ -249,7 +250,8 @@ const AdminTournament: React.FC = () => {
 
     const apiCall = async (endpoint: string, body: any) => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/dev/tournament/${endpoint}`, {
+            // Production Admin Routes
+            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: password },
                 body: JSON.stringify(body)

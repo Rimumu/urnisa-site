@@ -478,7 +478,8 @@ const Tournament: React.FC = () => {
   const fetchBracket = async (silent = false) => {
       if (!silent) setLoadingBracket(true);
       try {
-          const res = await fetch(`${API_BASE_URL}/api/dev/tournament/bracket`);
+          // PRODUCTION API ENDPOINT
+          const res = await fetch(`${API_BASE_URL}/api/tournament/bracket`);
           if (res.ok) {
               const data = await res.json();
               setMatches(data.matches || []);
