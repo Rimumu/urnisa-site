@@ -20,7 +20,6 @@ interface TournamentEntry {
 
 interface TournamentMatch {
     id: string;
-    bracketGroup: 'winners' | 'losers' | 'finals';
     round: number;
     matchIndex: number;
     player1: string | null;
@@ -29,7 +28,6 @@ interface TournamentMatch {
     score: string;
     status: string;
     nextMatchId: string | null;
-    loserNextMatchId?: string | null;
 }
 
 type TournamentStatus = 'DRAFTING' | 'LOCK_IN' | 'ONGOING';
@@ -82,257 +80,244 @@ const BANNED_IDS = new Set([
 
 const isBanned = (id: number) => BANNED_IDS.has(id);
 
+// --- CACHE & HELPERS ---
+const clientImageCache = new Map<string, boolean>();
+
+const getFormattedName = (name: string) => {
+    return name.toLowerCase()
+        .replace(/[.']/g, '')
+        .replace(/♀/g, '-f')
+        .replace(/♂/g, '-m')
+        .replace(/\s+/g, '-');
+};
+
 // --- COMPONENTS ---
 
 const PokemonTeamImage: React.FC<{ pokemon: Pokemon; className?: string }> = ({ pokemon, className = "" }) => {
-    // ... (Image logic remains same, truncated for brevity in change block but assumes full code)
-     const [imgSrc, setImgSrc] = useState<string>("");
+    const [imgSrc, setImgSrc] = useState<string>("");
+
     useEffect(() => {
-        setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`);
+        let isMounted = true;
+
+        const verifyImage = async () => {
+            const cobbleName = getFormattedName(pokemon.name);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            const fallback3d = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`;
+
+            if (clientImageCache.has(primaryUrl)) {
+                if (isMounted) {
+                    const isValid = clientImageCache.get(primaryUrl);
+                    setImgSrc(isValid ? primaryUrl : fallback3d);
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+                
+                clientImageCache.set(primaryUrl, data.valid);
+
+                if (isMounted) {
+                    setImgSrc(data.valid ? primaryUrl : fallback3d);
+                }
+            } catch (error) {
+                if (isMounted) setImgSrc(fallback3d);
+            }
+        };
+
+        verifyImage();
+
+        return () => { isMounted = false; };
     }, [pokemon]);
 
+    const handleImageError = () => {
+        if (imgSrc.includes('cobblemon.tools')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png`);
+        } else {
+            setImgSrc(`https://via.placeholder.com/300x400/000000/FFFFFF?text=${encodeURIComponent(pokemon.name)}`);
+        }
+    };
+
     return (
-        <img src={imgSrc} alt={pokemon.name} className={`w-full h-full object-contain ${className}`} loading="lazy" />
+        <OptimizedImage 
+            src={imgSrc} 
+            alt={pokemon.name} 
+            className={`w-full h-full object-contain ${className}`}
+            contain
+            onError={handleImageError}
+            loading="lazy"
+        />
     );
 };
 
 const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }> = ({ pokemon, revealed }) => {
-    if (!revealed || !pokemon) return <div className="aspect-square bg-black/40 rounded-[2rem] border-2 border-white/5 flex items-center justify-center"><span className="text-4xl">?</span></div>;
-    return (
-        <div className="aspect-square bg-[#120507] rounded-[2rem] border-2 border-white/10 relative overflow-hidden group shadow-2xl">
-            <div className="absolute inset-0 p-4 pb-14 flex items-center justify-center">
-                <PokemonTeamImage pokemon={pokemon} />
+    const [types, setTypes] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (revealed && pokemon) {
+            fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    setTypes(data.types.map((t: any) => t.type.name));
+                })
+                .catch(() => setTypes([]));
+        } else {
+            setTypes([]);
+        }
+    }, [pokemon, revealed]);
+
+    if (!revealed || !pokemon) {
+        return (
+            <div className="aspect-square bg-black/40 rounded-[2rem] border-2 border-white/5 flex flex-col items-center justify-center relative overflow-hidden group shadow-lg">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-500">
+                    <span className="text-4xl font-black text-gray-700 select-none">?</span>
+                </div>
+                <div className="h-2 w-16 bg-white/5 rounded-full"></div>
             </div>
-            <div className="absolute bottom-0 w-full bg-black/60 text-center py-2">
-                <span className="text-white font-bold uppercase text-xs">{pokemon.name}</span>
+        );
+    }
+
+    return (
+        <div className="aspect-square bg-[#120507] rounded-[2rem] border-2 border-white/10 relative overflow-hidden group shadow-2xl hover:border-brand-primary/50 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+            <div className="absolute top-3 right-3 z-30">
+                <span className="text-[9px] font-black text-white/40 bg-black/60 px-2 py-0.5 rounded-lg border border-white/5 font-mono tracking-wider backdrop-blur-sm">
+                    #{pokemon.id.toString().padStart(3, '0')}
+                </span>
+            </div>
+            <div className="absolute inset-0 z-10 p-4 pb-14 flex items-center justify-center">
+                <div className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] filter group-hover:scale-110 transition-transform duration-500 ease-out">
+                    <PokemonTeamImage pokemon={pokemon} />
+                </div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/10 z-20 flex flex-col items-center justify-center py-2 px-1">
+                <h4 className="text-white font-black uppercase text-sm tracking-wider truncate drop-shadow-md mb-1.5 w-full text-center">
+                    {pokemon.name}
+                </h4>
+                <div className="flex justify-center flex-wrap gap-1.5 w-full">
+                    {types.length > 0 ? types.map(t => (
+                        <span key={t} className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md border border-white/10 ${TYPE_COLORS[t] || 'bg-gray-600 text-white'}`}>
+                            {t}
+                        </span>
+                    )) : (
+                        <div className="flex gap-1"><div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div><div className="h-4 w-10 bg-white/10 rounded-full animate-pulse"></div></div>
+                    )}
+                </div>
             </div>
         </div>
     );
 };
 
 const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNode; color?: string }> = ({ title, icon, children, color = "border-white/10" }) => (
-    <div className={`bg-black/40 backdrop-blur-xl rounded-2xl border-2 ${color} p-6 shadow-2xl h-full`}>
-        <div className="flex items-center gap-3 mb-4">
-             <span className="text-3xl">{icon}</span> 
-            <h3 className="text-xl font-black uppercase tracking-wider text-white">{title}</h3>
+    <div className={`bg-black/40 backdrop-blur-xl rounded-2xl border-2 ${color} p-6 shadow-2xl relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300 h-full flex flex-col justify-start`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 pointer-events-none"></div>
+        <div className="absolute -top-2 -right-2 p-4 opacity-10 text-7xl pointer-events-none group-hover:scale-110 transition-transform">{icon}</div>
+        <div className="flex items-center gap-3 mb-4 relative z-10 w-full justify-start">
+             <span className="text-3xl filter drop-shadow-lg grayscale-0">{icon}</span> 
+            <h3 className="text-xl font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-sm text-left">{title}</h3>
         </div>
-        <div className="text-gray-300 text-sm space-y-2">{children}</div>
+        <div className="text-gray-300 text-xs md:text-sm space-y-2 relative z-10 leading-relaxed font-medium text-left w-full">
+            {children}
+        </div>
     </div>
 );
 
-// --- BRACKET VISUALIZER ---
-
-const CARD_WIDTH = 260;
-const CARD_HEIGHT = 100;
-const X_GAP = 60;
-const Y_GAP = 20;
-const GROUP_Y_GAP = 100; // Gap between Winners and Losers bracket
-
-const BracketMatchCard: React.FC<{ match: TournamentMatch, style: React.CSSProperties }> = ({ match, style }) => {
+// --- BRACKET COMPONENT ---
+const BracketMatch: React.FC<{ match: TournamentMatch }> = ({ match }) => {
+    // Parse Score
     const scoreObj = useMemo(() => {
-        if (!match.score) return { p1: '', p2: '' };
+        if (!match.score) return { p1: '', p2: '', raw: '' };
         const parts = match.score.match(/^(\d+)\s*[-:,\s]\s*(\d+)$/);
-        if (parts) return { p1: parts[1], p2: parts[2] };
-        return { p1: '', p2: '' };
+        if (parts) return { p1: parts[1], p2: parts[2], raw: '' };
+        return { p1: '', p2: '', raw: match.score };
     }, [match.score]);
 
     const isP1Winner = match.winner === match.player1 && match.winner;
     const isP2Winner = match.winner === match.player2 && match.winner;
 
     return (
-        <div 
-            style={{ ...style, width: CARD_WIDTH, height: CARD_HEIGHT }} 
-            className={`
-                absolute flex flex-col bg-[#120507] border-2 rounded-xl overflow-hidden shadow-xl z-10 transition-colors
-                ${match.status === 'COMPLETED' ? 'border-brand-primary/60' : 'border-white/10'}
-            `}
-        >
-            <div className="bg-black/40 px-3 py-1 flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
-                <span>{match.id}</span>
-                <span className={match.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-500'}>{match.status}</span>
-            </div>
-            
-            <div className={`flex-1 flex items-center justify-between px-3 ${isP1Winner ? 'bg-brand-primary/10' : ''}`}>
-                <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
-                    {match.player1 || 'TBD'}
-                </span>
-                {scoreObj.p1 && <span className="font-mono font-bold bg-black/40 px-1.5 rounded text-xs">{scoreObj.p1}</span>}
-            </div>
-            <div className="h-px bg-white/5"></div>
-            <div className={`flex-1 flex items-center justify-between px-3 ${isP2Winner ? 'bg-brand-primary/10' : ''}`}>
-                <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
-                    {match.player2 || 'TBD'}
-                </span>
-                {scoreObj.p2 && <span className="font-mono font-bold bg-black/40 px-1.5 rounded text-xs">{scoreObj.p2}</span>}
-            </div>
-        </div>
-    );
-};
+        <div className="relative group w-64 z-10">
+            <div className={`
+                bg-[#120507] border-2 rounded-xl overflow-hidden shadow-xl transition-all duration-300
+                ${match.status === 'COMPLETED' ? 'border-brand-primary/60 shadow-brand-primary/10' : 'border-white/10'}
+                hover:border-white/30
+            `}>
+                {/* Header */}
+                <div className="bg-black/40 px-3 py-1.5 flex justify-between items-center text-[9px] font-bold text-gray-500 uppercase tracking-widest border-b border-white/5">
+                    <span>{match.id}</span>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${match.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-500'}`}>
+                        {match.status === 'COMPLETED' ? 'Finished' : match.status}
+                    </span>
+                </div>
 
-const BracketView: React.FC<{ matches: TournamentMatch[] }> = ({ matches }) => {
-    // --- LAYOUT ENGINE ---
-    const { nodes, connections, totalWidth, totalHeight } = useMemo(() => {
-        const _nodes: { match: TournamentMatch, x: number, y: number }[] = [];
-        const _connections: { x1: number, y1: number, x2: number, y2: number, type: 'win' | 'lose' }[] = [];
-        
-        // Split by group
-        const winners = matches.filter(m => m.bracketGroup === 'winners').sort((a,b) => a.round - b.round || a.matchIndex - b.matchIndex);
-        const losers = matches.filter(m => m.bracketGroup === 'losers').sort((a,b) => a.round - b.round || a.matchIndex - b.matchIndex);
-        const finals = matches.filter(m => m.bracketGroup === 'finals');
-
-        // Helper to get round depth map
-        const positions = new Map<string, {x:number, y:number}>();
-
-        // 1. Layout Winners Bracket (Standard Tree)
-        let maxWinnerY = 0;
-        const winnerRounds = Math.max(...winners.map(m => m.round), 0);
-        
-        for (let r = 1; r <= winnerRounds; r++) {
-            const roundMatches = winners.filter(m => m.round === r);
-            roundMatches.forEach((m, idx) => {
-                const x = (r - 1) * (CARD_WIDTH + X_GAP);
-                let y = 0;
-
-                if (r === 1) {
-                    // Leaf nodes: sequential placement
-                    y = idx * (CARD_HEIGHT + Y_GAP);
-                } else {
-                    // Parent nodes: Centered between children (feeders)
-                    const feeders = winners.filter(prev => prev.round === r - 1 && prev.nextMatchId === m.id);
-                    if (feeders.length > 0) {
-                        const ySum = feeders.reduce((acc, f) => acc + (positions.get(f.id)?.y || 0), 0);
-                        y = ySum / feeders.length;
-                    } else {
-                        // Fallback if structure is weird
-                        y = idx * (CARD_HEIGHT + Y_GAP); 
-                    }
-                }
-
-                positions.set(m.id, { x, y });
-                _nodes.push({ match: m, x, y });
-                maxWinnerY = Math.max(maxWinnerY, y + CARD_HEIGHT);
-            });
-        }
-
-        // 2. Layout Losers Bracket (Offset Y)
-        let losersStartY = maxWinnerY + GROUP_Y_GAP;
-        const loserRounds = Math.max(...losers.map(m => m.round), 0);
-
-        for (let r = 1; r <= loserRounds; r++) {
-            const roundMatches = losers.filter(m => m.round === r);
-            roundMatches.forEach((m, idx) => {
-                const x = (r - 1) * (CARD_WIDTH + X_GAP); // Align rounds with winners roughly
-                let y = 0;
-                
-                // For losers bracket, Round 1 is flat.
-                // Subsequent rounds might feed from previous LB round OR drop from WB.
-                // Simplified Logic: Align based on previous round feeders if exist, else stack.
-                const feeders = losers.filter(prev => prev.round === r - 1 && prev.nextMatchId === m.id);
-                
-                if (r === 1 || feeders.length === 0) {
-                    y = losersStartY + idx * (CARD_HEIGHT + Y_GAP);
-                } else {
-                     const ySum = feeders.reduce((acc, f) => acc + (positions.get(f.id)?.y || 0), 0);
-                     y = ySum / feeders.length;
-                }
-                
-                positions.set(m.id, { x, y });
-                _nodes.push({ match: m, x, y });
-            });
-        }
-
-        // 3. Layout Finals
-        if (finals.length > 0) {
-            const wbFinal = winners.find(m => m.round === winnerRounds);
-            const finalX = (winnerRounds) * (CARD_WIDTH + X_GAP); // Next col
-            // Center vertically between WB final and LB final if double elim, else just WB level
-            const finalY = positions.get(wbFinal?.id || '')?.y || 0;
-            
-            finals.forEach((m, idx) => {
-                const x = finalX + (idx * 50); // Offset if bracket reset exists
-                const y = finalY;
-                positions.set(m.id, { x, y });
-                _nodes.push({ match: m, x, y });
-            });
-        }
-
-        // 4. Generate Connections
-        matches.forEach(m => {
-            const start = positions.get(m.id);
-            if (!start) return;
-
-            // Connection to Winner Next Match
-            if (m.nextMatchId) {
-                const end = positions.get(m.nextMatchId);
-                if (end) {
-                    _connections.push({ x1: start.x + CARD_WIDTH, y1: start.y + CARD_HEIGHT/2, x2: end.x, y2: end.y + CARD_HEIGHT/2, type: 'win' });
-                }
-            }
-
-            // Connection to Loser Bracket (Drop)
-            if (m.loserNextMatchId) {
-                const end = positions.get(m.loserNextMatchId);
-                if (end) {
-                    // Draw a dashed line to indicate dropping to losers
-                    // We start from bottom center of card
-                    _connections.push({ x1: start.x + CARD_WIDTH/2, y1: start.y + CARD_HEIGHT, x2: end.x, y2: end.y + CARD_HEIGHT/2, type: 'lose' });
-                }
-            }
-        });
-
-        // Calculate Canvas Size
-        let maxX = 0;
-        let maxY = 0;
-        _nodes.forEach(n => {
-            maxX = Math.max(maxX, n.x + CARD_WIDTH);
-            maxY = Math.max(maxY, n.y + CARD_HEIGHT);
-        });
-
-        return { nodes: _nodes, connections: _connections, totalWidth: maxX + 100, totalHeight: maxY + 100 };
-    }, [matches]);
-
-    return (
-        <div className="relative w-full h-full overflow-auto custom-scrollbar bg-black/20 rounded-xl border border-white/5">
-            <div style={{ width: totalWidth, height: totalHeight, position: 'relative' }}>
-                {/* Connections Layer */}
-                <svg style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-                    <defs>
-                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                            <polygon points="0 0, 10 3.5, 0 7" fill="#555" />
-                        </marker>
-                    </defs>
-                    {connections.map((c, i) => {
-                        // Bezier Curve Logic
-                        const midX = (c.x1 + c.x2) / 2;
-                        const path = `M ${c.x1} ${c.y1} C ${midX} ${c.y1}, ${midX} ${c.y2}, ${c.x2} ${c.y2}`;
-                        
-                        return (
-                            <path 
-                                key={i} 
-                                d={path} 
-                                stroke={c.type === 'lose' ? '#e5383b' : '#555'} 
-                                strokeWidth="2" 
-                                fill="none" 
-                                strokeDasharray={c.type === 'lose' ? "5,5" : "0"}
-                                opacity={c.type === 'lose' ? 0.4 : 0.6}
-                            />
-                        );
-                    })}
-                </svg>
-
-                {/* Nodes Layer */}
-                {nodes.map(n => (
-                    <BracketMatchCard key={n.match.id} match={n.match} style={{ left: n.x, top: n.y }} />
-                ))}
-
-                {/* Labels */}
-                <div className="absolute top-4 left-4 text-xs font-black uppercase tracking-widest text-brand-primary opacity-50 pointer-events-none">Winners Bracket</div>
-                {nodes.some(n => n.match.bracketGroup === 'losers') && (
+                {/* Content */}
+                <div className="flex flex-col">
+                    {/* Player 1 */}
                     <div 
-                        className="absolute left-4 text-xs font-black uppercase tracking-widest text-red-500 opacity-50 pointer-events-none"
-                        style={{ top: nodes.find(n => n.match.bracketGroup === 'losers')?.y ? nodes.find(n => n.match.bracketGroup === 'losers')!.y - 40 : 0 }}
+                        className={`px-3 py-2.5 flex items-center justify-between border-b border-white/5 transition-colors ${isP1Winner ? 'bg-brand-primary/10' : ''}`}
                     >
-                        Losers Bracket
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {match.player1 && (
+                                <img 
+                                    src={`https://mc-heads.net/avatar/${match.player1}/24`} 
+                                    alt="" 
+                                    className="w-5 h-5 rounded-sm shadow-sm"
+                                />
+                            )}
+                            <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
+                                {match.player1 || <span className="text-gray-600 italic">TBD</span>}
+                            </span>
+                            {scoreObj.p1 && (
+                                <span className={`
+                                    flex items-center justify-center w-6 h-6 rounded-md bg-black/40 border border-white/10 
+                                    text-xs font-bold font-mono shrink-0 shadow-inner
+                                    ${isP1Winner ? 'text-brand-primary border-brand-primary/30' : 'text-gray-400'}
+                                `}>
+                                    {scoreObj.p1}
+                                </span>
+                            )}
+                        </div>
+                        {isP1Winner && <span className="text-sm shrink-0 ml-2">👑</span>}
+                    </div>
+
+                    {/* Player 2 */}
+                    <div 
+                        className={`px-3 py-2.5 flex items-center justify-between transition-colors ${isP2Winner ? 'bg-brand-primary/10' : ''}`}
+                    >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {match.player2 && (
+                                <img 
+                                    src={`https://mc-heads.net/avatar/${match.player2}/24`} 
+                                    alt="" 
+                                    className="w-5 h-5 rounded-sm shadow-sm"
+                                />
+                            )}
+                            <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-brand-primary' : 'text-gray-300'}`}>
+                                {match.player2 || <span className="text-gray-600 italic">TBD</span>}
+                            </span>
+                            {scoreObj.p2 && (
+                                <span className={`
+                                    flex items-center justify-center w-6 h-6 rounded-md bg-black/40 border border-white/10 
+                                    text-xs font-bold font-mono shrink-0 shadow-inner
+                                    ${isP2Winner ? 'text-brand-primary border-brand-primary/30' : 'text-gray-400'}
+                                `}>
+                                    {scoreObj.p2}
+                                </span>
+                            )}
+                        </div>
+                        {isP2Winner && <span className="text-sm shrink-0 ml-2">👑</span>}
+                    </div>
+                </div>
+
+                {/* Raw Score Fallback */}
+                {scoreObj.raw && (
+                    <div className="bg-black/60 py-1 text-center border-t border-white/5">
+                        <span className="text-[10px] font-mono font-bold text-gray-400">{scoreObj.raw}</span>
                     </div>
                 )}
             </div>
@@ -343,8 +328,8 @@ const BracketView: React.FC<{ matches: TournamentMatch[] }> = ({ matches }) => {
 const Tournament: React.FC = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('rules');
-  const [loadingPokemon, setLoadingPokemon] = useState(true);
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [loadingPokemon, setLoadingPokemon] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Team Management State
@@ -365,9 +350,53 @@ const Tournament: React.FC = () => {
   const [loadingPlayers, setLoadingPlayers] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<TournamentEntry | null>(null);
 
+  // --- ZOOM & PAN STATE ---
+  const [zoomScale, setZoomScale] = useState(1);
+  const [panPos, setPanPos] = useState({ x: 50, y: 50 }); // Initial padding
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Keep track of current state in ref for event listener
+  const stateRef = useRef({ zoomScale, panPos });
   useEffect(() => {
-    // ... (Pokemon Fetch logic same as before)
-     const fetchPokemon = async () => {
+      stateRef.current = { zoomScale, panPos };
+  }, [zoomScale, panPos]);
+
+  // Attach native wheel listener to prevent default scrolling
+  useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const onWheel = (e: WheelEvent) => {
+          if (matches.length === 0) return;
+          e.preventDefault();
+          setHasInteracted(true);
+
+          const { zoomScale: currentZoom, panPos: currentPan } = stateRef.current;
+          const zoomSensitivity = 0.001;
+          const delta = -e.deltaY * zoomSensitivity; 
+          const newScale = Math.min(Math.max(0.2, currentZoom + delta), 3);
+
+          const rect = container.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+
+          const newX = mouseX - (mouseX - currentPan.x) * (newScale / currentZoom);
+          const newY = mouseY - (mouseY - currentPan.y) * (newScale / currentZoom);
+
+          setZoomScale(newScale);
+          setPanPos({ x: newX, y: newY });
+      };
+
+      // { passive: false } is required to use preventDefault()
+      container.addEventListener('wheel', onWheel, { passive: false });
+      return () => container.removeEventListener('wheel', onWheel);
+  }, [matches.length]);
+
+  useEffect(() => {
+    const fetchPokemon = async () => {
       try {
         const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025');
         const data = await response.json();
@@ -376,7 +405,11 @@ const Tournament: React.FC = () => {
           name: p.name.charAt(0).toUpperCase() + p.name.slice(1).replace(/-/g, ' ')
         }));
         setPokemonList(formatted);
-      } catch (e) { console.error(e); } finally { setLoadingPokemon(false); }
+      } catch (e) {
+        console.error("Failed to fetch pokemon list", e);
+      } finally {
+        setLoadingPokemon(false);
+      }
     };
     fetchPokemon();
   }, []);
@@ -384,12 +417,21 @@ const Tournament: React.FC = () => {
   useEffect(() => {
       fetch(`${API_BASE_URL}/api/tournament/config`)
           .then(res => res.json())
-          .then(data => setTournamentStatus(data.status || 'DRAFTING'))
-          .catch(console.error);
+          .then(data => {
+              setTournamentStatus(data.status || 'DRAFTING');
+          })
+          .catch(e => console.error("Config fetch error", e));
   }, []);
 
-  useEffect(() => { if (user?.id) fetchMyTeam(); }, [user]);
-  useEffect(() => { fetchPlayers(); }, [activeTab]);
+  useEffect(() => {
+      if (user?.id) {
+          fetchMyTeam();
+      }
+  }, [user]);
+
+  useEffect(() => {
+      fetchPlayers();
+  }, [activeTab]);
 
   useEffect(() => {
       if (activeTab === 'brackets') {
@@ -399,7 +441,6 @@ const Tournament: React.FC = () => {
       }
   }, [activeTab]);
 
-  // ... (API Fetch functions: fetchMyTeam, fetchPlayers, fetchBracket - same as previous)
   const fetchMyTeam = async () => {
       if (!user?.id) return;
       setLoadingTeam(true);
@@ -415,35 +456,48 @@ const Tournament: React.FC = () => {
                   setHasStartedRegistration(true);
               }
           }
-      } catch (e) { console.error(e); } finally { setLoadingTeam(false); }
+      } catch (e) {
+          console.error("Failed to fetch team", e);
+      } finally {
+          setLoadingTeam(false);
+      }
   };
 
   const fetchPlayers = async () => {
       if (playersList.length === 0) setLoadingPlayers(true);
       try {
+          // Dev page fetches dev players too
           const res = await fetch(`${API_BASE_URL}/api/tournament/players?dev=true`);
-          if (res.ok) setPlayersList(await res.json());
-      } catch (e) { console.error(e); } finally { setLoadingPlayers(false); }
+          if (res.ok) {
+              setPlayersList(await res.json());
+          }
+      } catch (e) { console.error(e); } 
+      finally { setLoadingPlayers(false); }
   };
 
   const fetchBracket = async (silent = false) => {
       if (!silent) setLoadingBracket(true);
       try {
+          // PRODUCTION API ENDPOINT
           const res = await fetch(`${API_BASE_URL}/api/tournament/bracket`);
           if (res.ok) {
               const data = await res.json();
               setMatches(data.matches || []);
           }
-      } catch(e) {} finally { if (!silent) setLoadingBracket(false); }
+      } catch(e) {}
+      finally { 
+          if (!silent) setLoadingBracket(false); 
+      }
   };
 
   const filteredPokemon = useMemo(() => {
     if (!searchQuery) return pokemonList.slice(0, 50);
-    return pokemonList.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 100);
+    return pokemonList.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 100);
   }, [pokemonList, searchQuery]);
 
-  // ... (Handlers: handleSelectPokemon, handleRemovePokemon, handleInitialRegister, handleSaveDraft, handleLockIn - same as previous)
-   const handleSelectPokemon = (pokemon: Pokemon) => {
+  const handleSelectPokemon = (pokemon: Pokemon) => {
     if (isLocked || tournamentStatus === 'ONGOING') return;
     const emptySlot = selectedTeam.indexOf(null);
     if (emptySlot !== -1) {
@@ -459,8 +513,10 @@ const Tournament: React.FC = () => {
     newTeam[index] = null;
     setSelectedTeam(newTeam);
   };
-  
-  const hasBannedPokemon = useMemo(() => selectedTeam.some(p => p !== null && isBanned(p.id)), [selectedTeam]);
+
+  const hasBannedPokemon = useMemo(() => {
+      return selectedTeam.some(p => p !== null && isBanned(p.id));
+  }, [selectedTeam]);
 
   const handleInitialRegister = async () => {
       if (!user || tournamentStatus === 'ONGOING') return;
@@ -469,11 +525,23 @@ const Tournament: React.FC = () => {
           const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ discordId: user.id, minecraftUsername: user.minecraftUsername, team: new Array(6).fill(null) })
+              body: JSON.stringify({
+                  discordId: user.id,
+                  minecraftUsername: user.minecraftUsername,
+                  team: new Array(6).fill(null)
+              })
           });
-          if (res.ok) setHasStartedRegistration(true);
-          else alert("Registration failed.");
-      } catch (e) { alert("Network error."); } finally { setLoadingTeam(false); }
+          
+          if (res.ok) {
+              setHasStartedRegistration(true);
+          } else {
+              alert("Registration failed. Please try again.");
+          }
+      } catch (e) {
+          alert("Network error.");
+      } finally {
+          setLoadingTeam(false);
+      }
   };
 
   const handleSaveDraft = async () => {
@@ -484,125 +552,616 @@ const Tournament: React.FC = () => {
         const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ discordId: user.id, minecraftUsername: user.minecraftUsername, team: selectedTeam })
+            body: JSON.stringify({
+                discordId: user.id,
+                minecraftUsername: user.minecraftUsername,
+                team: selectedTeam
+            })
         });
-        if (res.ok) { setSaveStatus('success'); setTimeout(() => setSaveStatus('idle'), 2000); } else setSaveStatus('error');
-    } catch (e) { setSaveStatus('error'); } finally { setSaving(false); }
+        
+        if (res.ok) {
+            setSaveStatus('success');
+            setTimeout(() => setSaveStatus('idle'), 2000);
+        } else {
+            setSaveStatus('error');
+        }
+    } catch (e) {
+        setSaveStatus('error');
+    } finally {
+        setSaving(false);
+    }
   };
 
   const handleLockIn = async () => {
       if (tournamentStatus !== 'LOCK_IN') return;
-      if (selectedTeam.filter(p => p !== null).length < 1) { alert("Empty team!"); return; }
-      if (!window.confirm("Lock in team?")) return;
+      if (selectedTeam.filter(p => p !== null).length < 1) {
+          alert("You cannot lock an empty team!");
+          return;
+      }
+      if (!window.confirm("Are you sure you want to LOCK IN your team? You will NOT be able to edit it afterwards.")) return;
+
       await handleSaveDraft();
+
       setSaving(true);
       try {
-          const res = await fetch(`${API_BASE_URL}/api/tournament/lock`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ discordId: user?.id }) });
-          if (res.ok) { setIsLocked(true); setSaveStatus('success'); } else alert("Lock failed.");
-      } catch(e) { alert("Lock failed."); } finally { setSaving(false); }
+          const res = await fetch(`${API_BASE_URL}/api/tournament/lock`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ discordId: user?.id })
+          });
+          if (res.ok) {
+              setIsLocked(true);
+              setSaveStatus('success');
+          } else {
+              const err = await res.json();
+              alert(err.error || "Lock failed.");
+          }
+      } catch(e) { alert("Lock failed."); }
+      finally { setSaving(false); }
+  };
+
+  // Drag Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+      if(matches.length === 0) return;
+      if(e.button !== 0) return;
+      
+      setIsDragging(true);
+      setHasInteracted(true);
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+      e.preventDefault(); 
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - lastMousePos.x;
+      const dy = e.clientY - lastMousePos.y;
+      setPanPos(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setLastMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+      setIsDragging(false);
+  };
+
+  // Group Matches By Round for Bracket Display
+  const rounds = useMemo(() => {
+      const grouped: Record<number, TournamentMatch[]> = {};
+      if (!matches || matches.length === 0) return grouped;
+      
+      matches.forEach(m => {
+          if (!grouped[m.round]) grouped[m.round] = [];
+          grouped[m.round].push(m);
+      });
+      
+      // Sort within rounds
+      Object.keys(grouped).forEach(r => {
+          grouped[Number(r)].sort((a,b) => a.matchIndex - b.matchIndex);
+      });
+      return grouped;
+  }, [matches]);
+
+  const roundKeys = Object.keys(rounds).map(Number).sort((a,b) => a-b);
+
+  // Calculate layout metrics
+  const CARD_HEIGHT = 120; 
+  const VERTICAL_GAP = 20;
+  const CARD_TOTAL_H = CARD_HEIGHT + VERTICAL_GAP;
+
+  const getMatchOffset = (round: number, index: number): number => {
+      if (round === 1) {
+          return index * CARD_TOTAL_H;
+      }
+      const prevRound = round - 1;
+      const src1 = getMatchOffset(prevRound, index * 2);
+      const src2 = getMatchOffset(prevRound, index * 2 + 1);
+      
+      return (src1 + src2) / 2;
   };
 
   return (
     <div className="py-4 pb-8 font-sans text-white relative">
       <style>{`
-        /* ... existing styles ... */
+        .dev-stripe {
+            background: repeating-linear-gradient(45deg, #f59e0b, #f59e0b 10px, #000 10px, #000 20px);
+        }
         .pokemon-grid::-webkit-scrollbar { width: 6px; }
         .pokemon-grid::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
         .pokemon-grid::-webkit-scrollbar-thumb { background: #e5383b; border-radius: 10px; }
-        .banned-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #ef4444; color: white; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 50; pointer-events: none; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-        .group:hover .banned-tooltip { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(-4px); }
-        .dock-pill { background: rgba(18, 5, 7, 0.65); backdrop-filter: blur(25px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5); height: 40px; }
-        .nav-link-active { position: relative; color: #e5383b !important; background: rgba(229, 56, 59, 0.1); }
+        
+        .banned-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 50;
+            pointer-events: none;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .banned-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #ef4444 transparent transparent transparent;
+        }
+        .group:hover .banned-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        .dock-pill {
+            background: rgba(18, 5, 7, 0.65);
+            backdrop-filter: blur(25px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            height: 40px;
+        }
+        
+        .nav-link-active {
+            position: relative;
+            color: #e5383b !important;
+            background: rgba(229, 56, 59, 0.1);
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #1f090c; border-radius: 10px; margin: 4px; }
+        ::-webkit-scrollbar-thumb { background: #e5383b; border-radius: 10px; border: 2px solid #1f090c; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff4d4d; }
+
+        /* Bracket Connectors */
+        .bracket-connector-right {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background-color: rgba(255,255,255,0.1);
+        }
+        .bracket-connector-vertical {
+            position: absolute;
+            right: -20px;
+            width: 2px;
+            background-color: rgba(255,255,255,0.1);
+        }
       `}</style>
 
       <UserProfile onUserChange={setUser} className="!absolute top-4 right-4" />
 
-      {/* ... (Header and Tabs logic same as before, simplified for brevity in change block but assumes full render) ... */}
-       <div className="relative z-20 container mx-auto px-4 pt-12">
-          {/* ... Top Bar ... */}
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-start items-center mb-6 gap-4">
+      <div className="relative z-20 container mx-auto px-4 pt-12">
+        {/* Top Utility Bar */}
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-start items-center mb-6 gap-4">
             <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md h-10 shrink-0">
                 <span>←</span> Back to Dashboard
             </Link>
+
             <div className="dock-pill rounded-full p-1 flex items-center gap-1 shadow-xl">
-                 {['rules', 'signup', 'brackets', 'players'].map(t => (
-                     <button key={t} onClick={() => setActiveTab(t as any)} className={`relative flex items-center gap-2 px-3 h-full transition-all duration-300 rounded-full ${activeTab === t ? 'nav-link-active' : 'text-gray-500 hover:text-white'}`}>
-                         <span className="text-[9px] font-black uppercase tracking-[0.05em]">{t}</span>
-                     </button>
-                 ))}
+                {[
+                  { id: 'rules', label: 'RULES', icon: '📜' },
+                  { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked && tournamentStatus !== 'ONGOING' },
+                  { id: 'brackets', label: 'BRACKET', icon: '📊' },
+                  { id: 'players', label: 'PLAYERS', icon: '👥' }
+                ].map((tab) => (
+                  <button 
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`
+                      relative flex items-center gap-2 px-3 h-full transition-all duration-300 rounded-full
+                      ${activeTab === tab.id 
+                          ? 'nav-link-active' 
+                          : 'text-gray-500 hover:text-white group'}
+                    `}
+                  >
+                      <span className="text-sm md:text-base transition-transform group-hover:scale-110">{tab.icon}</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.05em]">{tab.label}</span>
+                      {tab.notify && <div className="absolute top-1 right-1 w-1 h-1 bg-brand-primary rounded-full animate-pulse shadow-[0_0_8px_#e5383b]"></div>}
+                  </button>
+                ))}
+            </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Header Dashboard */}
+          <div className="flex flex-col md:flex-row justify-between items-center bg-black/40 border border-white/10 rounded-[2.5rem] p-6 md:p-8 gap-6 backdrop-blur-md">
+            <div className="flex items-center gap-6">
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-black/40 rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border border-brand-primary/30 p-1">
+                    <img src="https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif" alt="Tournament Logo" className="w-full h-full object-cover rounded-2xl" />
+                </div>
+                <div>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1 text-white">
+                        NISAMON <span className="text-brand-primary">TOURNAMENT</span>
+                    </h1>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">Season 1</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
+                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Players</span>
+                    <span className="text-xl font-black text-white">{playersList.length}</span>
+                </div>
+                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Phase</span>
+                    <span className={`text-xl font-black uppercase ${
+                        tournamentStatus === 'DRAFTING' ? 'text-red-500' : 
+                        tournamentStatus === 'LOCK_IN' ? 'text-orange-500' : 
+                        'text-green-500'
+                    }`}>
+                        {tournamentStatus === 'DRAFTING' ? 'SIGNUPS' : tournamentStatus.replace('_', '-')}
+                    </span>
+                </div>
+                <button 
+                    onClick={() => {
+                        if (tournamentStatus === 'ONGOING') {
+                            setActiveTab('brackets');
+                        } else {
+                            setActiveTab('signup');
+                        }
+                    }}
+                    className={`
+                        text-white font-black px-8 h-14 rounded-2xl shadow-lg transition-all uppercase tracking-widest text-sm border-b-4 flex items-center justify-center flex-1 md:flex-none min-w-[140px]
+                        ${tournamentStatus === 'DRAFTING' 
+                            ? 'bg-red-600 hover:bg-red-500 border-red-800 hover:scale-105' 
+                            : tournamentStatus === 'LOCK_IN'
+                                ? 'bg-orange-600 hover:bg-orange-500 border-orange-800'
+                                : 'bg-green-600 hover:bg-green-500 border-green-800'}
+                    `}
+                >
+                    {tournamentStatus === 'ONGOING' ? 'Play' : tournamentStatus === 'LOCK_IN' ? 'Lock-In' : 'Sign Up'}
+                </button>
             </div>
           </div>
-          
-          <div className="max-w-7xl mx-auto space-y-6">
-              {/* ... Header Dashboard ... */}
 
-              <div className="min-h-[40vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                  {/* ... Rules, Players, Signup tabs (omitted for brevity, assume unchanged) ... */}
-                   {activeTab === 'rules' && <div className="p-8 bg-black/40 rounded-3xl border border-white/10"><h2 className="text-3xl font-black mb-4">Rules</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><RuleCard title="Format" icon="🏆">Single Elim, 6v6 roster, 4v4 battle, Lvl 50 cap.</RuleCard><RuleCard title="Bans" icon="🚫">No Legendaries/Mythicals/UBs. No Dynamax/Tera/Z-Moves.</RuleCard></div></div>}
-                   
-                   {activeTab === 'players' && (
-                        <div className="bg-black/40 p-6 rounded-3xl border border-white/10">
-                            <h2 className="text-2xl font-black mb-6">Registered Players ({playersList.length})</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {playersList.map((p, i) => (
-                                    <button key={i} onClick={() => setSelectedPlayer(p)} className="bg-white/5 p-4 rounded-xl text-left hover:bg-white/10 transition-colors flex items-center gap-3">
-                                        <img src={`https://mc-heads.net/avatar/${p.minecraftUsername}/32`} className="rounded" />
-                                        <div><div className="font-bold">{p.minecraftUsername}</div><div className="text-xs text-gray-500">{p.isLocked ? 'Ready' : 'Drafting'}</div></div>
-                                    </button>
-                                ))}
+          {/* Content Viewport */}
+          <div className="min-h-[40vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            {activeTab === 'rules' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="md:col-span-2 lg:col-span-3">
+                        <div className="bg-gradient-to-br from-brand-primary/20 to-black border-2 border-brand-primary/40 p-8 rounded-[2rem] relative overflow-hidden shadow-2xl">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl pointer-events-none text-brand-primary">🏆</div>
+                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Official Format</h2>
+                            <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
+                                Single-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!
+                            </p>
+                        </div>
+                    </div>
+                    <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
+                        <div className="space-y-4">
+                            <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
+                            <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Legendary Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li></ul></div>
+                        </div>
+                    </RuleCard>
+                    <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
+                        <ul className="space-y-2">
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A player cannot have two Pokémon of the same National Pokédex number.</span></li>
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item.</span></li>
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A player cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
+                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
+                        </ul>
+                    </RuleCard>
+                    <RuleCard title="Move Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
+                        <div className="space-y-3">
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
+                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
+                        </div>
+                    </RuleCard>
+                    <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
+                        <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
+                    </RuleCard>
+                    <RuleCard title="General Rules" icon="⚖️">
+                        <ul className="space-y-3">
+                            <li className="flex gap-3"><span className="text-red-500 font-bold text-lg leading-none">•</span><span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>No intentional stalling or disconnect abuse.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Valid disconnect? Restart match <strong className="text-white">WITH SAME TEAM</strong>.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Report matches within <strong className="text-white">10 minutes</strong>.</span></li>
+                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span className="italic opacity-80">Admin decisions are final.</span></li>
+                        </ul>
+                    </RuleCard>
+                    <RuleCard title="Spectator Rules" icon="👀" color="border-green-500/40 bg-green-900/10">
+                        <ul className="space-y-2">
+                            <li className="flex gap-2"><span className="text-green-400">•</span> When the matches start mute your mic/ use push to talk.</li>
+                            <li className="flex gap-2"><span className="text-green-400">•</span> Cheering is allowed but do not distract/disrupt the contestants and matches.</li>
+                            <li className="flex gap-2"><span className="text-green-400">•</span> Keep your pokemon on your shoulders or in your balls.</li>
+                        </ul>
+                    </RuleCard>
+                </div>
+            )}
+
+            {activeTab === 'brackets' && (
+              <div 
+                className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-0 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-500 h-[600px] flex flex-col"
+              >
+                {loadingBracket ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                        <div className="animate-spin text-4xl mb-4">⌛</div>
+                        <div className="font-bold text-white">Loading Bracket...</div>
+                    </div>
+                ) : matches.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-20">
+                        <div className="text-9xl mb-8 opacity-20">📊</div>
+                        <h2 className="text-5xl font-black text-white uppercase tracking-widest mb-4">Bracket Pending</h2>
+                        <p className="text-gray-400 text-xl max-w-lg mx-auto leading-relaxed">Generated after lock-ins!</p>
+                    </div>
+                ) : (
+                    <div 
+                        className="flex-1 overflow-hidden relative cursor-move bg-[#1a0b0e]/50 select-none"
+                        ref={containerRef}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                    >
+                        {/* Control Indicator */}
+                        <div className={`absolute top-4 right-4 z-50 bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 text-xs text-gray-300 flex items-center gap-3 pointer-events-none shadow-xl transition-opacity duration-500 ${hasInteracted ? 'opacity-0' : 'opacity-100'}`}>
+                            <span className="text-xl">🔍</span>
+                            <div className="flex flex-col gap-0.5">
+                                <div className="font-bold text-white">Interactive Map</div>
+                                <div className="text-[10px] text-gray-400">Scroll to Zoom • Drag to Pan</div>
                             </div>
                         </div>
-                   )}
 
-                   {activeTab === 'signup' && (
-                        <div className="bg-black/40 p-8 rounded-3xl border border-white/10 text-center">
-                            {!user ? <div>Login required.</div> : 
-                                !hasStartedRegistration ? <button onClick={handleInitialRegister} className="bg-brand-primary px-8 py-4 rounded-xl font-bold text-white">JOIN NOW</button> :
-                                <div>
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-2xl font-black">Draft Your Team</h2>
-                                        {tournamentStatus === 'LOCK_IN' && <button onClick={handleLockIn} disabled={selectedTeam.includes(null)} className="bg-green-600 px-6 py-2 rounded-lg font-bold">LOCK IN</button>}
-                                    </div>
-                                    <div className="grid grid-cols-6 gap-2 mb-6">
-                                        {selectedTeam.map((p, i) => (
-                                            <div key={i} className="aspect-square bg-black/50 rounded-xl border border-white/10 flex items-center justify-center relative group">
-                                                {p ? <><PokemonTeamImage pokemon={p} /> <button onClick={() => handleRemovePokemon(i)} className="absolute top-1 right-1 bg-red-600 w-5 h-5 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100">x</button></> : <span className="text-2xl opacity-20">+</span>}
+                        <div 
+                            style={{ 
+                                transform: `translate(${panPos.x}px, ${panPos.y}px) scale(${zoomScale})`, 
+                                transformOrigin: '0 0',
+                                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                            }}
+                            className="w-full h-full origin-top-left"
+                        >
+                            <div className="flex p-10 min-w-max relative h-full">
+                                {roundKeys.map((round) => {
+                                    const roundMatches = rounds[round];
+                                    return (
+                                        <div key={round} className="flex flex-col relative mr-16" style={{ width: '280px' }}>
+                                            <div className="text-center font-black text-brand-primary uppercase tracking-widest mb-6 text-xs sticky top-0 bg-black/50 backdrop-blur-sm py-1 rounded z-30">
+                                                Round {round}
                                             </div>
-                                        ))}
-                                    </div>
-                                    {!isLocked && <div className="bg-black/30 p-4 rounded-xl"><input type="text" placeholder="Search Pokemon..." className="bg-transparent w-full outline-none text-white font-bold" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} /><div className="grid grid-cols-8 gap-2 mt-4 max-h-60 overflow-y-auto pokemon-grid">{filteredPokemon.map(p => <button key={p.id} onClick={() => handleSelectPokemon(p)} disabled={isBanned(p.id)} className="aspect-square bg-white/5 rounded-lg hover:bg-white/10 disabled:opacity-30"><PokemonTeamImage pokemon={p} /></button>)}</div></div>}
-                                </div>
-                            }
+                                            
+                                            {/* Render Matches for this Round */}
+                                            <div className="relative h-full">
+                                                {roundMatches.map((m) => {
+                                                    const top = getMatchOffset(round, m.matchIndex);
+                                                    return (
+                                                        <div 
+                                                            key={m.id} 
+                                                            className="absolute left-0 w-full"
+                                                            style={{ top: `${top}px` }}
+                                                        >
+                                                            <BracketMatch match={m} />
+                                                            
+                                                            {/* SVG Connector to Next Round */}
+                                                            {/* Only draw if not the final round */}
+                                                            {round < roundKeys.length && (
+                                                                <svg 
+                                                                    className="absolute top-0 left-full overflow-visible pointer-events-none z-0" 
+                                                                    width="64" 
+                                                                    height="1" // Height doesn't matter as we draw relative
+                                                                    style={{ top: '50%' }}
+                                                                >
+                                                                    {m.matchIndex % 2 === 0 ? (
+                                                                        // Top of pair: Curve down
+                                                                        <path 
+                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
+                                                                            fill="none" 
+                                                                            stroke="rgba(255,255,255,0.1)" 
+                                                                            strokeWidth="2"
+                                                                        />
+                                                                    ) : (
+                                                                        // Bottom of pair: Curve up
+                                                                        <path 
+                                                                            d={`M 0 0 H 20 V ${getMatchOffset(round+1, Math.floor(m.matchIndex/2)) - top} H 40`}
+                                                                            fill="none" 
+                                                                            stroke="rgba(255,255,255,0.1)" 
+                                                                            strokeWidth="2"
+                                                                        />
+                                                                    )}
+                                                                </svg>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-                   )}
+                    </div>
+                )}
+              </div>
+            )}
 
-                   {activeTab === 'brackets' && (
-                      <div className="relative z-10 h-[600px] flex flex-col">
-                        {loadingBracket ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center"><div className="animate-spin text-4xl mb-4">⌛</div><div className="font-bold text-white">Loading Bracket...</div></div>
-                        ) : matches.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center py-20 text-gray-500">Bracket Pending</div>
-                        ) : (
-                            <BracketView matches={matches} />
-                        )}
+            {activeTab === 'players' && (
+              <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-left-4 duration-500">
+                  <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                    <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Players List</h2>
+                    <div className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-4 py-1.5 rounded-full font-black uppercase tracking-widest">{playersList.length} Registered</div>
+                  </div>
+                  {loadingPlayers ? (<div className="text-center py-20 animate-spin">⌛</div>) : playersList.length === 0 ? (<div className="text-center py-24 text-gray-600 font-bold italic">No players yet!</div>) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {playersList.map((entry, idx) => (
+                              <button 
+                                key={idx} 
+                                onClick={() => setSelectedPlayer(entry)}
+                                className="bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02]"
+                              >
+                                  <div className="flex items-center gap-4 border-b border-white/5 pb-4 w-full">
+                                      <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-14 h-14 rounded-2xl border-2 border-white/10" alt={entry.minecraftUsername} />
+                                      <div className="flex-1 min-w-0">
+                                          <div className="font-black text-white text-xl truncate">{entry.minecraftUsername}</div>
+                                          <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${entry.isLocked ? 'text-green-400' : 'text-amber-400'}`}><span className={`w-2 h-2 rounded-full ${entry.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>{entry.isLocked ? 'Ready' : 'Drafting'}</div>
+                                      </div>
+                                  </div>
+                                  <div className="grid grid-cols-6 gap-2 w-full">
+                                      {tournamentStatus === 'ONGOING' && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
+                                  </div>
+                              </button>
+                          ))}
                       </div>
-                   )}
+                  )}
+              </div>
+            )}
+
+            {activeTab === 'signup' && (
+              <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {!user ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center space-y-8">
+                    <div className="w-20 h-20 bg-red-900/20 rounded-full flex items-center justify-center text-5xl opacity-40">🔒</div>
+                    <div className="space-y-2"><h2 className="text-3xl font-black text-white uppercase tracking-tighter">Login Required</h2><p className="text-gray-400 max-w-sm mx-auto text-sm">Discord identification required.</p></div>
+                    <UserProfile className="scale-110" />
+                  </div>
+                ) : loadingTeam ? (<div className="text-center py-20">Retrieving...</div>) : !hasStartedRegistration && !isLocked ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center space-y-8">
+                    {tournamentStatus === 'ONGOING' ? (
+                        <div className="bg-red-900/20 border-2 border-red-500/30 p-12 rounded-[2.5rem] flex flex-col items-center gap-4">
+                            <span className="text-6xl">⛔</span>
+                            <h2 className="text-4xl font-black text-white uppercase italic">Registration Closed</h2>
+                            <p className="text-gray-400">The tournament has already begun. Signups are no longer available for this season.</p>
+                        </div>
+                    ) : (
+                        <>
+                            <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
+                            <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">Click below to register and begin drafting your team!</p></div>
+                            <button onClick={handleInitialRegister} className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-[2rem] shadow-xl transition-all transform hover:scale-105 uppercase tracking-widest border-b-4 border-red-800">JOIN TOURNAMENT</button>
+                        </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-10">
+                    {(isLocked || tournamentStatus === 'ONGOING') && (
+                        <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2.5rem] p-6 text-center shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+                            <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">{tournamentStatus === 'ONGOING' ? '⚔️ TOURNAMENT ONGOING' : '🛡️ ROSTER SECURED'}</h3>
+                            <p className="text-green-200/60 text-xs">Selection locked and synced with database.</p>
+                        </div>
+                    )}
+                    <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
+                      <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
+                      <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
+                    </div>
+                    <div className="space-y-6">
+                      <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
+                        {selectedTeam.map((p, idx) => {
+                          const banned = p !== null && isBanned(p.id);
+                          return (
+                            <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
+                              {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    {!isLocked && tournamentStatus !== 'ONGOING' && (
+                        <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl">
+                            <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Pokemon Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
+                                {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
+                                        const isSelected = selectedTeam.some(sp => sp?.id === p.id);
+                                        const isFull = !selectedTeam.includes(null);
+                                        const banned = isBanned(p.id);
+                                        return (<button key={p.id} disabled={isSelected || isFull || banned} onClick={() => handleSelectPokemon(p)} className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50' : (isFull || banned) ? 'bg-gray-900 opacity-30 grayscale' : 'bg-white/5 border border-white/10 hover:border-brand-primary/50'}`} title={p.name}><div className="w-full h-full relative"><PokemonTeamImage pokemon={p} />{banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}</div>{banned && <div className="banned-tooltip">BANNED</div>}</button>);
+                                    })
+                                }
+                            </div>
+                        </div>
+                    )}
+                    {!isLocked && tournamentStatus !== 'ONGOING' && (
+                        <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
+                            <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1">{saveStatus === 'success' ? 'SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE DRAFT'}</button>
+                            {tournamentStatus === 'LOCK_IN' && (
+                                <button onClick={handleLockIn} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon} className="px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] bg-green-600 hover:bg-green-500 text-white border-green-800 border-b-4">🔒 FINALIZE & LOCK TEAM</button>
+                            )}
+                        </div>
+                    )}
+                    {tournamentStatus === 'ONGOING' && !isLocked && hasStartedRegistration && (
+                        <div className="bg-amber-900/20 border-2 border-amber-500/30 p-8 rounded-[2.5rem] text-center">
+                            <span className="text-4xl mb-4 block">⌛</span>
+                            <h3 className="text-2xl font-black text-white uppercase italic mb-2">Phase Expired</h3>
+                            <p className="text-gray-400">The tournament has already begun. Drafting is closed, and unfinalized teams have been disqualified.</p>
+                        </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* PLAYER DETAILS MODAL */}
+      {selectedPlayer && (
+          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+              <div className="bg-[#120507] w-full max-w-5xl max-h-[90vh] rounded-[3rem] border-2 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
+                  
+                  {/* Decorative Header Background */}
+                  <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-primary/10 to-transparent pointer-events-none"></div>
+
+                  {/* Modal Header */}
+                  <div className="p-8 md:p-10 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/20 relative z-10">
+                      <div className="flex items-center gap-6">
+                          <div className="relative">
+                              <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full"></div>
+                              <img src={`https://mc-heads.net/avatar/${selectedPlayer.minecraftUsername}/128`} className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] border-4 border-brand-primary shadow-2xl relative z-10" alt={selectedPlayer.minecraftUsername} />
+                          </div>
+                          <div>
+                              <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg">{selectedPlayer.minecraftUsername}</h2>
+                              <div className={`
+                                flex items-center gap-2 px-4 py-1.5 rounded-full w-fit border shadow-lg
+                                ${selectedPlayer.isLocked 
+                                    ? 'bg-green-500/10 text-green-400 border-green-500/30' 
+                                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}
+                              `}>
+                                  <span className={`w-2 h-2 rounded-full ${selectedPlayer.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
+                                  <span className="text-xs font-black uppercase tracking-widest">{selectedPlayer.isLocked ? 'Ready for Battle' : 'Drafting Phase'}</span>
+                              </div>
+                          </div>
+                      </div>
+                      <button 
+                        onClick={() => setSelectedPlayer(null)} 
+                        className="group p-4 rounded-full bg-white/5 hover:bg-red-600 hover:text-white text-gray-400 transition-all duration-300 border border-white/10 hover:border-red-500 hover:rotate-90 hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]"
+                      >
+                          <span className="text-2xl leading-none font-bold">✕</span>
+                      </button>
+                  </div>
+
+                  {/* Modal Content - Team Grid */}
+                  <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#120507]">
+                      <div className="flex items-center gap-4 mb-8">
+                          <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Active Roster</h3>
+                          <div className="h-px bg-white/10 flex-1"></div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                          {(tournamentStatus === 'ONGOING' && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
+                              <PokemonDetailCard 
+                                  key={idx} 
+                                  pokemon={pokemon} 
+                                  revealed={true}
+                              />
+                          ))}
+                      </div>
+                  </div>
               </div>
           </div>
-       </div>
-
-       {/* Player Detail Modal */}
-       {selectedPlayer && (
-           <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
-               <div className="bg-[#1a0b0e] p-8 rounded-3xl max-w-4xl w-full border border-white/10 relative">
-                   <button onClick={() => setSelectedPlayer(null)} className="absolute top-4 right-4 text-gray-500 hover:text-white">✕</button>
-                   <h2 className="text-3xl font-black mb-6">{selectedPlayer.minecraftUsername}</h2>
-                   <div className="grid grid-cols-3 gap-4">
-                       {selectedPlayer.team.map((p, i) => <PokemonDetailCard key={i} pokemon={p} revealed={true} />)}
-                   </div>
-               </div>
-           </div>
-       )}
+      )}
     </div>
   );
 };
