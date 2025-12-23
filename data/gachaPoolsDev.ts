@@ -1,3 +1,4 @@
+
 export interface CardData {
     id: number;
     name: string;
@@ -10,14 +11,12 @@ export interface CardData {
     weight?: number; // Higher number = more frequent
 }
 
-// THEME: CREATION TRIO (Dialga / Palkia / Giratina) - Time, Space, Antimatter
+// THEME: LEGENDARY BEASTS (Raikou / Entei / Suicune)
 export const LAMB_POOL: CardData[] = [
-    // The Chase - Time
-    { id: 483, name: "Dialga", type: 'Pokemon', subType: "Temporal", rarity: 'Legendary', hp: 220, description: "A legendary Pokemon that can control time.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766066036/dialgaSTILL_d5h5oc.png" },
-    
-    // The Support - Space & Antimatter
-    { id: 484, name: "Palkia", type: 'Pokemon', subType: "Spatial", rarity: 'Legendary', hp: 210, description: "It has the ability to distort space.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766065601/palkiaSTILL_ype3sr.png" },
-    { id: 487, name: "Giratina", type: 'Pokemon', subType: "Renegade", rarity: 'Legendary', hp: 250, description: "Lives in the Distortion World.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766066274/giratinaSTILL2_f2spbc.png" },
+    // The Chase - Legendary Beasts
+    { id: 243, name: "Raikou", type: 'Pokemon', subType: "Thunder", rarity: 'Legendary', hp: 190, description: "The thunder Pokemon.", weight: 1, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/243.png" },
+    { id: 244, name: "Entei", type: 'Pokemon', subType: "Volcano", rarity: 'Legendary', hp: 230, description: "Bark volcanoes.", weight: 3, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/244.png" },
+    { id: 245, name: "Suicune", type: 'Pokemon', subType: "Aurora", rarity: 'Legendary', hp: 200, description: "Purifies water.", weight: 3, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/245.png" },
 
     // Rares (Weight: 10) - Themed Powerful Sinnoh/Distortion Mons
     { id: 445, name: "Garchomp", type: 'Pokemon', subType: "Mach", rarity: 'Rare', hp: 170, description: "Flies at the speed of sound.", weight: 10 },
@@ -57,10 +56,10 @@ export const LAMB_POOL: CardData[] = [
     { id: 20004, name: "5x Pokeball", type: 'Item', subType: "Balls", rarity: 'Common', description: "Catches wild Pokemon.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png", weight: 30 },
 ];
 
-// THEME: ARCEUS (The Creator / Alpha) - Infinite Time, Space, and Power
+// THEME: CELEBI (Time Travel) - Forest Guardian
 export const WAGYU_POOL: CardData[] = [
     // The Chase
-    { id: 493, name: "Arceus", type: 'Pokemon', subType: "Alpha", rarity: 'Mythical', hp: 300, description: "The creator of the universe.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png" },
+    { id: 251, name: "Celebi", type: 'Pokemon', subType: "Time Travel", rarity: 'Mythical', hp: 100, description: "Guardian of the forest.", weight: 1, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/251.png" },
     
     // Legendary Items (Weight: 3)
     { id: 30030, name: "Gold Coin", type: 'Item', subType: "Currency", rarity: 'Legendary', description: "A fortune.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-gold.png", weight: 3 },
