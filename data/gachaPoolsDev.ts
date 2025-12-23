@@ -11,12 +11,14 @@ export interface CardData {
     weight?: number; // Higher number = more frequent
 }
 
-// THEME: LEGENDARY BEASTS (Raikou / Entei / Suicune)
+// THEME: LEGENDARY BEASTS (Suicune / Entei / Raikou)
 export const LAMB_POOL: CardData[] = [
-    // The Chase - Legendary Beasts
-    { id: 243, name: "Raikou", type: 'Pokemon', subType: "Thunder", rarity: 'Legendary', hp: 190, description: "The thunder Pokemon.", weight: 1, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/243.png" },
-    { id: 244, name: "Entei", type: 'Pokemon', subType: "Volcano", rarity: 'Legendary', hp: 230, description: "Bark volcanoes.", weight: 3, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/244.png" },
-    { id: 245, name: "Suicune", type: 'Pokemon', subType: "Aurora", rarity: 'Legendary', hp: 200, description: "Purifies water.", weight: 3, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/245.png" },
+    // The Chase - Suicune (Now Weight 1)
+    { id: 245, name: "Suicune", type: 'Pokemon', subType: "Aurora", rarity: 'Legendary', hp: 200, description: "Purifies water.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766470677/suicuneSTILL_fwjdny.png" },
+    
+    // The Support - Entei & Raikou (Weight 3)
+    { id: 244, name: "Entei", type: 'Pokemon', subType: "Volcano", rarity: 'Legendary', hp: 230, description: "Bark volcanoes.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766470672/enteiSTILL_zkhf6u.png" },
+    { id: 243, name: "Raikou", type: 'Pokemon', subType: "Thunder", rarity: 'Legendary', hp: 190, description: "The thunder Pokemon.", weight: 3, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766470673/raikouSTILL_qjadcr.png" },
 
     // Rares (Weight: 10) - Themed Powerful Sinnoh/Distortion Mons
     { id: 445, name: "Garchomp", type: 'Pokemon', subType: "Mach", rarity: 'Rare', hp: 170, description: "Flies at the speed of sound.", weight: 10 },
@@ -59,7 +61,7 @@ export const LAMB_POOL: CardData[] = [
 // THEME: CELEBI (Time Travel) - Forest Guardian
 export const WAGYU_POOL: CardData[] = [
     // The Chase
-    { id: 251, name: "Celebi", type: 'Pokemon', subType: "Time Travel", rarity: 'Mythical', hp: 100, description: "Guardian of the forest.", weight: 1, image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/251.png" },
+    { id: 251, name: "Celebi", type: 'Pokemon', subType: "Time Travel", rarity: 'Mythical', hp: 100, description: "Guardian of the forest.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766470674/celebiSTILL_yylm7p.png" },
     
     // Legendary Items (Weight: 3)
     { id: 30030, name: "Gold Coin", type: 'Item', subType: "Currency", rarity: 'Legendary', description: "A fortune.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-gold.png", weight: 3 },

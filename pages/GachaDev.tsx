@@ -22,12 +22,12 @@ interface Particle {
 }
 
 // --- CONSTANTS ---
-// Celebi and Legendary Beasts Images (Pokemon Home Renders)
-const RAIKOU_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/243.png";
-const ENTEI_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/244.png";
-const SUICUNE_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/245.png";
-const CELEBI_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/251.png";
-const CELEBI_ICON_IMAGE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/251.png";
+// Celebi and Legendary Beasts Images
+const RAIKOU_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470673/raikouSTILL_qjadcr.png";
+const ENTEI_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470672/enteiSTILL_zkhf6u.png";
+const SUICUNE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470677/suicuneSTILL_fwjdny.png";
+const CELEBI_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470674/celebiSTILL_yylm7p.png";
+const CELEBI_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470674/celebiSTILL_yylm7p.png";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -349,7 +349,7 @@ const GachaDev: React.FC = () => {
         
         const newParticles: Particle[] = [];
         // Updated colors for the particles: Reddish for Lamb (Beasts) and Green for Wagyu (Celebi)
-        const baseColor = selectedPack === 'lamb' ? '#fca5a5' : '#4ade80';
+        const baseColor = selectedPack === 'lamb' ? '#60a5fa' : '#4ade80';
         
         const packHeight = packRef.current ? packRef.current.clientHeight : 420;
         const cutY = (exactPercentage / 100) * packHeight;
@@ -511,7 +511,7 @@ const GachaDev: React.FC = () => {
                 <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
                     <div className="bg-black/60 backdrop-blur-md border border-sky-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
                         <div className="bg-sky-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-sky-500/10">
-                            <img src={RAIKOU_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                            <img src={SUICUNE_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
                             <div className="text-[9px] font-black text-sky-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
@@ -553,26 +553,26 @@ const GachaDev: React.FC = () => {
                                         hover:scale-105 hover:-rotate-1 cursor-pointer w-full max-w-sm mx-auto
                                     `}
                                 >
-                                    <div className="absolute inset-0 bg-yellow-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-b from-yellow-900 via-red-900 to-blue-900 rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-yellow-500/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-blue-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-b from-blue-900 via-purple-900 to-yellow-900 rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-blue-500/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         
-                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-yellow-500/30 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-yellow-500/20 rounded-full"></div>)}
+                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-blue-500/30 flex items-center justify-center space-x-1">
+                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-blue-500/20 rounded-full"></div>)}
                                         </div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-yellow-500/30"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-blue-500/30"></div>
 
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className="bg-yellow-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            <div className="bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
                                                 Legendary Pack
                                             </div>
                                         </div>
 
                                         <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[3rem]">
                                             <img 
-                                                src={RAIKOU_IMAGE} 
-                                                alt="Raikou" 
-                                                className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 md:w-72 h-60 md:h-72 object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
+                                                src={SUICUNE_IMAGE} 
+                                                alt="Suicune" 
+                                                className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 md:w-72 h-60 md:h-72 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
                                             />
                                             <img 
                                                 src={ENTEI_IMAGE} 
@@ -580,15 +580,15 @@ const GachaDev: React.FC = () => {
                                                 className="absolute bottom-20 left-2 md:left-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(220,38,38,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
                                             />
                                             <img 
-                                                src={SUICUNE_IMAGE} 
-                                                alt="Suicune" 
-                                                className="absolute bottom-20 right-2 md:right-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
+                                                src={RAIKOU_IMAGE} 
+                                                alt="Raikou" 
+                                                className="absolute bottom-20 right-2 md:right-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
                                             />
                                         </div>
 
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
                                             <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
-                                            <p className="text-yellow-200 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Johto Beasts Edition</p>
+                                            <p className="text-blue-200 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Johto Beasts Edition</p>
                                         </div>
                                     </div>
                                 </button>
@@ -734,7 +734,7 @@ const GachaDev: React.FC = () => {
                                             rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] origin-bottom-left
                                             ${selectedPack === 'lamb' 
-                                                ? 'from-yellow-900 via-red-900 to-blue-900 border-yellow-500/50' 
+                                                ? 'from-blue-900 via-purple-900 to-yellow-900 border-blue-500/50' 
                                                 : 'from-green-900 via-emerald-900 to-teal-900 border-green-400/50'}
                                         `}
                                         style={{
@@ -748,9 +748,9 @@ const GachaDev: React.FC = () => {
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img src={RAIKOU_IMAGE} alt="Raikou" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] z-10" />
+                                                    <img src={SUICUNE_IMAGE} alt="Suicune" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] z-10" />
                                                     <img src={ENTEI_IMAGE} alt="Entei" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(220,38,38,0.5)] z-20" />
-                                                    <img src={SUICUNE_IMAGE} alt="Suicune" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" />
+                                                    <img src={RAIKOU_IMAGE} alt="Raikou" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] z-20" />
                                                 </>
                                             ) : (
                                                 <img src={CELEBI_IMAGE} alt="Celebi" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(74,222,128,0.6)]" />
@@ -758,7 +758,7 @@ const GachaDev: React.FC = () => {
                                         </div>
 
                                         <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-yellow-600' : 'bg-green-600'}`}>
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-blue-600' : 'bg-green-600'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
@@ -769,7 +769,7 @@ const GachaDev: React.FC = () => {
                                             </h2>
                                         </div>
                                         <div className="absolute top-0 left-0 right-0 h-6 bg-black/20 border-b border-white/10 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className={`w-1 h-3 rounded-full ${selectedPack === 'lamb' ? 'bg-yellow-500/20' : 'bg-green-500/20'}`}></div>)}
+                                            {[...Array(10)].map((_, i) => <div key={i} className={`w-1 h-3 rounded-full ${selectedPack === 'lamb' ? 'bg-blue-500/20' : 'bg-green-500/20'}`}></div>)}
                                         </div>
                                     </div>
 
@@ -778,7 +778,7 @@ const GachaDev: React.FC = () => {
                                             absolute inset-0 z-10
                                             rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             ${selectedPack === 'lamb' 
-                                                ? 'from-yellow-900 via-red-900 to-blue-900 border-yellow-500/50' 
+                                                ? 'from-blue-900 via-purple-900 to-yellow-900 border-blue-500/50' 
                                                 : 'from-green-900 via-emerald-900 to-teal-900 border-green-400/50'}
                                         `}
                                         style={{
@@ -790,9 +790,9 @@ const GachaDev: React.FC = () => {
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img src={RAIKOU_IMAGE} alt="Raikou" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] z-10" />
+                                                    <img src={SUICUNE_IMAGE} alt="Suicune" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] z-10" />
                                                     <img src={ENTEI_IMAGE} alt="Entei" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(220,38,38,0.5)] z-20" />
-                                                    <img src={SUICUNE_IMAGE} alt="Suicune" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] z-20" />
+                                                    <img src={RAIKOU_IMAGE} alt="Raikou" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] z-20" />
                                                 </>
                                             ) : (
                                                 <img src={CELEBI_IMAGE} alt="Celebi" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(74,222,128,0.6)]" />
@@ -800,7 +800,7 @@ const GachaDev: React.FC = () => {
                                         </div>
 
                                         <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-yellow-600' : 'bg-green-600'}`}>
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-blue-600' : 'bg-green-600'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
@@ -816,7 +816,7 @@ const GachaDev: React.FC = () => {
                                         )}
                                     </div>
 
-                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-yellow-500/40' : 'bg-green-500/40'}`}
+                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-blue-500/40' : 'bg-green-500/40'}`}
                                          style={{ 
                                              top: `${cutYPercentage}%`, 
                                              height: '20%', 
