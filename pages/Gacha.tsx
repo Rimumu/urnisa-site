@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
@@ -21,11 +22,12 @@ interface Particle {
 }
 
 // --- CONSTANTS ---
-const DIALGA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066036/dialgaSTILL_d5h5oc.png";
-const PALKIA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766065601/palkiaSTILL_ype3sr.png";
-const GIRATINA_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066274/giratinaSTILL2_f2spbc.png";
-const ARCEUS_PACK_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png";
-const ARCEUS_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766066321/arceusSTILL2_jqtak4.png";
+// Celebi and Legendary Beasts Images
+const RAIKOU_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470673/raikouSTILL_qjadcr.png";
+const ENTEI_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470672/enteiSTILL_zkhf6u.png";
+const SUICUNE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470677/suicuneSTILL_fwjdny.png";
+const CELEBI_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470674/celebiSTILL_yylm7p.png";
+const CELEBI_ICON_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1766470674/celebiSTILL_yylm7p.png";
 
 // --- CACHE ---
 const clientImageCache = new Map<string, boolean>();
@@ -355,7 +357,8 @@ const Gacha: React.FC = () => {
         setCutYPercentage(exactPercentage);
         
         const newParticles: Particle[] = [];
-        const baseColor = selectedPack === 'lamb' ? '#7dd3fc' : '#fbbf24';
+        // Updated colors for the particles: Blue for Lamb (Beasts) and Green for Wagyu (Celebi)
+        const baseColor = selectedPack === 'lamb' ? '#60a5fa' : '#4ade80';
         
         const packHeight = packRef.current ? packRef.current.clientHeight : 420;
         const cutY = (exactPercentage / 100) * packHeight;
@@ -504,7 +507,7 @@ const Gacha: React.FC = () => {
                 <div className="flex flex-wrap gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
                     <div className="bg-black/60 backdrop-blur-md border border-sky-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
                         <div className="bg-sky-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-sky-500/10">
-                            <img src={DIALGA_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                            <img src={SUICUNE_IMAGE} alt="Lamb" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
                             <div className="text-[9px] font-black text-sky-400 uppercase tracking-widest leading-tight">Lamb Chop</div>
@@ -513,7 +516,7 @@ const Gacha: React.FC = () => {
                     </div>
                     <div className="bg-black/60 backdrop-blur-md border border-amber-500/30 rounded-full pl-2 pr-5 py-1.5 flex items-center gap-3 shadow-xl hover:scale-105 transition-transform cursor-default group overflow-hidden">
                         <div className="bg-amber-500/20 p-1 rounded-full w-10 h-10 flex items-center justify-center overflow-hidden border border-amber-500/10">
-                            <img src={ARCEUS_ICON_IMAGE} alt="Wagyu" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+                            <img src={CELEBI_ICON_IMAGE} alt="Wagyu" className="w-full h-full object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
                         </div>
                         <div className="flex flex-col">
                             <div className="text-[9px] font-black text-amber-400 uppercase tracking-widest leading-tight">Wagyu A5</div>
@@ -533,11 +536,11 @@ const Gacha: React.FC = () => {
                                 GACHA <span className="text-brand-primary">PACK</span>
                             </h1>
                             <p className="text-center text-gray-400 mb-8 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-                                Are you going to unveil the lambs of creations or will you unpack the premium creator Arceus?
+                                Unveil the guardians of the forest or unleash the legendary beasts!
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 px-2 md:px-20">
-                                {/* LAMB CHOP (CREATION TRIO) */}
+                                {/* LAMB CHOP (LEGENDARY BEASTS) */}
                                 <button 
                                     onClick={() => selectPack('lamb')}
                                     disabled={processing}
@@ -546,35 +549,47 @@ const Gacha: React.FC = () => {
                                         ${packs.lambPacks > 0 ? 'hover:scale-105 hover:-rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                     `}
                                 >
-                                    <div className="absolute inset-0 bg-sky-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-b from-sky-900 via-slate-900 to-black rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-sky-500/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-blue-600 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-b from-blue-900 via-purple-900 to-yellow-900 rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-blue-500/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
                                         
-                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-sky-500/30 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-sky-500/20 rounded-full"></div>)}
+                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-blue-500/30 flex items-center justify-center space-x-1">
+                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-blue-500/20 rounded-full"></div>)}
                                         </div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-sky-500/30"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-blue-500/30"></div>
 
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className="bg-sky-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            <div className="bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
                                                 Legendary Pack
                                             </div>
                                         </div>
 
                                         <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-[3rem]">
-                                            <img src={DIALGA_IMAGE} alt="Dialga" className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 md:w-72 h-60 md:h-72 object-contain drop-shadow-[0_0_15px_rgba(125,211,252,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" />
-                                            <img src={PALKIA_IMAGE} alt="Palkia" className="absolute bottom-20 left-2 md:left-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(244,114,182,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" />
-                                            <img src={GIRATINA_IMAGE} alt="Giratina" className="absolute bottom-20 right-2 md:right-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" />
+                                            <img 
+                                                src={SUICUNE_IMAGE} 
+                                                alt="Suicune" 
+                                                className="absolute top-16 left-1/2 transform -translate-x-1/2 w-60 md:w-72 h-60 md:h-72 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] z-10 transition-transform duration-700 group-hover:scale-110" 
+                                            />
+                                            <img 
+                                                src={ENTEI_IMAGE} 
+                                                alt="Entei" 
+                                                className="absolute bottom-20 left-2 md:left-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(220,38,38,0.5)] z-20 transition-transform duration-700 group-hover:translate-x-2" 
+                                            />
+                                            <img 
+                                                src={RAIKOU_IMAGE} 
+                                                alt="Raikou" 
+                                                className="absolute bottom-20 right-2 md:right-4 w-40 md:w-56 h-40 md:h-56 object-contain drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] z-20 transition-transform duration-700 group-hover:-translate-x-2" 
+                                            />
                                         </div>
 
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
                                             <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase drop-shadow-md transform -rotate-2">Lamb Chop</h2>
-                                            <p className="text-sky-300 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Creation Trio Edition</p>
+                                            <p className="text-blue-200 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Johto Beasts Edition</p>
                                         </div>
                                     </div>
                                 </button>
 
-                                {/* WAGYU (ARCEUS) */}
+                                {/* WAGYU (CELEBI) */}
                                 <button 
                                     onClick={() => selectPack('wagyu')}
                                     disabled={processing}
@@ -583,28 +598,28 @@ const Gacha: React.FC = () => {
                                         ${packs.wagyuPacks > 0 ? 'hover:scale-105 hover:rotate-1 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}
                                     `}
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-b from-[#fde68a] via-white to-[#fde68a] rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-amber-400/50 shadow-2xl overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-green-900 via-emerald-900 to-teal-900 rounded-[2rem] md:rounded-[3rem] border-[4px] md:border-[6px] border-green-400/50 shadow-2xl overflow-hidden">
                                         <div className="absolute inset-0 star-layer-1 opacity-30"></div>
                                         <div className="absolute inset-0 star-layer-2 opacity-40 mix-blend-screen"></div>
                                         
-                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-amber-500/30 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-amber-500/20 rounded-full"></div>)}
+                                        <div className="absolute top-0 left-0 right-0 h-6 bg-black/40 border-b border-green-500/30 flex items-center justify-center space-x-1">
+                                            {[...Array(10)].map((_, i) => <div key={i} className="w-1 h-3 bg-green-500/20 rounded-full"></div>)}
                                         </div>
-                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-amber-500/30"></div>
+                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-black/40 border-t border-green-500/30"></div>
 
                                         <div className="absolute top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className="bg-amber-500 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
+                                            <div className="bg-green-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-white/20 backdrop-blur-sm">
                                                 Mythic Pack
                                             </div>
                                         </div>
 
                                         <div className="absolute inset-0 flex items-center justify-center z-10">
-                                            <img src={ARCEUS_PACK_IMAGE} alt="Arceus" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)] group-hover:scale-110 transition-transform duration-500" />
+                                            <img src={CELEBI_IMAGE} alt="Celebi" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(74,222,128,0.6)] group-hover:scale-110 transition-transform duration-500" />
                                         </div>
 
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center z-30">
-                                            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-900 to-amber-600 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
-                                            <p className="text-amber-900 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Creator Edition</p>
+                                            <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-green-100 to-green-300 italic tracking-tighter uppercase drop-shadow-sm transform -rotate-2">Wagyu A5</h2>
+                                            <p className="text-green-200 text-[10px] md:text-xs font-mono uppercase tracking-[0.2em] mt-1">Forest Guardian Edition</p>
                                         </div>
                                     </div>
                                 </button>
@@ -715,8 +730,8 @@ const Gacha: React.FC = () => {
                                             rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] origin-bottom-left
                                             ${selectedPack === 'lamb' 
-                                                ? 'from-sky-900 via-slate-900 to-black border-sky-500/50' 
-                                                : 'from-[#fde68a] via-white to-[#fde68a] border-amber-400/50'}
+                                                ? 'from-blue-900 via-purple-900 to-yellow-900 border-blue-500/50' 
+                                                : 'from-green-900 via-emerald-900 to-teal-900 border-green-400/50'}
                                         `}
                                         style={{
                                             clipPath: `inset(0 0 ${100 - cutYPercentage}% 0)`,
@@ -729,28 +744,28 @@ const Gacha: React.FC = () => {
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img src={DIALGA_IMAGE} alt="Dialga" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(125,211,252,0.6)] z-10" />
-                                                    <img src={PALKIA_IMAGE} alt="Palkia" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(244,114,182,0.5)] z-20" />
-                                                    <img src={GIRATINA_IMAGE} alt="Giratina" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] z-20" />
+                                                    <img src={SUICUNE_IMAGE} alt="Suicune" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] z-10" />
+                                                    <img src={ENTEI_IMAGE} alt="Entei" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(220,38,38,0.5)] z-20" />
+                                                    <img src={RAIKOU_IMAGE} alt="Raikou" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] z-20" />
                                                 </>
                                             ) : (
-                                                <img src={ARCEUS_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]" />
+                                                <img src={CELEBI_IMAGE} alt="Celebi" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(74,222,128,0.6)]" />
                                             )}
                                         </div>
 
                                         <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-sky-500' : 'bg-amber-500 text-white'}`}>
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-blue-600' : 'bg-green-600'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
                                         <div className="absolute bottom-8 md:bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-amber-900'}`}>
+                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-green-100'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
                                         <div className="absolute top-0 left-0 right-0 h-6 bg-black/20 border-b border-white/10 flex items-center justify-center space-x-1">
-                                            {[...Array(10)].map((_, i) => <div key={i} className={`w-1 h-3 rounded-full ${selectedPack === 'lamb' ? 'bg-sky-500/20' : 'bg-amber-500/20'}`}></div>)}
+                                            {[...Array(10)].map((_, i) => <div key={i} className={`w-1 h-3 rounded-full ${selectedPack === 'lamb' ? 'bg-blue-500/20' : 'bg-green-500/20'}`}></div>)}
                                         </div>
                                     </div>
 
@@ -759,8 +774,8 @@ const Gacha: React.FC = () => {
                                             absolute inset-0 z-10
                                             rounded-[2rem] md:rounded-[3rem] overflow-hidden bg-gradient-to-b border-[4px] md:border-[6px]
                                             ${selectedPack === 'lamb' 
-                                                ? 'from-sky-900 via-slate-900 to-black border-sky-500/50' 
-                                                : 'from-[#fde68a] via-white to-[#fde68a] border-amber-400/50'}
+                                                ? 'from-blue-900 via-purple-900 to-yellow-900 border-blue-500/50' 
+                                                : 'from-green-900 via-emerald-900 to-teal-900 border-green-400/50'}
                                         `}
                                         style={{
                                             clipPath: `inset(${cutYPercentage}% 0 0 0)`
@@ -771,23 +786,23 @@ const Gacha: React.FC = () => {
                                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                                             {selectedPack === 'lamb' ? (
                                                 <>
-                                                    <img src={DIALGA_IMAGE} alt="Dialga" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(125,211,252,0.6)] z-10" />
-                                                    <img src={PALKIA_IMAGE} alt="Palkia" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(244,114,182,0.5)] z-20" />
-                                                    <img src={GIRATINA_IMAGE} alt="Giratina" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)] z-20" />
+                                                    <img src={SUICUNE_IMAGE} alt="Suicune" className="absolute top-10 md:top-16 left-1/2 transform -translate-x-1/2 w-48 md:w-60 h-48 md:h-60 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] z-10" />
+                                                    <img src={ENTEI_IMAGE} alt="Entei" className="absolute bottom-16 md:bottom-24 left-2 md:left-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(220,38,38,0.5)] z-20" />
+                                                    <img src={RAIKOU_IMAGE} alt="Raikou" className="absolute bottom-16 md:bottom-24 right-2 md:right-4 w-32 md:w-40 h-32 md:h-40 object-contain drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] z-20" />
                                                 </>
                                             ) : (
-                                                <img src={ARCEUS_PACK_IMAGE} alt="Pack Icon" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]" />
+                                                <img src={CELEBI_IMAGE} alt="Celebi" className="w-64 md:w-80 h-64 md:h-80 object-contain drop-shadow-[0_0_20px_rgba(74,222,128,0.6)]" />
                                             )}
                                         </div>
 
                                         <div className="absolute top-8 md:top-12 left-0 right-0 flex justify-center z-30">
-                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-sky-500' : 'bg-amber-500 text-white'}`}>
+                                            <div className={`text-white text-[10px] md:text-xs font-bold px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm ${selectedPack === 'lamb' ? 'bg-blue-600' : 'bg-green-600'}`}>
                                                 {selectedPack === 'lamb' ? 'Legendary Pack' : 'Mythic Pack'}
                                             </div>
                                         </div>
 
                                         <div className="absolute bottom-10 md:bottom-12 left-0 right-0 text-center pointer-events-none z-30">
-                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-amber-900'}`}>
+                                            <h2 className={`text-3xl md:text-4xl font-black italic tracking-tighter uppercase drop-shadow-md transform -rotate-2 ${selectedPack === 'lamb' ? 'text-white' : 'text-green-100'}`}>
                                                 {selectedPack === 'lamb' ? 'Lamb Chop' : 'Wagyu A5'}
                                             </h2>
                                         </div>
@@ -797,7 +812,7 @@ const Gacha: React.FC = () => {
                                         )}
                                     </div>
 
-                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-sky-500/40' : 'bg-amber-500/40'}`}
+                                    <div className={`absolute inset-4 blur-2xl z-0 transition-opacity duration-500 ${selectedPack === 'lamb' ? 'bg-blue-500/40' : 'bg-green-500/40'}`}
                                          style={{ 
                                              top: `${cutYPercentage}%`, 
                                              height: '20%', 
