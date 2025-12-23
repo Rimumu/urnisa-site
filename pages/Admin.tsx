@@ -358,6 +358,7 @@ const Admin: React.FC = () => {
     const [confirmReset, setConfirmReset] = useState(false);
     const [confirmSync, setConfirmSync] = useState(false);
     const [confirmRebuild, setConfirmRebuild] = useState(false);
+    const [confirmEnd, setConfirmEnd] = useState(false); // For Ending Nisathon
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -975,6 +976,17 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     const handleSimulateEvent = () => apiCall('nisathon/test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
     const handleToggleDoubleTimer = () => apiCall('nisathon/event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
     
+    // NEW: End Nisathon Handler
+    const handleEndNisathon = () => {
+        if (confirmEnd) {
+            apiCall('nisathon/end', {});
+            setConfirmEnd(false);
+        } else {
+            setConfirmEnd(true);
+            setTimeout(() => setConfirmEnd(false), 3000);
+        }
+    };
+
     const handleDeleteEvent = (id: string, revert: boolean) => {
         apiCall('nisathon/delete-event', { id, revert });
         setConfirmDelete(null);
@@ -1182,6 +1194,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         Time Remaining
                                         {stats.isPaused && <span className="bg-amber-500 text-black px-2 rounded text-[10px] animate-pulse">PAUSED</span>}
                                         {isDoubleTimer && <span className="text-yellow-400 animate-pulse">🔥 2x</span>}
+                                        {stats.isEnded && <span className="bg-red-500 text-white px-2 rounded text-[10px] font-bold">ENDED</span>}
                                     </div>
                                     <div className={`text-3xl font-black font-mono tracking-tight ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300`}>
                                         {timeLeftString}
@@ -1347,6 +1360,10 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <button onClick={handleResetData} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmReset ? 'bg-red-600 w-full' : 'bg-red-900/40'}`}>{confirmReset ? "CONFIRM RESET ALL DATA?" : "Reset Nisathon Data"}</button>
                                 <button onClick={handleForceSync} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmSync ? 'bg-blue-600' : 'bg-blue-900/40'}`}>{confirmSync ? "Confirm Force Sync?" : "Force Sync (StreamElements)"}</button>
                                 <button onClick={handleRebuild} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmRebuild ? 'bg-orange-600' : 'bg-orange-900/40'}`}>{confirmRebuild ? "Confirm Rebuild?" : "Rebuild from History"}</button>
+                                {/* NEW: END BUTTON */}
+                                <button onClick={handleEndNisathon} className={`px-6 py-3 rounded-xl font-bold text-white transition-all w-full ${confirmEnd ? 'bg-red-700 animate-pulse' : 'bg-red-900/60 hover:bg-red-700'}`}>
+                                    {confirmEnd ? "ARE YOU SURE? CLICK TO END NISATHON" : "END NISATHON"}
+                                </button>
                             </div>
                         </div>
                     )}

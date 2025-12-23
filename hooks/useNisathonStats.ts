@@ -11,6 +11,7 @@ export interface NisathonStatsData {
     isPaused: boolean;
     remainingTimeMs?: number;
     activeEvent?: string | null; // e.g. "DOUBLE_TIMER"
+    isEnded?: boolean; // New field
 }
 
 export interface TopContributor {
@@ -38,7 +39,8 @@ export const useNisathonStats = (pollInterval = 5000) => {
         totalNisaballs: 0,
         timerEndTime: new Date().toISOString(),
         isPaused: false,
-        activeEvent: null
+        activeEvent: null,
+        isEnded: false
     });
     const [leaderboard, setLeaderboard] = useState<TopContributor[]>([]);
     const [recentEvents, setRecentEvents] = useState<ContributorEvent[]>([]);

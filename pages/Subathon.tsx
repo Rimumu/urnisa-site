@@ -623,8 +623,17 @@ const Subathon: React.FC = () => {
                              <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Dashboard</h2>
                         </div>
                     </div>
-                    {/* Use Live Timer from Backend */}
-                    <Timer endTime={stats.timerEndTime} isPaused={stats.isPaused} remainingTimeMs={stats.remainingTimeMs} />
+                    {/* Use Live Timer from Backend OR Show ENDED card */}
+                    {stats.isEnded ? (
+                        <div className="bg-gradient-to-r from-brand-primary to-brand-secondary p-8 rounded-3xl border-4 border-white/20 shadow-[0_0_50px_rgba(229,56,59,0.5)] text-center animate-in zoom-in duration-500 max-w-2xl w-full">
+                            <h2 className="text-4xl md:text-6xl font-black text-white drop-shadow-lg tracking-tighter">
+                                NISATHON HAS ENDED!
+                            </h2>
+                            <p className="text-white/80 font-bold uppercase tracking-widest mt-2 text-lg">Thank you for all the support!</p>
+                        </div>
+                    ) : (
+                        <Timer endTime={stats.timerEndTime} isPaused={stats.isPaused} remainingTimeMs={stats.remainingTimeMs} />
+                    )}
                 </div>
 
                 <div className="space-y-16">
