@@ -61,7 +61,7 @@ export const LAMB_POOL: CardData[] = [
 // THEME: CELEBI (Time Travel) - Forest Guardian
 export const WAGYU_POOL: CardData[] = [
     // The Chase
-    { id: 251, name: "Celebi", type: 'Pokemon', subType: "Time Travel", rarity: 'Mythical', hp: 100, description: "Guardian of the forest.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766470674/celebiSTILL_yylm7p.png" },
+    { id: 251, name: "Celebi", type: 'Pokemon', subType: "Forest Deity", rarity: 'Mythical', hp: 100, description: "Guardian of the forest.", weight: 1, image: "https://res.cloudinary.com/dsencimjn/image/upload/v1766470674/celebiSTILL_yylm7p.png" },
     
     // Legendary Items (Weight: 3)
     { id: 30030, name: "Gold Coin", type: 'Item', subType: "Currency", rarity: 'Legendary', description: "A fortune.", image: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/relic-gold.png", weight: 3 },
