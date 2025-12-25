@@ -32,7 +32,8 @@ const PREFIX_TO_DIFF: Record<string, string> = {
     'N': 'Normal',
     'H': 'Hard',
     'I': 'Insane',
-    'X': 'Nightmare'
+    'X': 'Nightmare',
+    'Y': 'Nightmare+'
 };
 
 // Manual Data
@@ -419,6 +420,9 @@ const BingoDashboard: React.FC = () => {
                     selected = getRandomItems(['Ultra-Rare'], 24);
                 } else if (difficulty === 'Nightmare') {
                     selected = getRandomItems(['Ultra-Rare'], 20);
+                } else if (difficulty === 'Nightmare+') {
+                    // Custom fill later
+                    selected = [];
                 } else {
                     // DEFAULT
                     const pool = [...cobblemonPool];
@@ -458,6 +462,20 @@ const BingoDashboard: React.FC = () => {
                     finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
                     const legends = getRandomItems(['Legendary'], 4);
                     corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
+                } else if (difficulty === 'Nightmare+') {
+                    const specialIndices = [0, 4, 12, 20, 24];
+                    const mythics = getRandomItems(['Mythical'], 5);
+                    const legends = getRandomItems(['Legendary'], 20);
+                    
+                    let legIdx = 0;
+                    for (let i = 0; i < 25; i++) {
+                        if (specialIndices.includes(i)) continue;
+                        finalGrid[i] = legends[legIdx++] || getRandomItems(['Common'], 1)[0];
+                    }
+                    
+                    specialIndices.forEach((gridIdx, i) => {
+                        finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
+                    });
                 } else {
                     fillGrid(selected, [12]);
                     finalGrid[12] = FREE_SPACE_CELL;

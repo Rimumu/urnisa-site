@@ -32,7 +32,7 @@ interface SavedCard {
     updatedAt: string;
 }
 
-type BingoDifficulty = 'Default' | 'Easy' | 'Normal' | 'Hard' | 'Insane' | 'Nightmare';
+type BingoDifficulty = 'Default' | 'Easy' | 'Normal' | 'Hard' | 'Insane' | 'Nightmare' | 'Nightmare+';
 
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
@@ -64,7 +64,8 @@ const DIFF_PREFIXES: Record<BingoDifficulty, string> = {
     'Normal': 'N',
     'Hard': 'H',
     'Insane': 'I',
-    'Nightmare': 'X'
+    'Nightmare': 'X',
+    'Nightmare+': 'Y'
 };
 
 const PREFIX_TO_DIFF: Record<string, BingoDifficulty> = {
@@ -73,7 +74,8 @@ const PREFIX_TO_DIFF: Record<string, BingoDifficulty> = {
     'N': 'Normal',
     'H': 'Hard',
     'I': 'Insane',
-    'X': 'Nightmare'
+    'X': 'Nightmare',
+    'Y': 'Nightmare+'
 };
 
 // Manual Legendary & Mythic Pool
@@ -775,6 +777,9 @@ const Bingo: React.FC = () => {
                 selected = getRandomItems(['Ultra-Rare'], 24);
             } else if (diffToUse === 'Nightmare') {
                 selected = getRandomItems(['Ultra-Rare'], 20);
+            } else if (diffToUse === 'Nightmare+') {
+                // We handle custom filling for Nightmare+ below
+                selected = []; 
             } else {
                 const pool = [...cobblemonPool];
                 const tempPool = [...pool];
@@ -817,6 +822,20 @@ const Bingo: React.FC = () => {
                 finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
                 const legends = getRandomItems(['Legendary'], 4);
                 corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
+            } else if (diffToUse === 'Nightmare+') {
+                const specialIndices = [0, 4, 12, 20, 24];
+                const mythics = getRandomItems(['Mythical'], 5);
+                const legends = getRandomItems(['Legendary'], 20);
+                
+                let legIdx = 0;
+                for (let i = 0; i < 25; i++) {
+                    if (specialIndices.includes(i)) continue;
+                    finalGrid[i] = legends[legIdx++] || getRandomItems(['Common'], 1)[0];
+                }
+                
+                specialIndices.forEach((gridIdx, i) => {
+                    finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
+                });
             } else {
                 fillGrid(selected, [12]);
                 finalGrid[12] = FREE_SPACE_CELL;
@@ -826,7 +845,7 @@ const Bingo: React.FC = () => {
             setGridData(finalGrid);
             
             setMarked(new Array(25).fill(false));
-            if (diffToUse !== 'Insane' && diffToUse !== 'Nightmare') {
+            if (diffToUse !== 'Insane' && diffToUse !== 'Nightmare' && diffToUse !== 'Nightmare+') {
                 const newMarked = new Array(25).fill(false);
                 newMarked[12] = true;
                 setMarked(newMarked);
@@ -1273,6 +1292,7 @@ const Bingo: React.FC = () => {
                                     { label: 'Hard', desc: 'Rare/Ultra-Rare', color: 'bg-purple-600 hover:bg-purple-500' },
                                     { label: 'Insane', desc: 'All UR + 1 Legend', color: 'bg-red-600 hover:bg-red-500' },
                                     { label: 'Nightmare', desc: 'UR + Mythic/Legend', color: 'bg-gradient-to-r from-purple-900 to-black border border-purple-500 hover:brightness-110' },
+                                    { label: 'Nightmare+', desc: 'All Legend + 5 Mythics', color: 'bg-gradient-to-r from-red-900 to-black border border-red-500 hover:brightness-110' },
                                 ].map((opt) => (
                                     <button
                                         key={opt.label}
