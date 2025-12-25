@@ -742,15 +742,6 @@ const BingoDashboard: React.FC = () => {
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>
-                                            
-                                            {/* Secondary: Discord (Small Circle Bottom Right) */}
-                                            <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-2 border-[#1a0b0e] shadow-md overflow-hidden bg-[#5865F2]">
-                                                <img 
-                                                    src={winner.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
-                                                    alt="Discord" 
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
                                         </div>
 
                                         {/* User Info */}
