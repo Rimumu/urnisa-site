@@ -143,7 +143,28 @@ const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] 
     { id: 144, name: 'Articuno', rarity: 'Legendary' },
     { id: 145, name: 'Zapdos', rarity: 'Legendary' },
     // Mythics
-    { id: 151, name: 'Mew', rarity: 'Mythical' }
+    { id: 151, name: 'Mew', rarity: 'Mythical' },
+    { id: 251, name: 'Celebi', rarity: 'Mythical' },
+    { id: 385, name: 'Jirachi', rarity: 'Mythical' },
+    { id: 386, name: 'Deoxys', rarity: 'Mythical' },
+    { id: 490, name: 'Manaphy', rarity: 'Mythical' },
+    { id: 491, name: 'Darkrai', rarity: 'Mythical' },
+    { id: 492, name: 'Shaymin', rarity: 'Mythical' },
+    { id: 493, name: 'Arceus', rarity: 'Mythical' },
+    { id: 494, name: 'Victini', rarity: 'Mythical' },
+    { id: 647, name: 'Keldeo', rarity: 'Mythical' },
+    { id: 648, name: 'Meloetta', rarity: 'Mythical' },
+    { id: 649, name: 'Genesect', rarity: 'Mythical' },
+    { id: 719, name: 'Diancie', rarity: 'Mythical' },
+    { id: 720, name: 'Hoopa', rarity: 'Mythical' },
+    { id: 721, name: 'Volcanion', rarity: 'Mythical' },
+    { id: 801, name: 'Magearna', rarity: 'Mythical' },
+    { id: 802, name: 'Marshadow', rarity: 'Mythical' },
+    { id: 807, name: 'Zeraora', rarity: 'Mythical' },
+    { id: 808, name: 'Meltan', rarity: 'Mythical' },
+    { id: 809, name: 'Melmetal', rarity: 'Mythical' },
+    { id: 893, name: 'Zarude', rarity: 'Mythical' },
+    { id: 1025, name: 'Pecharunt', rarity: 'Mythical' }
 ];
 
 const FREE_SPACE_CELL: BingoCell = {
