@@ -74,7 +74,6 @@ const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] 
     { id: 251, name: 'Celebi', rarity: 'Mythical' },
     { id: 385, name: 'Jirachi', rarity: 'Mythical' },
     { id: 386, name: 'Deoxys', rarity: 'Mythical' },
-    { id: 490, name: 'Manaphy', rarity: 'Mythical' },
     { id: 491, name: 'Darkrai', rarity: 'Mythical' },
     { id: 492, name: 'Shaymin', rarity: 'Mythical' },
     { id: 493, name: 'Arceus', rarity: 'Mythical' },
@@ -321,11 +320,15 @@ const BingoDashboard: React.FC = () => {
                     const parsedInfo = getSpawnInfo(m.name);
                     const spawns = new Set<string>();
                     
-                    if (parsedInfo) {
-                        spawns.add(parsedInfo);
+                    if (m.name === 'Melmetal') {
+                        spawns.add("Meltan Evolution");
                     } else {
-                        if (m.rarity === 'Legendary') spawns.add("Check the quest book!");
-                        else if (m.rarity === 'Mythical') spawns.add("Mythic");
+                        if (parsedInfo) {
+                            spawns.add(parsedInfo);
+                        } else {
+                            if (m.rarity === 'Legendary') spawns.add("Check the quest book!");
+                            else if (m.rarity === 'Mythical') spawns.add("Mythic");
+                        }
                     }
 
                     if (ex) { 
@@ -351,6 +354,7 @@ const BingoDashboard: React.FC = () => {
                 
                 // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
                 cobblemonArray = cobblemonArray.filter(entry => {
+                    if (entry.name === 'Manaphy') return false; // Explicitly remove Manaphy
                     if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
                     return !excludedIds.has(entry.id);
                 });

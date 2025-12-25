@@ -147,7 +147,6 @@ const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] 
     { id: 251, name: 'Celebi', rarity: 'Mythical' },
     { id: 385, name: 'Jirachi', rarity: 'Mythical' },
     { id: 386, name: 'Deoxys', rarity: 'Mythical' },
-    { id: 490, name: 'Manaphy', rarity: 'Mythical' },
     { id: 491, name: 'Darkrai', rarity: 'Mythical' },
     { id: 492, name: 'Shaymin', rarity: 'Mythical' },
     { id: 493, name: 'Arceus', rarity: 'Mythical' },
@@ -450,17 +449,21 @@ const Bingo: React.FC = () => {
                     
                     const spawns = new Set<string>();
                     
-                    // CHECK FOR JSON CONFIGURATION FIRST
-                    const parsedInfo = getSpawnInfo(manualEntry.name);
-                    
-                    if (parsedInfo) {
-                        spawns.add(parsedInfo);
+                    if (manualEntry.name === 'Melmetal') {
+                        spawns.add("Meltan Evolution");
                     } else {
-                        // Fallback logic if not in config
-                        if (manualEntry.rarity === 'Legendary') {
-                            spawns.add("Check the quest book!");
-                        } else if (manualEntry.rarity === 'Mythical') {
-                            spawns.add("Mythic");
+                        // CHECK FOR JSON CONFIGURATION FIRST
+                        const parsedInfo = getSpawnInfo(manualEntry.name);
+                        
+                        if (parsedInfo) {
+                            spawns.add(parsedInfo);
+                        } else {
+                            // Fallback logic if not in config
+                            if (manualEntry.rarity === 'Legendary') {
+                                spawns.add("Check the quest book!");
+                            } else if (manualEntry.rarity === 'Mythical') {
+                                spawns.add("Mythic");
+                            }
                         }
                     }
 
@@ -494,6 +497,7 @@ const Bingo: React.FC = () => {
                 
                 // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
                 cobblemonArray = cobblemonArray.filter(entry => {
+                    if (entry.name === 'Manaphy') return false; // Explicitly remove Manaphy
                     if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
                     return !excludedIds.has(entry.id);
                 });
