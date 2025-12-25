@@ -14,7 +14,7 @@ const CSV_EXPORT_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/expor
 interface BingoCell {
     id: number;
     name: string;
-    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical' | 'Free';
+    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical' | 'Ultra-Beast' | 'Free';
     spawns: string[];
 }
 
@@ -33,7 +33,8 @@ const PREFIX_TO_DIFF: Record<string, string> = {
     'H': 'Hard',
     'I': 'Insane',
     'X': 'Nightmare',
-    'Y': 'Nightmare+'
+    'Y': 'Nightmare+',
+    'Z': 'Impossible'
 };
 
 // Manual Data
@@ -91,7 +92,19 @@ const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] 
     { id: 808, name: 'Meltan', rarity: 'Mythical' },
     { id: 809, name: 'Melmetal', rarity: 'Mythical' },
     { id: 893, name: 'Zarude', rarity: 'Mythical' },
-    { id: 1025, name: 'Pecharunt', rarity: 'Mythical' }
+    { id: 1025, name: 'Pecharunt', rarity: 'Mythical' },
+    // Ultra Beasts
+    { id: 793, name: 'Nihilego', rarity: 'Ultra-Beast' },
+    { id: 794, name: 'Buzzwole', rarity: 'Ultra-Beast' },
+    { id: 795, name: 'Pheromosa', rarity: 'Ultra-Beast' },
+    { id: 796, name: 'Xurkitree', rarity: 'Ultra-Beast' },
+    { id: 797, name: 'Celesteela', rarity: 'Ultra-Beast' },
+    { id: 798, name: 'Kartana', rarity: 'Ultra-Beast' },
+    { id: 799, name: 'Guzzlord', rarity: 'Ultra-Beast' },
+    { id: 803, name: 'Poipole', rarity: 'Ultra-Beast' },
+    { id: 804, name: 'Naganadel', rarity: 'Ultra-Beast' },
+    { id: 805, name: 'Stakataka', rarity: 'Ultra-Beast' },
+    { id: 806, name: 'Blacephalon', rarity: 'Ultra-Beast' }
 ];
 
 const FREE_SPACE_CELL: BingoCell = {
@@ -133,6 +146,7 @@ const mulberry32 = (a: number) => {
 const mapRarity = (val: string | undefined): BingoCell['rarity'] => {
     if (!val) return 'Common';
     const v = val.toLowerCase();
+    if (v.includes('beast') || v.includes('ultra beast')) return 'Ultra-Beast';
     if (v.includes('mythic')) return 'Mythical';
     if (v.includes('legend')) return 'Legendary';
     if (v.includes('ultra')) return 'Ultra-Rare';
@@ -152,6 +166,7 @@ const getFormattedName = (name: string) => {
 // Mini Cell Component
 const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
     let bgClass = "bg-gray-700 border-gray-600";
+    if (item.rarity === 'Ultra-Beast') bgClass = "bg-cyan-950 border-cyan-400 shadow-[0_0_5px_cyan]";
     if (item.rarity === 'Mythical') bgClass = "bg-pink-900 border-pink-500";
     if (item.rarity === 'Legendary') bgClass = "bg-yellow-900 border-yellow-500";
     if (item.rarity === 'Ultra-Rare') bgClass = "bg-purple-900 border-purple-500";
@@ -170,7 +185,10 @@ const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
         const formattedName = getFormattedName(item.name);
         
         // Priority 1: Cobblemon Tools (Matches server modpack style)
-        const cobbleUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
+        // UB Exception: Use Home
+        const cobbleUrl = item.rarity === 'Ultra-Beast' 
+            ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
+            : `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
         
         // Priority 2: PokeAPI Home (High Quality 3D) - Requires ID
         const homeUrl = item.id > 0 ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png` : null;
@@ -323,6 +341,8 @@ const BingoDashboard: React.FC = () => {
                     
                     if (m.name === 'Melmetal') {
                         spawns.add("Meltan Evolution");
+                    } else if (m.rarity === 'Ultra-Beast') {
+                         spawns.add("Obtained from Ultra Space Wormhole!");
                     } else {
                         if (parsedInfo) {
                             spawns.add(parsedInfo);
@@ -356,7 +376,7 @@ const BingoDashboard: React.FC = () => {
                 // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
                 cobblemonArray = cobblemonArray.filter(entry => {
                     if (entry.name === 'Manaphy') return false; // Explicitly remove Manaphy
-                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
+                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical' || entry.rarity === 'Ultra-Beast') return true;
                     return !excludedIds.has(entry.id);
                 });
 
@@ -423,6 +443,9 @@ const BingoDashboard: React.FC = () => {
                 } else if (difficulty === 'Nightmare+') {
                     // Custom fill later
                     selected = [];
+                } else if (difficulty === 'Impossible') {
+                    // Custom fill later
+                    selected = [];
                 } else {
                     // DEFAULT
                     const pool = [...cobblemonPool];
@@ -476,6 +499,25 @@ const BingoDashboard: React.FC = () => {
                     specialIndices.forEach((gridIdx, i) => {
                         finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
                     });
+                } else if (difficulty === 'Impossible') {
+                    const specialIndices = [0, 4, 12, 20, 24];
+                    
+                    const ub = getRandomItems(['Ultra-Beast'], 1);
+                    const mythics = getRandomItems(['Mythical'], 4);
+                    const legends = getRandomItems(['Legendary'], 20);
+                    
+                    let legIdx = 0;
+                    for (let i = 0; i < 25; i++) {
+                        if (specialIndices.includes(i)) continue;
+                        finalGrid[i] = legends[legIdx++] || getRandomItems(['Common'], 1)[0];
+                    }
+                    
+                    const corners = [0, 4, 20, 24];
+                    corners.forEach((gridIdx, i) => {
+                        finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
+                    });
+                    finalGrid[12] = ub[0] || getRandomItems(['Common'], 1)[0];
+
                 } else {
                     fillGrid(selected, [12]);
                     finalGrid[12] = FREE_SPACE_CELL;

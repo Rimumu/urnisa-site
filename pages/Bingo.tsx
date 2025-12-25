@@ -11,7 +11,7 @@ import { getSpawnInfo } from '../data/legendaryConfig';
 interface BingoCell {
     id: number;
     name: string;
-    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical' | 'Free';
+    rarity: 'Common' | 'Uncommon' | 'Rare' | 'Ultra-Rare' | 'Legendary' | 'Mythical' | 'Ultra-Beast' | 'Free';
     spawns: string[];
 }
 
@@ -32,7 +32,7 @@ interface SavedCard {
     updatedAt: string;
 }
 
-type BingoDifficulty = 'Default' | 'Easy' | 'Normal' | 'Hard' | 'Insane' | 'Nightmare' | 'Nightmare+';
+type BingoDifficulty = 'Default' | 'Easy' | 'Normal' | 'Hard' | 'Insane' | 'Nightmare' | 'Nightmare+' | 'Impossible';
 
 const LOGO_URL = "https://res.cloudinary.com/dsencimjn/image/upload/v1765016320/cobblebingo_mhbavw.png";
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
@@ -65,7 +65,8 @@ const DIFF_PREFIXES: Record<BingoDifficulty, string> = {
     'Hard': 'H',
     'Insane': 'I',
     'Nightmare': 'X',
-    'Nightmare+': 'Y'
+    'Nightmare+': 'Y',
+    'Impossible': 'Z'
 };
 
 const PREFIX_TO_DIFF: Record<string, BingoDifficulty> = {
@@ -75,7 +76,8 @@ const PREFIX_TO_DIFF: Record<string, BingoDifficulty> = {
     'H': 'Hard',
     'I': 'Insane',
     'X': 'Nightmare',
-    'Y': 'Nightmare+'
+    'Y': 'Nightmare+',
+    'Z': 'Impossible'
 };
 
 // Manual Legendary & Mythic Pool
@@ -165,7 +167,19 @@ const MANUAL_POOL_DATA: { id: number, name: string, rarity: BingoCell['rarity'] 
     { id: 808, name: 'Meltan', rarity: 'Mythical' },
     { id: 809, name: 'Melmetal', rarity: 'Mythical' },
     { id: 893, name: 'Zarude', rarity: 'Mythical' },
-    { id: 1025, name: 'Pecharunt', rarity: 'Mythical' }
+    { id: 1025, name: 'Pecharunt', rarity: 'Mythical' },
+    // Ultra Beasts
+    { id: 793, name: 'Nihilego', rarity: 'Ultra-Beast' },
+    { id: 794, name: 'Buzzwole', rarity: 'Ultra-Beast' },
+    { id: 795, name: 'Pheromosa', rarity: 'Ultra-Beast' },
+    { id: 796, name: 'Xurkitree', rarity: 'Ultra-Beast' },
+    { id: 797, name: 'Celesteela', rarity: 'Ultra-Beast' },
+    { id: 798, name: 'Kartana', rarity: 'Ultra-Beast' },
+    { id: 799, name: 'Guzzlord', rarity: 'Ultra-Beast' },
+    { id: 803, name: 'Poipole', rarity: 'Ultra-Beast' },
+    { id: 804, name: 'Naganadel', rarity: 'Ultra-Beast' },
+    { id: 805, name: 'Stakataka', rarity: 'Ultra-Beast' },
+    { id: 806, name: 'Blacephalon', rarity: 'Ultra-Beast' }
 ];
 
 const FREE_SPACE_CELL: BingoCell = {
@@ -259,6 +273,7 @@ const getFormattedName = (name: string) => {
 const mapRarity = (val: string | undefined): BingoCell['rarity'] => {
     if (!val) return 'Common';
     const v = val.toLowerCase();
+    if (v.includes('beast') || v.includes('ultra beast')) return 'Ultra-Beast';
     if (v.includes('mythic')) return 'Mythical';
     if (v.includes('legend')) return 'Legendary';
     if (v.includes('ultra')) return 'Ultra-Rare';
@@ -280,7 +295,12 @@ const BingoCardImage: React.FC<{ item: BingoCell }> = ({ item }) => {
 
         const verifyImage = async () => {
             const cobbleName = getFormattedName(item.name);
-            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+            
+            // For Ultra Beasts, enforce PokeAPI Home
+            const primaryUrl = item.rarity === 'Ultra-Beast' 
+                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
+                : `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
+                
             // Fallback relies on ID. 
             const fallback3d = item.id > 0 
                 ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
@@ -453,6 +473,8 @@ const Bingo: React.FC = () => {
                     
                     if (manualEntry.name === 'Melmetal') {
                         spawns.add("Meltan Evolution");
+                    } else if (manualEntry.rarity === 'Ultra-Beast') {
+                         spawns.add("Obtained from Ultra Space Wormhole!");
                     } else {
                         // CHECK FOR JSON CONFIGURATION FIRST
                         const parsedInfo = getSpawnInfo(manualEntry.name);
@@ -497,10 +519,10 @@ const Bingo: React.FC = () => {
                 // Convert map to array and filter
                 let cobblemonArray = Array.from(poolMap.values());
                 
-                // Remove excluded IDs, but KEEP Legendaries/Mythicals to fix the Nightmare pool issue
+                // Remove excluded IDs, but KEEP Legendaries/Mythicals/UBs to fix the Nightmare pool issue
                 cobblemonArray = cobblemonArray.filter(entry => {
                     if (entry.name === 'Manaphy') return false; // Explicitly remove Manaphy
-                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical') return true;
+                    if (entry.rarity === 'Legendary' || entry.rarity === 'Mythical' || entry.rarity === 'Ultra-Beast') return true;
                     return !excludedIds.has(entry.id);
                 });
 
@@ -778,8 +800,11 @@ const Bingo: React.FC = () => {
             } else if (diffToUse === 'Nightmare') {
                 selected = getRandomItems(['Ultra-Rare'], 20);
             } else if (diffToUse === 'Nightmare+') {
-                // We handle custom filling for Nightmare+ below
-                selected = []; 
+                 // Custom fill later
+                 selected = []; 
+            } else if (diffToUse === 'Impossible') {
+                 // Custom fill later
+                 selected = [];
             } else {
                 const pool = [...cobblemonPool];
                 const tempPool = [...pool];
@@ -836,6 +861,31 @@ const Bingo: React.FC = () => {
                 specialIndices.forEach((gridIdx, i) => {
                     finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
                 });
+            } else if (diffToUse === 'Impossible') {
+                // IMPOSSIBLE: Center = UB, Corners = Mythical, Rest = Legendary
+                const specialIndices = [0, 4, 12, 20, 24];
+                
+                // Get Pools
+                const ub = getRandomItems(['Ultra-Beast'], 1);
+                const mythics = getRandomItems(['Mythical'], 4);
+                const legends = getRandomItems(['Legendary'], 20);
+                
+                // Fill Rest (Legendaries)
+                let legIdx = 0;
+                for (let i = 0; i < 25; i++) {
+                    if (specialIndices.includes(i)) continue;
+                    finalGrid[i] = legends[legIdx++] || getRandomItems(['Common'], 1)[0];
+                }
+                
+                // Fill Corners (Mythicals)
+                const corners = [0, 4, 20, 24];
+                corners.forEach((gridIdx, i) => {
+                    finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
+                });
+
+                // Fill Center (UB)
+                finalGrid[12] = ub[0] || getRandomItems(['Common'], 1)[0];
+
             } else {
                 fillGrid(selected, [12]);
                 finalGrid[12] = FREE_SPACE_CELL;
@@ -845,7 +895,7 @@ const Bingo: React.FC = () => {
             setGridData(finalGrid);
             
             setMarked(new Array(25).fill(false));
-            if (diffToUse !== 'Insane' && diffToUse !== 'Nightmare' && diffToUse !== 'Nightmare+') {
+            if (diffToUse !== 'Insane' && diffToUse !== 'Nightmare' && diffToUse !== 'Nightmare+' && diffToUse !== 'Impossible') {
                 const newMarked = new Array(25).fill(false);
                 newMarked[12] = true;
                 setMarked(newMarked);
@@ -921,6 +971,7 @@ const Bingo: React.FC = () => {
             case 'Ultra-Rare': return 'bg-purple-600/80 text-purple-100';
             case 'Legendary': return 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/50';
             case 'Mythical': return 'bg-pink-500 text-white shadow-lg shadow-pink-500/50';
+            case 'Ultra-Beast': return 'bg-cyan-500 text-black font-black tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.8)] animate-pulse';
             case 'Free': return 'bg-white text-black font-black tracking-widest';
             default: return 'bg-gray-500';
         }
@@ -929,6 +980,8 @@ const Bingo: React.FC = () => {
     const getCardVisuals = (rarity: string) => {
         const base = "border-2";
         switch (rarity) {
+            case 'Ultra-Beast':
+                return `${base} border-cyan-400 bg-[#0f172a] shadow-[0_0_20px_rgba(34,211,238,0.5)] group-hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] relative overflow-hidden group-hover:border-cyan-300`;
             case 'Mythical':
                 return `${base} border-pink-500/50 bg-gradient-to-br from-pink-900/30 to-black/80 shadow-[0_0_10px_rgba(236,72,153,0.1)] group-hover:border-pink-400 group-hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]`;
             case 'Legendary':
@@ -946,6 +999,8 @@ const Bingo: React.FC = () => {
 
     const getNamePlateStyle = (rarity: string) => {
         switch (rarity) {
+            case 'Ultra-Beast':
+                return "bg-cyan-950/90 border-t border-cyan-500/60 shadow-[0_-5px_15px_rgba(34,211,238,0.4)] backdrop-blur-md";
             case 'Mythical':
                 return "bg-gradient-to-t from-pink-900/90 to-pink-900/60 border-t border-pink-500/60 shadow-[0_-5px_15px_rgba(236,72,153,0.4)] backdrop-blur-md";
             case 'Legendary':
@@ -959,6 +1014,7 @@ const Bingo: React.FC = () => {
 
     const getTooltipStyle = (rarity: string) => {
         switch(rarity) {
+            case 'Ultra-Beast': return "border-cyan-400 bg-cyan-950 text-cyan-50";
             case 'Mythical': return "border-pink-500 bg-pink-900/95 text-white";
             case 'Legendary': return "border-yellow-500 bg-yellow-900/95 text-white";
             case 'Ultra-Rare': return "border-purple-500 bg-purple-900/95 text-white";
@@ -982,6 +1038,14 @@ const Bingo: React.FC = () => {
                     backdrop-filter: blur(10px);
                     border: 1px solid rgba(255, 255, 255, 0.1);
                     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+                }
+                .ub-bg {
+                    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+                    animation: spin-slow 60s linear infinite;
+                }
+                @keyframes spin-slow {
+                    from { background-position: 0 0; }
+                    to { background-position: 100% 100%; }
                 }
             `}</style>
             
@@ -1114,6 +1178,9 @@ const Bingo: React.FC = () => {
                                                     {(item.rarity === 'Legendary' || item.rarity === 'Mythical') && (
                                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none"></div>
                                                     )}
+                                                    {item.rarity === 'Ultra-Beast' && (
+                                                         <div className="absolute inset-0 ub-bg opacity-30 pointer-events-none"></div>
+                                                    )}
 
                                                     {/* Rarity Badge - Top Right - INCREASED SIZE */}
                                                     <div className={`
@@ -1121,7 +1188,7 @@ const Bingo: React.FC = () => {
                                                         text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
                                                         ${getRarityBadgeStyle(item.rarity)}
                                                     `}>
-                                                        {item.rarity === 'Ultra-Rare' ? 'ULTRA RARE' : item.rarity}
+                                                        {item.rarity === 'Ultra-Rare' ? 'ULTRA RARE' : item.rarity === 'Ultra-Beast' ? 'BEAST' : item.rarity}
                                                     </div>
 
                                                     {/* Image Container - Adjusted Padding for compact fit */}
@@ -1153,7 +1220,7 @@ const Bingo: React.FC = () => {
                                                         ${getTooltipStyle(item.rarity)}
                                                     `}>
                                                         <div className="text-[9px] font-bold uppercase tracking-widest border-b border-white/20 pb-1 mb-1 opacity-70">
-                                                            {item.rarity === 'Legendary' ? 'Condition' : 'Biome'}
+                                                            {item.rarity === 'Legendary' || item.rarity === 'Ultra-Beast' ? 'Condition' : 'Biome'}
                                                         </div>
                                                         <div className="text-[10px] font-medium leading-relaxed whitespace-normal">
                                                             {item.spawns.join(', ')}
@@ -1166,7 +1233,7 @@ const Bingo: React.FC = () => {
                                                         href={wikiUrl}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className={`text-[8px] md:text-[10px] text-center truncate px-1 transition-colors flex items-center gap-1 group/link drop-shadow-md ${item.rarity === 'Free' ? 'text-black font-black' : 'text-white font-bold hover:text-brand-primary hover:underline'}`}
+                                                        className={`text-[8px] md:text-[10px] text-center truncate px-1 transition-colors flex items-center gap-1 group/link drop-shadow-md ${item.rarity === 'Free' ? 'text-black font-black' : item.rarity === 'Ultra-Beast' ? 'text-cyan-400 font-bold hover:text-white' : 'text-white font-bold hover:text-brand-primary hover:underline'}`}
                                                     >
                                                         {item.name}
                                                     </a>
@@ -1284,7 +1351,7 @@ const Bingo: React.FC = () => {
                             <button onClick={() => setShowDiffModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
                             <h3 className="text-xl font-black text-white mb-6 text-center">Select Difficulty</h3>
                             
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
                                 {[
                                     { label: 'Default', desc: 'Standard Random', color: 'bg-gray-600 hover:bg-gray-500' },
                                     { label: 'Easy', desc: 'Common/Uncommon', color: 'bg-green-600 hover:bg-green-500' },
@@ -1293,6 +1360,7 @@ const Bingo: React.FC = () => {
                                     { label: 'Insane', desc: 'All UR + 1 Legend', color: 'bg-red-600 hover:bg-red-500' },
                                     { label: 'Nightmare', desc: 'UR + Mythic/Legend', color: 'bg-gradient-to-r from-purple-900 to-black border border-purple-500 hover:brightness-110' },
                                     { label: 'Nightmare+', desc: 'All Legend + 5 Mythics', color: 'bg-gradient-to-r from-red-900 to-black border border-red-500 hover:brightness-110' },
+                                    { label: 'Impossible', desc: 'UB Center + Legends', color: 'bg-gradient-to-r from-cyan-600 to-black border border-cyan-400 hover:brightness-110' },
                                 ].map((opt) => (
                                     <button
                                         key={opt.label}
