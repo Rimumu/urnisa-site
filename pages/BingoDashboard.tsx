@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../constants';
 import UserProfile from '../components/UserProfile';
 import { LAMB_POOL, WAGYU_POOL } from '../data/gachaPools';
 import { getSpawnInfo } from '../data/legendaryConfig';
-import OptimizedImage from '../components/OptimizedImage';
 
 // --- CONSTANTS ---
 const SHEET_ID = '16JrrEp919HVn8YE0AtmeAu6_tPkMkKqEmRzMlKW442A';
@@ -26,15 +25,14 @@ interface CobblemonEntry {
     spawns: Set<string>;
 }
 
-// Bingo Winner Type
 interface BingoWinner {
     _id: string;
     discordId: string;
     minecraftUsername: string;
+    discordAvatar?: string;
     cardId: string;
     linesCompleted: number;
     completedAt: string;
-    discordAvatar?: string; // Optional cached avatar
 }
 
 // Difficulty Mapping
@@ -175,170 +173,136 @@ const getFormattedName = (name: string) => {
         .replace(/\s+/g, '-');
 };
 
-// --- LEADERBOARD CARD COMPONENT ---
-const MiniGridPreview: React.FC<{ cardId: string, pool: CobblemonEntry[] }> = ({ cardId, pool }) => {
-    const [grid, setGrid] = useState<BingoCell[]>([]);
+// Mini Cell Component
+const MiniCell: React.FC<{ item: BingoCell }> = ({ item }) => {
+    let bgClass = "bg-gray-700 border-gray-600";
+    if (item.rarity === 'Ultra-Beast') bgClass = "bg-cyan-950 border-cyan-400 shadow-[0_0_5px_cyan]";
+    if (item.rarity === 'Mythical') bgClass = "bg-pink-900 border-pink-500";
+    if (item.rarity === 'Legendary') bgClass = "bg-yellow-900 border-yellow-500";
+    if (item.rarity === 'Ultra-Rare') bgClass = "bg-purple-900 border-purple-500";
+    if (item.rarity === 'Rare') bgClass = "bg-blue-900 border-blue-500";
+    if (item.rarity === 'Uncommon') bgClass = "bg-green-900 border-green-600";
+    if (item.id === -1) bgClass = "bg-white border-white";
+
+    const [imgSrc, setImgSrc] = useState<string>("");
 
     useEffect(() => {
-        if (!cardId || !pool || pool.length === 0) return;
-
-        // Parse Difficulty
-        let diff = 'Default';
-        const parts = cardId.split('-');
-        if (parts.length === 2 && parts[0].length === 1 && PREFIX_TO_DIFF[parts[0]]) {
-            diff = PREFIX_TO_DIFF[parts[0]];
+        if (item.id === -1) {
+            setImgSrc("https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif");
+            return;
         }
 
-        const seed = cyrb128(cardId);
-        const rng = mulberry32(seed[0]);
+        const formattedName = getFormattedName(item.name);
+        
+        // Priority 1: Cobblemon Tools (Matches server modpack style)
+        // UB Exception: Use Home
+        const cobbleUrl = item.rarity === 'Ultra-Beast' 
+            ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png`
+            : `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
+        
+        // Priority 2: PokeAPI Home (High Quality 3D) - Requires ID
+        const homeUrl = item.id > 0 ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${item.id}.png` : null;
+        
+        // Priority 3: PokemonDB (Name based fallback)
+        const dbUrl = `https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`;
 
-        const getRandomItems = (rarities: BingoCell['rarity'][], count: number): BingoCell[] => {
-            let p = pool.filter(entry => rarities.includes(entry.rarity));
-            if (p.length === 0) p = pool;
-            p = [...p];
-            for (let i = p.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
-                [p[i], p[j]] = [p[j], p[i]];
-            }
-            return p.slice(0, count).map(e => ({ id: e.id, name: e.name, rarity: e.rarity, spawns: [] }));
-        };
+        // Check Cache first
+        if (clientImageCache.has(cobbleUrl)) {
+            setImgSrc(clientImageCache.get(cobbleUrl) ? cobbleUrl : (homeUrl || dbUrl));
+            return;
+        }
 
-        let selected: BingoCell[] = [];
-        if (diff === 'Easy') {
-            selected = [...getRandomItems(['Common'], 12), ...getRandomItems(['Uncommon'], 12)];
-        } else if (diff === 'Normal') {
-            selected = [
-                ...getRandomItems(['Common'], 6), ...getRandomItems(['Uncommon'], 6),
-                ...getRandomItems(['Rare'], 6), ...getRandomItems(['Ultra-Rare'], 6)
-            ];
-        } else if (diff === 'Hard') {
-            selected = [...getRandomItems(['Rare'], 12), ...getRandomItems(['Ultra-Rare'], 12)];
-        } else if (diff === 'Insane') {
-            selected = getRandomItems(['Ultra-Rare'], 24);
-        } else if (diff === 'Nightmare') {
-            selected = getRandomItems(['Ultra-Rare'], 20);
-        } else if (diff === 'Nightmare+') {
-            selected = [];
-        } else if (diff === 'Impossible') {
-            selected = [];
+        // Verify Cobblemon URL validity via backend proxy
+        fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(cobbleUrl)}`)
+            .then(res => res.json())
+            .then(data => {
+                clientImageCache.set(cobbleUrl, data.valid);
+                if (data.valid) {
+                    setImgSrc(cobbleUrl);
+                } else {
+                    setImgSrc(homeUrl || dbUrl);
+                }
+            })
+            .catch(() => {
+                // On verification error, fallback immediately
+                setImgSrc(homeUrl || dbUrl);
+            });
+
+    }, [item]);
+
+    // Robust error handler for the img tag itself
+    const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        const currentSrc = e.currentTarget.src;
+        const formattedName = getFormattedName(item.name);
+        
+        // If we failed on Cobblemon or Home, try PokemonDB
+        if (!currentSrc.includes('pokemondb')) {
+            e.currentTarget.src = `https://img.pokemondb.net/sprites/home/normal/${formattedName}.png`;
         } else {
-            const p = [...pool];
-            for (let i = p.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
-                [p[i], p[j]] = [p[j], p[i]];
-            }
-            selected = p.slice(0, 24).map(e => ({ id: e.id, name: e.name, rarity: e.rarity, spawns: [] }));
-        }
-
-        // Shuffle selected (except special fills)
-        if (diff !== 'Nightmare+' && diff !== 'Impossible') {
-            for (let i = selected.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
-                [selected[i], selected[j]] = [selected[j], selected[i]];
-            }
-        }
-
-        const finalGrid: BingoCell[] = new Array(25).fill(null);
-        const fillGrid = (src: BingoCell[], skip: number[]) => {
-            let idx = 0;
-            for (let i=0; i<25; i++) {
-                if (skip.includes(i)) continue;
-                if (idx < src.length) finalGrid[i] = src[idx++];
-                else finalGrid[i] = getRandomItems(['Common'], 1)[0];
-            }
-        };
-
-        if (diff === 'Insane') {
-            fillGrid(selected, [12]);
-            finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
-        } else if (diff === 'Nightmare') {
-            const corners = [0, 4, 20, 24];
-            fillGrid(selected, [12, ...corners]);
-            finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
-            const legs = getRandomItems(['Legendary'], 4);
-            corners.forEach((idx, i) => finalGrid[idx] = legs[i]);
-        } else if (diff === 'Nightmare+') {
-            const spec = [0, 4, 12, 20, 24];
-            const myth = getRandomItems(['Mythical'], 5);
-            const legs = getRandomItems(['Legendary'], 20);
-            let lIdx = 0;
-            for(let i=0; i<25; i++) {
-                if (spec.includes(i)) continue;
-                finalGrid[i] = legs[lIdx++] || getRandomItems(['Common'], 1)[0];
-            }
-            spec.forEach((idx, i) => finalGrid[idx] = myth[i]);
-        } else if (diff === 'Impossible') {
-             const spec = [0, 4, 12, 20, 24];
-             const ub = getRandomItems(['Ultra-Beast'], 1);
-             const myth = getRandomItems(['Mythical'], 4);
-             const legs = getRandomItems(['Legendary'], 20);
-             let lIdx = 0;
-             for(let i=0; i<25; i++) {
-                 if (spec.includes(i)) continue;
-                 finalGrid[i] = legs[lIdx++] || getRandomItems(['Common'], 1)[0];
+            // If PokemonDB fails, try standard pokeapi if ID exists
+             if (item.id > 0 && !currentSrc.includes('raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/')) {
+                 e.currentTarget.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png`;
+             } else {
+                 // Final fallback: Hide image, show text
+                 e.currentTarget.style.display = 'none';
+                 if (e.currentTarget.parentElement) {
+                     e.currentTarget.parentElement.classList.add('bg-gray-800');
+                     e.currentTarget.parentElement.innerText = item.name.substring(0, 3).toUpperCase();
+                     e.currentTarget.parentElement.style.color = 'white';
+                     e.currentTarget.parentElement.style.fontSize = '10px';
+                     e.currentTarget.parentElement.style.fontWeight = 'bold';
+                 }
              }
-             const corn = [0, 4, 20, 24];
-             corn.forEach((idx, i) => finalGrid[idx] = myth[i]);
-             finalGrid[12] = ub[0];
-        } else {
-            fillGrid(selected, [12]);
-            finalGrid[12] = FREE_SPACE_CELL;
         }
-
-        setGrid(finalGrid);
-
-    }, [cardId, pool]);
-
-    const getColor = (r: string) => {
-        if(r === 'Ultra-Beast') return 'bg-cyan-500 border-cyan-300 shadow-[0_0_2px_cyan]';
-        if(r === 'Mythical') return 'bg-pink-600 border-pink-400 shadow-[0_0_2px_pink]';
-        if(r === 'Legendary') return 'bg-yellow-600 border-yellow-400';
-        if(r === 'Ultra-Rare') return 'bg-purple-600 border-purple-400';
-        if(r === 'Rare') return 'bg-blue-600 border-blue-400';
-        if(r === 'Uncommon') return 'bg-green-700 border-green-500';
-        if(r === 'Free') return 'bg-white';
-        return 'bg-gray-700 border-gray-600';
     };
 
     return (
-        <div className="grid grid-cols-5 gap-[2px] w-full h-full bg-[#120507] p-[2px]">
-            {grid.map((cell, i) => (
-                <div key={i} className={`w-full h-full rounded-[1px] border-[0.5px] opacity-80 ${cell ? getColor(cell.rarity) : 'bg-transparent'}`}></div>
-            ))}
+        <div className={`aspect-square rounded-md border ${bgClass} flex items-center justify-center p-1 relative overflow-hidden shadow-sm`}>
+            {item.id !== -1 && <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>}
+            <img 
+                src={imgSrc} 
+                alt={item.name} 
+                className="w-full h-full object-contain" 
+                loading="lazy" 
+                onError={handleError}
+            />
         </div>
     );
 };
 
-const LeaderboardCard: React.FC<{ winner: BingoWinner, pool: CobblemonEntry[] }> = ({ winner, pool }) => {
+// Mini Preview of Card for Leaderboard
+const MiniCardPreview: React.FC<{ cardId: string }> = ({ cardId }) => {
+    const [def, setDef] = useState<any>(null);
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/api/bingo/definition?id=${cardId}`)
+            .then(res => res.json())
+            .then(data => setDef(data))
+            .catch(() => {});
+    }, [cardId]);
+
+    if (!def) return <div className="w-16 h-20 bg-white/5 animate-pulse rounded border border-white/5"></div>;
+
     return (
-        <div className="flex items-center justify-between bg-black/40 border border-white/10 rounded-2xl p-4 group hover:bg-white/5 transition-all hover:scale-[1.01] shadow-lg">
-            <div className="flex items-center gap-4">
-                <div className="relative">
-                    <img src={`https://mc-heads.net/avatar/${winner.minecraftUsername}/48`} className="w-12 h-12 rounded-xl border border-white/10 shadow-md relative z-10 bg-[#120507]" alt={winner.minecraftUsername} />
-                    {winner.discordId && (
-                         <img src={`https://cdn.discordapp.com/avatars/${winner.discordId}/${winner.discordAvatar}.png`} className="w-6 h-6 rounded-full absolute -bottom-2 -right-2 z-20 border-2 border-[#1a0b0e]" onError={(e) => e.currentTarget.style.display = 'none'} />
-                    )}
-                </div>
-                <div>
-                    <h3 className="font-black text-white text-lg leading-none">{winner.minecraftUsername}</h3>
-                    <p className="text-gray-500 text-xs font-mono mt-1">{new Date(winner.completedAt).toLocaleDateString()}</p>
+        <Link 
+            to={`/minecraft/bingo/card?id=${cardId}`} 
+            className="block w-16 h-20 bg-black/40 border border-white/10 rounded overflow-hidden hover:scale-110 hover:border-brand-primary/50 transition-all relative group shadow-lg"
+            title={`View Card ${cardId}`}
+        >
+            <div className="absolute inset-0 flex flex-col p-0.5">
+                <div className="bg-brand-primary/30 h-1.5 w-full mb-0.5 rounded-sm"></div>
+                <div className="grid grid-cols-5 gap-[1px] flex-1">
+                    {def.gridData && def.gridData.slice(0, 25).map((cell: any, i: number) => {
+                        let color = "bg-gray-700/50";
+                        if (cell.rarity === 'Legendary') color = "bg-yellow-600/80";
+                        if (cell.rarity === 'Mythical') color = "bg-pink-600/80";
+                        if (cell.rarity === 'Ultra-Beast') color = "bg-cyan-600/80";
+                        if (cell.rarity === 'Ultra-Rare') color = "bg-purple-600/60";
+                        if (cell.id === -1) color = "bg-white";
+                        return <div key={i} className={`${color} rounded-[1px]`}></div>
+                    })}
                 </div>
             </div>
-
-            <div className="flex items-center gap-6">
-                <div className="text-center hidden sm:block">
-                    <div className="text-2xl font-black text-brand-primary leading-none">{winner.linesCompleted}</div>
-                    <div className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Lines</div>
-                </div>
-
-                <Link to={`/minecraft/bingo/card?id=${winner.cardId}`} className="relative w-16 h-20 rounded-lg overflow-hidden border-2 border-white/10 hover:border-brand-primary/50 transition-colors shadow-inner bg-black cursor-pointer group/card" title="View Card">
-                    <MiniGridPreview cardId={winner.cardId} pool={pool} />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/card:opacity-100 flex items-center justify-center transition-opacity">
-                         <span className="text-xs">👁️</span>
-                    </div>
-                </Link>
-            </div>
-        </div>
+        </Link>
     );
 };
 
@@ -346,22 +310,26 @@ const BingoDashboard: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [previewGrid, setPreviewGrid] = useState<BingoCell[]>([]);
     const [loading, setLoading] = useState(true);
+    const [winners, setWinners] = useState<BingoWinner[]>([]);
     
     // Config from API
     const [config, setConfig] = useState<{ cardId: string, winCondition: string }>({ cardId: '', winCondition: '' });
-    
-    // Leaderboard State
-    const [winners, setWinners] = useState<BingoWinner[]>([]);
-    const [poolData, setPoolData] = useState<CobblemonEntry[]>([]); // To pass to MiniPreview
 
     useEffect(() => {
+        // Fetch Winners
+        fetch(`${API_BASE_URL}/api/bingo/winners`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setWinners(data);
+            })
+            .catch(console.error);
+
         const fetchAndGenerate = async () => {
             try {
                 // 1. Fetch Data sources in parallel
-                const [csvRes, configRes, winnersRes] = await Promise.all([
+                const [csvRes, configRes] = await Promise.all([
                     fetch(CSV_EXPORT_URL),
-                    fetch(`${API_BASE_URL}/api/bingo/config`),
-                    fetch(`${API_BASE_URL}/api/bingo/winners`)
+                    fetch(`${API_BASE_URL}/api/bingo/config`)
                 ]);
 
                 if (!csvRes.ok) throw new Error("Failed to fetch sheet");
@@ -384,10 +352,6 @@ const BingoDashboard: React.FC = () => {
                     }
                 }
 
-                if (winnersRes.ok) {
-                    setWinners(await winnersRes.json());
-                }
-
                 // 2. CHECK IF DEFINITION EXISTS (PERSISTENCE)
                 // This ensures the preview matches the real generated card
                 try {
@@ -397,12 +361,12 @@ const BingoDashboard: React.FC = () => {
                         if (def && def.gridData && Array.isArray(def.gridData)) {
                             setPreviewGrid(def.gridData);
                             setLoading(false);
-                            // Still parse sheet for Pool Data needed by Leaderboard Previews
+                            return; // Stop early, use saved data
                         }
                     }
                 } catch (e) { /* Ignore and generate locally */ }
 
-                // 3. PARSE SHEET
+                // 3. IF NO SAVED DEFINITION, PARSE SHEET AND GENERATE
                 const rows = text.split('\n').map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(cell => cell.trim().replace(/^"|"$/g, '').trim()));
                 const poolMap = new Map<string, CobblemonEntry>();
 
@@ -480,141 +444,157 @@ const BingoDashboard: React.FC = () => {
                 if (cobblemonArray.length === 0) throw new Error("No data found in sheet after filtering");
                 
                 const cobblemonPool = cobblemonArray;
-                setPoolData(cobblemonPool); // Save for leaderboard
+                
+                // 4. GENERATE PREVIEW GRID (Using Fetched Seed and Difficulty Logic)
+                const seed = cyrb128(activeCardId);
+                const rng = mulberry32(seed[0]);
 
-                // 4. GENERATE PREVIEW GRID (Only if not loaded from definition)
-                if (previewGrid.length === 0) {
-                    const seed = cyrb128(activeCardId);
-                    const rng = mulberry32(seed[0]);
+                // Helper to get random items from filtered pool
+                const getRandomItems = (rarities: BingoCell['rarity'][], count: number) => {
+                    let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
+                    if (pool.length === 0) pool = cobblemonPool; // Fallback
+                    
+                    // Copy for shuffle to keep main pool sorted
+                    pool = [...pool];
 
-                    // Helper to get random items from filtered pool
-                    const getRandomItems = (rarities: BingoCell['rarity'][], count: number): BingoCell[] => {
-                        let pool = cobblemonPool.filter(p => rarities.includes(p.rarity));
-                        if (pool.length === 0) pool = cobblemonPool; // Fallback
-                        
-                        // Copy for shuffle to keep main pool sorted
-                        pool = [...pool];
-
-                        // Shuffle pool
-                        for (let i = pool.length - 1; i > 0; i--) {
-                            const j = Math.floor(rng() * (i + 1));
-                            [pool[i], pool[j]] = [pool[j], pool[i]];
-                        }
-                        
-                        // Return top N
-                        return pool.slice(0, count).map(entry => ({
-                            id: entry.id,
-                            name: entry.name,
-                            rarity: entry.rarity,
-                            spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
-                        }));
-                    };
-
-                    let selected: BingoCell[] = [];
-
-                    // GENERATION LOGIC (Mirrors Bingo.tsx)
-                    if (difficulty === 'Easy') {
-                        const commons = getRandomItems(['Common'], 12);
-                        const uncommons = getRandomItems(['Uncommon'], 12);
-                        selected = [...commons, ...uncommons];
-                    } else if (difficulty === 'Normal') {
-                        selected = [
-                            ...getRandomItems(['Common'], 6),
-                            ...getRandomItems(['Uncommon'], 6),
-                            ...getRandomItems(['Rare'], 6),
-                            ...getRandomItems(['Ultra-Rare'], 6)
-                        ];
-                    } else if (difficulty === 'Hard') {
-                        selected = [
-                            ...getRandomItems(['Rare'], 12),
-                            ...getRandomItems(['Ultra-Rare'], 12)
-                        ];
-                    } else if (difficulty === 'Insane') {
-                        selected = getRandomItems(['Ultra-Rare'], 24);
-                    } else if (difficulty === 'Nightmare') {
-                        selected = getRandomItems(['Ultra-Rare'], 20);
-                    } else if (difficulty === 'Nightmare+') {
-                        // Custom fill later
-                        selected = [];
-                    } else if (difficulty === 'Impossible') {
-                        // Custom fill later
-                        selected = [];
-                    } else {
-                        // DEFAULT
-                        const pool = [...cobblemonPool];
-                        const tempPool = [...pool];
-                        for (let i = tempPool.length - 1; i > 0; i--) {
-                            const j = Math.floor(rng() * (i + 1));
-                            [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
-                        }
-                        selected = tempPool.slice(0, 24).map(entry => ({
-                            id: entry.id, name: entry.name, rarity: entry.rarity, spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
-                        }));
-                    }
-
-                    // Shuffle selected
-                    for (let i = selected.length - 1; i > 0; i--) {
+                    // Shuffle pool
+                    for (let i = pool.length - 1; i > 0; i--) {
                         const j = Math.floor(rng() * (i + 1));
-                        [selected[i], selected[j]] = [selected[j], selected[i]];
+                        [pool[i], pool[j]] = [pool[j], pool[i]];
                     }
+                    
+                    // Return top N
+                    return pool.slice(0, count).map(entry => ({
+                        id: entry.id,
+                        name: entry.name,
+                        rarity: entry.rarity,
+                        spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
+                    }));
+                };
 
-                    // Construct Grid
-                    const finalGrid: BingoCell[] = new Array(25).fill(null);
-                    const fillGrid = (source: BingoCell[], skipIndices: number[]) => {
-                        let sourceIdx = 0;
-                        for (let i = 0; i < 25; i++) {
-                            if (skipIndices.includes(i)) continue;
-                            if (sourceIdx < source.length) finalGrid[i] = source[sourceIdx++];
-                            else finalGrid[i] = getRandomItems(['Common'], 1)[0];
-                        }
-                    };
+                let selected: BingoCell[] = [];
 
-                    if (difficulty === 'Insane') {
-                        fillGrid(selected, [12]);
-                        finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
-                    } else if (difficulty === 'Nightmare') {
-                        const corners = [0, 4, 20, 24];
-                        fillGrid(selected, [12, ...corners]);
-                        finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
-                        const legends = getRandomItems(['Legendary'], 4);
-                        corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
-                    } else if (difficulty === 'Nightmare+') {
-                        const specialIndices = [0, 4, 12, 20, 24];
-                        const mythics = getRandomItems(['Mythical'], 5);
-                        const legends = getRandomItems(['Legendary'], 20);
-                        
-                        let legIdx = 0;
-                        for (let i = 0; i < 25; i++) {
-                            if (specialIndices.includes(i)) continue;
-                            finalGrid[i] = legends[legIdx++] || getRandomItems(['Common'], 1)[0];
-                        }
-                        
-                        specialIndices.forEach((gridIdx, i) => {
-                            finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
-                        });
-                    } else if (difficulty === 'Impossible') {
-                         const spec = [0, 4, 12, 20, 24];
-                         const ub = getRandomItems(['Ultra-Beast'], 1);
-                         const myth = getRandomItems(['Mythical'], 4);
-                         const legs = getRandomItems(['Legendary'], 20);
-                         let lIdx = 0;
-                         for(let i=0; i<25; i++) {
-                             if (spec.includes(i)) continue;
-                             finalGrid[i] = legs[lIdx++] || getRandomItems(['Common'], 1)[0];
-                         }
-                         const corn = [0, 4, 20, 24];
-                         corn.forEach((idx, i) => finalGrid[idx] = myth[i]);
-                         finalGrid[12] = ub[0] || getRandomItems(['Common'], 1)[0];
-                    } else {
-                        // Default
-                        fillGrid(selected, [12]);
-                        finalGrid[12] = FREE_SPACE_CELL;
+                // GENERATION LOGIC (Mirrors Bingo.tsx)
+                if (difficulty === 'Easy') {
+                    const commons = getRandomItems(['Common'], 12);
+                    const uncommons = getRandomItems(['Uncommon'], 12);
+                    selected = [...commons, ...uncommons];
+                } else if (difficulty === 'Normal') {
+                    selected = [
+                        ...getRandomItems(['Common'], 6),
+                        ...getRandomItems(['Uncommon'], 6),
+                        ...getRandomItems(['Rare'], 6),
+                        ...getRandomItems(['Ultra-Rare'], 6)
+                    ];
+                } else if (difficulty === 'Hard') {
+                    selected = [
+                        ...getRandomItems(['Rare'], 12),
+                        ...getRandomItems(['Ultra-Rare'], 12)
+                    ];
+                } else if (difficulty === 'Insane') {
+                    selected = getRandomItems(['Ultra-Rare'], 24);
+                } else if (difficulty === 'Nightmare') {
+                    selected = getRandomItems(['Ultra-Rare'], 20);
+                } else if (difficulty === 'Nightmare+') {
+                    // Custom fill later
+                    selected = [];
+                } else if (difficulty === 'Impossible') {
+                    // Custom fill later
+                    selected = [];
+                } else {
+                    // DEFAULT
+                    const pool = [...cobblemonPool];
+                    const tempPool = [...pool];
+                    for (let i = tempPool.length - 1; i > 0; i--) {
+                        const j = Math.floor(rng() * (i + 1));
+                        [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
                     }
-
-                    setPreviewGrid(finalGrid);
+                    selected = tempPool.slice(0, 24).map(entry => ({
+                        id: entry.id, name: entry.name, rarity: entry.rarity, spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
+                    }));
                 }
+
+                // Shuffle selected
+                for (let i = selected.length - 1; i > 0; i--) {
+                    const j = Math.floor(rng() * (i + 1));
+                    [selected[i], selected[j]] = [selected[j], selected[i]];
+                }
+
+                // Construct Grid
+                const finalGrid: BingoCell[] = new Array(25).fill(null);
+                const fillGrid = (source: BingoCell[], skipIndices: number[]) => {
+                    let sourceIdx = 0;
+                    for (let i = 0; i < 25; i++) {
+                        if (skipIndices.includes(i)) continue;
+                        if (sourceIdx < source.length) finalGrid[i] = source[sourceIdx++];
+                        else finalGrid[i] = getRandomItems(['Common'], 1)[0];
+                    }
+                };
+
+                if (difficulty === 'Insane') {
+                    fillGrid(selected, [12]);
+                    finalGrid[12] = getRandomItems(['Legendary'], 1)[0];
+                } else if (difficulty === 'Nightmare') {
+                    const corners = [0, 4, 20, 24];
+                    fillGrid(selected, [12, ...corners]);
+                    finalGrid[12] = getRandomItems(['Mythical'], 1)[0];
+                    const legends = getRandomItems(['Legendary'], 4);
+                    corners.forEach((idx, i) => finalGrid[idx] = legends[i]);
+                } else if (difficulty === 'Nightmare+') {
+                    const specialIndices = [0, 4, 12, 20, 24];
+                    const mythics = getRandomItems(['Mythical'], 5);
+                    const legends = getRandomItems(['Legendary'], 20);
+                    
+                    let legIdx = 0;
+                    for (let i = 0; i < 25; i++) {
+                        if (specialIndices.includes(i)) continue;
+                        finalGrid[i] = legends[legIdx++] || getRandomItems(['Common'], 1)[0];
+                    }
+                    
+                    specialIndices.forEach((gridIdx, i) => {
+                        finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
+                    });
+                } else if (difficulty === 'Impossible') {
+                    const specialIndices = [0, 4, 12, 20, 24];
+                    
+                    const ub = getRandomItems(['Ultra-Beast'], 1);
+                    const mythics = getRandomItems(['Mythical'], 4);
+                    const legends = getRandomItems(['Legendary'], 20);
+                    
+                    let legIdx = 0;
+                    for (let i = 0; i < 25; i++) {
+                        if (specialIndices.includes(i)) continue;
+                        finalGrid[i] = legends[legIdx++] || getRandomItems(['Common'], 1)[0];
+                    }
+                    
+                    const corners = [0, 4, 20, 24];
+                    corners.forEach((gridIdx, i) => {
+                        finalGrid[gridIdx] = mythics[i] || getRandomItems(['Common'], 1)[0];
+                    });
+                    finalGrid[12] = ub[0] || getRandomItems(['Common'], 1)[0];
+
+                } else {
+                    fillGrid(selected, [12]);
+                    finalGrid[12] = FREE_SPACE_CELL;
+                }
+
+                setPreviewGrid(finalGrid);
+
+                // 5. SAVE THIS GENERATED DEFINITION (So other views see same thing)
+                try {
+                    await fetch(`${API_BASE_URL}/api/bingo/definition`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            cardId: activeCardId, 
+                            gridData: finalGrid,
+                            difficulty: difficulty
+                        })
+                    });
+                } catch (e) { /* ignore save errors */ }
+
             } catch (e) {
-                console.error("Dashboard Load Error", e);
+                console.error("Preview Gen Error", e);
             } finally {
                 setLoading(false);
             }
@@ -624,117 +604,177 @@ const BingoDashboard: React.FC = () => {
     }, []);
 
     return (
-        <div className="min-h-screen py-12 font-sans text-white relative">
-             <style>{`
-                .glass-panel {
-                    background: rgba(0, 0, 0, 0.7);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-                }
-            `}</style>
-            
-            <UserProfile onUserChange={setUser} className="!absolute top-4 right-4" />
+        <div className="min-h-screen py-4 font-sans text-white relative">
+            <UserProfile 
+                onUserChange={setUser} 
+                className="!absolute top-4 right-4"
+            />
 
-            <div className="container mx-auto px-4 relative z-10 flex flex-col items-center gap-8">
-                
-                {/* Header */}
-                <div className="text-center space-y-4">
-                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-2xl">
-                        BINGO <span className="text-brand-primary">DASHBOARD</span>
-                    </h1>
-                    <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                        Track current events, check the leaderboard, and see who's winning the Cobblemon Bingo!
-                    </p>
+            <div className="container mx-auto px-4 pt-4 pb-2">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm">
+                    <span>←</span> Back to Dashboard
+                </Link>
+            </div>
+
+            <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 space-y-16 py-12">
+                {/* HERO SECTION */}
+                <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    
+                    {/* Left Side: Info */}
+                    <div className="space-y-8 text-center md:text-left order-2 md:order-1">
+                        <div>
+                            <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-4 drop-shadow-2xl">
+                                BINGO <span className="text-red-500">CHALLENGE</span>
+                            </h1>
+                            <p className="text-xl text-gray-300 font-medium leading-relaxed max-w-lg mx-auto md:mx-0">
+                                Join the community bingo challenge with everyone and compete and finish first to win rewards on the server!
+                            </p>
+                        </div>
+
+                        {/* Win Condition Box */}
+                        <div className="bg-gradient-to-r from-red-900/30 to-black/30 p-1 rounded-2xl border border-red-500/30 max-w-md mx-auto md:mx-0 shadow-lg">
+                            <div className="bg-black/40 backdrop-blur-md rounded-xl p-4 flex items-center gap-4">
+                                <div className="text-3xl">🏆</div>
+                                <div>
+                                    <div className="text-xs font-bold text-red-400 uppercase tracking-widest">Winning Condition</div>
+                                    <div className="text-xl font-black text-white">{config.winCondition || "Loading..."}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <Link 
+                                to={`/minecraft/bingo/card?id=${config.cardId || "WEEK1"}`}
+                                className="bg-brand-primary hover:bg-red-600 text-white font-bold text-xl py-4 px-8 rounded-2xl shadow-[0_0_30px_rgba(229,56,59,0.4)] transition-transform hover:scale-105 flex items-center justify-center gap-3 group"
+                            >
+                                <span>🚀</span>
+                                <span>PLAY CHALLENGE CARD</span>
+                            </Link>
+                            
+                            <div className="flex gap-4">
+                                <Link 
+                                    to="/minecraft/bingo/card"
+                                    className="flex-1 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+                                >
+                                    <span>🎲</span> Random Card
+                                </Link>
+                                <Link 
+                                    to="/minecraft/bingo/card?view=saved"
+                                    className="flex-1 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2"
+                                >
+                                    <span>💾</span> Saved Cards
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="bg-black/30 p-4 rounded-xl border border-white/10 text-sm text-gray-400">
+                            <strong className="text-brand-accent">TIP:</strong> You can save your progress on the card page. Don't forget to mark your catches!
+                        </div>
+                    </div>
+
+                    {/* Right Side: Card Preview */}
+                    <div className="order-1 md:order-2 flex justify-center perspective-1000">
+                        <Link 
+                            to={`/minecraft/bingo/card?id=${config.cardId || "WEEK1"}`}
+                            className="relative group cursor-pointer transition-transform duration-500 hover:rotate-y-12 hover:scale-105"
+                        >
+                            {/* Card Container */}
+                            <div className="w-[320px] h-[400px] bg-[#1a0b0e] rounded-3xl border-[8px] border-[#3a1017] shadow-2xl overflow-hidden relative flex flex-col items-center p-4">
+                                {/* Header */}
+                                <div className="text-center mb-3">
+                                    <div className="text-2xl font-black tracking-[0.2em] text-white/20 group-hover:text-brand-primary/40 transition-colors">BINGO</div>
+                                </div>
+
+                                {/* The Grid */}
+                                {loading ? (
+                                    <div className="flex-1 flex items-center justify-center text-brand-primary animate-pulse font-bold">Generating Preview...</div>
+                                ) : (
+                                    <div className="grid grid-cols-5 gap-1 w-full flex-1">
+                                        {previewGrid.map((item, idx) => (
+                                            <MiniCell key={idx} item={item} />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Hover Overlay */}
+                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                                    <span className="text-4xl mb-2">👉</span>
+                                    <span className="font-bold text-white uppercase tracking-widest border-b-2 border-brand-primary pb-1">Click to Start</span>
+                                </div>
+                            </div>
+
+                            {/* Glow Effect behind card */}
+                            <div className="absolute inset-0 bg-brand-primary/20 blur-[50px] -z-10 group-hover:bg-brand-primary/40 transition-colors duration-500 rounded-full"></div>
+                        </Link>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-                    
-                    {/* LEFT: Current Event Info */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
-                            
-                            <h2 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
-                                <span>📅</span> Active Card
-                            </h2>
-                            
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Event ID</div>
-                                    <div className="text-3xl font-mono font-black text-brand-primary tracking-wide">
-                                        {config.cardId || "LOADING..."}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Win Condition</div>
-                                    <div className="text-xl font-bold text-white bg-white/5 px-3 py-2 rounded-xl inline-block border border-white/5">
-                                        {config.winCondition || "Loading..."}
-                                    </div>
-                                </div>
-                                
-                                <div className="pt-4">
-                                    <Link to="/minecraft/bingo/card" className="block w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-xl text-center shadow-lg transition-transform hover:scale-[1.02]">
-                                        PLAY BINGO
-                                    </Link>
-                                    <p className="text-center text-[10px] text-gray-500 mt-2">
-                                        Use ID <strong>{config.cardId}</strong> to generate this card!
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Preview Grid */}
-                        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 shadow-xl flex flex-col items-center">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Card Preview</h3>
-                            {loading ? (
-                                <div className="w-48 h-60 flex items-center justify-center animate-pulse text-gray-600 font-bold">Loading...</div>
-                            ) : (
-                                <div className="w-48 h-60 rounded-lg overflow-hidden border-2 border-white/10 shadow-2xl bg-[#120507]">
-                                    <div className="grid grid-cols-5 gap-[1px] w-full h-full bg-[#120507] p-[1px]">
-                                        {previewGrid.map((cell, i) => {
-                                            // Simple color mapping for preview
-                                            let color = 'bg-gray-700';
-                                            if (cell.rarity === 'Ultra-Beast') color = 'bg-cyan-500';
-                                            else if (cell.rarity === 'Mythical') color = 'bg-pink-600';
-                                            else if (cell.rarity === 'Legendary') color = 'bg-yellow-600';
-                                            else if (cell.rarity === 'Ultra-Rare') color = 'bg-purple-600';
-                                            else if (cell.rarity === 'Rare') color = 'bg-blue-600';
-                                            else if (cell.rarity === 'Uncommon') color = 'bg-green-700';
-                                            else if (cell.rarity === 'Free') color = 'bg-white';
-                                            
-                                            return <div key={i} className={`w-full h-full ${color} opacity-80`}></div>
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                {/* LEADERBOARD SECTION */}
+                <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="h-1 flex-1 bg-gradient-to-r from-transparent to-brand-primary/30"></div>
+                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+                            <span className="text-4xl">👑</span> Bingo Leaderboard
+                        </h2>
+                        <div className="h-1 flex-1 bg-gradient-to-l from-transparent to-brand-primary/30"></div>
                     </div>
 
-                    {/* RIGHT: Leaderboard */}
-                    <div className="lg:col-span-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-xl flex flex-col h-[600px]">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-3xl font-black text-white">🏆 Hall of Fame</h2>
-                            <div className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
-                                Top Winners
-                            </div>
+                    {winners.length === 0 ? (
+                        <div className="text-center py-16 bg-black/20 rounded-[2rem] border border-white/5">
+                            <span className="text-6xl mb-4 block grayscale opacity-30">🏆</span>
+                            <h3 className="text-xl font-bold text-gray-500">No winners yet</h3>
+                            <p className="text-gray-600 text-sm mt-1">Be the first to complete the bingo!</p>
                         </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {winners.map((winner, index) => (
+                                <div key={winner._id} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 flex items-center gap-5 shadow-lg group hover:border-brand-primary/40 transition-all hover:-translate-y-1">
+                                    {/* Rank */}
+                                    <div className="text-3xl font-black text-white/10 absolute top-2 right-4 pointer-events-none group-hover:text-brand-primary/20 transition-colors">
+                                        #{index + 1}
+                                    </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
-                            {winners.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full text-gray-500 opacity-50">
-                                    <span className="text-6xl mb-4">👑</span>
-                                    <span className="font-bold text-xl">No winners yet!</span>
-                                    <span className="text-sm">Be the first to complete a line!</span>
+                                    {/* Avatars */}
+                                    <div className="relative shrink-0">
+                                        <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg relative bg-black/50">
+                                            {/* Discord Avatar Layer */}
+                                            <img 
+                                                src={winner.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
+                                                alt="Discord" 
+                                                className="w-full h-full object-cover"
+                                            />
+                                            {/* MC Head Overlay */}
+                                            <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg border border-black shadow-md overflow-hidden bg-black">
+                                                <img 
+                                                    src={`https://mc-heads.net/avatar/${winner.minecraftUsername}/32`} 
+                                                    alt="MC" 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0 flex flex-col gap-1">
+                                        <div className="font-black text-white text-lg truncate" title={winner.minecraftUsername}>
+                                            {winner.minecraftUsername}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                                            <span className="bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded font-bold">
+                                                {winner.linesCompleted} Line{winner.linesCompleted !== 1 ? 's' : ''}
+                                            </span>
+                                            <span>• {new Date(winner.completedAt).toLocaleDateString()}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Card Preview */}
+                                    <div className="shrink-0">
+                                        <MiniCardPreview cardId={winner.cardId} />
+                                    </div>
                                 </div>
-                            ) : (
-                                winners.map((winner) => (
-                                    <LeaderboardCard key={winner._id} winner={winner} pool={poolData} />
-                                ))
-                            )}
+                            ))}
                         </div>
-                    </div>
-
+                    )}
                 </div>
             </div>
         </div>

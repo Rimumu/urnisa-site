@@ -260,7 +260,6 @@ interface TournamentPlayer {
     updatedAt: string;
 }
 
-// Interface for Bingo Winner
 interface BingoWinner {
     _id: string;
     discordId: string;
@@ -268,6 +267,7 @@ interface BingoWinner {
     cardId: string;
     linesCompleted: number;
     completedAt: string;
+    discordAvatar?: string;
 }
 
 const Admin: React.FC = () => {
@@ -337,14 +337,15 @@ const Admin: React.FC = () => {
     const [bingoCardId, setBingoCardId] = useState('');
     const [bingoWinCondition, setBingoWinCondition] = useState('');
     const [bingoStatus, setBingoStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    
-    // --- BINGO WINNERS STATE ---
     const [bingoWinners, setBingoWinners] = useState<BingoWinner[]>([]);
+    
+    // Bingo Winners Form State
     const [winDiscordId, setWinDiscordId] = useState('');
-    const [winMCName, setWinMCName] = useState(''); // Only if needed fallback
+    const [winUsername, setWinUsername] = useState('');
     const [winCardId, setWinCardId] = useState('');
     const [winLines, setWinLines] = useState(1);
-    const [winDate, setWinDate] = useState('');
+    const [winDate, setWinDate] = useState(new Date().toISOString().split('T')[0]);
+    const [winAvatar, setWinAvatar] = useState('');
 
     // --- CODE GENERATION STATE ---
     const [genType, setGenType] = useState('lamb');
@@ -530,8 +531,8 @@ const Admin: React.FC = () => {
                 fetchBingoConfig();
                 fetchBingoWinners();
                 interval = window.setInterval(() => {
-                     fetchWhitelistData();
-                     fetchBingoWinners();
+                    fetchWhitelistData();
+                    fetchBingoWinners();
                 }, 10000);
             } else if (activeTab === 'codes') {
                 fetchCodes();
@@ -816,63 +817,40 @@ const Admin: React.FC = () => {
         }
     };
 
-    // --- BINGO WINNER HANDLERS ---
-    const handleAddBingoWinner = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAddWinner = async () => {
+        if (!winDiscordId || !winUsername || !winCardId) {
+            alert("Please fill all required fields");
+            return;
+        }
         setLoading(true);
-        setBingoStatus(null);
-
-        // Try to fetch existing approved application for this user to get MC name if possible
-        // But the backend will likely handle it via stored Link data if we provide DiscordID.
-        // We will send DiscordID. If user also provided MC Name manually, we use it.
-
         try {
-            // First, check if we have a linked account for this Discord ID in our approved list to fill gaps
-            let finalMC = winMCName;
-            if (!finalMC && winDiscordId) {
-                const app = approvedApps.find(a => a.discordId === winDiscordId);
-                if (app) finalMC = app.minecraftUsername;
-            }
-            // If still no MC Name, assume "Unknown" or force user to input
-            if (!finalMC) {
-                // Try looking up in the whitelistApps (pending list too? unlikely)
-                // Just fallback
-                finalMC = "Unknown";
-            }
-
-            const response = await fetch(`${API_BASE_URL}/api/admin/bingo/winner`, {
+            const res = await fetch(`${API_BASE_URL}/api/admin/bingo/winner`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: password },
                 body: JSON.stringify({
                     discordId: winDiscordId,
-                    minecraftUsername: winMCName || finalMC, // Prefer manual input, fallback to lookup
+                    minecraftUsername: winUsername,
                     cardId: winCardId,
                     linesCompleted: winLines,
-                    completedAt: winDate || new Date().toISOString()
+                    completedAt: winDate
                 })
             });
-
-            if (response.ok) {
-                setBingoStatus({ type: 'success', message: "Winner Added!" });
+            if (res.ok) {
                 fetchBingoWinners();
-                // Clear form
+                setWinUsername('');
                 setWinDiscordId('');
-                setWinMCName('');
                 setWinLines(1);
-                setWinDate('');
             } else {
-                setBingoStatus({ type: 'error', message: "Failed to add winner" });
+                alert("Failed to add winner");
             }
-        } catch (e) {
-            setBingoStatus({ type: 'error', message: "Network Error" });
-        } finally {
-            setLoading(false);
-            setTimeout(() => setBingoStatus(null), 3000);
-        }
+        } catch(e) {
+            alert("Network Error");
+        } finally { setLoading(false); }
     };
 
-    const handleDeleteBingoWinner = async (id: string) => {
+    const handleDeleteWinner = async (id: string) => {
         if (!confirm("Remove this winner?")) return;
+        setLoading(true);
         try {
             await fetch(`${API_BASE_URL}/api/admin/bingo/winner/delete`, {
                 method: 'POST',
@@ -880,9 +858,10 @@ const Admin: React.FC = () => {
                 body: JSON.stringify({ id })
             });
             fetchBingoWinners();
-        } catch(e) {}
+        } catch(e) {
+            alert("Network Error");
+        } finally { setLoading(false); }
     };
-
 
     // --- TOURNAMENT HANDLERS ---
     const handleSetTournamentStatus = async (status: 'DRAFTING' | 'LOCK_IN' | 'ONGOING') => {
@@ -1775,74 +1754,70 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 </div>
                             </div>
                             
-                            {/* BINGO CONFIGURATION & WINNER MANAGEMENT */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl space-y-8">
-                                <div>
-                                    <h3 className="font-bold text-white text-lg mb-6">Bingo Configuration</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                                        <div>
-                                            <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Active Card ID</label>
-                                            <input type="text" value={bingoCardId} onChange={e => setBingoCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono" placeholder="WEEK1" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Win Condition Text</label>
-                                            <input type="text" value={bingoWinCondition} onChange={e => setBingoWinCondition(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="1 Line" />
-                                        </div>
-                                        <button onClick={handleSaveBingoConfig} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-lg h-[50px] transition-colors">Update Config</button>
+                            {/* BINGO CONFIGURATION */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white text-lg mb-6">Bingo Configuration</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                                    <div>
+                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Active Card ID</label>
+                                        <input type="text" value={bingoCardId} onChange={e => setBingoCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono" placeholder="WEEK1" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Win Condition Text</label>
+                                        <input type="text" value={bingoWinCondition} onChange={e => setBingoWinCondition(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="1 Line" />
+                                    </div>
+                                    <button onClick={handleSaveBingoConfig} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-lg h-[50px] transition-colors">Update Config</button>
+                                </div>
+                            </div>
+
+                            {/* BINGO WINNERS MANAGEMENT (NEW) */}
+                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white text-lg mb-6">Bingo Winners Management</h3>
+                                
+                                {/* Add Winner Form */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8 bg-white/5 p-4 rounded-xl border border-white/5">
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Discord ID</label>
+                                        <input type="text" value={winDiscordId} onChange={e => setWinDiscordId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="12345..." />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Minecraft Name</label>
+                                        <input type="text" value={winUsername} onChange={e => setWinUsername(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="Steve" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Card ID</label>
+                                        <input type="text" value={winCardId} onChange={e => setWinCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="WEEK1" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Lines</label>
+                                        <input type="number" value={winLines} onChange={e => setWinLines(parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" min="1" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Date</label>
+                                        <input type="date" value={winDate} onChange={e => setWinDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" />
+                                    </div>
+                                    <div className="flex items-end">
+                                        <button onClick={handleAddWinner} disabled={loading} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-sm transition-colors shadow-lg">ADD WINNER</button>
                                     </div>
                                 </div>
 
-                                <div className="border-t border-white/10 pt-8">
-                                    <h3 className="font-bold text-white text-lg mb-6">Bingo Winners Management</h3>
-                                    
-                                    <form onSubmit={handleAddBingoWinner} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 items-end bg-white/5 p-4 rounded-xl border border-white/5">
-                                        <div className="lg:col-span-1">
-                                            <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Discord ID</label>
-                                            <input type="text" value={winDiscordId} onChange={e => setWinDiscordId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" placeholder="123456789..." required />
-                                        </div>
-                                        <div className="lg:col-span-1">
-                                            <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">MC Name (Optional)</label>
-                                            <input type="text" value={winMCName} onChange={e => setWinMCName(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm" placeholder="Steve" />
-                                        </div>
-                                        <div className="lg:col-span-1">
-                                            <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Card ID</label>
-                                            <input type="text" value={winCardId} onChange={e => setWinCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm font-mono" placeholder="WEEK1-A1B2" required />
-                                        </div>
-                                        <div className="lg:col-span-1">
-                                            <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Lines / Date</label>
-                                            <div className="flex gap-2">
-                                                <input type="number" value={winLines} onChange={e => setWinLines(parseInt(e.target.value))} className="w-16 bg-black/40 border border-white/10 rounded p-2 text-white text-center text-sm" min="1" max="12" />
-                                                <input type="date" value={winDate} onChange={e => setWinDate(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded p-2 text-white text-sm" />
+                                {/* Winners List */}
+                                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                                    {bingoWinners.map((winner) => (
+                                        <div key={winner._id} className="flex items-center justify-between bg-black/20 p-3 rounded-lg border border-white/5 hover:bg-white/5 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-mono text-xs text-gray-500">#{winner.cardId}</span>
+                                                <span className="font-bold text-white text-sm">{winner.minecraftUsername}</span>
+                                                <span className="text-xs text-gray-400">({winner.discordId})</span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xs bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded font-bold">{winner.linesCompleted} Lines</span>
+                                                <span className="text-xs text-gray-500">{new Date(winner.completedAt).toLocaleDateString()}</span>
+                                                <button onClick={() => handleDeleteWinner(winner._id)} className="text-red-500 hover:text-red-400 font-bold text-xs bg-red-900/20 px-2 py-1 rounded hover:bg-red-900/40 transition-colors">DEL</button>
                                             </div>
                                         </div>
-                                        <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded text-sm h-[38px]">Add Winner</button>
-                                    </form>
-
-                                    <div className="max-h-60 overflow-y-auto custom-scrollbar border border-white/10 rounded-xl">
-                                        <table className="w-full text-left text-sm text-gray-400">
-                                            <thead className="text-xs uppercase bg-black/40 text-gray-200 sticky top-0 z-10">
-                                                <tr>
-                                                    <th className="px-4 py-2">User</th>
-                                                    <th className="px-4 py-2">Card</th>
-                                                    <th className="px-4 py-2">Lines</th>
-                                                    <th className="px-4 py-2 text-right">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {bingoWinners.map((w) => (
-                                                    <tr key={w._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                        <td className="px-4 py-2 font-bold text-white">{w.minecraftUsername}</td>
-                                                        <td className="px-4 py-2 font-mono text-xs">{w.cardId}</td>
-                                                        <td className="px-4 py-2">{w.linesCompleted}</td>
-                                                        <td className="px-4 py-2 text-right">
-                                                            <button onClick={() => handleDeleteBingoWinner(w._id)} className="text-red-500 hover:text-white hover:bg-red-600 px-2 py-0.5 rounded text-xs font-bold transition-colors">DEL</button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                {bingoWinners.length === 0 && <tr><td colSpan={4} className="text-center py-4 text-xs italic">No winners yet.</td></tr>}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    ))}
+                                    {bingoWinners.length === 0 && <div className="text-center text-gray-500 py-4 text-xs italic">No winners recorded yet.</div>}
                                 </div>
                             </div>
                         </div>
