@@ -1188,7 +1188,7 @@ const Bingo: React.FC = () => {
                                                         text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm backdrop-blur-sm
                                                         ${getRarityBadgeStyle(item.rarity)}
                                                     `}>
-                                                        {item.rarity === 'Ultra-Rare' ? 'ULTRA RARE' : item.rarity === 'Ultra-Beast' ? 'BEAST' : item.rarity}
+                                                        {item.rarity === 'Ultra-Rare' ? 'ULTRA RARE' : item.rarity === 'Ultra-Beast' ? 'ULTRA BEAST' : item.rarity}
                                                     </div>
 
                                                     {/* Image Container - Adjusted Padding for compact fit */}
