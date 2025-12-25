@@ -921,27 +921,6 @@ export const RAW_SPAWN_DATA = {
     }
   },
   {
-    "id": "mythsandlegends-hoopa-1",
-    "pokemon": "hoopa",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "ultra-rare",
-    "level": "50",
-    "weight": 0.3,
-    "condition": {
-      "biomes": [
-        "minecraft:the_end",
-        "minecraft:end_barrens",
-        "minecraft:end_highlands",
-        "minecraft:end_midlands",
-        "minecraft:small_end_islands"
-      ]
-    }
-  },
-  {
     "id": "mythsandlegends-jirachi-1",
     "pokemon": "jirachi",
     "presets": [
@@ -1068,7 +1047,7 @@ export const RAW_SPAWN_DATA = {
     "type": "pokemon",
     "context": "grounded",
     "bucket": "summons",
-    "level": "68-.72",
+    "level": "68-72",
     "weight": 3,
     "condition": {
       "biomes": [
@@ -1445,44 +1424,6 @@ export const RAW_SPAWN_DATA = {
   },
   {
     "id": "mythsandlegends-magearna-2",
-    "pokemon": "magearna",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "ultra-rare",
-    "level": "50",
-    "weight": 0.3,
-    "condition": {
-      "biomes": [
-        "minecraft:the_end",
-        "minecraft:end_barrens",
-        "minecraft:end_highlands",
-        "minecraft:end_midlands",
-        "minecraft:small_end_islands"
-      ]
-    }
-  },
-  {
-    "id": "mythsandlegends-magearna-3",
-    "pokemon": "magearna",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "ultra-rare",
-    "level": "50",
-    "weight": 0.3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_deep_dark"
-      ]
-    }
-  },
-  {
-    "id": "mythsandlegends-magearna-4",
     "pokemon": "magearna",
     "presets": [
       "natural"
@@ -3194,14 +3135,8 @@ export const RAW_SPAWN_DATA = {
     "weight": 3,
     "condition": {
       "biomes": [
-        "#minecraft:is_mountain",
-        "#cobblemon:is_hills",
-        "#forge:is_mountain",
-        "terralith:stony_spires",
-        "terralith:volcanic_peaks",
-        "terralith:windswept_spires",
-        "terralith:yosemite_cliffs",
-        "wythers:tibesti_mountains"
+        "#minecraft:is_forest",
+        "#cobblemon:is_grassland"
       ],
       "key_item": "myths_and_legends:grassland_blade"
     }
@@ -3219,13 +3154,16 @@ export const RAW_SPAWN_DATA = {
     "weight": 0.3,
     "condition": {
       "biomes": [
-        "minecraft:crimson_forest"
+        "#cobblemon:is_volcanic",
+        "#cobblemon:is_thermal",
+        "minecraft:basalt_deltas",
+        "minecraft:nether_wastes"
       ]
     }
   },
   {
-    "id": "mythsandlegends-volcanion-2",
-    "pokemon": "volcanion",
+    "id": "mythsandlegends-zarude-1",
+    "pokemon": "zarude",
     "presets": [
       "natural"
     ],
@@ -3236,7 +3174,48 @@ export const RAW_SPAWN_DATA = {
     "weight": 0.3,
     "condition": {
       "biomes": [
-        "#cobblemon:is_volcanic"
+        "minecraft:jungle",
+        "minecraft:bamboo_jungle",
+        "minecraft:dark_forest"
+      ]
+    }
+  },
+  {
+    "id": "mythsandlegends-zeraora-1",
+    "pokemon": "zeraora",
+    "presets": [
+      "natural"
+    ],
+    "type": "pokemon",
+    "context": "grounded",
+    "bucket": "ultra-rare",
+    "level": "70",
+    "weight": 0.3,
+    "condition": {
+      "biomes": [
+        "minecraft:savanna",
+        "minecraft:savanna_plateau",
+        "#cobblemon:is_savanna"
+      ],
+      "isThundering": true
+    }
+  },
+  {
+    "id": "mythsandlegends-manaphy-1",
+    "pokemon": "manaphy",
+    "presets": [
+      "water_surface"
+    ],
+    "type": "pokemon",
+    "context": "submerged",
+    "bucket": "ultra-rare",
+    "level": "20",
+    "weight": 0.3,
+    "condition": {
+      "biomes": [
+        "minecraft:warm_ocean",
+        "minecraft:lukewarm_ocean",
+        "#cobblemon:is_ocean"
       ]
     }
   },
@@ -3249,35 +3228,15 @@ export const RAW_SPAWN_DATA = {
     "type": "pokemon",
     "context": "grounded",
     "bucket": "summons",
-    "level": "50",
+    "level": "70",
     "weight": 3,
     "condition": {
       "biomes": [
+        "minecraft:dark_forest",
         "minecraft:flower_forest",
-        "minecraft:forest",
-        "minecraft:meadow"
+        "#cobblemon:is_magical"
       ],
-      "key_item": "myths_and_legends:sapling_of_life"
-    }
-  },
-  {
-    "id": "mythsandlegends-xerneas-2",
-    "pokemon": "xerneas",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_forest",
-        "#cobblemon:is_magical",
-        "#cobblemon:is_floral"
-      ],
-      "key_item": "myths_and_legends:sapling_of_life"
+      "key_item": "myths_and_legends:x_crystal"
     }
   },
   {
@@ -3289,33 +3248,15 @@ export const RAW_SPAWN_DATA = {
     "type": "pokemon",
     "context": "grounded",
     "bucket": "summons",
-    "level": "50",
+    "level": "70",
     "weight": 3,
     "condition": {
       "biomes": [
         "minecraft:dark_forest",
+        "#cobblemon:is_spooky",
         "minecraft:swamp"
       ],
-      "key_item": "myths_and_legends:cocoon_of_destruction"
-    }
-  },
-  {
-    "id": "mythsandlegends-yveltal-2",
-    "pokemon": "yveltal",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_spooky",
-        "#cobblemon:is_tundra"
-      ],
-      "key_item": "myths_and_legends:cocoon_of_destruction"
+      "key_item": "myths_and_legends:y_crystal"
     }
   },
   {
@@ -3331,29 +3272,11 @@ export const RAW_SPAWN_DATA = {
     "weight": 3,
     "condition": {
       "biomes": [
+        "minecraft:forest",
         "minecraft:flower_forest",
-        "minecraft:meadow"
+        "minecraft:birch_forest"
       ],
-      "key_item": "myths_and_legends:rusted_sword"
-    }
-  },
-  {
-    "id": "mythsandlegends-zacian-2",
-    "pokemon": "zacian",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "70",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_magical",
-        "#cobblemon:is_forest",
-        "#cobblemon:is_highlands"
-      ],
+      "timeRange": "day",
       "key_item": "myths_and_legends:rusted_sword"
     }
   },
@@ -3370,308 +3293,12 @@ export const RAW_SPAWN_DATA = {
     "weight": 3,
     "condition": {
       "biomes": [
-        "minecraft:taiga",
-        "minecraft:windswept_forest"
-      ],
-      "key_item": "myths_and_legends:rusted_shield"
-    }
-  },
-  {
-    "id": "mythsandlegends-zamazenta-2",
-    "pokemon": "zamazenta",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "70",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_plateau",
-        "#cobblemon:is_savanna",
-        "#cobblemon:is_highlands"
-      ],
-      "key_item": "myths_and_legends:rusted_shield"
-    }
-  },
-  {
-    "id": "mythsandlegends-zapdos-1",
-    "pokemon": "zapdos",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50-60",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "minecraft:plains",
-        "minecraft:savanna"
-      ],
-      "key_item": "myths_and_legends:tidal_bell_zapdos"
-    }
-  },
-  {
-    "id": "mythsandlegends-zapdos-2",
-    "pokemon": "zapdos",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50-60",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_sky",
-        "#cobblemon:is_mountain"
-      ],
-      "key_item": "myths_and_legends:tidal_bell_zapdos"
-    }
-  },
-  {
-    "id": "mythsandlegends-zarude-1",
-    "pokemon": "zarude",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "ultra-rare",
-    "level": "70",
-    "weight": 0.3,
-    "condition": {
-      "biomes": [
-        "wythers:subtropical_forest_edge",
-        "wythers:tropical_grassland",
-        "wythers:humid_tropical_grassland",
-        "wythers:tropical_island",
-        "#minecraft:is_jungle",
-        "terralith:cave/underground_jungle",
-        "wythers:subtropical_forest",
-        "wythers:tropical_forest_canyon",
-        "wythers:tropical_rainforest",
-        "wythers:highland_tropical_rainforest",
-        "wythers:dripleaf_swamp",
-        "wythers:subtropical_grassland",
-        "wythers:jungle_canyon",
-        "wythers:eucalyptus_deanei_forest",
-        "wythers:tropical_forest"
-      ]
-    }
-  },
-  {
-    "id": "mythsandlegends-zekrom-1",
-    "pokemon": "zekrom",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "60-70",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "minecraft:swamp",
-        "minecraft:dark_forest",
-        "minecraft:roofed_forest"
-      ],
-      "minLight": 0,
-      "maxLight": 7,
-      "key_item": "myths_and_legends:dark_stone"
-    }
-  },
-  {
-    "id": "mythsandlegends-zeraora-1",
-    "pokemon": "zeraora",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "ultra-rare",
-    "level": "70",
-    "weight": 0.3,
-    "condition": {
-      "biomes": [
-        "#minecraft:is_savanna",
-        "terralith:arid_highlands",
-        "terralith:ashen_savanna",
-        "terralith:brushland",
-        "terralith:desert_oasis",
-        "terralith:fractured_savanna",
-        "terralith:hot_shrubland",
-        "terralith:red_oasis",
-        "terralith:savanna_badlands",
-        "terralith:savanna_slopes",
-        "terralith:shrubland",
-        "wythers:granite_canyon",
-        "wythers:tropical_forest_canyon",
-        "wythers:tropical_forest"
-      ]
-    }
-  },
-  {
-    "id": "mythsandlegends-zygarde-1",
-    "pokemon": "zygarde",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "70",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "minecraft:birch_forest",
         "minecraft:forest",
-        "minecraft:jungle",
-        "minecraft:mangrove_swamp",
-        "minecraft:swamp"
+        "minecraft:dark_forest",
+        "minecraft:old_growth_pine_taiga"
       ],
-      "key_item": "myths_and_legends:zygarde_cube"
-    }
-  },
-  {
-    "id": "mythsandlegends-zygarde-2",
-    "pokemon": "zygarde",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "70",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_forest",
-        "#cobblemon:is_cave",
-        "#cobblemon:is_swamp"
-      ],
-      "key_item": "myths_and_legends:zygarde_cube"
-    }
-  },
-  {
-    "id": "mythsandlegends-zygarde-3",
-    "pokemon": "zygarde",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "70",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_forest",
-        "#cobblemon:is_cave",
-        "#cobblemon:is_swamp"
-      ],
-      "key_item": "myths_and_legends:zygarde_cell"
-    }
-  },
-  {
-    "id": "mythsandlegends-zygarde-4",
-    "pokemon": "zygarde",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "70",
-    "weight": 3,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_forest",
-        "#cobblemon:is_cave",
-        "#cobblemon:is_swamp"
-      ],
-      "key_item": "myths_and_legends:zygarde_core"
-    }
-  },
-  {
-    "id": "chienpao-1",
-    "pokemon": "chienpao",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50-60",
-    "weight": 3.0,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_freezing"
-      ],
-      "key_item": "academy:sword_of_ruin"
-    }
-  },
-  {
-    "id": "chiyu-1",
-    "pokemon": "chiyu",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50-60",
-    "weight": 3.0,
-    "condition": {
-      "biomes": [
-        "minecraft:soul_sand_valley",
-        "regions_unexplored:infernal_holt",
-        "#cobblemon:is_volcanic"
-      ],
-      "key_item": "academy:beads_of_ruin"
-    }
-  },
-  {
-    "id": "tinglu-1",
-    "pokemon": "tinglu",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50-60",
-    "weight": 3.0,
-    "condition": {
-      "biomes": [
-        "#cobblemon:is_swamp"
-      ],
-      "key_item": "academy:vessel_of_ruin"
-    }
-  },
-  {
-    "id": "wochien-1",
-    "pokemon": "wochien",
-    "presets": [
-      "natural"
-    ],
-    "type": "pokemon",
-    "context": "grounded",
-    "bucket": "summons",
-    "level": "50-60",
-    "weight": 3.0,
-    "condition": {
-      "biomes": [
-        "minecraft:old_growth_spruce_taiga",
-        "regions_unexplored:redwoods"
-      ],
-      "key_item": "academy:tablets_of_ruin"
+      "timeRange": "night",
+      "key_item": "myths_and_legends:rusted_shield"
     }
   }
 ]

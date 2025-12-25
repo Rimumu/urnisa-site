@@ -418,8 +418,9 @@ const Bingo: React.FC = () => {
                     }
 
                     // Add Biome from Column H (Index 7)
+                    // Check strict logic: don't add "None"
                     const biomeRaw = cols[7];
-                    if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.toLowerCase() !== 'none' && biomeRaw.trim() !== '') {
+                    if (biomeRaw && biomeRaw !== '#N/A' && biomeRaw.trim().toLowerCase() !== 'none' && biomeRaw.trim() !== '') {
                         const parts = biomeRaw.split(/[,/&]/);
                         
                         parts.forEach(part => {

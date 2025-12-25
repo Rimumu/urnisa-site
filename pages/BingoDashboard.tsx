@@ -388,7 +388,7 @@ const BingoDashboard: React.FC = () => {
                         id: entry.id,
                         name: entry.name,
                         rarity: entry.rarity,
-                        spawns: []
+                        spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
                     }));
                 };
 
@@ -424,7 +424,7 @@ const BingoDashboard: React.FC = () => {
                         [tempPool[i], tempPool[j]] = [tempPool[j], tempPool[i]];
                     }
                     selected = tempPool.slice(0, 24).map(entry => ({
-                        id: entry.id, name: entry.name, rarity: entry.rarity, spawns: []
+                        id: entry.id, name: entry.name, rarity: entry.rarity, spawns: Array.from(entry.spawns).sort().length > 0 ? Array.from(entry.spawns).sort() : ["Unknown Location"]
                     }));
                 }
 
