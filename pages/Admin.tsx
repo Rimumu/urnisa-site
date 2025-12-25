@@ -1714,43 +1714,45 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     />
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm text-gray-400">
-                                        <thead className="text-xs uppercase bg-white/5 text-gray-200">
-                                            <tr>
-                                                <th className="px-4 py-3 rounded-tl-lg">User</th>
-                                                <th className="px-4 py-3">Approved</th>
-                                                <th className="px-4 py-3 rounded-tr-lg text-right">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredApprovedApps.map((app) => (
-                                                <tr key={app._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                                    <td className="px-4 py-3">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="relative w-10 h-10 shrink-0">
-                                                                <img src={app.discordAvatar} className="w-10 h-10 rounded-full border-2 border-white/10 object-cover" />
-                                                                <div className="absolute -bottom-1 -right-1 bg-[#1a0b0e] rounded-md p-0.5 border border-white/10 shadow-sm">
-                                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/16`} className="w-4 h-4 object-contain" />
+                                <div className="rounded-xl border border-white/5 overflow-hidden">
+                                    <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                                        <table className="w-full text-left text-sm text-gray-400 relative">
+                                            <thead className="text-xs uppercase bg-[#2d1216] text-gray-200 sticky top-0 z-10 shadow-sm">
+                                                <tr>
+                                                    <th className="px-4 py-3">User</th>
+                                                    <th className="px-4 py-3">Approved</th>
+                                                    <th className="px-4 py-3 text-right">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5 bg-black/20">
+                                                {filteredApprovedApps.map((app) => (
+                                                    <tr key={app._id} className="hover:bg-white/5 transition-colors">
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="relative w-10 h-10 shrink-0">
+                                                                    <img src={app.discordAvatar} className="w-10 h-10 rounded-full border-2 border-white/10 object-cover" />
+                                                                    <div className="absolute -bottom-1 -right-1 bg-[#1a0b0e] rounded-md p-0.5 border border-white/10 shadow-sm">
+                                                                        <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/16`} className="w-4 h-4 object-contain" />
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex flex-col min-w-0">
+                                                                    <span className="font-bold text-white text-sm truncate">{app.discordUsername}</span>
+                                                                    <span className="font-mono text-xs text-brand-primary truncate">{app.minecraftUsername}</span>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex flex-col min-w-0">
-                                                                <span className="font-bold text-white text-sm truncate">{app.discordUsername}</span>
-                                                                <span className="font-mono text-xs text-brand-primary truncate">{app.minecraftUsername}</span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-xs">{app.approvedAt ? new Date(app.approvedAt).toLocaleDateString() : '-'}</td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white hover:bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">REVOKE</button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                            {filteredApprovedApps.length === 0 && (
-                                                <tr><td colSpan={3} className="text-center py-8">No users found.</td></tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-xs">{app.approvedAt ? new Date(app.approvedAt).toLocaleDateString() : '-'}</td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white hover:bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">REVOKE</button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {filteredApprovedApps.length === 0 && (
+                                                    <tr><td colSpan={3} className="text-center py-8">No users found.</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                             
