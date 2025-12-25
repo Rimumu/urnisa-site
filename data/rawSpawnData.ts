@@ -1552,7 +1552,20 @@ export const RAW_SPAWN_DATA = {
     "weight": 0.3,
     "condition": {
       "biomes": [
-        "none"
+        "wythers:autumnal_flower_forest",
+        "terralith:sakura_valley",
+        "#c:floral",
+        "terralith:lavender_valley",
+        "wythers:flowering_pantanal",
+        "minecraft:cherry_grove",
+        "wythers:sakura_forest",
+        "minecraft:flower_forest",
+        "wythers:spring_flower_fields",
+        "minecraft:sunflower_plains",
+        "terralith:blooming_valley",
+        "#c:flower_forests",
+        "minecraft:meadow",
+        "terralith:sakura_grove"
       ]
     }
   },
@@ -3434,7 +3447,21 @@ export const RAW_SPAWN_DATA = {
     "weight": 0.3,
     "condition": {
       "biomes": [
-        "none"
+        "wythers:subtropical_forest_edge",
+        "wythers:tropical_grassland",
+        "wythers:humid_tropical_grassland",
+        "wythers:tropical_island",
+        "#minecraft:is_jungle",
+        "terralith:cave/underground_jungle",
+        "wythers:subtropical_forest",
+        "wythers:tropical_forest_canyon",
+        "wythers:tropical_rainforest",
+        "wythers:highland_tropical_rainforest",
+        "wythers:dripleaf_swamp",
+        "wythers:subtropical_grassland",
+        "wythers:jungle_canyon",
+        "wythers:eucalyptus_deanei_forest",
+        "wythers:tropical_forest"
       ]
     }
   },
