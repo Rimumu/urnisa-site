@@ -728,48 +728,65 @@ const BingoDashboard: React.FC = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {winners.map((winner, index) => (
-                                <div key={winner._id} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-5 flex items-center gap-5 shadow-lg group hover:border-brand-primary/40 transition-all hover:-translate-y-1">
-                                    {/* Rank */}
-                                    <div className="text-3xl font-black text-white/10 absolute top-2 right-4 pointer-events-none group-hover:text-brand-primary/20 transition-colors">
-                                        #{index + 1}
-                                    </div>
-
-                                    {/* Avatars */}
-                                    <div className="relative shrink-0">
-                                        <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg relative bg-black/50">
-                                            {/* Discord Avatar Layer */}
-                                            <img 
-                                                src={winner.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
-                                                alt="Discord" 
-                                                className="w-full h-full object-cover"
-                                            />
-                                            {/* MC Head Overlay */}
-                                            <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg border border-black shadow-md overflow-hidden bg-black">
+                                <div key={winner._id} className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-lg group hover:border-brand-primary/40 transition-all hover:-translate-y-1 h-full">
+                                    
+                                    {/* Top Row: Avatar + Name + Lines */}
+                                    <div className="flex items-start gap-4">
+                                        {/* Avatar Cluster */}
+                                        <div className="relative shrink-0">
+                                            {/* Main: Minecraft (Big Head) */}
+                                            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg bg-black relative">
                                                 <img 
-                                                    src={`https://mc-heads.net/avatar/${winner.minecraftUsername}/32`} 
+                                                    src={`https://mc-heads.net/avatar/${winner.minecraftUsername}/128`} 
                                                     alt="MC" 
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>
+                                            
+                                            {/* Secondary: Discord (Small Circle Bottom Right) */}
+                                            <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-2 border-[#1a0b0e] shadow-md overflow-hidden bg-[#5865F2]">
+                                                <img 
+                                                    src={winner.discordAvatar || "https://cdn.discordapp.com/embed/avatars/0.png"} 
+                                                    alt="Discord" 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* User Info */}
+                                        <div className="flex-1 flex flex-col justify-center min-h-[5rem]">
+                                            {/* Full Username - No Truncate */}
+                                            <div className="font-black text-white text-xl leading-tight mb-2 break-all">
+                                                {winner.minecraftUsername}
+                                            </div>
+                                            
+                                            <div className="flex flex-wrap gap-2 text-xs">
+                                                <span className="bg-brand-primary/20 text-brand-primary border border-brand-primary/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                                                    {winner.linesCompleted} Line{winner.linesCompleted !== 1 ? 's' : ''}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0 flex flex-col gap-1">
-                                        <div className="font-black text-white text-lg truncate" title={winner.minecraftUsername}>
-                                            {winner.minecraftUsername}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                                            <span className="bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded font-bold">
-                                                {winner.linesCompleted} Line{winner.linesCompleted !== 1 ? 's' : ''}
+                                    {/* Divider */}
+                                    <div className="h-px bg-white/5 w-full"></div>
+
+                                    {/* Bottom Row: Card Code + Date + Preview */}
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Bingo Card</span>
+                                            <div className="font-mono font-bold text-white text-lg bg-black/40 px-3 py-1 rounded border border-white/5 tracking-wider select-all w-fit">
+                                                {winner.cardId}
+                                            </div>
+                                            <span className="text-[10px] text-gray-600 mt-1">
+                                                Completed: {new Date(winner.completedAt).toLocaleDateString()}
                                             </span>
-                                            <span>• {new Date(winner.completedAt).toLocaleDateString()}</span>
                                         </div>
-                                    </div>
 
-                                    {/* Card Preview */}
-                                    <div className="shrink-0">
-                                        <MiniCardPreview cardId={winner.cardId} />
+                                        {/* Card Preview */}
+                                        <div className="shrink-0">
+                                            <MiniCardPreview cardId={winner.cardId} />
+                                        </div>
                                     </div>
                                 </div>
                             ))}
