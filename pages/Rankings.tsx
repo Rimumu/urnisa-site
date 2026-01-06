@@ -3,9 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../constants';
 
+// --- ICONS ---
+
+const DragonIcon = () => (
+    <svg viewBox="0 0 512 512" fill="currentColor" className="w-[1.1em] h-[1.1em] inline-block align-sub -mt-1">
+        <path d="M144 32C64.5 32 0 96.5 0 176c0 44.2 17.9 86.2 49.3 117.5c2.3 2.3 2.9 5.8 1.6 8.8C42.8 322.9 32 355.7 32 392c0 61.9 50.1 112 112 112s112-50.1 112-112c0-11-1.7-21.7-4.8-31.9c-1.7-5.5 2.4-11.2 8.2-11.2h32.6c13.1 0 24.8 8.1 29.5 20.3C337.3 408.9 373.1 432 416 432c61.9 0 112-50.1 112-112V237.3c0-42.4-16.9-83.1-46.9-113.1l-6.2-6.2c-29.9-29.9-70.5-46.7-112.9-46.7H352v-8c0-13.3-10.7-24-24-24H280c-13.3 0-24 10.7-24 24v8h-8c-13.3 0-24 10.7-24 24v16H184V104c0-13.3-10.7-24-24-24H120c-13.3 0-24 10.7-24 24v16H88c-13.3 0-24 10.7-24 24v12.3c-14.7 13.9-24 33.3-24 55.7c0 42 32.2 76 72 76H320c22.1 0 40-17.9 40-40s-17.9-40-40-40H224c-13.3 0-24-10.7-24-24s10.7-24 24-24h12.5c22.7 0 44.2-10.7 57.5-29.2L320 64h42c21.2 0 41.5 8.4 56.5 23.4l6.2 6.2c15 15 23.4 35.3 23.4 56.5v82c0 26.5-21.5 48-48 48c-26.5 0-48-21.5-48-48V216c0-13.3-10.7-24-24-24H256c-13.3 0-24 10.7-24 24v32H192V232c0-13.3-10.7-24-24-24H128c-13.3 0-24 10.7-24 24v16H96c-17.7 0-32 14.3-32 32c0 17.7 14.3 32 32 32H336c8.8 0 16 7.2 16 16s-7.2 16-16 16H80c-26.5 0-48-21.5-48-48c0-26.5 21.5-48 48-48h16v-8.3C96 161.3 121.3 136 152 136H320c39.8 0 72 32.2 72 72s-32.2 72-72 72H168c-13.3 0-24 10.7-24 24s10.7 24 24 24H336c39.8 0 72-32.2 72-72s-32.2-72-72-72H152c-66.3 0-120-53.7-120-120s53.7-120 120-120h48c13.3 0 24-10.7 24-24s-10.7-24-24-24H144z"/>
+    </svg>
+);
+
 // --- CONSTANTS & STYLES ---
 
-const TIER_STYLES: Record<string, { bg: string; text: string; border: string; glow: string; icon: string }> = {
+const TIER_STYLES: Record<string, { bg: string; text: string; border: string; glow: string; icon: React.ReactNode }> = {
     DIRT: { 
         bg: 'bg-[#2a2522]', 
         text: 'text-[#a8a29e]', 
@@ -53,7 +61,7 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
         text: 'text-pink-400', 
         border: 'border-pink-600', 
         glow: 'shadow-[0_0_25px_rgba(236,72,153,0.6)]', 
-        icon: '◆' 
+        icon: <DragonIcon />
     },
     ETERNAL: { 
         bg: 'bg-[#450a0a]', 
