@@ -11,14 +11,14 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
         text: 'text-[#a8a29e]', 
         border: 'border-[#44403c]', 
         glow: '', 
-        icon: '🪨' 
+        icon: '🟤' 
     },
     CASUAL: { 
         bg: 'bg-gray-800', 
         text: 'text-gray-300', 
         border: 'border-gray-600', 
         glow: '', 
-        icon: '🌱' 
+        icon: '⚪' 
     },
     OMEGA: { 
         bg: 'bg-emerald-950', 
@@ -46,14 +46,14 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
         text: 'text-yellow-400', 
         border: 'border-yellow-600', 
         glow: 'shadow-[0_0_20px_rgba(234,179,8,0.5)]', 
-        icon: '🏆' 
+        icon: '⭐' 
     },
     MYTHIC: { 
         bg: 'bg-pink-950', 
         text: 'text-pink-400', 
         border: 'border-pink-600', 
         glow: 'shadow-[0_0_25px_rgba(236,72,153,0.6)]', 
-        icon: '🔮' 
+        icon: '💠' 
     },
     ETERNAL: { 
         bg: 'bg-[#450a0a]', 
