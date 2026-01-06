@@ -19,6 +19,7 @@ import Inventory from './pages/Inventory';
 import Redeem from './pages/Redeem';
 import About from './pages/About';
 import Admin from './pages/Admin';
+import Rankings from './pages/Rankings';
 import Overlay from './pages/Overlay';
 import TimerWidget from './pages/overlays/TimerWidget';
 import GoalWidget from './pages/overlays/GoalWidget';
@@ -35,7 +36,7 @@ import ScrollToTop from './components/ScrollToTop';
 const MainLayout: React.FC = () => {
   const [showCapybara, setShowCapybara] = useState(false);
   const location = useLocation();
-  
+
   const triggerEasterEgg = () => {
     setShowCapybara(true);
   };
@@ -50,7 +51,7 @@ const MainLayout: React.FC = () => {
       </main>
       <Footer />
       <ScrollToTopButton />
-      <CapybaraEasterEgg 
+      <CapybaraEasterEgg
         isVisible={showCapybara}
         onClose={() => setShowCapybara(false)}
       />
@@ -72,28 +73,29 @@ const App: React.FC = () => {
 
         {/* 2. MAIN WEBSITE ROUTES (Wrapped in Layout) */}
         <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/nisathon" element={<Subathon />} />
-            <Route path="/nisathon/wheel" element={<Wheel />} />
-            <Route path="/minecraft" element={<Minecraft />} />
-            <Route path="/minecraft/gacha" element={<Gacha />} />
-            <Route path="/minecraft/tournament" element={<Tournament />} />
-            {/* Dev Routes */}
-            <Route path="/dev/gacha" element={<GachaDev />} />
-            <Route path="/dev/tournament" element={<TournamentDev />} />
-            <Route path="/dev/admintournament" element={<AdminTournamentDev />} />
-            {/* Prod Admin Routes */}
-            <Route path="/admin/tournament" element={<AdminTournament />} />
-            
-            <Route path="/minecraft/bingo" element={<BingoDashboard />} />
-            <Route path="/minecraft/bingo/card" element={<Bingo />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/redeem" element={<Redeem />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/admin" element={<Admin />} />
-            
-            {/* 404 Fallback - Redirects unknown paths to Home */}
-            <Route path="*" element={<Home />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/nisathon" element={<Subathon />} />
+          <Route path="/nisathon/wheel" element={<Wheel />} />
+          <Route path="/minecraft" element={<Minecraft />} />
+          <Route path="/minecraft/gacha" element={<Gacha />} />
+          <Route path="/minecraft/tournament" element={<Tournament />} />
+          <Route path="/minecraft/rankings" element={<Rankings />} />
+          {/* Dev Routes */}
+          <Route path="/dev/gacha" element={<GachaDev />} />
+          <Route path="/dev/tournament" element={<TournamentDev />} />
+          <Route path="/dev/admintournament" element={<AdminTournamentDev />} />
+          {/* Prod Admin Routes */}
+          <Route path="/admin/tournament" element={<AdminTournament />} />
+
+          <Route path="/minecraft/bingo" element={<BingoDashboard />} />
+          <Route path="/minecraft/bingo/card" element={<Bingo />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/redeem" element={<Redeem />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/admin" element={<Admin />} />
+
+          {/* 404 Fallback - Redirects unknown paths to Home */}
+          <Route path="*" element={<Home />} />
         </Route>
       </Routes>
     </div>
