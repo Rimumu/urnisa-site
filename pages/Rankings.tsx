@@ -53,7 +53,7 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
         text: 'text-pink-400', 
         border: 'border-pink-600', 
         glow: 'shadow-[0_0_25px_rgba(236,72,153,0.6)]', 
-        icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-[1.1em] h-[1.1em] inline-block align-sub"><circle cx="12" cy="12" r="10" /></svg>
+        icon: '●' 
     },
     ETERNAL: { 
         bg: 'bg-[#450a0a]', 
@@ -373,7 +373,7 @@ const Rankings: React.FC = () => {
                                     </div>
                                 ) : players.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                                        <div className="text-4xl mb-2">🌱</div>
+                                        <div className="text-4xl mb-2">🏆</div>
                                         <div className="font-bold">No ranked players yet.</div>
                                         <div className="text-sm">Be the first to battle!</div>
                                     </div>
