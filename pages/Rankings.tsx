@@ -53,7 +53,7 @@ const TIER_STYLES: Record<string, { bg: string; text: string; border: string; gl
         text: 'text-pink-400', 
         border: 'border-pink-600', 
         glow: 'shadow-[0_0_25px_rgba(236,72,153,0.6)]', 
-        icon: '💠' 
+        icon: '◆' 
     },
     ETERNAL: { 
         bg: 'bg-[#450a0a]', 
