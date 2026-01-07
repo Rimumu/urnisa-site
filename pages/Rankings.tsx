@@ -1,67 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { API_BASE_URL } from '../constants';
 
-// --- CONSTANTS & STYLES ---
+// API Base URL
+const API_BASE = import.meta.env.VITE_API_URL || 'https://urnisa-backend-21ls.onrender.com';
 
-const TIER_STYLES: Record<string, { bg: string; text: string; border: string; glow: string; icon: React.ReactNode }> = {
-    DIRT: { 
-        bg: 'bg-[#2a2522]', 
-        text: 'text-[#a8a29e]', 
-        border: 'border-[#44403c]', 
-        glow: '', 
-        icon: '🟤' 
-    },
-    CASUAL: { 
-        bg: 'bg-gray-800', 
-        text: 'text-gray-300', 
-        border: 'border-gray-600', 
-        glow: '', 
-        icon: '⚪' 
-    },
-    OMEGA: { 
-        bg: 'bg-emerald-950', 
-        text: 'text-emerald-400', 
-        border: 'border-emerald-600', 
-        glow: 'shadow-[0_0_10px_rgba(16,185,129,0.3)]', 
-        icon: '🟢' 
-    },
-    BETA: { 
-        bg: 'bg-blue-950', 
-        text: 'text-blue-400', 
-        border: 'border-blue-600', 
-        glow: 'shadow-[0_0_10px_rgba(59,130,246,0.3)]', 
-        icon: '🔵' 
-    },
-    ALPHA: { 
-        bg: 'bg-purple-950', 
-        text: 'text-purple-400', 
-        border: 'border-purple-600', 
-        glow: 'shadow-[0_0_15px_rgba(147,51,234,0.4)]', 
-        icon: '🟣' 
-    },
-    LEGENDARY: { 
-        bg: 'bg-yellow-950', 
-        text: 'text-yellow-400', 
-        border: 'border-yellow-600', 
-        glow: 'shadow-[0_0_20px_rgba(234,179,8,0.5)]', 
-        icon: '🟡' 
-    },
-    MYTHIC: { 
-        bg: 'bg-pink-950', 
-        text: 'text-pink-400', 
-        border: 'border-pink-600', 
-        glow: 'shadow-[0_0_25px_rgba(236,72,153,0.6)]', 
-        icon: '●' 
-    },
-    ETERNAL: { 
-        bg: 'bg-[#450a0a]', 
-        text: 'text-red-500', 
-        border: 'border-red-600', 
-        glow: 'shadow-[0_0_30px_rgba(239,68,68,0.7)] animate-pulse', 
-        icon: '👹' 
-    },
+// Tier colors and styles
+const TIER_STYLES: Record<string, { bg: string; text: string; border: string; glow: string }> = {
+    UNRANKED: { bg: 'bg-gray-900', text: 'text-gray-500', border: 'border-gray-700', glow: '' },
+    DIRT: { bg: 'bg-amber-900/50', text: 'text-amber-600', border: 'border-amber-700', glow: '' },
+    CASUAL: { bg: 'bg-gray-700', text: 'text-gray-300', border: 'border-gray-500', glow: '' },
+    OMEGA: { bg: 'bg-green-900/50', text: 'text-green-400', border: 'border-green-500', glow: 'shadow-green-500/20' },
+    BETA: { bg: 'bg-blue-900/50', text: 'text-blue-400', border: 'border-blue-500', glow: 'shadow-blue-500/20' },
+    ALPHA: { bg: 'bg-purple-900/50', text: 'text-purple-400', border: 'border-purple-500', glow: 'shadow-purple-500/20' },
+    LEGENDARY: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', border: 'border-yellow-500', glow: 'shadow-yellow-500/30' },
+    MYTHIC: { bg: 'bg-pink-900/50', text: 'text-pink-400', border: 'border-pink-500', glow: 'shadow-pink-500/30' },
+    ETERNAL: { bg: 'bg-red-900/50', text: 'text-red-400', border: 'border-red-500', glow: 'shadow-red-500/40 shadow-lg' },
 };
 
 interface Player {
@@ -76,8 +28,13 @@ interface Player {
     winRate: number;
     winStreak: number;
     bestWinStreak: number;
-    totalKOs?: number;
-    totalDeaths?: number;
+}
+
+interface PokemonInfo {
+    species: string;
+    nickname?: string;
+    level: number;
+    fainted: boolean;
 }
 
 interface MatchHistory {
@@ -86,144 +43,280 @@ interface MatchHistory {
     opponent: string;
     opponentUuid: string;
     eloChange: number;
+    eloBefore: number;
+    eloAfter: number;
+    battleType: string;
+    endReason: string;
+    pokemonAlive: number;
+    pokemonTotal: number;
+    date: string;
+}
+
+interface MatchDetail {
+    id: string;
+    winner: {
+        uuid: string;
+        name: string;
+        eloChange: number;
+        eloBefore: number;
+        eloAfter: number;
+        pokemonAlive: number;
+        pokemonTotal: number;
+        kos: number;
+        pokemon: PokemonInfo[];
+    };
+    loser: {
+        uuid: string;
+        name: string;
+        eloChange: number;
+        eloBefore: number;
+        eloAfter: number;
+        pokemonAlive: number;
+        pokemonTotal: number;
+        kos: number;
+        pokemon: PokemonInfo[];
+    };
     battleType: string;
     endReason: string;
     date: string;
 }
 
-// --- COMPONENTS ---
+interface MatchHistoryResponse {
+    matches: MatchHistory[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+}
 
-const TierBadge: React.FC<{ tier: string; size?: 'sm' | 'md' | 'lg' }> = ({ tier, size = 'md' }) => {
-    const styles = TIER_STYLES[tier] || TIER_STYLES.DIRT;
-    const sizeClasses = {
-        sm: 'text-[10px] px-2 py-0.5',
-        md: 'text-xs px-3 py-1',
-        lg: 'text-sm px-4 py-1.5'
+// Pokemon Sprite Component with Cobblemon -> PokeAPI fallback
+const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
+    const [imgSrc, setImgSrc] = useState<string>('');
+
+    const getFormattedName = (name: string) => {
+        return name.toLowerCase()
+            .replace(/[.']/g, '')
+            .replace(/♀/g, '-f')
+            .replace(/♂/g, '-m')
+            .replace(/\s+/g, '-');
+    };
+
+    useEffect(() => {
+        const cobbleName = getFormattedName(pokemon.species);
+        // Try Cobblemon tools first
+        setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`);
+    }, [pokemon.species]);
+
+    const handleImageError = () => {
+        const cobbleName = getFormattedName(pokemon.species);
+        if (imgSrc.includes('cobblemon.tools')) {
+            // Fallback to PokeAPI Home (3D) sprites - need to get Pokemon ID
+            // Use a generic approach with species name
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${cobbleName}.png`);
+        } else if (imgSrc.includes('other/home')) {
+            // Try official artwork
+            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${cobbleName}.png`);
+        } else if (imgSrc.includes('official-artwork')) {
+            // Try basic sprite by name (won't work, but as last resort)
+            setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`);
+        } else {
+            // Final fallback - placeholder
+            setImgSrc(`https://via.placeholder.com/64x64/1a1a1a/666666?text=${encodeURIComponent(pokemon.species.substring(0, 3))}`);
+        }
     };
 
     return (
-        <span className={`
-            ${styles.bg} ${styles.text} ${styles.border} ${styles.glow} 
-            border rounded-full ${sizeClasses[size]} font-black uppercase tracking-wider flex items-center gap-1.5 w-fit
-        `}>
-            <span>{styles.icon}</span>
-            <span>{tier}</span>
+        <div
+            className={`relative w-14 h-14 rounded-lg flex items-center justify-center transition-all ${pokemon.fainted
+                ? 'bg-red-900/50 border-2 border-red-500/50 grayscale-[50%]'
+                : 'bg-gray-800/50 border border-gray-700/50'
+                }`}
+            title={`${pokemon.nickname || pokemon.species} Lv.${pokemon.level}${pokemon.fainted ? ' (Fainted)' : ''}`}
+        >
+            <img
+                src={imgSrc}
+                alt={pokemon.species}
+                className={`w-12 h-12 object-contain transition-all ${pokemon.fainted ? 'opacity-60' : ''}`}
+                onError={handleImageError}
+            />
+            {pokemon.fainted && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-red-400 text-xl font-bold opacity-80">✕</span>
+                </div>
+            )}
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] bg-black/80 px-1 rounded text-gray-400">
+                {pokemon.level}
+            </div>
+        </div>
+    );
+};
+
+
+const TierBadge: React.FC<{ tier: string; size?: 'sm' | 'md' | 'lg' }> = ({ tier, size = 'md' }) => {
+    const styles = TIER_STYLES[tier] || TIER_STYLES.UNRANKED;
+    const sizeClasses = {
+        sm: 'text-xs px-2 py-0.5',
+        md: 'text-sm px-3 py-1',
+        lg: 'text-base px-4 py-1.5 font-bold'
+    };
+
+    return (
+        <span className={`${styles.bg} ${styles.text} ${styles.border} ${styles.glow} border rounded-full ${sizeClasses[size]} font-semibold`}>
+            {tier}
         </span>
     );
 };
 
-const PlayerModal: React.FC<{ player: Player; onClose: () => void }> = ({ player, onClose }) => {
+const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player, onClose }) => {
     const [history, setHistory] = useState<MatchHistory[]>([]);
     const [loading, setLoading] = useState(true);
-    const styles = TIER_STYLES[player.tier] || TIER_STYLES.DIRT;
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+    const styles = TIER_STYLES[player.tier] || TIER_STYLES.UNRANKED;
+
+    const onMatchSelect = (matchId: string) => {
+        setSelectedMatchId(matchId);
+    };
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/api/ranked/player/${player.uuid}/history?limit=10`)
+        setLoading(true);
+        fetch(`${API_BASE}/api/ranked/player/${player.uuid}/history?limit=10&page=${page}`)
             .then(res => res.json())
-            .then(data => {
-                setHistory(data);
+            .then((data: MatchHistoryResponse) => {
+                setHistory(data.matches || []);
+                setTotalPages(data.pagination?.totalPages || 1);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, [player.uuid]);
+    }, [player.uuid, page]);
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={onClose}>
-            <div 
-                className="bg-[#120507] w-full max-w-2xl max-h-[90vh] rounded-[2.5rem] border-2 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500"
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div
+                className={`bg-gray-900 border-2 ${styles.border} rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto ${styles.glow}`}
                 onClick={e => e.stopPropagation()}
             >
-                {/* Header Background */}
-                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-primary/10 to-transparent pointer-events-none"></div>
-
                 {/* Header */}
-                <div className="p-8 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/20 relative z-10">
-                    <div className="flex items-center gap-6">
-                        <div className="relative">
-                            <div className={`absolute inset-0 blur-xl rounded-full opacity-50 ${styles.bg}`}></div>
-                            <img 
-                                src={`https://mc-heads.net/avatar/${player.uuid}/128`} 
-                                className="w-24 h-24 rounded-[2rem] border-4 border-white/10 shadow-2xl relative z-10 bg-[#120507]" 
-                                alt={player.minecraftName} 
+                <div className={`p-6 ${styles.bg} border-b ${styles.border} rounded-t-2xl`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <img
+                                src={`https://mc-heads.net/avatar/${player.uuid}/64`}
+                                alt={player.minecraftName}
+                                className="w-16 h-16 rounded-lg border-2 border-white/20"
                             />
-                            <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 z-20">
-                                <TierBadge tier={player.tier} size="sm" />
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">{player.minecraftName}</h2>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <TierBadge tier={player.tier} size="md" />
+                                    <span className="text-gray-400">#{player.rank}</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="text-center md:text-left">
-                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-lg">{player.minecraftName}</h2>
-                            <div className="flex items-center justify-center md:justify-start gap-3 text-sm text-gray-400 font-mono">
-                                <span className="font-bold text-white">Rank #{player.rank}</span>
-                                <span>•</span>
-                                <span className="text-brand-primary font-bold">{player.elo} ELO</span>
-                            </div>
-                        </div>
+                        <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">×</button>
                     </div>
-                    <button 
-                        onClick={onClose} 
-                        className="group p-3 rounded-full bg-white/5 hover:bg-red-600 hover:text-white text-gray-400 transition-all duration-300 border border-white/10"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-black/20">
-                    <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
-                        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Win Rate</div>
-                        <div className={`text-2xl font-black ${player.winRate >= 50 ? 'text-green-400' : 'text-yellow-400'}`}>{player.winRate}%</div>
+                {/* Stats */}
+                <div className="p-6 grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                        <div className={`text-3xl font-bold ${styles.text}`}>{player.elo}</div>
+                        <div className="text-sm text-gray-400">ELO</div>
                     </div>
-                    <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
-                        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Record</div>
-                        <div className="text-xl font-bold text-white">
-                            <span className="text-green-400">{player.wins}W</span> <span className="text-gray-600">/</span> <span className="text-red-400">{player.losses}L</span>
-                        </div>
+                    <div className="text-center">
+                        <div className="text-3xl font-bold text-green-400">{player.wins}</div>
+                        <div className="text-sm text-gray-400">Wins</div>
                     </div>
-                    <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
-                        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Streak</div>
-                        <div className="text-2xl font-black text-orange-400 flex items-center justify-center gap-1">
-                            {player.winStreak > 0 ? '🔥' : '❄️'} {player.winStreak}
-                        </div>
+                    <div className="text-center">
+                        <div className="text-3xl font-bold text-red-400">{player.losses}</div>
+                        <div className="text-sm text-gray-400">Losses</div>
                     </div>
-                    <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/5">
-                        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Best Streak</div>
-                        <div className="text-2xl font-black text-yellow-500">{player.bestWinStreak}</div>
+                </div>
+
+                <div className="px-6 pb-4 grid grid-cols-2 gap-4">
+                    <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                        <div className="text-xl font-bold text-yellow-400">{player.winRate}%</div>
+                        <div className="text-xs text-gray-400">Win Rate</div>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                        <div className="text-xl font-bold text-orange-400">{player.bestWinStreak}</div>
+                        <div className="text-xs text-gray-400">Best Streak</div>
                     </div>
                 </div>
 
                 {/* Match History */}
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-black/40">
-                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-4">Recent Matches</h3>
+                <div className="p-6 border-t border-gray-700">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-white">Match History</h3>
+                        {totalPages > 1 && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="px-2 py-1 text-sm bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    ←
+                                </button>
+                                <span className="text-sm text-gray-400">{page}/{totalPages}</span>
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="px-2 py-1 text-sm bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    →
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     {loading ? (
-                        <div className="text-center py-8 text-gray-500 animate-pulse font-bold">Loading history...</div>
+                        <div className="text-gray-400 text-center py-4">Loading...</div>
                     ) : history.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500 italic">No matches recorded yet.</div>
+                        <div className="text-gray-400 text-center py-4">No matches yet</div>
                     ) : (
                         <div className="space-y-2">
                             {history.map(match => (
-                                <div 
-                                    key={match.id} 
-                                    className={`
-                                        flex items-center justify-between p-3 rounded-xl border border-white/5 transition-all
-                                        ${match.isWin ? 'bg-green-900/10 hover:bg-green-900/20' : 'bg-red-900/10 hover:bg-red-900/20'}
-                                    `}
+                                <div
+                                    key={match.id}
+                                    onClick={() => onMatchSelect(match.id)}
+                                    className={`p-3 rounded-lg cursor-pointer transition-all hover:scale-[1.02] ${match.isWin ? 'bg-green-900/30 hover:bg-green-900/50' : 'bg-red-900/30 hover:bg-red-900/50'
+                                        }`}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`
-                                            w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs
-                                            ${match.isWin ? 'bg-green-500 text-black' : 'bg-red-500 text-white'}
-                                        `}>
-                                            {match.isWin ? 'W' : 'L'}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className={`font-bold text-lg w-6 ${match.isWin ? 'text-green-400' : 'text-red-400'}`}>
+                                                {match.isWin ? 'W' : 'L'}
+                                            </span>
+                                            <div>
+                                                <span className="text-white font-medium">vs {match.opponent}</span>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded">
+                                                        {match.battleType}
+                                                    </span>
+                                                    {match.endReason === 'forfeit' && (
+                                                        <span className="text-xs text-yellow-400 bg-yellow-900/30 px-2 py-0.5 rounded">
+                                                            Forfeit
+                                                        </span>
+                                                    )}
+                                                    <span className="text-xs text-gray-500">
+                                                        {match.pokemonAlive}/{match.pokemonTotal} alive
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="font-bold text-white text-sm">vs {match.opponent}</div>
-                                            <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">{match.battleType} • {new Date(match.date).toLocaleDateString()}</div>
+                                        <div className="text-right">
+                                            <span className={`font-bold ${match.eloChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {match.eloChange >= 0 ? '+' : ''}{match.eloChange}
+                                            </span>
+                                            <div className="text-xs text-gray-500">
+                                                {new Date(match.date).toLocaleDateString()}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className={`font-mono font-bold ${match.eloChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                        {match.eloChange > 0 ? '+' : ''}{match.eloChange}
+                                    <div className="text-[10px] text-gray-500 mt-1 text-center">
+                                        Click to view Pokemon details →
                                     </div>
                                 </div>
                             ))}
@@ -231,192 +324,329 @@ const PlayerModal: React.FC<{ player: Player; onClose: () => void }> = ({ player
                     )}
                 </div>
             </div>
+            {/* Match Detail Modal */}
+            {selectedMatchId && (
+                <MatchDetailModal matchId={selectedMatchId} onClose={() => setSelectedMatchId(null)} />
+            )}
         </div>
     );
 };
+
+// Match Detail Modal - Shows Pokemon for both players
+const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ matchId, onClose }) => {
+    const [match, setMatch] = useState<MatchDetail | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`${API_BASE}/api/ranked/match/${matchId}`)
+            .then(res => res.json())
+            .then(data => {
+                setMatch(data);
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
+    }, [matchId]);
+
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+            <div
+                className="bg-gray-900 border-2 border-purple-500/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20"
+                onClick={e => e.stopPropagation()}
+            >
+                {loading ? (
+                    <div className="p-12 text-center">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent"></div>
+                        <p className="text-gray-400 mt-4">Loading match details...</p>
+                    </div>
+                ) : !match ? (
+                    <div className="p-12 text-center text-red-400">Failed to load match</div>
+                ) : (
+                    <>
+                        {/* Header */}
+                        <div className="p-4 bg-gradient-to-r from-green-900/50 via-gray-900 to-red-900/50 border-b border-gray-700 flex items-center justify-between">
+                            <div>
+                                <span className="text-xs text-gray-400">{match.battleType} • {new Date(match.date).toLocaleString()}</span>
+                                <h3 className="text-lg font-bold text-white">Battle Result</h3>
+                            </div>
+                            <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">×</button>
+                        </div>
+
+                        {/* Winner Section */}
+                        <div className="p-4 border-b border-gray-700/50">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src={`https://mc-heads.net/avatar/${match.winner.uuid}/40`}
+                                        alt={match.winner.name}
+                                        className="w-10 h-10 rounded-lg border border-green-500/50"
+                                    />
+                                    <div>
+                                        <span className="text-green-400 text-xs font-bold uppercase">Winner</span>
+                                        <h4 className="text-white font-bold">{match.winner.name}</h4>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-green-400 font-bold text-lg">+{match.winner.eloChange}</span>
+                                    <div className="text-xs text-gray-500">{match.winner.eloBefore} → {match.winner.eloAfter}</div>
+                                </div>
+                            </div>
+                            {match.winner.pokemon && match.winner.pokemon.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 justify-center bg-gray-800/30 rounded-lg p-3">
+                                    {match.winner.pokemon.map((poke, i) => (
+                                        <PokemonSprite key={i} pokemon={poke} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center text-gray-500 text-sm py-3">
+                                    Pokemon data not available
+                                </div>
+                            )}
+                            <div className="text-center text-xs text-gray-500 mt-2">
+                                {match.winner.pokemonAlive}/{match.winner.pokemonTotal} alive • {match.winner.kos} KOs
+                            </div>
+                        </div>
+
+                        {/* VS Divider */}
+                        <div className="flex items-center justify-center py-2 bg-gray-800/50">
+                            <span className="text-2xl font-black text-gray-600">VS</span>
+                        </div>
+
+                        {/* Loser Section */}
+                        <div className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src={`https://mc-heads.net/avatar/${match.loser.uuid}/40`}
+                                        alt={match.loser.name}
+                                        className="w-10 h-10 rounded-lg border border-red-500/50 opacity-75"
+                                    />
+                                    <div>
+                                        <span className="text-red-400 text-xs font-bold uppercase">Loser</span>
+                                        <h4 className="text-white font-bold">{match.loser.name}</h4>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-red-400 font-bold text-lg">{match.loser.eloChange}</span>
+                                    <div className="text-xs text-gray-500">{match.loser.eloBefore} → {match.loser.eloAfter}</div>
+                                </div>
+                            </div>
+                            {match.loser.pokemon && match.loser.pokemon.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 justify-center bg-gray-800/30 rounded-lg p-3">
+                                    {match.loser.pokemon.map((poke, i) => (
+                                        <PokemonSprite key={i} pokemon={poke} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center text-gray-500 text-sm py-3">
+                                    Pokemon data not available
+                                </div>
+                            )}
+                            <div className="text-center text-xs text-gray-500 mt-2">
+                                {match.loser.pokemonAlive}/{match.loser.pokemonTotal} alive • {match.loser.kos} KOs
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        {match.endReason === 'forfeit' && (
+                            <div className="p-3 bg-yellow-900/20 border-t border-yellow-500/30 text-center">
+                                <span className="text-yellow-400 text-sm font-medium">⚠️ Match ended by forfeit</span>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
 
 const Rankings: React.FC = () => {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-    const [totalPlayers, setTotalPlayers] = useState(0);
+    const [total, setTotal] = useState(0);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/ranked/leaderboard?limit=100`);
-                if (!response.ok) throw new Error("Failed to fetch");
-                const data = await response.json();
+        fetch(`${API_BASE}/api/ranked/leaderboard?limit=100`)
+            .then(res => res.json())
+            .then(data => {
                 setPlayers(data.players || []);
-                setTotalPlayers(data.total || 0);
-            } catch (err) {
-                setError('Failed to load leaderboard');
-            } finally {
+                setTotal(data.total || 0);
                 setLoading(false);
-            }
-        };
-        fetchData();
+            })
+            .catch(err => {
+                setError('Failed to load leaderboard');
+                setLoading(false);
+            });
     }, []);
 
-    // Calculate Tier Stats
+    // Tier distribution for sidebar
     const tierCounts = players.reduce((acc, p) => {
         acc[p.tier] = (acc[p.tier] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
 
     return (
-        <div className="min-h-screen py-4 font-sans text-white relative">
-            {/* Top Bar */}
-            <div className="container mx-auto px-4 pt-4 pb-2">
-                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
-                    <span>←</span> Back to Dashboard
-                </Link>
+        <div className="min-h-screen">
+            {/* Hero Section */}
+            <div className="relative py-16 mb-8">
+                <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 via-purple-900/10 to-transparent"></div>
+                <div className="relative max-w-6xl mx-auto px-4 text-center">
+                    <h1 className="text-5xl font-black text-white mb-4 tracking-tight">
+                        <span className="bg-gradient-to-r from-red-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+                            RANKED LEADERBOARD
+                        </span>
+                    </h1>
+                    <p className="text-xl text-gray-400">
+                        Compete in Cobblemon battles to climb the ranks
+                    </p>
+
+                    {/* Tier Legend */}
+                    <div className="flex flex-wrap justify-center gap-2 mt-6">
+                        {['UNRANKED', 'DIRT', 'CASUAL', 'OMEGA', 'BETA', 'ALPHA', 'LEGENDARY', 'MYTHIC', 'ETERNAL'].map(tier => (
+                            <TierBadge key={tier} tier={tier} size="sm" />
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
-                {/* Hero Section */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 bg-black/40 backdrop-blur-xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/10 to-transparent pointer-events-none"></div>
-                    <div className="relative z-10">
-                        <div className="inline-block bg-brand-primary/20 border border-brand-primary/30 text-brand-primary px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-4">
-                            Season 1
-                        </div>
-                        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none mb-4">
-                            COMPETITIVE <br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-red-400">RANKINGS</span>
-                        </h1>
-                        <p className="text-gray-400 text-lg max-w-xl leading-relaxed">
-                            Battle your way to the top of the Cobblemon league. Earn ELO, climb tiers, and become an Eternal legend.
-                        </p>
-                    </div>
-                    
-                    {/* Top 1 Display if available */}
-                    {players.length > 0 && (
-                        <div className="relative group cursor-pointer" onClick={() => setSelectedPlayer(players[0])}>
-                            <div className="absolute inset-0 bg-yellow-500/20 blur-[60px] rounded-full pointer-events-none"></div>
-                            <div className="relative bg-[#1a0b0e] border-4 border-yellow-500 rounded-[2.5rem] p-6 flex flex-col items-center gap-4 shadow-2xl transform hover:scale-105 transition-transform duration-300">
-                                <div className="absolute -top-6 bg-yellow-500 text-black font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg border-2 border-white">
-                                    Current #1
-                                </div>
-                                <img 
-                                    src={`https://mc-heads.net/avatar/${players[0].uuid}/128`} 
-                                    alt={players[0].minecraftName}
-                                    className="w-32 h-32 rounded-2xl shadow-lg mt-2"
-                                />
-                                <div className="text-center">
-                                    <div className="text-2xl font-black text-white">{players[0].minecraftName}</div>
-                                    <div className="text-yellow-400 font-mono font-bold">{players[0].elo} ELO</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Sidebar Stats */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 shadow-xl">
-                            <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-6 border-b border-white/10 pb-2">Tier Distribution</h3>
+            <div className="max-w-6xl mx-auto px-4 pb-16">
+                <div className="grid lg:grid-cols-4 gap-8">
+                    {/* Sidebar - Stats */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-6 sticky top-24">
+                            <h3 className="text-lg font-bold text-white mb-4">Tier Distribution</h3>
                             <div className="space-y-3">
-                                {['ETERNAL', 'MYTHIC', 'LEGENDARY', 'ALPHA', 'BETA', 'OMEGA', 'CASUAL', 'DIRT'].map(tier => {
+                                {['ETERNAL', 'MYTHIC', 'LEGENDARY', 'ALPHA', 'BETA', 'OMEGA', 'CASUAL', 'DIRT', 'UNRANKED'].map(tier => {
                                     const count = tierCounts[tier] || 0;
                                     const styles = TIER_STYLES[tier];
-                                    const percentage = totalPlayers > 0 ? (count / totalPlayers) * 100 : 0;
+                                    const percentage = total > 0 ? (count / total) * 100 : 0;
 
                                     return (
-                                        <div key={tier} className="group">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <div className={`text-xs font-bold flex items-center gap-2 ${styles.text}`}>
-                                                    <span>{styles.icon}</span> {tier}
-                                                </div>
-                                                <div className="text-xs font-mono text-gray-500">{count}</div>
+                                        <div key={tier} className="space-y-1">
+                                            <div className="flex justify-between items-center">
+                                                <span className={`${styles.text} font-semibold text-sm`}>{tier}</span>
+                                                <span className="text-gray-400 text-sm">{count}</span>
                                             </div>
-                                            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                                <div 
-                                                    className={`h-full rounded-full transition-all duration-1000 ${styles.bg}`} 
+                                            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full ${styles.bg} ${styles.border} border-r transition-all duration-500`}
                                                     style={{ width: `${Math.max(percentage, count > 0 ? 5 : 0)}%` }}
-                                                ></div>
+                                                />
                                             </div>
                                         </div>
                                     );
                                 })}
                             </div>
-                            <div className="mt-6 pt-4 border-t border-white/10 text-center">
-                                <span className="text-3xl font-black text-white">{totalPlayers}</span>
-                                <div className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Ranked Players</div>
+
+                            <div className="mt-6 pt-4 border-t border-gray-700">
+                                <div className="text-center">
+                                    <div className="text-3xl font-bold text-white">{total}</div>
+                                    <div className="text-sm text-gray-400">Ranked Players</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Main Leaderboard */}
+                    {/* Leaderboard Table */}
                     <div className="lg:col-span-3">
-                        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col h-[800px]">
+                        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 overflow-hidden">
                             {/* Table Header */}
-                            <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-white/5 border-b border-white/5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            <div className="bg-gray-900/80 px-6 py-4 grid grid-cols-12 gap-4 text-sm font-semibold text-gray-400 border-b border-gray-700">
                                 <div className="col-span-1 text-center">#</div>
-                                <div className="col-span-5 md:col-span-4">Player</div>
-                                <div className="col-span-3 md:col-span-2 text-center">Tier</div>
-                                <div className="col-span-2 md:col-span-2 text-center">ELO</div>
-                                <div className="col-span-3 md:col-span-2 text-center">W/L</div>
-                                <div className="hidden md:block col-span-1 text-center">Win %</div>
+                                <div className="col-span-4">Player</div>
+                                <div className="col-span-2 text-center">Tier</div>
+                                <div className="col-span-2 text-center">ELO</div>
+                                <div className="col-span-2 text-center">W/L</div>
+                                <div className="col-span-1 text-center">WR</div>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                {loading ? (
-                                    <div className="flex items-center justify-center h-full">
-                                        <div className="animate-spin text-4xl">⏳</div>
+                            {/* Loading State */}
+                            {loading && (
+                                <div className="p-12 text-center">
+                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+                                    <p className="text-gray-400 mt-4">Loading rankings...</p>
+                                </div>
+                            )}
+
+                            {/* Error State */}
+                            {error && (
+                                <div className="p-12 text-center">
+                                    <p className="text-red-400">{error}</p>
+                                </div>
+                            )}
+
+                            {/* Empty State */}
+                            {!loading && !error && players.length === 0 && (
+                                <div className="p-12 text-center">
+                                    <p className="text-gray-400">No ranked players yet. Be the first to climb!</p>
+                                </div>
+                            )}
+
+                            {/* Player Rows */}
+                            {!loading && !error && players.map((player, index) => {
+                                const styles = TIER_STYLES[player.tier] || TIER_STYLES.DIRT;
+                                const isTop3 = player.rank <= 3;
+
+                                return (
+                                    <div
+                                        key={player.uuid}
+                                        onClick={() => setSelectedPlayer(player)}
+                                        className={`px-6 py-4 grid grid-cols-12 gap-4 items-center cursor-pointer transition-all duration-200 hover:bg-gray-700/50 border-b border-gray-700/50 ${isTop3 ? `${styles.bg} ${styles.glow}` : ''
+                                            }`}
+                                    >
+                                        {/* Rank */}
+                                        <div className="col-span-1 text-center">
+                                            {player.rank === 1 && <span className="text-2xl">🥇</span>}
+                                            {player.rank === 2 && <span className="text-2xl">🥈</span>}
+                                            {player.rank === 3 && <span className="text-2xl">🥉</span>}
+                                            {player.rank > 3 && <span className="text-gray-400 font-mono">{player.rank}</span>}
+                                        </div>
+
+                                        {/* Player Info */}
+                                        <div className="col-span-4 flex items-center gap-3">
+                                            <img
+                                                src={`https://mc-heads.net/avatar/${player.uuid}/32`}
+                                                alt={player.minecraftName}
+                                                className="w-8 h-8 rounded-md"
+                                            />
+                                            <span className="font-semibold text-white truncate">{player.minecraftName}</span>
+                                        </div>
+
+                                        {/* Tier */}
+                                        <div className="col-span-2 flex justify-center">
+                                            <TierBadge tier={player.tier} size="sm" />
+                                        </div>
+
+                                        {/* ELO */}
+                                        <div className={`col-span-2 text-center font-bold ${styles.text}`}>
+                                            {player.elo}
+                                        </div>
+
+                                        {/* W/L */}
+                                        <div className="col-span-2 text-center">
+                                            <span className="text-green-400">{player.wins}</span>
+                                            <span className="text-gray-500">/</span>
+                                            <span className="text-red-400">{player.losses}</span>
+                                        </div>
+
+                                        {/* Win Rate */}
+                                        <div className="col-span-1 text-center text-yellow-400 font-semibold">
+                                            {player.winRate}%
+                                        </div>
                                     </div>
-                                ) : error ? (
-                                    <div className="flex items-center justify-center h-full text-red-400 font-bold">
-                                        {error}
-                                    </div>
-                                ) : players.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                                        <div className="text-4xl mb-2">🏆</div>
-                                        <div className="font-bold">No ranked players yet.</div>
-                                        <div className="text-sm">Be the first to battle!</div>
-                                    </div>
-                                ) : (
-                                    <div className="divide-y divide-white/5">
-                                        {players.map((player) => (
-                                            <div 
-                                                key={player.uuid}
-                                                onClick={() => setSelectedPlayer(player)}
-                                                className="grid grid-cols-12 gap-4 px-6 py-3 items-center hover:bg-white/5 transition-colors cursor-pointer group"
-                                            >
-                                                <div className="col-span-1 text-center font-mono font-bold text-gray-500 group-hover:text-white">
-                                                    {player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : player.rank}
-                                                </div>
-                                                <div className="col-span-5 md:col-span-4 flex items-center gap-3">
-                                                    <img src={`https://mc-heads.net/avatar/${player.uuid}/32`} className="w-8 h-8 rounded-md bg-black/20" alt="" />
-                                                    <span className="font-bold text-white truncate text-sm">{player.minecraftName}</span>
-                                                </div>
-                                                <div className="col-span-3 md:col-span-2 flex justify-center">
-                                                    <TierBadge tier={player.tier} size="sm" />
-                                                </div>
-                                                <div className="col-span-2 md:col-span-2 text-center font-mono font-bold text-brand-primary">
-                                                    {player.elo}
-                                                </div>
-                                                <div className="col-span-3 md:col-span-2 text-center text-xs font-bold">
-                                                    <span className="text-green-400">{player.wins}W</span> <span className="text-gray-600">/</span> <span className="text-red-400">{player.losses}L</span>
-                                                </div>
-                                                <div className="hidden md:block col-span-1 text-center text-xs font-mono text-gray-400">
-                                                    {player.winRate}%
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Modal */}
+            {/* Player Detail Modal */}
             {selectedPlayer && (
-                <PlayerModal player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
+                <PlayerCard player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
             )}
         </div>
     );
