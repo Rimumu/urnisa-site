@@ -244,17 +244,8 @@ const TierBadge: React.FC<{ tier: string; size?: 'sm' | 'md' | 'lg' }> = ({ tier
 };
 
 const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player, onClose }) => {
-    // Mock match history for preview
-    const MOCK_HISTORY: MatchHistory[] = [
-        { id: 'match-1', isWin: true, opponent: 'ShadowNinja', opponentUuid: 'a2bf8d3c-8e39-4c7f-a9e8-1d3f4b7c6e9a', eloChange: 25, eloBefore: 2125, eloAfter: 2150, battleType: '1v1', endReason: 'normal', pokemonAlive: 2, pokemonTotal: 3, date: new Date(Date.now() - 3600000).toISOString() },
-        { id: 'match-2', isWin: true, opponent: 'FireBreather', opponentUuid: 'b3c9e0d4-9f4a-5d8b-b0f9-2e4g5h8i7j0k', eloChange: 22, eloBefore: 2103, eloAfter: 2125, battleType: '1v1', endReason: 'normal', pokemonAlive: 1, pokemonTotal: 3, date: new Date(Date.now() - 7200000).toISOString() },
-        { id: 'match-3', isWin: false, opponent: 'PikachuMaster', opponentUuid: 'd9fb0cc5-4dc7-47a4-b4bf-5c1a8f9c9668', eloChange: -18, eloBefore: 2121, eloAfter: 2103, battleType: '1v1', endReason: 'normal', pokemonAlive: 0, pokemonTotal: 3, date: new Date(Date.now() - 10800000).toISOString() },
-        { id: 'match-4', isWin: true, opponent: 'IceQueen', opponentUuid: 'c4d0f1e5-0g5b-6e9c-c1g0-3f5h6i9j8k1l', eloChange: 20, eloBefore: 2101, eloAfter: 2121, battleType: '2v2', endReason: 'forfeit', pokemonAlive: 3, pokemonTotal: 4, date: new Date(Date.now() - 14400000).toISOString() },
-        { id: 'match-5', isWin: true, opponent: 'ThunderBolt', opponentUuid: 'd5e1g2f6-1h6c-7f0d-d2h1-4g6i7j0k9l2m', eloChange: 15, eloBefore: 2086, eloAfter: 2101, battleType: '1v1', endReason: 'normal', pokemonAlive: 2, pokemonTotal: 3, date: new Date(Date.now() - 18000000).toISOString() },
-    ];
-
-    const [history, setHistory] = useState<MatchHistory[]>(MOCK_HISTORY);
-    const [loading, setLoading] = useState(false);
+    const [history, setHistory] = useState<MatchHistory[]>([]);
+    const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
@@ -265,16 +256,23 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
     };
 
     useEffect(() => {
-        // Try to fetch real history, fallback to mock
+        setLoading(true);
+        // Try to fetch real history
         fetch(`${API_BASE}/api/ranked/player/${player.uuid}/history?limit=10&page=${page}`)
             .then(res => res.json())
             .then((data: MatchHistoryResponse) => {
-                if (data.matches && data.matches.length > 0) {
+                if (data.matches) {
                     setHistory(data.matches);
                     setTotalPages(data.pagination?.totalPages || 1);
+                } else {
+                    setHistory([]);
                 }
             })
-            .catch(() => console.log('Using mock match history'));
+            .catch(() => {
+                console.error('Failed to fetch history');
+                setHistory([]);
+            })
+            .finally(() => setLoading(false));
     }, [player.uuid, page]);
 
     return (
@@ -435,48 +433,11 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
 
 // Match Detail Modal - Shows Pokemon for both players
 const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ matchId, onClose }) => {
-    // Mock match detail for preview
-    const MOCK_MATCH: MatchDetail = {
-        id: matchId,
-        winner: {
-            uuid: 'c06f8906-4c8a-4911-9c29-ea1dbd1aab82',
-            name: 'DragonSlayer99',
-            eloChange: 25,
-            eloBefore: 2125,
-            eloAfter: 2150,
-            pokemonAlive: 2,
-            pokemonTotal: 3,
-            kos: 3,
-            pokemon: [
-                { species: 'Charizard', nickname: 'Blaze', level: 50, fainted: false },
-                { species: 'Dragonite', nickname: 'Stormy', level: 50, fainted: false },
-                { species: 'Garchomp', nickname: 'Chompy', level: 50, fainted: true },
-            ]
-        },
-        loser: {
-            uuid: 'a2bf8d3c-8e39-4c7f-a9e8-1d3f4b7c6e9a',
-            name: 'ShadowNinja',
-            eloChange: -25,
-            eloBefore: 1875,
-            eloAfter: 1850,
-            pokemonAlive: 0,
-            pokemonTotal: 3,
-            kos: 1,
-            pokemon: [
-                { species: 'Gengar', nickname: 'Shadow', level: 50, fainted: true },
-                { species: 'Alakazam', nickname: 'Psycho', level: 50, fainted: true },
-                { species: 'Greninja', nickname: 'Ninja', level: 50, fainted: true },
-            ]
-        },
-        battleType: '1v1',
-        endReason: 'normal',
-        date: new Date(Date.now() - 3600000).toISOString()
-    };
-
-    const [match, setMatch] = useState<MatchDetail | null>(MOCK_MATCH);
-    const [loading, setLoading] = useState(false);
+    const [match, setMatch] = useState<MatchDetail | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        setLoading(true);
         // Try to fetch real match data
         fetch(`${API_BASE}/api/ranked/match/${matchId}`)
             .then(res => res.json())
@@ -485,7 +446,10 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
                     setMatch(data);
                 }
             })
-            .catch(() => console.log('Using mock match detail'));
+            .catch(err => {
+                console.error('Failed to fetch match detail', err);
+            })
+            .finally(() => setLoading(false));
     }, [matchId]);
 
     return (
