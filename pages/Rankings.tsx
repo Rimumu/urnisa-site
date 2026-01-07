@@ -96,10 +96,34 @@ const idCache = new Map<string, number>();
 // Cache for image validity to avoid repeated backend checks
 const clientImageValidationCache = new Map<string, boolean>();
 
+// Pokemon Type Colors for Tooltip
+const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
+    normal: { bg: 'bg-gray-400', text: 'text-gray-900' },
+    fire: { bg: 'bg-orange-500', text: 'text-white' },
+    water: { bg: 'bg-blue-500', text: 'text-white' },
+    electric: { bg: 'bg-yellow-400', text: 'text-gray-900' },
+    grass: { bg: 'bg-green-500', text: 'text-white' },
+    ice: { bg: 'bg-cyan-300', text: 'text-gray-900' },
+    fighting: { bg: 'bg-red-700', text: 'text-white' },
+    poison: { bg: 'bg-purple-500', text: 'text-white' },
+    ground: { bg: 'bg-amber-600', text: 'text-white' },
+    flying: { bg: 'bg-indigo-300', text: 'text-gray-900' },
+    psychic: { bg: 'bg-pink-500', text: 'text-white' },
+    bug: { bg: 'bg-lime-500', text: 'text-gray-900' },
+    rock: { bg: 'bg-stone-500', text: 'text-white' },
+    ghost: { bg: 'bg-purple-800', text: 'text-white' },
+    dragon: { bg: 'bg-indigo-600', text: 'text-white' },
+    dark: { bg: 'bg-gray-800', text: 'text-white' },
+    steel: { bg: 'bg-slate-400', text: 'text-gray-900' },
+    fairy: { bg: 'bg-pink-300', text: 'text-gray-900' },
+};
+
 // Pokemon Sprite Component with Cobblemon -> PokeAPI fallback
 const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
     const [imgSrc, setImgSrc] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isHovered, setIsHovered] = useState(false);
+    const [types, setTypes] = useState<string[]>([]);
 
     const getFormattedName = (name: string) => {
         return name.toLowerCase()
@@ -122,6 +146,10 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
             const data = await res.json();
             if (data.id) {
                 idCache.set(cobbleName, data.id);
+                // Also cache types while we have them
+                if (data.types) {
+                    setTypes(data.types.map((t: { type: { name: string } }) => t.type.name));
+                }
                 return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${data.id}.png`;
             }
         } catch (e) {
@@ -132,6 +160,23 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
         // OR Pokemondb which supports names
         return `https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`;
     };
+
+    // Fetch types on mount
+    useEffect(() => {
+        const fetchTypes = async () => {
+            const cobbleName = getFormattedName(pokemon.species);
+            try {
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${cobbleName}`);
+                const data = await res.json();
+                if (data.types) {
+                    setTypes(data.types.map((t: { type: { name: string } }) => t.type.name));
+                }
+            } catch (e) {
+                // Silently fail - types are optional
+            }
+        };
+        fetchTypes();
+    }, [pokemon.species]);
 
     useEffect(() => {
         let mounted = true;
@@ -201,13 +246,16 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
         }
     };
 
+    const displayName = pokemon.nickname || pokemon.species;
+
     return (
         <div
             className={`relative w-14 h-14 rounded-lg flex items-center justify-center transition-all ${pokemon.fainted
                 ? 'bg-red-900/50 border-2 border-red-500/50 grayscale-[50%]'
                 : 'bg-gray-800/50 border border-gray-700/50'
                 }`}
-            title={`${pokemon.nickname || pokemon.species} Lv.${pokemon.level}${pokemon.fainted ? ' (Fainted)' : ''}`}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             <img
                 src={imgSrc || `https://via.placeholder.com/64x64/1a1a1a/666666?text=?`}
@@ -223,6 +271,37 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] bg-black/80 px-1 rounded text-gray-400">
                 {pokemon.level}
             </div>
+
+            {/* Custom Styled Tooltip */}
+            {isHovered && (
+                <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none animate-fade-in">
+                    <div className="bg-gray-900/95 border border-gray-700 rounded-lg p-2 shadow-lg min-w-[100px] text-center backdrop-blur-sm">
+                        <div className="text-white font-semibold text-sm mb-1 capitalize">
+                            {displayName}
+                        </div>
+                        {types.length > 0 && (
+                            <div className="flex gap-1 justify-center flex-wrap">
+                                {types.map((type) => {
+                                    const colors = TYPE_COLORS[type] || { bg: 'bg-gray-500', text: 'text-white' };
+                                    return (
+                                        <span
+                                            key={type}
+                                            className={`${colors.bg} ${colors.text} text-[10px] px-2 py-0.5 rounded-full font-medium uppercase`}
+                                        >
+                                            {type}
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        {pokemon.fainted && (
+                            <div className="text-red-400 text-[10px] mt-1 font-medium">Fainted</div>
+                        )}
+                    </div>
+                    {/* Tooltip Arrow */}
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-700"></div>
+                </div>
+            )}
         </div>
     );
 };
