@@ -246,7 +246,10 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
         }
     };
 
-    const displayName = pokemon.nickname || pokemon.species;
+    const hasNickname = pokemon.nickname && pokemon.nickname !== pokemon.species;
+    const displayName = hasNickname
+        ? `${pokemon.species} (${pokemon.nickname})`
+        : pokemon.species;
 
     return (
         <div
@@ -276,8 +279,11 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
             {isHovered && (
                 <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none animate-fade-in">
                     <div className="bg-gray-900/95 border border-gray-700 rounded-lg p-2 shadow-lg min-w-[100px] text-center backdrop-blur-sm">
-                        <div className="text-white font-semibold text-sm mb-1 capitalize">
-                            {displayName}
+                        <div className="text-white font-semibold text-sm mb-1">
+                            <span className="capitalize">{pokemon.species}</span>
+                            {hasNickname && (
+                                <span className="text-gray-400 font-normal"> ({pokemon.nickname})</span>
+                            )}
                         </div>
                         {types.length > 0 && (
                             <div className="flex gap-1 justify-center flex-wrap">
