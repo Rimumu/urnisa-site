@@ -206,19 +206,26 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200" onClick={onClose}>
             <style>{`
+                .custom-scrollbar {
+                    scrollbar-gutter: stable;
+                }
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
+                    width: 8px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(255, 255, 255, 0.05);
-                    border-radius: 4px;
+                    background: transparent;
+                    margin: 1.5rem 0;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(229, 56, 59, 0.5);
-                    border-radius: 4px;
+                    background: rgba(255, 255, 255, 0.15);
+                    border-radius: 10px;
+                    border: 2px solid #1a0b0e;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: rgba(229, 56, 59, 0.8);
+                    background: rgba(255, 255, 255, 0.25);
+                }
+                .custom-scrollbar::-webkit-scrollbar-corner {
+                    background: transparent;
                 }
             `}</style>
             <div
