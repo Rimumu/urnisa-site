@@ -5,103 +5,110 @@ import { useTwitchStatus } from '../hooks/useTwitchStatus';
 
 // Helper for Dropdown Logic
 const NisathonDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => (
-    <div className="relative group">
-        <NavLink 
-            to="/nisathon" 
-            className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-            onClick={(e) => { if(window.innerWidth < 768) { e.preventDefault(); } }} // Prevent nav on click on mobile to allow dropdown to open if logic requires
+  <div className="relative group">
+    <NavLink
+      to="/nisathon"
+      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+      onClick={(e) => { if (window.innerWidth < 768) { e.preventDefault(); } }} // Prevent nav on click on mobile to allow dropdown to open if logic requires
+    >
+      <span>Nisathon</span>
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    </NavLink>
+
+    {/* Dropdown Menu */}
+    <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
+      <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10">
+        <NavLink
+          to="/nisathon"
+          end
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
-            <span>Nisathon</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+          Dashboard
         </NavLink>
-        
-        {/* Dropdown Menu */}
-        <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
-            <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10">
-                <NavLink 
-                    to="/nisathon" 
-                    end
-                    onClick={closeMenu}
-                    className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-                >
-                    Dashboard
-                </NavLink>
-                <NavLink 
-                    to="/nisathon/wheel" 
-                    onClick={closeMenu}
-                    className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-                >
-                    Wheel
-                </NavLink>
-            </div>
-        </div>
+        <NavLink
+          to="/nisathon/wheel"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          Wheel
+        </NavLink>
+      </div>
     </div>
+  </div>
 );
 
 const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => (
-    <div className="relative group">
-        <NavLink 
-            to="/minecraft" 
-            className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-            onClick={(e) => { if(window.innerWidth < 768) { e.preventDefault(); } }}
+  <div className="relative group">
+    <NavLink
+      to="/minecraft"
+      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+      onClick={(e) => { if (window.innerWidth < 768) { e.preventDefault(); } }}
+    >
+      <span>Minecraft</span>
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    </NavLink>
+
+    {/* Dropdown Menu */}
+    <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
+      <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10">
+        <NavLink
+          to="/minecraft"
+          end
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
-            <span>Minecraft</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+          Dashboard
         </NavLink>
-        
-        {/* Dropdown Menu */}
-        <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
-            <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10">
-                <NavLink 
-                    to="/minecraft" 
-                    end
-                    onClick={closeMenu}
-                    className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-                >
-                    Dashboard
-                </NavLink>
-                <NavLink 
-                    to="/minecraft/bingo" 
-                    onClick={closeMenu}
-                    className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-                >
-                    Bingo Card
-                </NavLink>
-                <NavLink 
-                    to="/minecraft/gacha" 
-                    onClick={closeMenu}
-                    className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-                >
-                    Gacha Pack
-                </NavLink>
-                <NavLink 
-                    to="/minecraft/tournament" 
-                    onClick={closeMenu}
-                    className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-                >
-                    Tournament Hub
-                </NavLink>
-            </div>
-        </div>
+        <NavLink
+          to="/minecraft/bingo"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          Bingo Card
+        </NavLink>
+        <NavLink
+          to="/minecraft/gacha"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          Gacha Pack
+        </NavLink>
+        <NavLink
+          to="/minecraft/tournament"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          Tournament Hub
+        </NavLink>
+        <NavLink
+          to="/minecraft/rankings"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          🏆 Rankings
+        </NavLink>
+      </div>
     </div>
+  </div>
 );
 
 // This component is now only for the desktop view.
 const NavLinks: React.FC = () => (
-    <>
-        <NavLink to="/" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
-        <NisathonDropdown />
-        <MinecraftDropdown />
-        <NavLink to="/about" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>About Me</NavLink>
-    </>
+  <>
+    <NavLink to="/" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
+    <NisathonDropdown />
+    <MinecraftDropdown />
+    <NavLink to="/about" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>About Me</NavLink>
+  </>
 );
 
 interface NavbarProps {
-    onEasterEggTrigger: () => void;
+  onEasterEggTrigger: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
@@ -151,17 +158,17 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               {/* Logo Link to Twitch with PFP and Text */}
-              <a 
-                href="https://twitch.tv/urnisa_" 
-                target="_blank" 
+              <a
+                href="https://twitch.tv/urnisa_"
+                target="_blank"
                 rel="noopener noreferrer"
-                onClick={handleLogoClick} 
+                onClick={handleLogoClick}
                 className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
               >
-                <img 
-                    src="https://res.cloudinary.com/dsencimjn/image/upload/v1764677430/urnisapfp2_l3a3xx.png" 
-                    alt="Urnisa" 
-                    className="h-10 w-10 rounded-full object-cover border-2 border-brand-primary/50 group-hover:border-brand-primary transition-colors"
+                <img
+                  src="https://res.cloudinary.com/dsencimjn/image/upload/v1764677430/urnisapfp2_l3a3xx.png"
+                  alt="Urnisa"
+                  className="h-10 w-10 rounded-full object-cover border-2 border-brand-primary/50 group-hover:border-brand-primary transition-colors"
                 />
                 <span className="text-white font-black text-xl tracking-widest">URNISA</span>
               </a>
@@ -173,10 +180,10 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
                 rel="noopener noreferrer"
                 className={`
                     px-2 py-1 rounded-md text-[10px] font-black tracking-widest uppercase text-white transition-all duration-300
-                    ${isLive 
-                        ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)] animate-pulse' 
-                        : 'bg-gray-600 opacity-80'
-                    }
+                    ${isLive
+                    ? 'bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.5)] animate-pulse'
+                    : 'bg-gray-600 opacity-80'
+                  }
                 `}
                 title={isLive ? 'Urnisa is LIVE!' : 'Urnisa is Offline'}
               >
@@ -224,25 +231,26 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
         aria-hidden={!isOpen}
       >
         <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
-            <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Home</NavLink>
-            
-            {/* Mobile Sub-menu for Nisathon */}
-            <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
-                <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Nisathon Event</span>
-                <NavLink to="/nisathon" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
-                <NavLink to="/nisathon/wheel" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Wheel</NavLink>
-            </div>
+          <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Home</NavLink>
 
-            {/* Mobile Sub-menu for Minecraft */}
-            <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
-                <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Minecraft</span>
-                <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
-                <NavLink to="/minecraft/bingo" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Bingo Card</NavLink>
-                <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Gacha Pack</NavLink>
-                <NavLink to="/minecraft/tournament" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Tournament Hub</NavLink>
-            </div>
+          {/* Mobile Sub-menu for Nisathon */}
+          <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
+            <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Nisathon Event</span>
+            <NavLink to="/nisathon" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
+            <NavLink to="/nisathon/wheel" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Wheel</NavLink>
+          </div>
 
-            <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>About Me</NavLink>
+          {/* Mobile Sub-menu for Minecraft */}
+          <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
+            <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Minecraft</span>
+            <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
+            <NavLink to="/minecraft/bingo" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Bingo Card</NavLink>
+            <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Gacha Pack</NavLink>
+            <NavLink to="/minecraft/tournament" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Tournament Hub</NavLink>
+            <NavLink to="/minecraft/rankings" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>🏆 Rankings</NavLink>
+          </div>
+
+          <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>About Me</NavLink>
         </div>
       </div>
     </>
