@@ -206,155 +206,149 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200" onClick={onClose}>
             <style>{`
-                .custom-scrollbar {
-                    scrollbar-gutter: stable;
-                }
                 .custom-scrollbar::-webkit-scrollbar {
-                    width: 8px;
+                    width: 6px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                    margin: 1.5rem 0;
+                    background: #1a0b0e;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(255, 255, 255, 0.15);
-                    border-radius: 10px;
-                    border: 2px solid #1a0b0e;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 3px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: rgba(255, 255, 255, 0.25);
-                }
-                .custom-scrollbar::-webkit-scrollbar-corner {
-                    background: transparent;
+                    background: rgba(255, 255, 255, 0.35);
                 }
             `}</style>
             <div
-                className={`bg-[#1a0b0e] border ${styles.border} rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl ${styles.glow} custom-scrollbar`}
+                className={`bg-[#1a0b0e] border ${styles.border} rounded-3xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-2xl ${styles.glow}`}
                 onClick={e => e.stopPropagation()}
             >
-                {/* Header */}
-                <div className={`p-6 ${styles.bg} border-b border-white/10 rounded-t-3xl`}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <img
-                                src={`https://mc-heads.net/avatar/${player.uuid}/64`}
-                                alt={player.minecraftName}
-                                className="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-lg"
-                            />
-                            <div>
-                                <h2 className="text-2xl font-bold text-white">{player.minecraftName}</h2>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <TierBadge tier={player.tier} size="md" />
-                                    <span className="text-gray-400">#{player.rank}</span>
+                <div className="max-h-[85vh] overflow-y-auto custom-scrollbar">
+                    {/* Header */}
+                    <div className={`p-6 ${styles.bg} border-b border-white/10`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <img
+                                    src={`https://mc-heads.net/avatar/${player.uuid}/64`}
+                                    alt={player.minecraftName}
+                                    className="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-lg"
+                                />
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white">{player.minecraftName}</h2>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <TierBadge tier={player.tier} size="md" />
+                                        <span className="text-gray-400">#{player.rank}</span>
+                                    </div>
                                 </div>
                             </div>
+                            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all text-gray-400">✕</button>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all text-gray-400">✕</button>
                     </div>
-                </div>
 
-                {/* Stats */}
-                <div className="p-6 grid grid-cols-3 gap-4">
-                    <div className="text-center bg-white/5 rounded-xl p-3">
-                        <div className={`text-3xl font-bold ${styles.text}`}>{player.elo}</div>
-                        <div className="text-sm text-gray-400">ELO</div>
+                    {/* Stats */}
+                    <div className="p-6 grid grid-cols-3 gap-4">
+                        <div className="text-center bg-white/5 rounded-xl p-3">
+                            <div className={`text-3xl font-bold ${styles.text}`}>{player.elo}</div>
+                            <div className="text-sm text-gray-400">ELO</div>
+                        </div>
+                        <div className="text-center bg-white/5 rounded-xl p-3">
+                            <div className="text-3xl font-bold text-green-400">{player.wins}</div>
+                            <div className="text-sm text-gray-400">Wins</div>
+                        </div>
+                        <div className="text-center bg-white/5 rounded-xl p-3">
+                            <div className="text-3xl font-bold text-red-400">{player.losses}</div>
+                            <div className="text-sm text-gray-400">Losses</div>
+                        </div>
                     </div>
-                    <div className="text-center bg-white/5 rounded-xl p-3">
-                        <div className="text-3xl font-bold text-green-400">{player.wins}</div>
-                        <div className="text-sm text-gray-400">Wins</div>
-                    </div>
-                    <div className="text-center bg-white/5 rounded-xl p-3">
-                        <div className="text-3xl font-bold text-red-400">{player.losses}</div>
-                        <div className="text-sm text-gray-400">Losses</div>
-                    </div>
-                </div>
 
-                <div className="px-6 pb-4 grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                        <div className="text-xl font-bold text-yellow-400">{player.winRate}%</div>
-                        <div className="text-xs text-gray-400">Win Rate</div>
+                    <div className="px-6 pb-4 grid grid-cols-2 gap-4">
+                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
+                            <div className="text-xl font-bold text-yellow-400">{player.winRate}%</div>
+                            <div className="text-xs text-gray-400">Win Rate</div>
+                        </div>
+                        <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
+                            <div className="text-xl font-bold text-orange-400">{player.bestWinStreak}</div>
+                            <div className="text-xs text-gray-400">Best Streak</div>
+                        </div>
                     </div>
-                    <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
-                        <div className="text-xl font-bold text-orange-400">{player.bestWinStreak}</div>
-                        <div className="text-xs text-gray-400">Best Streak</div>
-                    </div>
-                </div>
 
-                {/* Match History */}
-                <div className="p-6 border-t border-white/10">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-white">Match History</h3>
-                        {totalPages > 1 && (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={page === 1}
-                                    className="px-3 py-1 text-sm bg-white/10 rounded-lg hover:bg-brand-primary/20 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    ←
-                                </button>
-                                <span className="text-sm text-gray-400">{page}/{totalPages}</span>
-                                <button
-                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={page === totalPages}
-                                    className="px-3 py-1 text-sm bg-white/10 rounded-lg hover:bg-brand-primary/20 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    →
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                    {loading ? (
-                        <div className="text-gray-400 text-center py-4">Loading...</div>
-                    ) : history.length === 0 ? (
-                        <div className="text-gray-400 text-center py-4">No matches yet</div>
-                    ) : (
-                        <div className="space-y-2">
-                            {history.map(match => (
-                                <div
-                                    key={match.id}
-                                    onClick={() => onMatchSelect(match.id)}
-                                    className={`p-3 rounded-lg cursor-pointer transition-all hover:scale-[1.02] ${match.isWin ? 'bg-green-900/30 hover:bg-green-900/50' : 'bg-red-900/30 hover:bg-red-900/50'
-                                        }`}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <span className={`font-bold text-lg w-6 ${match.isWin ? 'text-green-400' : 'text-red-400'}`}>
-                                                {match.isWin ? 'W' : 'L'}
-                                            </span>
-                                            <div>
-                                                <span className="text-white font-medium">vs {match.opponent}</span>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded">
-                                                        {match.battleType}
-                                                    </span>
-                                                    {match.endReason === 'forfeit' && (
-                                                        <span className="text-xs text-yellow-400 bg-yellow-900/30 px-2 py-0.5 rounded">
-                                                            Forfeit
+                    {/* Match History */}
+                    <div className="p-6 border-t border-white/10">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-lg font-semibold text-white">Match History</h3>
+                            {totalPages > 1 && (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={page === 1}
+                                        className="px-3 py-1 text-sm bg-white/10 rounded-lg hover:bg-brand-primary/20 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        ←
+                                    </button>
+                                    <span className="text-sm text-gray-400">{page}/{totalPages}</span>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={page === totalPages}
+                                        className="px-3 py-1 text-sm bg-white/10 rounded-lg hover:bg-brand-primary/20 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        {loading ? (
+                            <div className="text-gray-400 text-center py-4">Loading...</div>
+                        ) : history.length === 0 ? (
+                            <div className="text-gray-400 text-center py-4">No matches yet</div>
+                        ) : (
+                            <div className="space-y-2">
+                                {history.map(match => (
+                                    <div
+                                        key={match.id}
+                                        onClick={() => onMatchSelect(match.id)}
+                                        className={`p-3 rounded-lg cursor-pointer transition-all hover:scale-[1.02] ${match.isWin ? 'bg-green-900/30 hover:bg-green-900/50' : 'bg-red-900/30 hover:bg-red-900/50'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <span className={`font-bold text-lg w-6 ${match.isWin ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {match.isWin ? 'W' : 'L'}
+                                                </span>
+                                                <div>
+                                                    <span className="text-white font-medium">vs {match.opponent}</span>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded">
+                                                            {match.battleType}
                                                         </span>
-                                                    )}
-                                                    <span className="text-xs text-gray-500">
-                                                        {match.pokemonAlive}/{match.pokemonTotal} alive
-                                                    </span>
+                                                        {match.endReason === 'forfeit' && (
+                                                            <span className="text-xs text-yellow-400 bg-yellow-900/30 px-2 py-0.5 rounded">
+                                                                Forfeit
+                                                            </span>
+                                                        )}
+                                                        <span className="text-xs text-gray-500">
+                                                            {match.pokemonAlive}/{match.pokemonTotal} alive
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className={`font-bold ${match.eloChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {match.eloChange >= 0 ? '+' : ''}{match.eloChange}
+                                                </span>
+                                                <div className="text-xs text-gray-500">
+                                                    {new Date(match.date).toLocaleDateString()}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <span className={`font-bold ${match.eloChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                {match.eloChange >= 0 ? '+' : ''}{match.eloChange}
-                                            </span>
-                                            <div className="text-xs text-gray-500">
-                                                {new Date(match.date).toLocaleDateString()}
-                                            </div>
+                                        <div className="text-[10px] text-gray-500 mt-1 text-center">
+                                            Click to view Pokemon details →
                                         </div>
                                     </div>
-                                    <div className="text-[10px] text-gray-500 mt-1 text-center">
-                                        Click to view Pokemon details →
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
             {/* Match Detail Modal */}
