@@ -194,19 +194,19 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
     }, [player.uuid, page]);
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={onClose}>
             <div
-                className={`bg-gray-900 border-2 ${styles.border} rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto ${styles.glow}`}
+                className={`bg-[#1a0b0e] border ${styles.border} rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl ${styles.glow}`}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className={`p-6 ${styles.bg} border-b ${styles.border} rounded-t-2xl`}>
+                <div className={`p-6 ${styles.bg} border-b border-white/10 rounded-t-3xl`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <img
                                 src={`https://mc-heads.net/avatar/${player.uuid}/64`}
                                 alt={player.minecraftName}
-                                className="w-16 h-16 rounded-lg border-2 border-white/20"
+                                className="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-lg"
                             />
                             <div>
                                 <h2 className="text-2xl font-bold text-white">{player.minecraftName}</h2>
@@ -216,39 +216,39 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
                                 </div>
                             </div>
                         </div>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">×</button>
+                        <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all text-gray-400">✕</button>
                     </div>
                 </div>
 
                 {/* Stats */}
                 <div className="p-6 grid grid-cols-3 gap-4">
-                    <div className="text-center">
+                    <div className="text-center bg-white/5 rounded-xl p-3">
                         <div className={`text-3xl font-bold ${styles.text}`}>{player.elo}</div>
                         <div className="text-sm text-gray-400">ELO</div>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center bg-white/5 rounded-xl p-3">
                         <div className="text-3xl font-bold text-green-400">{player.wins}</div>
                         <div className="text-sm text-gray-400">Wins</div>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center bg-white/5 rounded-xl p-3">
                         <div className="text-3xl font-bold text-red-400">{player.losses}</div>
                         <div className="text-sm text-gray-400">Losses</div>
                     </div>
                 </div>
 
                 <div className="px-6 pb-4 grid grid-cols-2 gap-4">
-                    <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
                         <div className="text-xl font-bold text-yellow-400">{player.winRate}%</div>
                         <div className="text-xs text-gray-400">Win Rate</div>
                     </div>
-                    <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                    <div className="bg-white/5 rounded-xl p-3 text-center border border-white/5">
                         <div className="text-xl font-bold text-orange-400">{player.bestWinStreak}</div>
                         <div className="text-xs text-gray-400">Best Streak</div>
                     </div>
                 </div>
 
                 {/* Match History */}
-                <div className="p-6 border-t border-gray-700">
+                <div className="p-6 border-t border-white/10">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-lg font-semibold text-white">Match History</h3>
                         {totalPages > 1 && (
@@ -256,7 +256,7 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
                                 <button
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1}
-                                    className="px-2 py-1 text-sm bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 py-1 text-sm bg-white/10 rounded-lg hover:bg-brand-primary/20 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     ←
                                 </button>
@@ -264,7 +264,7 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
                                 <button
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
-                                    className="px-2 py-1 text-sm bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 py-1 text-sm bg-white/10 rounded-lg hover:bg-brand-primary/20 hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     →
                                 </button>
@@ -348,14 +348,14 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
     }, [matchId]);
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200" onClick={onClose}>
             <div
-                className="bg-gray-900 border-2 border-purple-500/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20"
+                className="bg-[#1a0b0e] border border-white/10 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
                 onClick={e => e.stopPropagation()}
             >
                 {loading ? (
                     <div className="p-12 text-center">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent"></div>
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-brand-primary border-t-transparent"></div>
                         <p className="text-gray-400 mt-4">Loading match details...</p>
                     </div>
                 ) : !match ? (
@@ -363,16 +363,16 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
                 ) : (
                     <>
                         {/* Header */}
-                        <div className="p-4 bg-gradient-to-r from-green-900/50 via-gray-900 to-red-900/50 border-b border-gray-700 flex items-center justify-between">
+                        <div className="p-4 bg-gradient-to-r from-green-900/30 via-black/50 to-red-900/30 border-b border-white/10 flex items-center justify-between rounded-t-3xl">
                             <div>
                                 <span className="text-xs text-gray-400">{match.battleType} • {new Date(match.date).toLocaleString()}</span>
                                 <h3 className="text-lg font-bold text-white">Battle Result</h3>
                             </div>
-                            <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl">×</button>
+                            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all text-gray-400">✕</button>
                         </div>
 
                         {/* Winner Section */}
-                        <div className="p-4 border-b border-gray-700/50">
+                        <div className="p-4 border-b border-white/10">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                     <img
@@ -489,26 +489,24 @@ const Rankings: React.FC = () => {
     }, {} as Record<string, number>);
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen py-8 font-sans text-white relative">
             {/* Hero Section */}
-            <div className="relative py-16 mb-8">
-                <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 via-purple-900/10 to-transparent"></div>
-                <div className="relative max-w-6xl mx-auto px-4 text-center">
-                    <h1 className="text-5xl font-black text-white mb-4 tracking-tight">
-                        <span className="bg-gradient-to-r from-red-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                            RANKED LEADERBOARD
-                        </span>
+            <div className="flex flex-col items-center text-center space-y-6 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="relative z-10">
+                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight drop-shadow-2xl">
+                        <span className="text-brand-primary">RANKED</span> LEADERBOARD
                     </h1>
-                    <p className="text-xl text-gray-400">
-                        Compete in Cobblemon battles to climb the ranks
-                    </p>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-brand-primary/5 blur-[60px] -z-10 rounded-full"></div>
+                </div>
+                <p className="text-gray-300 max-w-2xl text-lg md:text-xl px-4">
+                    Compete in Cobblemon battles to climb the ranks and prove your worth
+                </p>
 
-                    {/* Tier Legend */}
-                    <div className="flex flex-wrap justify-center gap-2 mt-6">
-                        {['UNRANKED', 'DIRT', 'CASUAL', 'OMEGA', 'BETA', 'ALPHA', 'LEGENDARY', 'MYTHIC', 'ETERNAL'].map(tier => (
-                            <TierBadge key={tier} tier={tier} size="sm" />
-                        ))}
-                    </div>
+                {/* Tier Legend */}
+                <div className="flex flex-wrap justify-center gap-2 mt-6 px-4">
+                    {['UNRANKED', 'DIRT', 'CASUAL', 'OMEGA', 'BETA', 'ALPHA', 'LEGENDARY', 'MYTHIC', 'ETERNAL'].map(tier => (
+                        <TierBadge key={tier} tier={tier} size="sm" />
+                    ))}
                 </div>
             </div>
 
@@ -516,8 +514,11 @@ const Rankings: React.FC = () => {
                 <div className="grid lg:grid-cols-4 gap-8">
                     {/* Sidebar - Stats */}
                     <div className="lg:col-span-1">
-                        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 p-6 sticky top-24">
-                            <h3 className="text-lg font-bold text-white mb-4">Tier Distribution</h3>
+                        <div className="bg-black/30 backdrop-blur-lg rounded-[2rem] border border-white/10 p-6 sticky top-24 shadow-xl">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 rounded-xl bg-brand-primary/20 flex items-center justify-center text-xl">📊</div>
+                                <h3 className="text-lg font-bold text-white">Tier Distribution</h3>
+                            </div>
                             <div className="space-y-3">
                                 {['ETERNAL', 'MYTHIC', 'LEGENDARY', 'ALPHA', 'BETA', 'OMEGA', 'CASUAL', 'DIRT', 'UNRANKED'].map(tier => {
                                     const count = tierCounts[tier] || 0;
@@ -530,9 +531,9 @@ const Rankings: React.FC = () => {
                                                 <span className={`${styles.text} font-semibold text-sm`}>{tier}</span>
                                                 <span className="text-gray-400 text-sm">{count}</span>
                                             </div>
-                                            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                                                 <div
-                                                    className={`h-full ${styles.bg} ${styles.border} border-r transition-all duration-500`}
+                                                    className={`h-full ${styles.bg} transition-all duration-500`}
                                                     style={{ width: `${Math.max(percentage, count > 0 ? 5 : 0)}%` }}
                                                 />
                                             </div>
@@ -541,9 +542,9 @@ const Rankings: React.FC = () => {
                                 })}
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-gray-700">
+                            <div className="mt-6 pt-4 border-t border-white/10">
                                 <div className="text-center">
-                                    <div className="text-3xl font-bold text-white">{total}</div>
+                                    <div className="text-3xl font-bold text-brand-primary">{total}</div>
                                     <div className="text-sm text-gray-400">Ranked Players</div>
                                 </div>
                             </div>
@@ -552,9 +553,9 @@ const Rankings: React.FC = () => {
 
                     {/* Leaderboard Table */}
                     <div className="lg:col-span-3">
-                        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700 overflow-hidden">
+                        <div className="bg-black/30 backdrop-blur-lg rounded-[2rem] border border-white/10 overflow-hidden shadow-xl">
                             {/* Table Header */}
-                            <div className="bg-gray-900/80 px-6 py-4 grid grid-cols-12 gap-4 text-sm font-semibold text-gray-400 border-b border-gray-700">
+                            <div className="bg-black/40 px-6 py-4 grid grid-cols-12 gap-4 text-sm font-semibold text-gray-400 border-b border-white/10">
                                 <div className="col-span-1 text-center">#</div>
                                 <div className="col-span-4">Player</div>
                                 <div className="col-span-2 text-center">Tier</div>
@@ -566,7 +567,7 @@ const Rankings: React.FC = () => {
                             {/* Loading State */}
                             {loading && (
                                 <div className="p-12 text-center">
-                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
+                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand-primary border-t-transparent"></div>
                                     <p className="text-gray-400 mt-4">Loading rankings...</p>
                                 </div>
                             )}
@@ -594,7 +595,7 @@ const Rankings: React.FC = () => {
                                     <div
                                         key={player.uuid}
                                         onClick={() => setSelectedPlayer(player)}
-                                        className={`px-6 py-4 grid grid-cols-12 gap-4 items-center cursor-pointer transition-all duration-200 hover:bg-gray-700/50 border-b border-gray-700/50 ${isTop3 ? `${styles.bg} ${styles.glow}` : ''
+                                        className={`px-6 py-4 grid grid-cols-12 gap-4 items-center cursor-pointer transition-all duration-200 hover:bg-white/5 border-b border-white/5 ${isTop3 ? `${styles.bg} ${styles.glow}` : ''
                                             }`}
                                     >
                                         {/* Rank */}

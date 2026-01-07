@@ -1766,18 +1766,38 @@ app.post('/api/admin/tournament/clear', auth, async (req, res) => {
 const RankedPlayer = mongoose.model('RankedPlayer', new mongoose.Schema({
     uuid: { type: String, required: true, unique: true },
     minecraftName: { type: String, required: true },
+
+    // === COMBINED STATS (ACTIVE - used for current leaderboard) ===
     elo: { type: Number, default: 0 },
     wins: { type: Number, default: 0 },
     losses: { type: Number, default: 0 },
-    tier: { type: String, default: 'DIRT' },
+    tier: { type: String, default: 'UNRANKED' },
     totalKOs: { type: Number, default: 0 },
     totalDeaths: { type: Number, default: 0 },
     winStreak: { type: Number, default: 0 },
     bestWinStreak: { type: Number, default: 0 },
+
+    // === 1v1 STATS (INACTIVE - for future separate leaderboard) ===
+    elo1v1: { type: Number, default: 0 },
+    wins1v1: { type: Number, default: 0 },
+    losses1v1: { type: Number, default: 0 },
+    tier1v1: { type: String, default: 'UNRANKED' },
+    winStreak1v1: { type: Number, default: 0 },
+    bestWinStreak1v1: { type: Number, default: 0 },
+
+    // === 2v2 STATS (INACTIVE - for future separate leaderboard) ===
+    elo2v2: { type: Number, default: 0 },
+    wins2v2: { type: Number, default: 0 },
+    losses2v2: { type: Number, default: 0 },
+    tier2v2: { type: String, default: 'UNRANKED' },
+    winStreak2v2: { type: Number, default: 0 },
+    bestWinStreak2v2: { type: Number, default: 0 },
+
     lastMatchAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 }));
+
 
 // Ranked Match Schema
 const RankedMatch = mongoose.model('RankedMatch', new mongoose.Schema({
@@ -1797,8 +1817,246 @@ const RankedMatch = mongoose.model('RankedMatch', new mongoose.Schema({
     loserEloChange: { type: Number, default: 0 },
     winnerEloBefore: { type: Number, default: 0 },
     loserEloBefore: { type: Number, default: 0 },
+    // Anti-abuse tracking
+    diminishingMultiplier: { type: Number, default: 1.0 },
+    uniqueOpponentBonus: { type: Boolean, default: false },
+    eloRangeReduced: { type: Boolean, default: false },
+    // Pokemon details for match history
+    winnerPokemon: [{
+        species: { type: String },
+        nickname: { type: String },
+        level: { type: Number, default: 50 },
+        fainted: { type: Boolean, default: false }
+    }],
+    loserPokemon: [{
+        species: { type: String },
+        nickname: { type: String },
+        level: { type: Number, default: 50 },
+        fainted: { type: Boolean, default: false }
+    }],
     createdAt: { type: Date, default: Date.now }
 }));
+
+
+// Opponent History Schema - tracks matches between specific player pairs
+const OpponentHistory = mongoose.model('OpponentHistory', new mongoose.Schema({
+    playerUuid: { type: String, required: true },
+    opponentUuid: { type: String, required: true },
+    matchCount: { type: Number, default: 0 },
+    lastMatchAt: { type: Date, default: null },
+    resetAt: { type: Date, default: null } // 12-hour reset timer
+}));
+
+// Create compound index for efficient lookups
+OpponentHistory.collection.createIndex({ playerUuid: 1, opponentUuid: 1 }, { unique: true });
+
+// Daily Stats Schema - tracks unique opponents per day
+const DailyStats = mongoose.model('DailyStats', new mongoose.Schema({
+    playerUuid: { type: String, required: true },
+    date: { type: String, required: true }, // YYYY-MM-DD format
+    uniqueOpponents: [{ type: String }], // Array of opponent UUIDs
+    matchesPlayed: { type: Number, default: 0 },
+    bonusEarned: { type: Boolean, default: false }
+}));
+
+DailyStats.collection.createIndex({ playerUuid: 1, date: 1 }, { unique: true });
+
+// Ranked Ban Schema - persistent bans
+const RankedBan = mongoose.model('RankedBan', new mongoose.Schema({
+    playerUuid: { type: String, required: true, unique: true },
+    playerName: { type: String },
+    reason: { type: String, default: 'Manual ban' },
+    bannedBy: { type: String }, // UUID or 'SYSTEM' for auto-bans
+    bannedAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date, default: null }, // null = permanent
+    isPermanent: { type: Boolean, default: false }
+}));
+
+// Forfeit History Schema - tracks recent forfeits for abuse detection
+const ForfeitHistory = mongoose.model('ForfeitHistory', new mongoose.Schema({
+    playerUuid: { type: String, required: true },
+    matchId: { type: String },
+    opponent: { type: String },
+    forfeitedAt: { type: Date, default: Date.now }
+}));
+
+ForfeitHistory.collection.createIndex({ playerUuid: 1, forfeitedAt: -1 });
+
+// Helper function to check if player is banned
+const isPlayerBanned = async (playerUuid) => {
+    const ban = await RankedBan.findOne({ playerUuid });
+    if (!ban) return { banned: false };
+
+    // Check if ban has expired
+    if (ban.expiresAt && new Date() > ban.expiresAt) {
+        await RankedBan.deleteOne({ playerUuid });
+        return { banned: false };
+    }
+
+    return {
+        banned: true,
+        reason: ban.reason,
+        expiresAt: ban.expiresAt,
+        isPermanent: ban.isPermanent
+    };
+};
+
+// Helper function to check and apply forfeit abuse ban
+const checkForfeitAbuse = async (playerUuid, playerName) => {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+    // Get recent forfeits (last hour)
+    const recentForfeits = await ForfeitHistory.find({
+        playerUuid,
+        forfeitedAt: { $gte: oneHourAgo }
+    }).sort({ forfeitedAt: -1 });
+
+    // If 3 or more forfeits in last hour, auto-ban for 24 hours
+    if (recentForfeits.length >= 3) {
+        const existingBan = await RankedBan.findOne({ playerUuid });
+        if (!existingBan) {
+            await RankedBan.create({
+                playerUuid,
+                playerName,
+                reason: 'Auto-ban: 3 forfeits within 1 hour',
+                bannedBy: 'SYSTEM',
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+                isPermanent: false
+            });
+            console.log(`🚫 Auto-banned ${playerName} for 24h (forfeit abuse)`);
+            return { banned: true, duration: '24 hours' };
+        }
+    }
+
+    return { banned: false };
+};
+
+
+// Anti-Abuse Helper Functions
+
+/**
+ * Get diminishing returns multiplier for same-opponent matches
+ * Match 1: 100%, Match 2: 75%, Match 3: 50%, Match 4+: 25%
+ * Resets after 12 hours
+ */
+const getDiminishingMultiplier = async (playerUuid, opponentUuid) => {
+    const now = new Date();
+    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+
+    let history = await OpponentHistory.findOne({ playerUuid, opponentUuid });
+
+    if (!history) {
+        // First match with this opponent
+        return { multiplier: 1.0, matchCount: 0 };
+    }
+
+    // Check if 12-hour reset has passed
+    if (history.lastMatchAt && history.lastMatchAt < twelveHoursAgo) {
+        // Reset the counter
+        history.matchCount = 0;
+        history.resetAt = now;
+        await history.save();
+        return { multiplier: 1.0, matchCount: 0 };
+    }
+
+    // Calculate multiplier based on match count
+    const count = history.matchCount;
+    let multiplier = 1.0;
+    if (count === 1) multiplier = 0.75;
+    else if (count === 2) multiplier = 0.50;
+    else if (count >= 3) multiplier = 0.25;
+
+    return { multiplier, matchCount: count };
+};
+
+/**
+ * Update opponent history after a match
+ */
+const updateOpponentHistory = async (playerUuid, opponentUuid) => {
+    const now = new Date();
+
+    await OpponentHistory.findOneAndUpdate(
+        { playerUuid, opponentUuid },
+        {
+            $inc: { matchCount: 1 },
+            $set: { lastMatchAt: now }
+        },
+        { upsert: true, new: true }
+    );
+};
+
+/**
+ * Check daily unique opponents and return bonus multiplier
+ * Returns bonus of 1.15 (15% extra) if player has fought 3+ unique opponents today
+ */
+const getUniqueOpponentBonus = async (playerUuid, opponentUuid) => {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    let stats = await DailyStats.findOne({ playerUuid, date: today });
+
+    if (!stats) {
+        stats = await DailyStats.create({
+            playerUuid,
+            date: today,
+            uniqueOpponents: [],
+            matchesPlayed: 0,
+            bonusEarned: false
+        });
+    }
+
+    // Check if this opponent is new for today
+    const isNewOpponent = !stats.uniqueOpponents.includes(opponentUuid);
+
+    // Add opponent to list if new
+    if (isNewOpponent) {
+        stats.uniqueOpponents.push(opponentUuid);
+    }
+    stats.matchesPlayed += 1;
+
+    // Check if bonus threshold reached (3 unique opponents)
+    const uniqueCount = stats.uniqueOpponents.length;
+    let bonusMultiplier = 1.0;
+    let bonusApplied = false;
+
+    if (uniqueCount >= 3 && !stats.bonusEarned) {
+        bonusMultiplier = 1.15; // 15% bonus
+        bonusApplied = true;
+        stats.bonusEarned = true;
+    } else if (uniqueCount >= 3 && stats.bonusEarned) {
+        // Already earned bonus today, still get small bonus for variety
+        bonusMultiplier = 1.05; // 5% ongoing bonus for variety
+    }
+
+    await stats.save();
+
+    return {
+        bonusMultiplier,
+        bonusApplied,
+        uniqueCount,
+        isNewOpponent
+    };
+};
+
+/**
+ * Get ELO range penalty - reduces gains if ELO difference > 500
+ */
+const getEloRangePenalty = (winnerElo, loserElo) => {
+    const eloDiff = Math.abs(winnerElo - loserElo);
+
+    if (eloDiff <= 500) {
+        return { multiplier: 1.0, reduced: false };
+    }
+
+    // Significant reduction for farming lower-ranked players
+    // 500-700 diff: 50%, 700-1000 diff: 25%, 1000+ diff: 10%
+    if (eloDiff <= 700) {
+        return { multiplier: 0.50, reduced: true };
+    } else if (eloDiff <= 1000) {
+        return { multiplier: 0.25, reduced: true };
+    } else {
+        return { multiplier: 0.10, reduced: true };
+    }
+};
 
 // Tier definitions
 const TIERS = {
@@ -1888,7 +2146,8 @@ app.post('/api/ranked/match', async (req, res) => {
             winnerUuid, winnerName, loserUuid, loserName,
             winnerAlivePokemon, winnerTotalPokemon,
             loserAlivePokemon, loserTotalPokemon,
-            winnerKOs, loserKOs, battleType, endReason
+            winnerKOs, loserKOs, battleType, endReason,
+            winnerPokemon, loserPokemon
         } = req.body;
 
         if (!winnerUuid || !loserUuid) {
@@ -1910,8 +2169,21 @@ app.post('/api/ranked/match', async (req, res) => {
         if (winnerName) winner.minecraftName = winnerName;
         if (loserName) loser.minecraftName = loserName;
 
-        // Calculate ELO changes
-        const eloChanges = calculateEloChange(winner.elo, loser.elo, {
+        // === ANTI-ABUSE CHECKS ===
+
+        // 1. Diminishing returns for same opponent (resets after 12 hours)
+        const winnerDiminishing = await getDiminishingMultiplier(winnerUuid, loserUuid);
+        const loserDiminishing = await getDiminishingMultiplier(loserUuid, winnerUuid);
+
+        // 2. ELO range penalty (>500 difference = reduced gains)
+        const eloRangePenalty = getEloRangePenalty(winner.elo, loser.elo);
+
+        // 3. Unique opponent bonus (3+ unique per day)
+        const winnerUniqueBonus = await getUniqueOpponentBonus(winnerUuid, loserUuid);
+        const loserUniqueBonus = await getUniqueOpponentBonus(loserUuid, winnerUuid);
+
+        // Calculate base ELO changes
+        const baseEloChanges = calculateEloChange(winner.elo, loser.elo, {
             winnerAlivePokemon: winnerAlivePokemon || 0,
             winnerTotalPokemon: winnerTotalPokemon || 1,
             loserTotalPokemon: loserTotalPokemon || 1,
@@ -1920,12 +2192,26 @@ app.post('/api/ranked/match', async (req, res) => {
             endReason: endReason || 'normal'
         });
 
+        // Apply anti-abuse modifiers to winner's gains
+        let finalWinnerChange = baseEloChanges.winnerChange;
+        finalWinnerChange *= winnerDiminishing.multiplier;  // Diminishing returns
+        finalWinnerChange *= eloRangePenalty.multiplier;    // ELO range penalty
+        finalWinnerChange *= winnerUniqueBonus.bonusMultiplier; // Unique opponent bonus
+        finalWinnerChange = Math.round(finalWinnerChange);
+
+        // Loser's loss is not affected by winner's modifiers (but can be by their own)
+        let finalLoserChange = baseEloChanges.loserChange;
+        finalLoserChange = Math.round(finalLoserChange);
+
         // Store ELO before changes
         const winnerEloBefore = winner.elo;
         const loserEloBefore = loser.elo;
 
-        // Update winner
-        winner.elo = Math.max(0, winner.elo + eloChanges.winnerChange);
+        const format = (battleType || '1v1').toLowerCase().replace('v', 'v');
+        const is1v1 = format === '1v1';
+
+        // Update winner - COMBINED stats (active)
+        winner.elo = Math.max(0, winner.elo + finalWinnerChange);
         winner.wins += 1;
         winner.winStreak += 1;
         winner.bestWinStreak = Math.max(winner.bestWinStreak, winner.winStreak);
@@ -1935,8 +2221,23 @@ app.post('/api/ranked/match', async (req, res) => {
         winner.lastMatchAt = new Date();
         winner.updatedAt = new Date();
 
-        // Update loser
-        loser.elo = Math.max(0, loser.elo + eloChanges.loserChange);
+        // Update winner - FORMAT-SPECIFIC stats (inactive, for future use)
+        if (is1v1) {
+            winner.elo1v1 = Math.max(0, (winner.elo1v1 || 0) + finalWinnerChange);
+            winner.wins1v1 = (winner.wins1v1 || 0) + 1;
+            winner.winStreak1v1 = (winner.winStreak1v1 || 0) + 1;
+            winner.bestWinStreak1v1 = Math.max(winner.bestWinStreak1v1 || 0, winner.winStreak1v1);
+            winner.tier1v1 = calculateTier(winner.elo1v1, winner.wins1v1);
+        } else {
+            winner.elo2v2 = Math.max(0, (winner.elo2v2 || 0) + finalWinnerChange);
+            winner.wins2v2 = (winner.wins2v2 || 0) + 1;
+            winner.winStreak2v2 = (winner.winStreak2v2 || 0) + 1;
+            winner.bestWinStreak2v2 = Math.max(winner.bestWinStreak2v2 || 0, winner.winStreak2v2);
+            winner.tier2v2 = calculateTier(winner.elo2v2, winner.wins2v2);
+        }
+
+        // Update loser - COMBINED stats (active)
+        loser.elo = Math.max(0, loser.elo + finalLoserChange);
         loser.losses += 1;
         loser.winStreak = 0;
         loser.totalKOs += (loserKOs || 0);
@@ -1945,21 +2246,66 @@ app.post('/api/ranked/match', async (req, res) => {
         loser.lastMatchAt = new Date();
         loser.updatedAt = new Date();
 
+        // Update loser - FORMAT-SPECIFIC stats (inactive, for future use)
+        if (is1v1) {
+            loser.elo1v1 = Math.max(0, (loser.elo1v1 || 0) + finalLoserChange);
+            loser.losses1v1 = (loser.losses1v1 || 0) + 1;
+            loser.winStreak1v1 = 0;
+            loser.tier1v1 = calculateTier(loser.elo1v1, loser.wins1v1 || 0);
+        } else {
+            loser.elo2v2 = Math.max(0, (loser.elo2v2 || 0) + finalLoserChange);
+            loser.losses2v2 = (loser.losses2v2 || 0) + 1;
+            loser.winStreak2v2 = 0;
+            loser.tier2v2 = calculateTier(loser.elo2v2, loser.wins2v2 || 0);
+        }
+
         await winner.save();
         await loser.save();
 
-        // Record match
+        // Update opponent history for both players
+        await updateOpponentHistory(winnerUuid, loserUuid);
+        await updateOpponentHistory(loserUuid, winnerUuid);
+
+        // Record match with anti-abuse info and Pokemon data
         const match = await RankedMatch.create({
             winnerUuid, winnerName, loserUuid, loserName,
             winnerAlivePokemon, winnerTotalPokemon,
             loserAlivePokemon, loserTotalPokemon,
             winnerKOs, loserKOs, battleType, endReason,
-            winnerEloChange: eloChanges.winnerChange,
-            loserEloChange: eloChanges.loserChange,
-            winnerEloBefore, loserEloBefore
+            winnerEloChange: finalWinnerChange,
+            loserEloChange: finalLoserChange,
+            winnerEloBefore, loserEloBefore,
+            diminishingMultiplier: winnerDiminishing.multiplier,
+            uniqueOpponentBonus: winnerUniqueBonus.bonusApplied,
+            eloRangeReduced: eloRangePenalty.reduced,
+            winnerPokemon: winnerPokemon || [],
+            loserPokemon: loserPokemon || []
         });
 
-        console.log(`🏆 Ranked Match: ${winnerName} (+${eloChanges.winnerChange}) defeated ${loserName} (${eloChanges.loserChange})`);
+        // Log with anti-abuse info
+        let logMsg = `🏆 Ranked Match: ${winnerName} (+${finalWinnerChange}) defeated ${loserName} (${finalLoserChange})`;
+        if (winnerDiminishing.multiplier < 1) logMsg += ` [Diminishing: ${Math.round(winnerDiminishing.multiplier * 100)}%]`;
+        if (eloRangePenalty.reduced) logMsg += ` [ELO Range Penalty]`;
+        if (winnerUniqueBonus.bonusApplied) logMsg += ` [Unique Opponent Bonus!]`;
+        console.log(logMsg);
+
+        // Track forfeits for abuse detection
+        let forfeitBan = null;
+        if (endReason === 'forfeit') {
+            // Record this forfeit
+            await ForfeitHistory.create({
+                playerUuid: loserUuid,
+                matchId: match._id.toString(),
+                opponent: winnerUuid
+            });
+
+            // Check if this triggers an auto-ban
+            forfeitBan = await checkForfeitAbuse(loserUuid, loserName);
+
+            // Clean up old forfeit records (older than 12 hours)
+            const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+            await ForfeitHistory.deleteMany({ forfeitedAt: { $lt: twelveHoursAgo } });
+        }
 
         res.json({
             success: true,
@@ -1967,14 +2313,141 @@ app.post('/api/ranked/match', async (req, res) => {
             loserElo: loser.elo,
             winnerWins: winner.wins,
             loserLosses: loser.losses,
-            winnerEloChange: eloChanges.winnerChange,
-            loserEloChange: eloChanges.loserChange,
+            winnerEloChange: finalWinnerChange,
+            loserEloChange: finalLoserChange,
             winnerTier: winner.tier,
             loserTier: loser.tier,
-            matchId: match._id
+            matchId: match._id,
+            // Anti-abuse info for client display
+            antiAbuse: {
+                diminishingMultiplier: winnerDiminishing.multiplier,
+                sameOpponentCount: winnerDiminishing.matchCount + 1,
+                eloRangeReduced: eloRangePenalty.reduced,
+                uniqueOpponentBonus: winnerUniqueBonus.bonusApplied,
+                uniqueOpponentsToday: winnerUniqueBonus.uniqueCount,
+                forfeitBan: forfeitBan
+            }
         });
     } catch (e) {
         console.error('Ranked match error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// === BAN MANAGEMENT ENDPOINTS ===
+
+// Check if player is banned (for mod to call)
+app.get('/api/ranked/ban/:uuid', async (req, res) => {
+    try {
+        const { uuid } = req.params;
+        const banStatus = await isPlayerBanned(uuid);
+        res.json(banStatus);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Ban a player (requires API key)
+app.post('/api/ranked/ban', async (req, res) => {
+    try {
+        const { apiKey, playerUuid, playerName, reason, duration, bannedBy, isPermanent } = req.body;
+
+        const configApiKey = process.env.RANKED_API_KEY || 'your-api-key-here';
+        if (apiKey !== configApiKey) {
+            return res.status(403).json({ error: 'Invalid API key' });
+        }
+
+        // Check if already banned
+        const existing = await RankedBan.findOne({ playerUuid });
+        if (existing) {
+            return res.json({ success: false, message: 'Player is already banned' });
+        }
+
+        // Calculate expiry
+        let expiresAt = null;
+        if (!isPermanent && duration) {
+            expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000); // duration in hours
+        }
+
+        await RankedBan.create({
+            playerUuid,
+            playerName: playerName || 'Unknown',
+            reason: reason || 'Manual ban',
+            bannedBy: bannedBy || 'OP',
+            expiresAt,
+            isPermanent: isPermanent || false
+        });
+
+        console.log(`🚫 ${playerName} banned from ranked by ${bannedBy} - Reason: ${reason}`);
+
+        res.json({
+            success: true,
+            expiresAt,
+            isPermanent: isPermanent || false
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Unban a player (requires API key)
+app.delete('/api/ranked/ban/:uuid', async (req, res) => {
+    try {
+        const { uuid } = req.params;
+        const { apiKey, unbannedBy } = req.body;
+
+        const configApiKey = process.env.RANKED_API_KEY || 'your-api-key-here';
+        if (apiKey !== configApiKey) {
+            return res.status(403).json({ error: 'Invalid API key' });
+        }
+
+        const ban = await RankedBan.findOneAndDelete({ playerUuid: uuid });
+
+        if (!ban) {
+            return res.json({ success: false, message: 'Player is not banned' });
+        }
+
+        console.log(`✅ ${ban.playerName} unbanned from ranked by ${unbannedBy || 'OP'}`);
+
+        res.json({
+            success: true,
+            playerName: ban.playerName
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// List all active bans (requires API key)
+app.get('/api/ranked/bans', async (req, res) => {
+    try {
+        const { apiKey } = req.query;
+
+        const configApiKey = process.env.RANKED_API_KEY || 'your-api-key-here';
+        if (apiKey !== configApiKey) {
+            return res.status(403).json({ error: 'Invalid API key' });
+        }
+
+        // Clean up expired bans first
+        await RankedBan.deleteMany({
+            expiresAt: { $ne: null, $lt: new Date() }
+        });
+
+        const bans = await RankedBan.find({}).sort({ bannedAt: -1 });
+
+        res.json({
+            count: bans.length,
+            bans: bans.map(b => ({
+                uuid: b.playerUuid,
+                name: b.playerName,
+                reason: b.reason,
+                bannedBy: b.bannedBy,
+                bannedAt: b.bannedAt,
+                expiresAt: b.expiresAt,
+                isPermanent: b.isPermanent
+            }))
+        });
+    } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
@@ -2061,30 +2534,96 @@ app.get('/api/ranked/player/:uuid', async (req, res) => {
 app.get('/api/ranked/player/:uuid/history', async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * limit;
 
         const matches = await RankedMatch.find({
             $or: [
                 { winnerUuid: req.params.uuid },
                 { loserUuid: req.params.uuid }
             ]
-        }).sort({ createdAt: -1 }).limit(limit);
+        }).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
-        const history = matches.map(m => ({
-            id: m._id,
-            isWin: m.winnerUuid === req.params.uuid,
-            opponent: m.winnerUuid === req.params.uuid ? m.loserName : m.winnerName,
-            opponentUuid: m.winnerUuid === req.params.uuid ? m.loserUuid : m.winnerUuid,
-            eloChange: m.winnerUuid === req.params.uuid ? m.winnerEloChange : m.loserEloChange,
-            battleType: m.battleType,
-            endReason: m.endReason,
-            date: m.createdAt
-        }));
+        const total = await RankedMatch.countDocuments({
+            $or: [
+                { winnerUuid: req.params.uuid },
+                { loserUuid: req.params.uuid }
+            ]
+        });
 
-        res.json(history);
+        const history = matches.map(m => {
+            const isWin = m.winnerUuid === req.params.uuid;
+            return {
+                id: m._id,
+                isWin,
+                opponent: isWin ? m.loserName : m.winnerName,
+                opponentUuid: isWin ? m.loserUuid : m.winnerUuid,
+                eloChange: isWin ? m.winnerEloChange : m.loserEloChange,
+                eloBefore: isWin ? m.winnerEloBefore : m.loserEloBefore,
+                eloAfter: isWin ? (m.winnerEloBefore + m.winnerEloChange) : (m.loserEloBefore + m.loserEloChange),
+                battleType: m.battleType,
+                endReason: m.endReason,
+                pokemonAlive: isWin ? m.winnerAlivePokemon : m.loserAlivePokemon,
+                pokemonTotal: isWin ? m.winnerTotalPokemon : m.loserTotalPokemon,
+                date: m.createdAt
+            };
+        });
+
+        res.json({
+            matches: history,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
+
+// Get Single Match Details
+app.get('/api/ranked/match/:id', async (req, res) => {
+    try {
+        const match = await RankedMatch.findById(req.params.id);
+        if (!match) {
+            return res.status(404).json({ error: 'Match not found' });
+        }
+
+        res.json({
+            id: match._id,
+            winner: {
+                uuid: match.winnerUuid,
+                name: match.winnerName,
+                eloChange: match.winnerEloChange,
+                eloBefore: match.winnerEloBefore,
+                eloAfter: match.winnerEloBefore + match.winnerEloChange,
+                pokemonAlive: match.winnerAlivePokemon,
+                pokemonTotal: match.winnerTotalPokemon,
+                kos: match.winnerKOs,
+                pokemon: match.winnerPokemon || []
+            },
+            loser: {
+                uuid: match.loserUuid,
+                name: match.loserName,
+                eloChange: match.loserEloChange,
+                eloBefore: match.loserEloBefore,
+                eloAfter: match.loserEloBefore + match.loserEloChange,
+                pokemonAlive: match.loserAlivePokemon,
+                pokemonTotal: match.loserTotalPokemon,
+                kos: match.loserKOs,
+                pokemon: match.loserPokemon || []
+            },
+            battleType: match.battleType,
+            endReason: match.endReason,
+            date: match.createdAt
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 
 // Get Player Rank (for in-game display)
 app.get('/api/ranked/player/:uuid/rank', async (req, res) => {
