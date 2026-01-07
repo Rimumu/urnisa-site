@@ -91,6 +91,9 @@ interface MatchHistoryResponse {
     };
 }
 
+// Simple in-memory cache for Pokemon IDs to avoid spamming PokeAPI
+const idCache = new Map<string, number>();
+
 // Pokemon Sprite Component with Cobblemon -> PokeAPI fallback
 const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
     const [imgSrc, setImgSrc] = useState<string>('');
@@ -111,18 +114,37 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
 
     const handleImageError = () => {
         const cobbleName = getFormattedName(pokemon.species);
+
         if (imgSrc.includes('cobblemon.tools')) {
-            // Fallback to PokeAPI Home (3D) sprites - need to get Pokemon ID
-            // Use a generic approach with species name
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${cobbleName}.png`);
+            // Check cache first
+            if (idCache.has(cobbleName)) {
+                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${idCache.get(cobbleName)}.png`);
+                return;
+            }
+
+            // Fallback to PokeAPI Home (3D) - Requires ID
+            fetch(`https://pokeapi.co/api/v2/pokemon/${cobbleName}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.id) {
+                        idCache.set(cobbleName, data.id);
+                        setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${data.id}.png`);
+                    } else {
+                        // Fallback to Pokemondb (Name based) if no ID found
+                        setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`);
+                    }
+                })
+                .catch(() => {
+                    // Network error or not found -> fallback to Pokemondb
+                    setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`);
+                });
         } else if (imgSrc.includes('other/home')) {
-            // Try official artwork
-            setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${cobbleName}.png`);
-        } else if (imgSrc.includes('official-artwork')) {
-            // Try basic sprite by name (won't work, but as last resort)
+            // If Home sprite fails (or wasn't found), try official artwork (also needs ID usually, but trying name just in case or pokemondb)
+            // Actually, if we are here, it means we MIGHT have an ID or tried an ID.
+            // Let's fallback to Pokemondb which is reliable with names
             setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`);
-        } else {
-            // Final fallback - placeholder
+        } else if (imgSrc.includes('pokemondb')) {
+            // Final fallback
             setImgSrc(`https://via.placeholder.com/64x64/1a1a1a/666666?text=${encodeURIComponent(pokemon.species.substring(0, 3))}`);
         }
     };
