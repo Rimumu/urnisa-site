@@ -204,9 +204,25 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
     }, [player.uuid, page]);
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200" onClick={onClose}>
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: rgba(229, 56, 59, 0.5);
+                    border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: rgba(229, 56, 59, 0.8);
+                }
+            `}</style>
             <div
-                className={`bg-[#1a0b0e] border ${styles.border} rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl ${styles.glow}`}
+                className={`bg-[#1a0b0e] border ${styles.border} rounded-3xl max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl ${styles.glow} custom-scrollbar`}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -398,9 +414,9 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
     }, [matchId]);
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-in fade-in duration-200" onClick={onClose}>
             <div
-                className="bg-[#1a0b0e] border border-white/10 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+                className="bg-[#1a0b0e] border border-white/10 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl custom-scrollbar"
                 onClick={e => e.stopPropagation()}
             >
                 {loading ? (
