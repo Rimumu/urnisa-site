@@ -531,7 +531,7 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
 const Rankings: React.FC = () => {
     // Mock test data for preview
     const MOCK_PLAYERS: Player[] = [
-        { rank: 1, uuid: 'c06f8906-4c8a-4911-9c29-ea1dbd1aab82', minecraftName: 'DragonSlayer99', elo: 2150, wins: 47, losses: 8, tier: 'ETERNAL', tierInfo: { name: 'ETERNAL', color: '#ef4444' }, winRate: 85, winStreak: 12, bestWinStreak: 15 },
+        { rank: 1, uuid: '665a0e4b-4cc8-4442-a1d3-7ddadc7d1f66', minecraftName: 'DragonSlayer99', elo: 2150, wins: 47, losses: 8, tier: 'ETERNAL', tierInfo: { name: 'ETERNAL', color: '#ef4444' }, winRate: 85, winStreak: 12, bestWinStreak: 15 },
         { rank: 2, uuid: 'd9fb0cc5-4dc7-47a4-b4bf-5c1a8f9c9668', minecraftName: 'PikachuMaster', elo: 1980, wins: 38, losses: 12, tier: 'MYTHIC', tierInfo: { name: 'MYTHIC', color: '#ec4899' }, winRate: 76, winStreak: 5, bestWinStreak: 9 },
         { rank: 3, uuid: 'a2bf8d3c-8e39-4c7f-a9e8-1d3f4b7c6e9a', minecraftName: 'ShadowNinja', elo: 1850, wins: 35, losses: 15, tier: 'LEGENDARY', tierInfo: { name: 'LEGENDARY', color: '#eab308' }, winRate: 70, winStreak: 3, bestWinStreak: 8 },
         { rank: 4, uuid: 'b3c9e0d4-9f4a-5d8b-b0f9-2e4g5h8i7j0k', minecraftName: 'FireBreather', elo: 1720, wins: 28, losses: 18, tier: 'ALPHA', tierInfo: { name: 'ALPHA', color: '#a855f7' }, winRate: 61, winStreak: 2, bestWinStreak: 6 },
