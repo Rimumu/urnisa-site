@@ -529,40 +529,23 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
 
 
 const Rankings: React.FC = () => {
-    // Mock test data for preview
-    const MOCK_PLAYERS: Player[] = [
-        { rank: 1, uuid: '665a0e4b-4cc8-4442-a1d3-7ddadc7d1f66', minecraftName: 'DragonSlayer99', elo: 2150, wins: 47, losses: 8, tier: 'ETERNAL', tierInfo: { name: 'ETERNAL', color: '#ef4444' }, winRate: 85, winStreak: 12, bestWinStreak: 15 },
-        { rank: 2, uuid: 'd9fb0cc5-4dc7-47a4-b4bf-5c1a8f9c9668', minecraftName: 'PikachuMaster', elo: 1980, wins: 38, losses: 12, tier: 'MYTHIC', tierInfo: { name: 'MYTHIC', color: '#ec4899' }, winRate: 76, winStreak: 5, bestWinStreak: 9 },
-        { rank: 3, uuid: 'a2bf8d3c-8e39-4c7f-a9e8-1d3f4b7c6e9a', minecraftName: 'ShadowNinja', elo: 1850, wins: 35, losses: 15, tier: 'LEGENDARY', tierInfo: { name: 'LEGENDARY', color: '#eab308' }, winRate: 70, winStreak: 3, bestWinStreak: 8 },
-        { rank: 4, uuid: 'b3c9e0d4-9f4a-5d8b-b0f9-2e4g5h8i7j0k', minecraftName: 'FireBreather', elo: 1720, wins: 28, losses: 18, tier: 'ALPHA', tierInfo: { name: 'ALPHA', color: '#a855f7' }, winRate: 61, winStreak: 2, bestWinStreak: 6 },
-        { rank: 5, uuid: 'c4d0f1e5-0g5b-6e9c-c1g0-3f5h6i9j8k1l', minecraftName: 'IceQueen', elo: 1650, wins: 25, losses: 20, tier: 'ALPHA', tierInfo: { name: 'ALPHA', color: '#a855f7' }, winRate: 56, winStreak: 0, bestWinStreak: 5 },
-        { rank: 6, uuid: 'd5e1g2f6-1h6c-7f0d-d2h1-4g6i7j0k9l2m', minecraftName: 'ThunderBolt', elo: 1480, wins: 22, losses: 20, tier: 'BETA', tierInfo: { name: 'BETA', color: '#3b82f6' }, winRate: 52, winStreak: 1, bestWinStreak: 4 },
-        { rank: 7, uuid: 'e6f2h3g7-2i7d-8g1e-e3i2-5h7j8k1l0m3n', minecraftName: 'GrassHopper', elo: 1350, wins: 18, losses: 22, tier: 'OMEGA', tierInfo: { name: 'OMEGA', color: '#22c55e' }, winRate: 45, winStreak: 0, bestWinStreak: 3 },
-        { rank: 8, uuid: 'f7g3i4h8-3j8e-9h2f-f4j3-6i8k9l2m1n4o', minecraftName: 'WaterWave', elo: 1200, wins: 15, losses: 25, tier: 'CASUAL', tierInfo: { name: 'CASUAL', color: '#9ca3af' }, winRate: 38, winStreak: 0, bestWinStreak: 2 },
-        { rank: 9, uuid: 'g8h4j5i9-4k9f-0i3g-g5k4-7j9l0m3n2o5p', minecraftName: 'RockSolid', elo: 1050, wins: 10, losses: 20, tier: 'DIRT', tierInfo: { name: 'DIRT', color: '#d97706' }, winRate: 33, winStreak: 0, bestWinStreak: 2 },
-        { rank: 10, uuid: 'h9i5k6j0-5l0g-1j4h-h6l5-8k0m1n4o3p6q', minecraftName: 'NewTrainer', elo: 950, wins: 3, losses: 7, tier: 'UNRANKED', tierInfo: { name: 'UNRANKED', color: '#6b7280' }, winRate: 30, winStreak: 0, bestWinStreak: 1 },
-    ];
-
-    const [players, setPlayers] = useState<Player[]>(MOCK_PLAYERS); // Start with mock data
-    const [loading, setLoading] = useState(false); // Set to false to show mock data
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-    const [total, setTotal] = useState(MOCK_PLAYERS.length);
+    const [total, setTotal] = useState(0);
 
     useEffect(() => {
-        // Try to fetch real data, fallback to mock if fails
         fetch(`${API_BASE}/api/ranked/leaderboard?limit=100`)
             .then(res => res.json())
             .then(data => {
-                if (data.players && data.players.length > 0) {
-                    setPlayers(data.players);
-                    setTotal(data.total || data.players.length);
-                }
-                // Keep mock data if no real data
+                setPlayers(data.players || []);
+                setTotal(data.total || 0);
+                setLoading(false);
             })
             .catch(err => {
-                console.log('Using mock data for preview');
-                // Keep mock data on error
+                setError('Failed to load leaderboard');
+                setLoading(false);
             });
     }, []);
 
@@ -575,22 +558,12 @@ const Rankings: React.FC = () => {
     return (
         <div className="min-h-screen py-8 font-sans text-white relative">
             {/* Hero Section */}
-            <div className="flex flex-col items-center text-center space-y-6 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex flex-col items-center text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="relative z-10">
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight drop-shadow-2xl">
                         <span className="text-brand-primary">RANKED</span> LEADERBOARD
                     </h1>
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-brand-primary/5 blur-[60px] -z-10 rounded-full"></div>
-                </div>
-                <p className="text-gray-300 max-w-2xl text-lg md:text-xl px-4">
-                    Compete in Cobblemon battles to climb the ranks and prove your worth
-                </p>
-
-                {/* Tier Legend */}
-                <div className="flex flex-wrap justify-center gap-2 mt-6 px-4">
-                    {['UNRANKED', 'DIRT', 'CASUAL', 'OMEGA', 'BETA', 'ALPHA', 'LEGENDARY', 'MYTHIC', 'ETERNAL'].map(tier => (
-                        <TierBadge key={tier} tier={tier} size="sm" />
-                    ))}
                 </div>
             </div>
 
