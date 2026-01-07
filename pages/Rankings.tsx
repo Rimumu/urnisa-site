@@ -93,10 +93,13 @@ interface MatchHistoryResponse {
 
 // Simple in-memory cache for Pokemon IDs to avoid spamming PokeAPI
 const idCache = new Map<string, number>();
+// Cache for image validity to avoid repeated backend checks
+const clientImageValidationCache = new Map<string, boolean>();
 
 // Pokemon Sprite Component with Cobblemon -> PokeAPI fallback
 const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
     const [imgSrc, setImgSrc] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
 
     const getFormattedName = (name: string) => {
         return name.toLowerCase()
@@ -106,45 +109,94 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
             .replace(/\s+/g, '-');
     };
 
+    // Helper to get fallback URL (Home high-res)
+    const getFallbackUrl = async (cobbleName: string): Promise<string> => {
+        // Check ID cache first
+        if (idCache.has(cobbleName)) {
+            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${idCache.get(cobbleName)}.png`;
+        }
+
+        // Fetch ID from PokeAPI
+        try {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${cobbleName}`);
+            const data = await res.json();
+            if (data.id) {
+                idCache.set(cobbleName, data.id);
+                return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${data.id}.png`;
+            }
+        } catch (e) {
+            console.warn(`Failed to fetch ID for ${cobbleName}`);
+        }
+
+        // Final fallback to name-based Home sprite (likely to fail if needs ID, but acts as safety) 
+        // OR Pokemondb which supports names
+        return `https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`;
+    };
+
     useEffect(() => {
-        const cobbleName = getFormattedName(pokemon.species);
-        // Try Cobblemon tools first
-        setImgSrc(`https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`);
-    }, [pokemon.species]);
+        let mounted = true;
 
-    const handleImageError = () => {
-        const cobbleName = getFormattedName(pokemon.species);
+        const verifyImage = async () => {
+            setIsLoading(true);
+            const cobbleName = getFormattedName(pokemon.species);
+            const primaryUrl = `https://cobblemon.tools/pokedex/pokemon/${cobbleName}/sprite.png`;
 
-        if (imgSrc.includes('cobblemon.tools')) {
-            // Check cache first
-            if (idCache.has(cobbleName)) {
-                setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${idCache.get(cobbleName)}.png`);
+            // 1. Check Validation Cache
+            if (clientImageValidationCache.has(primaryUrl)) {
+                const isValid = clientImageValidationCache.get(primaryUrl);
+                if (isValid) {
+                    if (mounted) setImgSrc(primaryUrl);
+                } else {
+                    const fallback = await getFallbackUrl(cobbleName);
+                    if (mounted) setImgSrc(fallback);
+                }
+                if (mounted) setIsLoading(false);
                 return;
             }
 
-            // Fallback to PokeAPI Home (3D) - Requires ID
-            fetch(`https://pokeapi.co/api/v2/pokemon/${cobbleName}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.id) {
-                        idCache.set(cobbleName, data.id);
-                        setImgSrc(`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${data.id}.png`);
+            // 2. Validate via Backend
+            try {
+                // Using API_BASE defined in file
+                const response = await fetch(`${API_BASE}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const data = await response.json();
+
+                if (mounted) {
+                    clientImageValidationCache.set(primaryUrl, data.valid);
+
+                    if (data.valid) {
+                        setImgSrc(primaryUrl);
                     } else {
-                        // Fallback to Pokemondb (Name based) if no ID found
-                        setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`);
+                        const fallback = await getFallbackUrl(cobbleName);
+                        setImgSrc(fallback);
                     }
-                })
-                .catch(() => {
-                    // Network error or not found -> fallback to Pokemondb
-                    setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`);
-                });
+                }
+            } catch (error) {
+                // Backend check failed? Assume primary is bad or network error, try fallback
+                if (mounted) {
+                    const fallback = await getFallbackUrl(cobbleName);
+                    setImgSrc(fallback);
+                }
+            } finally {
+                if (mounted) setIsLoading(false);
+            }
+        };
+
+        verifyImage();
+
+        return () => { mounted = false; };
+    }, [pokemon.species]);
+
+    const handleImageError = async () => {
+        // If the assigned image (validated or fallback) FAILS to load, try next fallback
+        if (imgSrc.includes('cobblemon.tools')) {
+            // If validation said YES but it failed loading (rare), go to fallback
+            const cobbleName = getFormattedName(pokemon.species);
+            const fallback = await getFallbackUrl(cobbleName);
+            setImgSrc(fallback);
         } else if (imgSrc.includes('other/home')) {
-            // If Home sprite fails (or wasn't found), try official artwork (also needs ID usually, but trying name just in case or pokemondb)
-            // Actually, if we are here, it means we MIGHT have an ID or tried an ID.
-            // Let's fallback to Pokemondb which is reliable with names
+            const cobbleName = getFormattedName(pokemon.species);
             setImgSrc(`https://img.pokemondb.net/sprites/home/normal/${cobbleName}.png`);
         } else if (imgSrc.includes('pokemondb')) {
-            // Final fallback
             setImgSrc(`https://via.placeholder.com/64x64/1a1a1a/666666?text=${encodeURIComponent(pokemon.species.substring(0, 3))}`);
         }
     };
@@ -158,9 +210,9 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
             title={`${pokemon.nickname || pokemon.species} Lv.${pokemon.level}${pokemon.fainted ? ' (Fainted)' : ''}`}
         >
             <img
-                src={imgSrc}
+                src={imgSrc || `https://via.placeholder.com/64x64/1a1a1a/666666?text=?`}
                 alt={pokemon.species}
-                className={`w-12 h-12 object-contain transition-all ${pokemon.fainted ? 'opacity-60' : ''}`}
+                className={`w-12 h-12 object-contain transition-all ${pokemon.fainted ? 'opacity-60' : ''} ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                 onError={handleImageError}
             />
             {pokemon.fainted && (
