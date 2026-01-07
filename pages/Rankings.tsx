@@ -246,9 +246,17 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
         }
     };
 
-    const hasNickname = pokemon.nickname && pokemon.nickname !== pokemon.species;
+    // Clean up nickname - removes "literal{...}" wrapper if present
+    const cleanNickname = (name: string | undefined): string | undefined => {
+        if (!name) return undefined;
+        const match = name.match(/^literal\{(.+)\}$/i);
+        return match ? match[1] : name;
+    };
+
+    const nickname = cleanNickname(pokemon.nickname);
+    const hasNickname = nickname && nickname !== pokemon.species;
     const displayName = hasNickname
-        ? `${pokemon.species} (${pokemon.nickname})`
+        ? `${pokemon.species} (${nickname})`
         : pokemon.species;
 
     return (
@@ -282,7 +290,7 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
                         <div className="text-white font-semibold text-sm mb-1">
                             <span className="capitalize">{pokemon.species}</span>
                             {hasNickname && (
-                                <span className="text-gray-400 font-normal"> ({pokemon.nickname})</span>
+                                <span className="text-gray-400 font-normal"> ({nickname})</span>
                             )}
                         </div>
                         {types.length > 0 && (
