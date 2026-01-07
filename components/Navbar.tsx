@@ -90,7 +90,7 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
           onClick={closeMenu}
           className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
-          🏆 Rankings
+          Rankings
         </NavLink>
       </div>
     </div>
