@@ -555,6 +555,39 @@ const SnakesLadder: React.FC = () => {
 
                     {/* Sidebar */}
                     <div className="space-y-6">
+                        {/* Hall of Fame */}
+                        <div className="bg-black/40 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-6 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-yellow-500/20 transition-colors"></div>
+
+                            <h3 className="text-yellow-400 font-bold uppercase tracking-widest text-xs mb-4 text-center border-b border-white/5 pb-4 flex items-center justify-center gap-2">
+                                <span>🏆</span> Hall of Fame <span>🏆</span>
+                            </h3>
+
+                            <div className="space-y-3">
+                                {state?.winners && state.winners.length > 0 ? (
+                                    state.winners.map((winner, idx) => (
+                                        <div key={winner._id} className="flex items-center gap-3">
+                                            <div className={`font-black w-6 text-center ${idx === 0 ? 'text-yellow-400 text-lg' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-amber-600' : 'text-gray-600'}`}>
+                                                #{idx + 1}
+                                            </div>
+                                            <img
+                                                src={winner.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(winner.user)}&background=random`}
+                                                alt={winner.user}
+                                                className="w-8 h-8 rounded-full border border-white/20"
+                                            />
+                                            <div className="flex-1 truncate font-bold text-white text-sm">
+                                                {winner.user}
+                                            </div>
+                                            <div className="text-yellow-400 font-black text-sm">
+                                                {winner.winCount} <span className="text-[10px] opacity-60 uppercase">Wins</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center text-gray-500 text-xs py-4 italic">No winners yet</div>
+                                )}
+                            </div>
+                        </div>
                         {/* Stats Card */}
                         <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
                             <h3 className="text-brand-accent font-bold uppercase tracking-widest text-xs mb-4 text-center">Game Stats</h3>

@@ -28,6 +28,14 @@ export interface SnakesHistoryItem {
     timestamp: string;
 }
 
+export interface SnakesWinner {
+    _id: string;
+    user: string;
+    avatarUrl?: string;
+    winCount: number;
+    lastWinAt: string;
+}
+
 export interface SnakesBoard {
     ladders: Record<number, number>;
     snakes: Record<number, number>;
@@ -37,6 +45,7 @@ export interface SnakesGameState {
     queue: SnakesQueueItem[];
     players: SnakesPlayer[];
     history: SnakesHistoryItem[];
+    winners: SnakesWinner[];
     isActive: boolean;
     board: SnakesBoard;
 }
