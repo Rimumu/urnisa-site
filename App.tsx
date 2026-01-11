@@ -13,13 +13,13 @@ import TournamentDev from './pages/TournamentDev'; // New Import
 import Tournament from './pages/Tournament'; // Prod Tournament Page
 import AdminTournamentDev from './pages/AdminTournamentDev'; // New Admin Tournament Dev Page
 import AdminTournament from './pages/AdminTournament'; // New Admin Tournament Production Page
+import SnakesLadder from './pages/SnakesLadder'; // Snakes and Ladders Game
 import Bingo from './pages/Bingo';
 import BingoDashboard from './pages/BingoDashboard';
 import Inventory from './pages/Inventory';
 import Redeem from './pages/Redeem';
 import About from './pages/About';
 import Admin from './pages/Admin';
-import Rankings from './pages/Rankings';
 import Overlay from './pages/Overlay';
 import TimerWidget from './pages/overlays/TimerWidget';
 import GoalWidget from './pages/overlays/GoalWidget';
@@ -79,11 +79,11 @@ const App: React.FC = () => {
           <Route path="/minecraft" element={<Minecraft />} />
           <Route path="/minecraft/gacha" element={<Gacha />} />
           <Route path="/minecraft/tournament" element={<Tournament />} />
-          <Route path="/minecraft/rankings" element={<Rankings />} />
           {/* Dev Routes */}
           <Route path="/dev/gacha" element={<GachaDev />} />
           <Route path="/dev/tournament" element={<TournamentDev />} />
           <Route path="/dev/admintournament" element={<AdminTournamentDev />} />
+          <Route path="/dev/snakesladder" element={<SnakesLadder />} />
           {/* Prod Admin Routes */}
           <Route path="/admin/tournament" element={<AdminTournament />} />
 

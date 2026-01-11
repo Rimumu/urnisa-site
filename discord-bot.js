@@ -13,7 +13,7 @@ try {
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.BOT_PORT || 3002;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 
 app.use(express.json());
@@ -32,7 +32,7 @@ const RCON_HOST = process.env.RCON_HOST;
 const RCON_PORT = parseInt(process.env.RCON_PORT || '25575');
 const RCON_PASSWORD = process.env.RCON_PASSWORD;
 
-const GUILD_ID = '1336782145833668729'; 
+const GUILD_ID = '1336782145833668729';
 const ROLE_SUBSCRIBER = '1339227370833448980';
 const ROLE_FRIEND = '1445655680735383675';
 const WHITELIST_NOTIFY_CHANNEL = '1375823728717467788';
@@ -42,7 +42,7 @@ const GACHA_LOG_CHANNEL = '1382803278449868921';
 // Map Gacha Item Names to RCON Commands / Minecraft IDs
 const ITEM_MAP = {
     'Bronze Coin': 'numismatic-overhaul:bronze_coin',
-    'Silver Coin': 'numismatic-overhaul:silver_coin', 
+    'Silver Coin': 'numismatic-overhaul:silver_coin',
     'Gold Coin': 'numismatic-overhaul:gold_coin',
     'Pokeball': 'cobblemon:poke_ball',
     'Great Ball': 'cobblemon:great_ball',
@@ -101,12 +101,12 @@ const sendRconCommand = async (command) => {
             return response; // Return the actual response string
         } catch (error) {
             console.warn(`⚠️ [RCON ATTEMPT ${attempt}/${maxRetries}] Failed: ${error.message}`);
-            
+
             if (attempt === maxRetries) {
                 console.error(`❌ [RCON ERROR] Could not send "${command}" after 3 attempts.`);
                 return false;
             }
-            
+
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
@@ -172,21 +172,119 @@ const RedemptionCodeSchema = new mongoose.Schema({
     code: { type: String, required: true, unique: true },
     type: { type: String, required: true }, // 'lamb' or 'wagyu'
     packAmount: { type: Number, default: 1 },
-    
+
     // Usage Logic
     usageType: { type: String, default: 'once_global' }, // 'once_global', 'once_per_user', 'infinite', 'time_limited'
     expiresAt: { type: Date }, // For time_limited
-    
+
     // Tracking
     usageCount: { type: Number, default: 0 },
     redeemedBy: [{ type: String }], // Array of discordIds
-    
+
     // Legacy support (optional)
     isRedeemed: { type: Boolean, default: false },
-    
+
     createdAt: { type: Date, default: Date.now }
 });
 const RedemptionCode = mongoose.model('RedemptionCode', RedemptionCodeSchema);
+
+// --- RANKED SYSTEM SYNC (HOTFIX) ---
+
+const RankedPlayerSchema = new mongoose.Schema({
+    uuid: { type: String, required: true, unique: true },
+    minecraftName: { type: String, required: true },
+    tier: { type: String, default: 'UNRANKED' },
+    // Only need tier and uuid/name for display sync
+    elo: Number,
+    wins: Number
+});
+const RankedPlayer = mongoose.model('RankedPlayer', RankedPlayerSchema);
+
+const TIER_FORMATS = {
+    DIRT: { color: 'gold', prefix: 'DIRT', sortKey: 'j' },
+    CASUAL: { color: 'gray', prefix: 'CASUAL', sortKey: 'i' },
+    OMEGA: { color: 'green', prefix: 'OMEGA', sortKey: 'h' },
+    BETA: { color: 'blue', prefix: 'BETA', sortKey: 'g' },
+    ALPHA: { color: 'dark_purple', prefix: 'ALPHA', sortKey: 'f' },
+    LEGENDARY: { color: 'yellow', prefix: 'LEGEND', sortKey: 'e' },
+    MYTHIC: { color: 'light_purple', prefix: 'MYTHIC', sortKey: 'd' },
+    ETERNAL: { color: 'red', prefix: 'ETERNAL', sortKey: 'c' }
+    // Note: OWNER='a', ADMIN='b' are handled by the mod (excluded from RCON sync)
+};
+
+const syncRankDisplays = async () => {
+    if (!Rcon || !RCON_HOST || !RCON_PASSWORD) return;
+    try {
+        console.log("🔄 [RankSync] Starting automatic display sync...");
+        const players = await RankedPlayer.find({ tier: { $ne: 'UNRANKED' } });
+
+        console.log(`🔄 [RankSync] Found ${players.length} ranked players to update.`);
+
+        const rcon = new Rcon({
+            host: RCON_HOST,
+            port: RCON_PORT,
+            password: RCON_PASSWORD,
+            timeout: 10000
+        });
+
+        await rcon.connect();
+
+        // Staff UUIDs to SKIP (Maintain Owner/Admin ranks on server)
+        const EXCLUDED_UUIDS = [
+            "e1fd26c1-e485-4ca4-b183-0053b5c7745a", // Owner
+            "4c446d34-2d54-491f-8b71-6d5e009d4cfe"  // Admin
+        ];
+
+        for (const p of players) {
+            // SKIP STAFF from rank overwrites
+            if (EXCLUDED_UUIDS.includes(p.uuid)) {
+                // console.log(`⏩ [RankSync] Skipping Staff Member: ${p.minecraftName}`);
+                continue;
+            }
+
+            const format = TIER_FORMATS[p.tier];
+            if (!format) continue;
+
+            // Team name format: "ranked_X_uuid8" where X is sort key (a-z)
+            // This matches the mod's naming scheme for proper tablist sorting
+            const teamName = `ranked_${format.sortKey}_${p.uuid.substring(0, 8)}`;
+
+            // 0. Remove player from any existing team first (cleans up old format teams)
+            await rcon.send(`team leave ${p.minecraftName}`);
+
+            // 1. Ensure team exists (silent fail if already exists)
+            await rcon.send(`team add ${teamName}`);
+
+            // 2. Set color (Player name white)
+            await rcon.send(`team modify ${teamName} color white`);
+
+            // 3. Set Prefix
+            const prefixJson = JSON.stringify([
+                { text: `${format.prefix} `, color: format.color, bold: true }
+            ]);
+            await rcon.send(`team modify ${teamName} prefix ${prefixJson}`);
+
+            // 4. Add player to team
+            await rcon.send(`team join ${teamName} ${p.minecraftName}`);
+        }
+
+        await rcon.end();
+        console.log("✅ [RankSync] Completed.");
+    } catch (e) {
+        console.error("❌ [RankSync] Failed:", e.message);
+    }
+};
+
+// Run sync every 10 minutes
+setInterval(syncRankDisplays, 10 * 60 * 1000);
+// --- INTERNAL API FOR SYNC TRIGGERS ---
+app.post('/api/internal/sync-ranks', (req, res) => {
+    console.log("⚡ [API] Triggering manual rank sync from Server...");
+    syncRankDisplays();
+    res.json({ success: true });
+});
+
+syncRankDisplays(); // Initial sync on startup
 
 
 // --- CACHING SYSTEMS ---
@@ -222,7 +320,7 @@ const fetchGuildMember = async (guildId, userId) => {
         const response = await axios.get(`https://discord.com/api/v10/guilds/${guildId}/members/${userId}`, {
             headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` }
         });
-        
+
         memberCache.set(cacheKey, {
             data: response.data,
             timestamp: Date.now()
@@ -249,7 +347,7 @@ app.get('/api/messages', async (req, res) => {
 
     try {
         const messages = await fetchDiscordMessages(channelId);
-        
+
         // Parallel fetch for members with individual caching inside fetchGuildMember
         const enhancedMessages = await Promise.all(messages.map(async (msg) => {
             const memberData = await fetchGuildMember(GUILD_ID, msg.author.id);
@@ -258,7 +356,7 @@ app.get('/api/messages', async (req, res) => {
                 member: memberData ? { nick: memberData.nick, avatar: memberData.avatar } : null
             };
         }));
-        
+
         const finalData = enhancedMessages.reverse();
 
         // Update Cache
@@ -268,13 +366,13 @@ app.get('/api/messages', async (req, res) => {
         };
 
         res.json(finalData);
-    } catch (error) { 
+    } catch (error) {
         // Fallback: If we hit a rate limit (429) but have stale data, return that instead of erroring
         if (cachedMsg) {
             console.warn("⚠️ Discord Rate Limit hit. Serving stale cache.");
             return res.json(cachedMsg.data);
         }
-        res.status(500).json({ error: 'Failed' }); 
+        res.status(500).json({ error: 'Failed' });
     }
 });
 
@@ -303,7 +401,7 @@ app.post('/api/auth/discord', async (req, res) => {
 
         const userData = userResponse.data;
         let mcUsername = null;
-        
+
         if (mongoose.connection.readyState === 1) {
             const existing = await MinecraftLink.findOne({ discordId: userData.id });
             if (existing) mcUsername = existing.minecraftUsername;
@@ -361,7 +459,7 @@ app.post('/api/whitelist/apply', async (req, res) => {
     // 2. Check existing pending app
     const existingApp = await WhitelistApp.findOne({ discordId, status: 'pending' });
     if (existingApp) return res.status(409).json({ error: "You already have a pending application!" });
-    
+
     // 3. Check if already approved (optional, prevents spam)
     const approvedApp = await WhitelistApp.findOne({ discordId, status: 'approved' });
     if (approvedApp) return res.status(200).json({ message: "You are already whitelisted!" });
@@ -385,7 +483,7 @@ app.post('/api/whitelist/apply', async (req, res) => {
         status: 'pending',
         appliedAt: new Date()
     });
-    
+
     console.log(`📝 New Whitelist Application: ${link.minecraftUsername}`);
     res.json({ success: true, message: "Application Sent! Please wait for admin approval." });
 });
@@ -405,7 +503,7 @@ app.get('/api/admin/whitelist', auth, async (req, res) => {
         const apps = await WhitelistApp.find({ status: 'pending' }).sort({ appliedAt: 1 });
         console.log(`   Found ${apps.length} pending apps.`);
         res.json(apps);
-    } catch(e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/admin/whitelist/approved', auth, async (req, res) => {
@@ -413,7 +511,7 @@ app.get('/api/admin/whitelist/approved', auth, async (req, res) => {
         // Removed limit to show all history as requested
         const apps = await WhitelistApp.find({ status: 'approved' }).sort({ approvedAt: -1, appliedAt: -1 });
         res.json(apps);
-    } catch(e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
@@ -439,9 +537,9 @@ app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
                         content: `<@${app.discordId}> You have been whitelisted! 🎉`
                     },
                     {
-                        headers: { 
+                        headers: {
                             Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
-                            'Content-Type': 'application/json' 
+                            'Content-Type': 'application/json'
                         }
                     }
                 );
@@ -453,7 +551,7 @@ app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
         }
 
         res.json({ success: true });
-    } catch(e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/admin/whitelist/reject', auth, async (req, res) => {
@@ -462,7 +560,7 @@ app.post('/api/admin/whitelist/reject', auth, async (req, res) => {
         console.log(`❌ Rejecting app ID: ${id}`);
         await WhitelistApp.findByIdAndDelete(id);
         res.json({ success: true });
-    } catch(e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
@@ -474,10 +572,10 @@ app.post('/api/admin/whitelist/revoke', auth, async (req, res) => {
         // Send RCON Command
         await sendRconCommand(`whitelist remove ${app.minecraftUsername}`);
         await sendRconCommand(`kick ${app.minecraftUsername} You have been removed from the whitelist.`);
-        
+
         await WhitelistApp.findByIdAndDelete(id);
         res.json({ success: true });
-    } catch(e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // Reset Daily Check-In (Admin)
@@ -489,7 +587,7 @@ app.post('/api/admin/users/reset-daily', auth, async (req, res) => {
         let targetDiscordId = query;
 
         // Try to resolve username first (Discord or Minecraft username)
-        const link = await MinecraftLink.findOne({ 
+        const link = await MinecraftLink.findOne({
             $or: [
                 { minecraftUsername: new RegExp(`^${query}$`, 'i') },
                 { discordUsername: new RegExp(`^${query}$`, 'i') }
@@ -520,7 +618,7 @@ app.post('/api/admin/users/reset-daily', auth, async (req, res) => {
 // UPDATED to support amounts and limits
 app.post('/api/admin/codes/generate', auth, async (req, res) => {
     const { type, amount = 1, packAmount = 1, usageType = 'once_global', hours = 0 } = req.body;
-    
+
     if (!type || !['lamb', 'wagyu'].includes(type)) return res.status(400).json({ error: "Invalid pack type" });
 
     try {
@@ -636,9 +734,9 @@ app.post('/api/daily/claim', async (req, res) => {
 
             if (elapsed < cooldown) {
                 const remainingMs = cooldown - elapsed;
-                return res.status(403).json({ 
-                    error: "Already claimed today", 
-                    remainingMs 
+                return res.status(403).json({
+                    error: "Already claimed today",
+                    remainingMs
                 });
             }
         }
@@ -648,8 +746,8 @@ app.post('/api/daily/claim', async (req, res) => {
         wallet.lastDailyClaim = now;
         await wallet.save();
 
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: "You have been rewarded with 1x Lamb Chop Pack for checking in!",
             wallet
         });
@@ -667,7 +765,7 @@ app.post('/api/codes/redeem', async (req, res) => {
 
     try {
         const codeRecord = await RedemptionCode.findOne({ code: code.trim().toUpperCase() });
-        
+
         if (!codeRecord) return res.status(404).json({ error: "Invalid code" });
 
         // Logic check based on usageType
@@ -688,7 +786,7 @@ app.post('/api/codes/redeem', async (req, res) => {
             const redeemedList = codeRecord.redeemedBy || [];
             // Legacy check: check if redeemedBy string matches (if older schema)
             if (typeof codeRecord.redeemedBy === 'string' && codeRecord.redeemedBy === discordId) {
-                 return res.status(409).json({ error: "You already redeemed this code" });
+                return res.status(409).json({ error: "You already redeemed this code" });
             }
             // Array check
             if (Array.isArray(redeemedList) && redeemedList.includes(discordId)) {
@@ -700,7 +798,7 @@ app.post('/api/codes/redeem', async (req, res) => {
         // Update Code Record
         codeRecord.usageCount = (codeRecord.usageCount || 0) + 1;
         codeRecord.redeemedAt = new Date(); // Last redeemed time
-        
+
         // Handle array update safely
         if (!Array.isArray(codeRecord.redeemedBy)) codeRecord.redeemedBy = [];
         codeRecord.redeemedBy.push(discordId);
@@ -715,8 +813,8 @@ app.post('/api/codes/redeem', async (req, res) => {
         const packsToAdd = codeRecord.packAmount || 1;
         const wallet = await UserPack.findOneAndUpdate(
             { discordId },
-            { 
-                $setOnInsert: { discordId }, 
+            {
+                $setOnInsert: { discordId },
                 $inc: { [codeRecord.type === 'lamb' ? 'lambPacks' : 'wagyuPacks']: packsToAdd }
             },
             { upsert: true, new: true }
@@ -760,7 +858,7 @@ app.post('/api/inventory/save', async (req, res) => {
                         headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` }
                     });
                     username = userRes.data.global_name || userRes.data.username;
-                    avatarUrl = userRes.data.avatar 
+                    avatarUrl = userRes.data.avatar
                         ? `https://cdn.discordapp.com/avatars/${discordId}/${userRes.data.avatar}.png`
                         : `https://cdn.discordapp.com/embed/avatars/${parseInt(userRes.data.discriminator || 0) % 5}.png`;
                 } catch (e) { console.error("User fetch failed for gacha log"); }
@@ -775,15 +873,15 @@ app.post('/api/inventory/save', async (req, res) => {
 
                 const descriptionLines = items.map(item => {
                     const r = item.rarity;
-                    if (r === 'Mythical') { 
-                        hasMythic = true; 
-                        if (!highlightImage) highlightImage = item; 
-                        return `**🌟 [MYTHICAL] ${item.name}**`; 
+                    if (r === 'Mythical') {
+                        hasMythic = true;
+                        if (!highlightImage) highlightImage = item;
+                        return `**🌟 [MYTHICAL] ${item.name}**`;
                     }
-                    if (r === 'Legendary') { 
-                        hasLegendary = true; 
-                        if (!highlightImage && !hasMythic) highlightImage = item; 
-                        return `**✨ [LEGENDARY] ${item.name}**`; 
+                    if (r === 'Legendary') {
+                        hasLegendary = true;
+                        if (!highlightImage && !hasMythic) highlightImage = item;
+                        return `**✨ [LEGENDARY] ${item.name}**`;
                     }
                     if (r === 'Ultra-Rare') return `🟣 [Ultra-Rare] ${item.name}`;
                     if (r === 'Rare') return `🔵 [Rare] ${item.name}`;
@@ -818,7 +916,7 @@ app.post('/api/inventory/save', async (req, res) => {
                 // Add image for high tier pulls
                 if (highlightImage) {
                     let imageUrl = highlightImage.image; // Use custom image if available
-                    
+
                     if (!imageUrl && highlightImage.type === 'Pokemon') {
                         const formattedName = highlightImage.name.toLowerCase()
                             .replace(/[.']/g, '')
@@ -827,7 +925,7 @@ app.post('/api/inventory/save', async (req, res) => {
                             .replace(/\s+/g, '-');
                         imageUrl = `https://cobblemon.tools/pokedex/pokemon/${formattedName}/sprite.png`;
                     }
-                    
+
                     if (imageUrl) {
                         embed.image = { url: imageUrl };
                     }
@@ -881,31 +979,31 @@ app.post('/api/inventory/claim', async (req, res) => {
 
         // 2.5 Check Online Status
         const player = link.minecraftUsername;
-        
+
         // Check if online via RCON "list" command
         const listResponse = await sendRconCommand("list");
-        
+
         if (listResponse === false) {
-             return res.status(502).json({ error: "Could not connect to Minecraft Server." });
+            return res.status(502).json({ error: "Could not connect to Minecraft Server." });
         }
 
         // Parse list response (Case-insensitive check)
         // Typical response: "There are 2 of a max of 20 players online: Player1, Player2"
         const lowerList = listResponse.toLowerCase();
         const lowerPlayer = player.toLowerCase();
-        
+
         let isOnline = false;
-        
+
         // Check if username is in the output string
         if (lowerList.includes(lowerPlayer)) {
             // Regex to ensure word boundary match
-            const safePlayer = lowerPlayer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
+            const safePlayer = lowerPlayer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const regex = new RegExp(`\\b${safePlayer}\\b`);
             if (regex.test(lowerList)) {
                 isOnline = true;
             }
         }
-        
+
         // Allow simulation to pass
         if (listResponse.includes("Simulation")) isOnline = true;
 
@@ -979,8 +1077,8 @@ const SELF_URL = 'https://urnisa-dbot-r1lm.onrender.com';
 const BACKEND_URL = 'https://urnisa-backend-21ls.onrender.com';
 
 setInterval(() => {
-    axios.get(SELF_URL).catch(() => {});
-    axios.get(BACKEND_URL).catch(() => {});
+    axios.get(SELF_URL).catch(() => { });
+    axios.get(BACKEND_URL).catch(() => { });
 }, 5 * 60 * 1000);
 
 app.listen(PORT, () => {

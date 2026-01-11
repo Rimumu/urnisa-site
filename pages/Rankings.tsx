@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
 
-// API Base URL
-const API_BASE = import.meta.env.VITE_API_URL || 'https://urnisa-backend-21ls.onrender.com';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../constants';
 
 // Tier colors and styles
-const TIER_STYLES: Record<string, { bg: string; text: string; border: string; glow: string }> = {
-    UNRANKED: { bg: 'bg-gray-900', text: 'text-gray-500', border: 'border-gray-700', glow: '' },
-    DIRT: { bg: 'bg-amber-900/50', text: 'text-amber-600', border: 'border-amber-700', glow: '' },
-    CASUAL: { bg: 'bg-gray-700', text: 'text-gray-300', border: 'border-gray-500', glow: '' },
-    OMEGA: { bg: 'bg-green-900/50', text: 'text-green-400', border: 'border-green-500', glow: 'shadow-green-500/20' },
-    BETA: { bg: 'bg-blue-900/50', text: 'text-blue-400', border: 'border-blue-500', glow: 'shadow-blue-500/20' },
-    ALPHA: { bg: 'bg-purple-900/50', text: 'text-purple-400', border: 'border-purple-500', glow: 'shadow-purple-500/20' },
-    LEGENDARY: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', border: 'border-yellow-500', glow: 'shadow-yellow-500/30' },
-    MYTHIC: { bg: 'bg-pink-900/50', text: 'text-pink-400', border: 'border-pink-500', glow: 'shadow-pink-500/30' },
-    ETERNAL: { bg: 'bg-red-900/50', text: 'text-red-400', border: 'border-red-500', glow: 'shadow-red-500/40 shadow-lg' },
+const TIER_STYLES: Record<string, { bg: string; text: string; border: string; glow: string; icon: React.ReactNode }> = {
+    UNRANKED: { bg: 'bg-gray-900', text: 'text-gray-500', border: 'border-gray-700', glow: '', icon: '⚪' },
+    DIRT: { bg: 'bg-amber-900/50', text: 'text-amber-600', border: 'border-amber-700', glow: '', icon: '🟤' },
+    CASUAL: { bg: 'bg-gray-700', text: 'text-gray-300', border: 'border-gray-500', glow: '', icon: '⚪' },
+    OMEGA: { bg: 'bg-green-900/50', text: 'text-green-400', border: 'border-green-500', glow: 'shadow-green-500/20', icon: '🟢' },
+    BETA: { bg: 'bg-blue-900/50', text: 'text-blue-400', border: 'border-blue-500', glow: 'shadow-blue-500/20', icon: '🔵' },
+    ALPHA: { bg: 'bg-purple-900/50', text: 'text-purple-400', border: 'border-purple-500', glow: 'shadow-purple-500/20', icon: '🟣' },
+    LEGENDARY: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', border: 'border-yellow-500', glow: 'shadow-yellow-500/30', icon: '🟡' },
+    MYTHIC: { bg: 'bg-pink-900/50', text: 'text-pink-400', border: 'border-pink-500', glow: 'shadow-pink-500/30', icon: '●' },
+    ETERNAL: { bg: 'bg-red-900/50', text: 'text-red-400', border: 'border-red-500', glow: 'shadow-red-500/40 shadow-lg', icon: '👹' },
 };
 
 interface Player {
@@ -201,8 +201,7 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
 
             // 2. Validate via Backend
             try {
-                // Using API_BASE defined in file
-                const response = await fetch(`${API_BASE}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
+                const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
                 const data = await response.json();
 
                 if (mounted) {
@@ -255,9 +254,6 @@ const PokemonSprite: React.FC<{ pokemon: PokemonInfo }> = ({ pokemon }) => {
 
     const nickname = cleanNickname(pokemon.nickname);
     const hasNickname = nickname && nickname !== pokemon.species;
-    const displayName = hasNickname
-        ? `${pokemon.species} (${nickname})`
-        : pokemon.species;
 
     return (
         <div
@@ -330,8 +326,9 @@ const TierBadge: React.FC<{ tier: string; size?: 'sm' | 'md' | 'lg' }> = ({ tier
     };
 
     return (
-        <span className={`${styles.bg} ${styles.text} ${styles.border} ${styles.glow} border rounded-full ${sizeClasses[size]} font-semibold`}>
-            {tier}
+        <span className={`${styles.bg} ${styles.text} ${styles.border} ${styles.glow} border rounded-full ${sizeClasses[size]} font-semibold flex items-center gap-1.5 w-fit`}>
+            <span>{styles.icon}</span>
+            <span>{tier}</span>
         </span>
     );
 };
@@ -351,7 +348,7 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
     useEffect(() => {
         setLoading(true);
         // Try to fetch real history
-        fetch(`${API_BASE}/api/ranked/player/${player.uuid}/history?limit=10&page=${page}`)
+        fetch(`${API_BASE_URL}/api/ranked/player/${player.uuid}/history?limit=10&page=${page}`)
             .then(res => res.json())
             .then((data: MatchHistoryResponse) => {
                 if (data.matches) {
@@ -532,7 +529,7 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
     useEffect(() => {
         setLoading(true);
         // Try to fetch real match data
-        fetch(`${API_BASE}/api/ranked/match/${matchId}`)
+        fetch(`${API_BASE_URL}/api/ranked/match/${matchId}`)
             .then(res => res.json())
             .then(data => {
                 if (data && data.winner) {
@@ -667,7 +664,7 @@ const Rankings: React.FC = () => {
     const [total, setTotal] = useState(0);
 
     useEffect(() => {
-        fetch(`${API_BASE}/api/ranked/leaderboard?limit=100`)
+        fetch(`${API_BASE_URL}/api/ranked/leaderboard?limit=100`)
             .then(res => res.json())
             .then(data => {
                 setPlayers(data.players || []);
@@ -688,6 +685,12 @@ const Rankings: React.FC = () => {
 
     return (
         <div className="min-h-screen py-8 font-sans text-white relative">
+            <div className="container mx-auto px-4 pt-4 pb-2">
+                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
+                    <span>←</span> Back to Dashboard
+                </Link>
+            </div>
+
             {/* Hero Section */}
             <div className="flex flex-col items-center text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="relative z-10">
@@ -716,7 +719,10 @@ const Rankings: React.FC = () => {
                                     return (
                                         <div key={tier} className="space-y-1">
                                             <div className="flex justify-between items-center">
-                                                <span className={`${styles.text} font-semibold text-sm`}>{tier}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span>{styles.icon}</span>
+                                                    <span className={`${styles.text} font-semibold text-sm`}>{tier}</span>
+                                                </div>
                                                 <span className="text-gray-400 text-sm">{count}</span>
                                             </div>
                                             <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -769,7 +775,8 @@ const Rankings: React.FC = () => {
 
                             {/* Empty State */}
                             {!loading && !error && players.length === 0 && (
-                                <div className="p-12 text-center">
+                                <div className="p-12 text-center flex flex-col items-center gap-2">
+                                    <span className="text-4xl">🏆</span>
                                     <p className="text-gray-400">No ranked players yet. Be the first to climb!</p>
                                 </div>
                             )}

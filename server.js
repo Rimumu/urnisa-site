@@ -152,6 +152,48 @@ const TournamentBracket = mongoose.model('TournamentBracket', new mongoose.Schem
     updatedAt: { type: Date, default: Date.now }
 }));
 
+// ==========================================
+// SNAKES AND LADDERS SCHEMAS
+// ==========================================
+const SnakesQueue = mongoose.model('SnakesQueue', new mongoose.Schema({
+    user: { type: String, required: true },
+    avatarUrl: String,
+    amount: { type: Number, default: 1 }, // How many rolls this entry represents
+    type: { type: String, default: 'sub' }, // 'sub' or 'gift'
+    sourceEventId: String,
+    createdAt: { type: Date, default: Date.now }
+}));
+
+const SnakesPlayer = mongoose.model('SnakesPlayer', new mongoose.Schema({
+    user: { type: String, required: true, unique: true },
+    avatarUrl: String,
+    position: { type: Number, default: 0 }, // 0 = not on board, 1-100 = tile
+    lastMovedAt: { type: Date, default: Date.now }
+}));
+
+const SnakesHistory = mongoose.model('SnakesHistory', new mongoose.Schema({
+    user: { type: String, required: true },
+    roll: { type: Number, required: true },
+    fromPosition: { type: Number, required: true },
+    toPosition: { type: Number, required: true },
+    specialMove: String, // 'ladder', 'snake', or null
+    timestamp: { type: Date, default: Date.now }
+}));
+
+const SnakesSettings = mongoose.model('SnakesSettings', new mongoose.Schema({
+    key: { type: String, default: 'main', unique: true },
+    isActive: { type: Boolean, default: false }, // Whether to process incoming events
+    lastProcessedEventId: String
+}));
+
+// Snakes and Ladders board configuration (standard layout)
+const SNAKES_AND_LADDERS = {
+    // Ladders: start -> end (go UP)
+    ladders: { 2: 38, 7: 14, 8: 31, 15: 26, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 78: 98, 87: 94 },
+    // Snakes: start -> end (go DOWN)
+    snakes: { 16: 6, 46: 25, 49: 11, 62: 19, 64: 60, 74: 53, 89: 68, 92: 88, 95: 75, 99: 80 }
+};
+
 const roundOneDecimal = (num) => Math.round(num * 10) / 10;
 
 // ==========================================
@@ -778,6 +820,159 @@ app.post('/api/wheel/spin-result', auth, async (req, res) => {
     await SpinHistory.create({ user: req.body.user, reward: req.body.reward });
     if (req.body.queueId) await SpinQueue.findByIdAndDelete(req.body.queueId);
     res.json({ success: true });
+});
+
+// ==========================================
+// SNAKES AND LADDERS API
+// ==========================================
+
+// Get full game state (players, queue, settings)
+app.get('/api/snakes/state', async (req, res) => {
+    try {
+        const [queue, players, history, settings] = await Promise.all([
+            SnakesQueue.find().sort({ createdAt: 1 }),
+            SnakesPlayer.find().sort({ lastMovedAt: -1 }),
+            SnakesHistory.find().sort({ timestamp: -1 }).limit(50),
+            SnakesSettings.findOne({ key: 'main' })
+        ]);
+        res.json({
+            queue,
+            players,
+            history,
+            isActive: settings?.isActive || false,
+            board: SNAKES_AND_LADDERS
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Toggle game active state
+app.post('/api/snakes/toggle', auth, async (req, res) => {
+    try {
+        let settings = await SnakesSettings.findOne({ key: 'main' });
+        if (!settings) settings = await SnakesSettings.create({ key: 'main' });
+        settings.isActive = !settings.isActive;
+        await settings.save();
+        console.log(`🐍 Snakes Game ${settings.isActive ? 'ACTIVATED' : 'DEACTIVATED'}`);
+        res.json({ success: true, isActive: settings.isActive });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Process a move (admin triggers this when ready)
+app.post('/api/snakes/move', auth, async (req, res) => {
+    try {
+        // Get first item in queue
+        const queueItem = await SnakesQueue.findOne().sort({ createdAt: 1 });
+        if (!queueItem) {
+            return res.status(400).json({ error: 'Queue is empty' });
+        }
+
+        // Roll dice (1-6)
+        const roll = Math.floor(Math.random() * 6) + 1;
+
+        // Get or create player
+        let player = await SnakesPlayer.findOne({ user: queueItem.user });
+        if (!player) {
+            player = await SnakesPlayer.create({
+                user: queueItem.user,
+                avatarUrl: queueItem.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(queueItem.user)}&background=random`,
+                position: 0
+            });
+        }
+
+        const fromPosition = player.position;
+        let newPosition = fromPosition + roll;
+        let specialMove = null;
+
+        // Can't go beyond 100
+        if (newPosition > 100) {
+            newPosition = fromPosition; // Stay in place if roll exceeds 100
+        } else {
+            // Check for ladder
+            if (SNAKES_AND_LADDERS.ladders[newPosition]) {
+                specialMove = 'ladder';
+                newPosition = SNAKES_AND_LADDERS.ladders[newPosition];
+            }
+            // Check for snake
+            else if (SNAKES_AND_LADDERS.snakes[newPosition]) {
+                specialMove = 'snake';
+                newPosition = SNAKES_AND_LADDERS.snakes[newPosition];
+            }
+        }
+
+        // Update player position
+        player.position = newPosition;
+        player.lastMovedAt = new Date();
+        await player.save();
+
+        // Log history
+        await SnakesHistory.create({
+            user: queueItem.user,
+            roll,
+            fromPosition,
+            toPosition: newPosition,
+            specialMove
+        });
+
+        // Remove from queue
+        await SnakesQueue.findByIdAndDelete(queueItem._id);
+
+        const isWinner = newPosition === 100;
+
+        console.log(`🎲 ${queueItem.user} rolled ${roll}: ${fromPosition} -> ${newPosition}${specialMove ? ` (${specialMove}!)` : ''}${isWinner ? ' 🏆 WINNER!' : ''}`);
+
+        res.json({
+            success: true,
+            user: queueItem.user,
+            roll,
+            fromPosition,
+            toPosition: newPosition,
+            specialMove,
+            isWinner
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Add test event to queue (for testing without real subs)
+app.post('/api/snakes/test-event', auth, async (req, res) => {
+    try {
+        const { user, amount = 1 } = req.body;
+        if (!user) return res.status(400).json({ error: 'User required' });
+
+        for (let i = 0; i < amount; i++) {
+            await SnakesQueue.create({
+                user,
+                avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(user)}&background=random`,
+                amount: 1,
+                type: 'test'
+            });
+        }
+
+        console.log(`🧪 Added ${amount} test roll(s) for ${user}`);
+        res.json({ success: true, added: amount });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Reset game (clear all data)
+app.post('/api/snakes/reset', auth, async (req, res) => {
+    try {
+        await Promise.all([
+            SnakesQueue.deleteMany({}),
+            SnakesPlayer.deleteMany({}),
+            SnakesHistory.deleteMany({})
+        ]);
+        console.log('🐍 Snakes game RESET');
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // NEW: COUNTDOWN API (STANDALONE)
@@ -1844,7 +2039,8 @@ const OpponentHistory = mongoose.model('OpponentHistory', new mongoose.Schema({
     opponentUuid: { type: String, required: true },
     matchCount: { type: Number, default: 0 },
     lastMatchAt: { type: Date, default: null },
-    resetAt: { type: Date, default: null } // 12-hour reset timer
+    firstMatchAt: { type: Date, default: null }, // Tracks when first match started for 12hr reset
+    cooldownUntil: { type: Date, default: null } // When null, no cooldown active
 }));
 
 // Create compound index for efficient lookups
@@ -1936,57 +2132,122 @@ const checkForfeitAbuse = async (playerUuid, playerName) => {
 
 /**
  * Get diminishing returns multiplier for same-opponent matches
- * Match 1: 100%, Match 2: 75%, Match 3: 50%, Match 4+: 25%
- * Resets after 12 hours
+ * 
+ * Logic:
+ * - Matches 1-3: Full ELO (100%)
+ * - After 3rd match: 30-minute cooldown starts
+ * - During cooldown: Cannot queue (handled by mod/frontend), but if bypassed,
+ *   match proceeds with diminishing returns (50% -> 25%)
+ * - After cooldown: Match allowed with diminishing returns, then new cooldown
+ * - After 12 hours since FIRST match with this opponent: Full reset
  */
 const getDiminishingMultiplier = async (playerUuid, opponentUuid) => {
     const now = new Date();
-    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+    const twelveHoursMs = 12 * 60 * 60 * 1000;
+    const thirtyMinutesMs = 30 * 60 * 1000;
 
     let history = await OpponentHistory.findOne({ playerUuid, opponentUuid });
 
     if (!history) {
         // First match with this opponent
-        return { multiplier: 1.0, matchCount: 0 };
+        return { multiplier: 1.0, matchCount: 0, onCooldown: false, cooldownRemaining: 0 };
     }
 
     // Check if 12-hour reset has passed
-    if (history.lastMatchAt && history.lastMatchAt < twelveHoursAgo) {
-        // Reset the counter
+    // Use firstMatchAt if available, otherwise fall back to lastMatchAt for legacy data
+    const referenceTime = history.firstMatchAt || history.lastMatchAt;
+
+    if (referenceTime && (now.getTime() - new Date(referenceTime).getTime() >= twelveHoursMs)) {
+        // Full reset - back to 3 free matches
         history.matchCount = 0;
-        history.resetAt = now;
+        history.firstMatchAt = null;
+        history.cooldownUntil = null;
         await history.save();
-        return { multiplier: 1.0, matchCount: 0 };
+        console.log(`🔄 Opponent history reset for ${playerUuid} vs ${opponentUuid} (12h passed)`);
+        return { multiplier: 1.0, matchCount: 0, onCooldown: false, cooldownRemaining: 0 };
     }
 
-    // Calculate multiplier based on match count
-    // Relaxed for small server: First 2 matches are 100%, then tapers off
-    // 0 = 1st match, 1 = 2nd match
+    // ADDITIONAL FIX: If no reference time exists but matchCount is high, reset it (corrupted data)
+    if (!referenceTime && history.matchCount >= 3) {
+        console.log(`⚠️ Corrupted opponent history detected for ${playerUuid} vs ${opponentUuid}, resetting`);
+        history.matchCount = 0;
+        history.firstMatchAt = null;
+        history.cooldownUntil = null;
+        await history.save();
+        return { multiplier: 1.0, matchCount: 0, onCooldown: false, cooldownRemaining: 0 };
+    }
+
     const count = history.matchCount;
+
+    // Check if currently on cooldown
+    if (history.cooldownUntil && now < new Date(history.cooldownUntil)) {
+        const cooldownRemaining = Math.ceil((new Date(history.cooldownUntil).getTime() - now.getTime()) / 60000);
+        // On cooldown - return info but still allow with heavy penalty if they somehow bypass
+        return {
+            multiplier: 0.25,
+            matchCount: count,
+            onCooldown: true,
+            cooldownRemaining
+        };
+    }
+
+    // First 3 matches: Full ELO
+    if (count < 3) {
+        return { multiplier: 1.0, matchCount: count, onCooldown: false, cooldownRemaining: 0 };
+    }
+
+    // Beyond 3 matches (after cooldown expired): Diminishing returns
+    // Match 4-5: 50%, Match 6+: 25%
     let multiplier = 1.0;
+    if (count <= 4) {
+        multiplier = 0.50;
+    } else {
+        multiplier = 0.25;
+    }
 
-    if (count <= 1) multiplier = 1.0;        // 1st & 2nd match: 100%
-    else if (count <= 3) multiplier = 0.50;  // 3rd & 4th match: 50%
-    else multiplier = 0.25;                  // 5th+ match: 25%
-
-    return { multiplier, matchCount: count };
+    return { multiplier, matchCount: count, onCooldown: false, cooldownRemaining: 0 };
 };
 
 /**
  * Update opponent history after a match
+ * Handles cooldown setting and firstMatchAt tracking
  */
 const updateOpponentHistory = async (playerUuid, opponentUuid) => {
     const now = new Date();
+    const thirtyMinutesMs = 30 * 60 * 1000;
 
-    await OpponentHistory.findOneAndUpdate(
-        { playerUuid, opponentUuid },
-        {
-            $inc: { matchCount: 1 },
-            $set: { lastMatchAt: now }
-        },
-        { upsert: true, new: true }
-    );
+    let history = await OpponentHistory.findOne({ playerUuid, opponentUuid });
+
+    if (!history) {
+        // Create new record - this is the first match
+        await OpponentHistory.create({
+            playerUuid,
+            opponentUuid,
+            matchCount: 1,
+            lastMatchAt: now,
+            firstMatchAt: now,
+            cooldownUntil: null
+        });
+        return;
+    }
+
+    // Increment match count
+    history.matchCount += 1;
+    history.lastMatchAt = now;
+
+    // If this was the first match of a new cycle, set firstMatchAt
+    if (!history.firstMatchAt) {
+        history.firstMatchAt = now;
+    }
+
+    // If we just hit 3 matches or beyond, start/extend cooldown
+    if (history.matchCount >= 3) {
+        history.cooldownUntil = new Date(now.getTime() + thirtyMinutesMs);
+    }
+
+    await history.save();
 };
+
 
 /**
  * Check daily unique opponents and return bonus multiplier
@@ -2041,24 +2302,30 @@ const getUniqueOpponentBonus = async (playerUuid, opponentUuid) => {
 };
 
 /**
- * Get ELO range penalty - reduces gains if ELO difference > 500
+ * Get ELO range penalty - reduces gains if ELO difference > 200 (2 ranks)
+ * Updated for small server where ranks are ~100 ELO apart
  */
 const getEloRangePenalty = (winnerElo, loserElo) => {
     const eloDiff = Math.abs(winnerElo - loserElo);
 
-    if (eloDiff <= 500) {
+    // No penalty for matches within 200 ELO (~2 ranks)
+    if (eloDiff <= 200) {
         return { multiplier: 1.0, reduced: false };
     }
 
-    // Significant reduction for farming lower-ranked players
-    // 500-700 diff: 50%, 700-1000 diff: 25%, 1000+ diff: 10%
-    if (eloDiff <= 700) {
-        return { multiplier: 0.50, reduced: true };
-    } else if (eloDiff <= 1000) {
-        return { multiplier: 0.25, reduced: true };
-    } else {
-        return { multiplier: 0.10, reduced: true };
+    // Graduated reduction for farming lower/higher ranked players
+    // 200-400 diff (~3-4 ranks): 75%
+    if (eloDiff <= 400) {
+        return { multiplier: 0.75, reduced: true };
     }
+
+    // 400-600 diff (~5-6 ranks): 50%
+    if (eloDiff <= 600) {
+        return { multiplier: 0.50, reduced: true };
+    }
+
+    // 600+ diff: 25%
+    return { multiplier: 0.25, reduced: true };
 };
 
 // Tier definitions - Fast Track for Small Server
@@ -2067,12 +2334,12 @@ const TIERS = {
     UNRANKED: { name: 'Unranked', minElo: 0, minWins: 0, color: '#666666' },
     DIRT: { name: 'Dirt', minElo: 0, minWins: 1, color: '#D2691E' },
     CASUAL: { name: 'Casual', minElo: 0, minWins: 2, color: '#808080' },
-    OMEGA: { name: 'Omega', minElo: 1100, color: '#55FF55' },      // Raised start to 1100 (Target: Few Hours)
+    OMEGA: { name: 'Omega', minElo: 1100, color: '#55FF55' },      // Raised start to 1100
     BETA: { name: 'Beta', minElo: 1200, color: '#5555FF' },
     ALPHA: { name: 'Alpha', minElo: 1275, color: '#AA00AA' },      // Bridge tier
-    LEGENDARY: { name: 'Legendary', minElo: 1350, color: '#FFFF55' }, // Target: 5 Days
-    MYTHIC: { name: 'Mythic', minElo: 1550, color: '#FF55FF' },     // Target: 10 Days
-    ETERNAL: { name: 'Eternal', minElo: 1750, color: '#FF5555' }    // Target: 14 Days
+    LEGENDARY: { name: 'Legend', minElo: 1425, color: '#FFFF55' }, // Target: 5 Days
+    MYTHIC: { name: 'Mythic', minElo: 1625, color: '#FF55FF' },     // Target: 10 Days
+    ETERNAL: { name: 'Eternal', minElo: 1900, color: '#FF5555' }    // Target: 14 Days
 };
 
 // Calculate tier from ELO and wins
@@ -2085,9 +2352,9 @@ const calculateTier = (elo, wins) => {
 
     if (wins === 1) return 'DIRT'; // Gatekeeper for new players staying >1000
 
-    if (elo >= 1750) return 'ETERNAL';
-    if (elo >= 1550) return 'MYTHIC';
-    if (elo >= 1350) return 'LEGENDARY';
+    if (elo >= 1900) return 'ETERNAL';
+    if (elo >= 1625) return 'MYTHIC';
+    if (elo >= 1425) return 'LEGENDARY';
     if (elo >= 1275) return 'ALPHA';
     if (elo >= 1200) return 'BETA';
     if (elo >= 1100) return 'OMEGA';
@@ -2097,8 +2364,10 @@ const calculateTier = (elo, wins) => {
 };
 
 // Custom ELO calculation with bonuses
+// OPTIMIZED for 8-player server progression (Legendary ~5d, Mythic ~10d, Eternal ~14d)
 const calculateEloChange = (winnerElo, loserElo, result) => {
-    const K = 60; // Increased to 60 for fast progression
+    const K = 100; // High K for small server fast progression
+    const LOSER_ELO_RATIO = 0.5; // Asymmetric: loser loses 50% of winner gains (inflation)
 
     // Expected score for winner
     const expectedWinner = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
@@ -2108,16 +2377,16 @@ const calculateEloChange = (winnerElo, loserElo, result) => {
     let baseWinnerChange = K * (1 - expectedWinner);
     let baseLoserChange = K * (0 - expectedLoser);
 
-    // Alive Pokemon bonus for winner (0-5.0 points) - HIGH BONUS for speed
+    // Alive Pokemon bonus for winner (0-10.0 points) - HIGH BONUS for speed
     let aliveBonus = 0;
     if (result.winnerTotalPokemon > 0) {
-        aliveBonus = (result.winnerAlivePokemon / result.winnerTotalPokemon) * 5.0;
+        aliveBonus = (result.winnerAlivePokemon / result.winnerTotalPokemon) * 10.0;
     }
 
-    // KO bonus for winner (0-5.0 points)
+    // KO bonus for winner (0-10.0 points)
     let koBonus = 0;
     if (result.loserTotalPokemon > 0) {
-        koBonus = (result.winnerKOs / result.loserTotalPokemon) * 5.0;
+        koBonus = (result.winnerKOs / result.loserTotalPokemon) * 10.0;
     }
 
     // Format multiplier (2v2 battles slightly higher stakes)
@@ -2137,7 +2406,7 @@ const calculateEloChange = (winnerElo, loserElo, result) => {
 
     // Calculate final changes
     const winnerChange = Math.round((baseWinnerChange * formatMultiplier + aliveBonus + koBonus) * winnerMultiplier);
-    const loserChange = Math.round(baseLoserChange * formatMultiplier * loserMultiplier);
+    const loserChange = Math.round(baseLoserChange * formatMultiplier * loserMultiplier * LOSER_ELO_RATIO);
 
     return { winnerChange, loserChange };
 };
@@ -2351,6 +2620,12 @@ app.post('/api/ranked/match', async (req, res) => {
             await ForfeitHistory.deleteMany({ forfeitedAt: { $lt: twelveHoursAgo } });
         }
 
+        // Fire-and-forget call to Discord Bot to sync ranks immediately
+        // On Render, we must use the remote URL provided in env, else fallback to localhost
+        const botUrl = process.env.BOT_API_URL || `http://localhost:${process.env.BOT_PORT || 3002}`;
+        axios.post(`${botUrl}/api/internal/sync-ranks`)
+            .catch(err => console.error("⚠️ Failed to trigger Bot Rank Sync:", err.message));
+
         res.json({
             success: true,
             winnerElo: winner.elo,
@@ -2502,13 +2777,13 @@ app.get('/api/ranked/leaderboard', async (req, res) => {
         const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
         const offset = parseInt(req.query.offset) || 0;
 
-        const players = await RankedPlayer.find({ wins: { $gt: 0 } })
+        const players = await RankedPlayer.find({})
             .sort({ elo: -1, wins: -1 })
             .skip(offset)
             .limit(limit)
             .select('uuid minecraftName elo wins losses tier winStreak bestWinStreak');
 
-        const total = await RankedPlayer.countDocuments({ wins: { $gt: 0 } });
+        const total = await RankedPlayer.countDocuments({});
 
         const leaderboard = players.map((p, i) => ({
             rank: offset + i + 1,
@@ -2692,6 +2967,225 @@ app.post('/api/ranked/reset', auth, async (req, res) => {
         await RankedPlayer.deleteMany({});
         await RankedMatch.deleteMany({});
         res.json({ success: true, message: 'All ranked data cleared' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// === ADMIN COMMAND ENDPOINTS ===
+
+// Modify ELO (add or remove)
+app.post('/api/ranked/admin/modify-elo', async (req, res) => {
+    const apiKey = req.headers['x-api-key'];
+    const validKey = process.env.RANKED_API_KEY || 'urnisa-ranked-api-key-2024';
+    if (apiKey !== validKey) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const { playerUuid, playerName, eloChange, modifiedBy } = req.body;
+
+        let player = await RankedPlayer.findOne({ uuid: playerUuid });
+        if (!player) {
+            player = await RankedPlayer.create({ uuid: playerUuid, minecraftName: playerName });
+        }
+
+        const oldElo = player.elo;
+        player.elo = Math.max(0, player.elo + eloChange);
+        player.tier = calculateTier(player.elo, player.wins);
+        player.updatedAt = new Date();
+        await player.save();
+
+        console.log(`⚙️ Admin ELO Modify: ${playerName} ${eloChange >= 0 ? '+' : ''}${eloChange} (${oldElo} → ${player.elo}) by ${modifiedBy}`);
+
+        res.json({
+            success: true,
+            oldElo,
+            newElo: player.elo,
+            tier: player.tier
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Set ELO to specific value
+app.post('/api/ranked/admin/set-elo', async (req, res) => {
+    const apiKey = req.headers['x-api-key'];
+    const validKey = process.env.RANKED_API_KEY || 'urnisa-ranked-api-key-2024';
+    if (apiKey !== validKey) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const { playerUuid, playerName, newElo, modifiedBy } = req.body;
+
+        let player = await RankedPlayer.findOne({ uuid: playerUuid });
+        if (!player) {
+            player = await RankedPlayer.create({ uuid: playerUuid, minecraftName: playerName });
+        }
+
+        const oldElo = player.elo;
+        player.elo = Math.max(0, newElo);
+        player.tier = calculateTier(player.elo, player.wins);
+        player.updatedAt = new Date();
+        await player.save();
+
+        console.log(`⚙️ Admin ELO Set: ${playerName} ${oldElo} → ${player.elo} by ${modifiedBy}`);
+
+        res.json({
+            success: true,
+            oldElo,
+            newElo: player.elo,
+            tier: player.tier
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Reset Player Stats
+app.post('/api/ranked/admin/reset-player', async (req, res) => {
+    const apiKey = req.headers['x-api-key'];
+    const validKey = process.env.RANKED_API_KEY || 'urnisa-ranked-api-key-2024';
+    if (apiKey !== validKey) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const { playerUuid, playerName, resetBy } = req.body;
+
+        const player = await RankedPlayer.findOne({ uuid: playerUuid });
+        if (!player) {
+            return res.json({ success: false, message: 'Player not found' });
+        }
+
+        const oldStats = { elo: player.elo, wins: player.wins, losses: player.losses };
+
+        // Reset all stats
+        player.elo = 1000;
+        player.wins = 0;
+        player.losses = 0;
+        player.tier = 'UNRANKED';
+        player.totalKOs = 0;
+        player.totalDeaths = 0;
+        player.winStreak = 0;
+        player.bestWinStreak = 0;
+        player.updatedAt = new Date();
+        await player.save();
+
+        // Also clear opponent history for this player
+        await OpponentHistory.deleteMany({
+            $or: [{ playerUuid }, { opponentUuid: playerUuid }]
+        });
+
+        console.log(`⚙️ Admin Reset: ${playerName} stats reset by ${resetBy} (was: ELO ${oldStats.elo}, W${oldStats.wins}/L${oldStats.losses})`);
+
+        res.json({
+            success: true,
+            oldStats,
+            message: `${playerName}'s stats have been reset`
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Get Player Info (Admin Detail)
+app.get('/api/ranked/admin/player-info/:uuid', async (req, res) => {
+    try {
+        const { uuid } = req.params;
+
+        const player = await RankedPlayer.findOne({ uuid });
+        if (!player) {
+            return res.json({ found: false });
+        }
+
+        // Get ban status
+        const banStatus = await isPlayerBanned(uuid);
+
+        // Get opponent history count
+        const opponentHistoryCount = await OpponentHistory.countDocuments({
+            $or: [{ playerUuid: uuid }, { opponentUuid: uuid }]
+        });
+
+        // Get recent forfeits
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        const recentForfeits = await ForfeitHistory.countDocuments({
+            playerUuid: uuid,
+            forfeitedAt: { $gte: oneHourAgo }
+        });
+
+        res.json({
+            found: true,
+            uuid: player.uuid,
+            name: player.minecraftName,
+            elo: player.elo,
+            tier: player.tier,
+            wins: player.wins,
+            losses: player.losses,
+            winRate: player.wins + player.losses > 0
+                ? Math.round((player.wins / (player.wins + player.losses)) * 100)
+                : 0,
+            winStreak: player.winStreak,
+            bestWinStreak: player.bestWinStreak,
+            totalKOs: player.totalKOs,
+            totalDeaths: player.totalDeaths,
+            lastMatchAt: player.lastMatchAt,
+            createdAt: player.createdAt,
+            banStatus,
+            opponentHistoryCount,
+            recentForfeits
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Clear Opponent History Between Two Players
+app.post('/api/ranked/admin/clear-history', async (req, res) => {
+    const apiKey = req.headers['x-api-key'];
+    const validKey = process.env.RANKED_API_KEY || 'urnisa-ranked-api-key-2024';
+    if (apiKey !== validKey) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const { player1Uuid, player2Uuid, clearedBy } = req.body;
+
+        // Delete both directions
+        const result = await OpponentHistory.deleteMany({
+            $or: [
+                { playerUuid: player1Uuid, opponentUuid: player2Uuid },
+                { playerUuid: player2Uuid, opponentUuid: player1Uuid }
+            ]
+        });
+
+        console.log(`⚙️ Admin Clear History: ${player1Uuid} <-> ${player2Uuid} by ${clearedBy} (${result.deletedCount} records)`);
+
+        res.json({
+            success: true,
+            deletedCount: result.deletedCount,
+            message: `Cleared ${result.deletedCount} opponent history records`
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ADMIN: Clear ALL Opponent History (resets everyone's diminishing returns)
+app.post('/api/ranked/admin/clear-all-opponent-history', async (req, res) => {
+    const apiKey = req.headers['x-api-key'];
+    const validKey = process.env.RANKED_API_KEY || 'urnisa-ranked-api-key-2024';
+
+    if (apiKey !== validKey) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid API Key' });
+    }
+
+    try {
+        const { clearedBy } = req.body;
+
+        const result = await OpponentHistory.deleteMany({});
+
+        console.log(`🗑️ ADMIN: ALL opponent history cleared by ${clearedBy || 'Unknown'} (${result.deletedCount} records)`);
+
+        res.json({
+            success: true,
+            deletedCount: result.deletedCount,
+            message: `Cleared ALL ${result.deletedCount} opponent history records. All diminishing returns reset.`
+        });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
