@@ -174,8 +174,8 @@ const SnakesLadder: React.FC = () => {
                     background: linear-gradient(145deg, #ffffff, #e6e6e6);
                     border: 3px solid #ccc;
                     border-radius: 12px;
-                    display: grid;
                     padding: 12px;
+                    box-sizing: border-box;
                     box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
                 }
                 .dice-dot {
@@ -321,13 +321,15 @@ const SnakesLadder: React.FC = () => {
                             ✕
                         </button>
 
-                        {/* User avatar and name */}
-                        <img
-                            src={currentRoller?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(moveResult.user)}&background=random`}
-                            alt={moveResult.user}
-                            className="w-20 h-20 rounded-full border-4 border-white shadow-2xl mb-4"
-                        />
-                        <h3 className="text-2xl font-black text-white mb-2">{moveResult.user}</h3>
+                        {/* User avatar and name - horizontal layout */}
+                        <div className="flex items-center gap-4 mb-6">
+                            <img
+                                src={currentRoller?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(moveResult.user)}&background=random`}
+                                alt={moveResult.user}
+                                className="w-16 h-16 rounded-full border-4 border-white shadow-2xl"
+                            />
+                            <h3 className="text-2xl font-black text-white">{moveResult.user}</h3>
+                        </div>
 
                         {/* 3D Dice result face */}
                         <div className="dice-scene mb-4" style={{ transform: 'scale(1.2)' }}>
