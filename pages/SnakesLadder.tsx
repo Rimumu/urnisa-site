@@ -303,6 +303,11 @@ const SnakesLadder: React.FC = () => {
                 .animate-unlock .shackle {
                     animation: shackle-open 0.8s forwards ease-out;
                 }
+                /* Custom Scrollbar */
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #f7c548; border-radius: 3px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ffdb7d; }
             `}</style>
 
             {/* Background Decorations */}
