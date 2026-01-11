@@ -231,14 +231,27 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 strokeWidth="0.5"
                             />
                             {/* Rounded top arc connecting the rails */}
-                            <path
-                                d={`M ${end.x - perpX} ${end.y - perpY} 
-                                    Q ${end.x} ${end.y - 2.5} ${end.x + perpX} ${end.y + perpY}`}
-                                fill="none"
-                                stroke="#10b981"
-                                strokeWidth="1.0"
-                                strokeLinecap="round"
-                            />
+                            {(() => {
+                                // Calculate arc control point in the direction of the ladder
+                                const arcOffset = 2.5;
+                                // Direction from start to end (normalized)
+                                const dirX = len > 0.001 ? dx / len : 0;
+                                const dirY = len > 0.001 ? dy / len : -1;
+                                // Control point extends beyond end in the ladder's direction
+                                const ctrlX = end.x + dirX * arcOffset;
+                                const ctrlY = end.y + dirY * arcOffset;
+
+                                return (
+                                    <path
+                                        d={`M ${end.x - perpX} ${end.y - perpY} 
+                                            Q ${ctrlX} ${ctrlY} ${end.x + perpX} ${end.y + perpY}`}
+                                        fill="none"
+                                        stroke="#10b981"
+                                        strokeWidth="1.0"
+                                        strokeLinecap="round"
+                                    />
+                                );
+                            })()}
                         </g>
                     );
                 })}
