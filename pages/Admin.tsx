@@ -386,6 +386,7 @@ const Admin: React.FC = () => {
     const [snakesStatus, setSnakesStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [snakesActive, setSnakesActive] = useState(false);
     const [snakesSimUser, setSnakesSimUser] = useState('');
+    const [snakesSimAmount, setSnakesSimAmount] = useState(1);
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -2016,13 +2017,22 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <h3 className="font-bold text-white mb-2">Simulate Real Events</h3>
                                     <p className="text-sm text-gray-400 mb-4">Test queue behavior safely.</p>
 
-                                    <input
-                                        type="text"
-                                        placeholder="Target User (Optional)"
-                                        value={snakesSimUser}
-                                        onChange={(e) => setSnakesSimUser(e.target.value)}
-                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm"
-                                    />
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Target User (Optional)"
+                                            value={snakesSimUser}
+                                            onChange={(e) => setSnakesSimUser(e.target.value)}
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="#"
+                                            value={snakesSimAmount}
+                                            onChange={(e) => setSnakesSimAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm text-center"
+                                        />
+                                    </div>
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
@@ -2034,13 +2044,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                         body: JSON.stringify({ type: 'subscriber', user: snakesSimUser || 'TestSub', amount: 1, tier: '1000' })
                                                     });
                                                     const data = await res.json();
-                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Sub' });
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Sub T1' });
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
                                             className="py-2 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/30"
                                         >
-                                            SUB (1)
+                                            SUB T1 (1)
                                         </button>
                                         <button
                                             onClick={async () => {
@@ -2051,13 +2061,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                         body: JSON.stringify({ type: 'subscriber', user: snakesSimUser || 'TestTier2', amount: 1, tier: '2000' })
                                                     });
                                                     const data = await res.json();
-                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Tier 2' });
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Sub T2' });
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
                                             className="py-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-500/30"
                                         >
-                                            SUB T2 (1)
+                                            SUB T2 (2)
                                         </button>
                                         <button
                                             onClick={async () => {
@@ -2065,16 +2075,16 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', Authorization: password },
-                                                        body: JSON.stringify({ type: 'gift', user: snakesSimUser || 'TestGifter', amount: 5 })
+                                                        body: JSON.stringify({ type: 'subscriber', user: snakesSimUser || 'TestTier3', amount: 1, tier: '3000' })
                                                     });
                                                     const data = await res.json();
-                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated 5 Gifts' });
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Sub T3' });
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
-                                            className="py-2 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-xs font-bold hover:bg-pink-500/30"
+                                            className="py-2 bg-orange-500/20 border border-orange-500/30 text-orange-400 rounded-lg text-xs font-bold hover:bg-orange-500/30"
                                         >
-                                            GIFT 5
+                                            SUB T3 (3)
                                         </button>
                                         <button
                                             onClick={async () => {
@@ -2082,16 +2092,16 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', Authorization: password },
-                                                        body: JSON.stringify({ type: 'gift', user: snakesSimUser || 'TestGifter', amount: 1 })
+                                                        body: JSON.stringify({ type: 'gift', user: snakesSimUser || 'TestGifter', amount: snakesSimAmount })
                                                     });
                                                     const data = await res.json();
-                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated 1 Gift' });
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: `Simulated Gift x${snakesSimAmount}` });
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
                                             className="py-2 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-xs font-bold hover:bg-pink-500/30"
                                         >
-                                            GIFT 1
+                                            GIFT ({snakesSimAmount})
                                         </button>
                                     </div>
                                 </div>
