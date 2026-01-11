@@ -144,25 +144,56 @@ const SnakesLadder: React.FC = () => {
                 }
                 .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
                 
-                /* 3D Dice Animation */
-                .dice-container {
+                /* 3D Dice Cube */
+                .dice-scene {
+                    width: 80px;
+                    height: 80px;
                     perspective: 300px;
                 }
-                @keyframes dice-roll-3d {
+                .dice-cube {
+                    width: 100%;
+                    height: 100%;
+                    position: relative;
+                    transform-style: preserve-3d;
+                    transition: transform 0.5s ease-out;
+                }
+                .dice-cube.rolling {
+                    animation: dice-tumble 1.5s ease-in-out infinite;
+                }
+                @keyframes dice-tumble {
                     0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-                    20% { transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg); }
-                    40% { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
-                    60% { transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg); }
-                    80% { transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg); }
-                    100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(0deg); }
+                    25% { transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg) translateY(-15px); }
+                    50% { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
+                    75% { transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg) translateY(-15px); }
+                    100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg); }
                 }
-                @keyframes dice-bounce {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-20px); }
+                .dice-face {
+                    position: absolute;
+                    width: 80px;
+                    height: 80px;
+                    background: linear-gradient(145deg, #ffffff, #e6e6e6);
+                    border: 3px solid #ccc;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 48px;
+                    box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
                 }
-                .animate-dice-3d {
-                    animation: dice-roll-3d 0.8s ease-in-out infinite, dice-bounce 0.4s ease-in-out infinite;
-                }
+                .dice-face-1 { transform: rotateY(0deg) translateZ(40px); }
+                .dice-face-2 { transform: rotateY(180deg) translateZ(40px); }
+                .dice-face-3 { transform: rotateY(-90deg) translateZ(40px); }
+                .dice-face-4 { transform: rotateY(90deg) translateZ(40px); }
+                .dice-face-5 { transform: rotateX(90deg) translateZ(40px); }
+                .dice-face-6 { transform: rotateX(-90deg) translateZ(40px); }
+                
+                /* Result rotations - show specific face */
+                .dice-show-1 { transform: rotateY(0deg) rotateX(0deg); }
+                .dice-show-2 { transform: rotateY(180deg) rotateX(0deg); }
+                .dice-show-3 { transform: rotateY(90deg) rotateX(0deg); }
+                .dice-show-4 { transform: rotateY(-90deg) rotateX(0deg); }
+                .dice-show-5 { transform: rotateX(-90deg) rotateY(0deg); }
+                .dice-show-6 { transform: rotateX(90deg) rotateY(0deg); }
             `}</style>
 
             {/* Background Decorations */}
@@ -214,12 +245,12 @@ const SnakesLadder: React.FC = () => {
                 >
                     <div
                         className={`relative w-full max-w-md p-8 rounded-[2rem] border-[3px] shadow-[0_0_80px_rgba(0,0,0,0.5)] flex flex-col items-center animate-in zoom-in-95 duration-300 ${moveResult.isWinner
-                                ? 'bg-gradient-to-b from-yellow-900/90 to-yellow-950/90 border-yellow-400'
-                                : moveResult.specialMove === 'ladder'
-                                    ? 'bg-gradient-to-b from-emerald-900/90 to-emerald-950/90 border-emerald-400'
-                                    : moveResult.specialMove === 'snake'
-                                        ? 'bg-gradient-to-b from-red-900/90 to-red-950/90 border-red-400'
-                                        : 'bg-gradient-to-b from-[#2a0f13]/95 to-[#120507]/95 border-brand-accent/50'
+                            ? 'bg-gradient-to-b from-yellow-900/90 to-yellow-950/90 border-yellow-400'
+                            : moveResult.specialMove === 'ladder'
+                                ? 'bg-gradient-to-b from-emerald-900/90 to-emerald-950/90 border-emerald-400'
+                                : moveResult.specialMove === 'snake'
+                                    ? 'bg-gradient-to-b from-red-900/90 to-red-950/90 border-red-400'
+                                    : 'bg-gradient-to-b from-[#2a0f13]/95 to-[#120507]/95 border-brand-accent/50'
                             }`}
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -333,15 +364,24 @@ const SnakesLadder: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Dice Display - Clickable to roll with 3D animation */}
-                        <div className="dice-container flex justify-center mb-6">
+                        {/* 3D Dice Display - Clickable to roll */}
+                        <div className="flex justify-center mb-6">
                             <button
                                 onClick={isAdmin ? handleRoll : undefined}
                                 disabled={!isAdmin || isRolling || !currentRoller}
-                                className={`text-8xl transition-transform ${isRolling ? 'animate-dice-3d' : ''} ${isAdmin && !isRolling && currentRoller ? 'hover:scale-110 cursor-pointer active:scale-95' : 'cursor-default'}`}
+                                className={`${isAdmin && !isRolling && currentRoller ? 'hover:scale-110 cursor-pointer' : 'cursor-default'} transition-transform`}
                                 title={isAdmin ? (currentRoller ? 'Click to roll!' : 'No one in queue') : 'Login as admin to roll'}
                             >
-                                {diceAnimation ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][diceAnimation - 1] : '🎲'}
+                                <div className="dice-scene">
+                                    <div className={`dice-cube ${isRolling ? 'rolling' : (diceAnimation ? `dice-show-${diceAnimation}` : 'dice-show-1')}`}>
+                                        <div className="dice-face dice-face-1">⚀</div>
+                                        <div className="dice-face dice-face-2">⚁</div>
+                                        <div className="dice-face dice-face-3">⚂</div>
+                                        <div className="dice-face dice-face-4">⚃</div>
+                                        <div className="dice-face dice-face-5">⚄</div>
+                                        <div className="dice-face dice-face-6">⚅</div>
+                                    </div>
+                                </div>
                             </button>
                         </div>
 
