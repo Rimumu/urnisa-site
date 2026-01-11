@@ -240,18 +240,21 @@ const SnakesLadder: React.FC = () => {
                 .dice-face-5 .d3 { grid-area: 2 / 2; justify-self: center; align-self: center; }
                 .dice-face-5 .d4 { grid-area: 3 / 1; justify-self: start; align-self: end; }
                 .dice-face-5 .d5 { grid-area: 3 / 3; justify-self: end; align-self: end; }
-                /* Face 6 - 2 columns of 3 */
+                /* Face 6 - 2 columns of 3 (using grid) */
                 .dice-face-6 { 
                     transform: rotateX(-90deg) translateZ(40px);
-                    display: flex;
-                    justify-content: space-between;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 1fr 1fr 1fr;
+                    align-items: center;
+                    justify-items: center;
                 }
-                .dice-face-6 .col {
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    height: 100%;
-                }
+                .dice-face-6 .d1 { justify-self: start; align-self: start; }
+                .dice-face-6 .d2 { justify-self: end; align-self: start; }
+                .dice-face-6 .d3 { justify-self: start; align-self: center; }
+                .dice-face-6 .d4 { justify-self: end; align-self: center; }
+                .dice-face-6 .d5 { justify-self: start; align-self: end; }
+                .dice-face-6 .d6 { justify-self: end; align-self: end; }
                 
                 /* Result rotations - show specific face */
                 .dice-show-1 { transform: rotateY(0deg) rotateX(0deg); }
@@ -373,16 +376,12 @@ const SnakesLadder: React.FC = () => {
                                 </div>
                                 {/* Face 6 - 6 dots (2 columns of 3) */}
                                 <div className="dice-face dice-face-6">
-                                    <div className="col">
-                                        <div className="dice-dot"></div>
-                                        <div className="dice-dot"></div>
-                                        <div className="dice-dot"></div>
-                                    </div>
-                                    <div className="col">
-                                        <div className="dice-dot"></div>
-                                        <div className="dice-dot"></div>
-                                        <div className="dice-dot"></div>
-                                    </div>
+                                    <div className="dice-dot d1"></div>
+                                    <div className="dice-dot d2"></div>
+                                    <div className="dice-dot d3"></div>
+                                    <div className="dice-dot d4"></div>
+                                    <div className="dice-dot d5"></div>
+                                    <div className="dice-dot d6"></div>
                                 </div>
                             </div>
                         </div>
@@ -518,16 +517,12 @@ const SnakesLadder: React.FC = () => {
                                         </div>
                                         {/* Face 6 - 6 dots (2 columns of 3) */}
                                         <div className="dice-face dice-face-6">
-                                            <div className="col">
-                                                <div className="dice-dot"></div>
-                                                <div className="dice-dot"></div>
-                                                <div className="dice-dot"></div>
-                                            </div>
-                                            <div className="col">
-                                                <div className="dice-dot"></div>
-                                                <div className="dice-dot"></div>
-                                                <div className="dice-dot"></div>
-                                            </div>
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                            <div className="dice-dot d3"></div>
+                                            <div className="dice-dot d4"></div>
+                                            <div className="dice-dot d5"></div>
+                                            <div className="dice-dot d6"></div>
                                         </div>
                                     </div>
                                 </div>
