@@ -10,7 +10,7 @@ const DEFAULT_BOARD: SnakesBoardType = {
 };
 
 const SnakesLadder: React.FC = () => {
-    const { state, loading, lastMoveResult, processMove, toggleActive, addTestEvent, resetGame } = useSnakesGame();
+    const { state, loading, lastMoveResult, processMove, toggleActive, addTestEvent, resetGame, adminMovePlayer } = useSnakesGame();
 
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminKey, setAdminKey] = useState('');
@@ -26,6 +26,17 @@ const SnakesLadder: React.FC = () => {
     // Test event form
     const [testUser, setTestUser] = useState('');
     const [testAmount, setTestAmount] = useState(1);
+
+    // Admin manual move form
+    const [moveUser, setMoveUser] = useState('');
+    const [moveSpaces, setMoveSpaces] = useState(0);
+
+    const handleAdminMove = async () => {
+        if (!moveUser) return;
+        await adminMovePlayer(adminKey, moveUser, moveSpaces);
+        // Don't clear user to allow multiple adjustments easily
+        setMoveSpaces(0);
+    };
 
     // Group queue by user
     const groupedQueue = useMemo(() => {
@@ -616,6 +627,33 @@ const SnakesLadder: React.FC = () => {
                         {isAdmin && (
                             <div className="bg-black/40 backdrop-blur-xl border border-red-500/20 rounded-3xl p-6">
                                 <h3 className="text-red-400 font-bold uppercase tracking-widest text-xs mb-4 text-center">Admin Controls</h3>
+
+                                {/* Manual Move */}
+                                <div className="space-y-3 mb-6 pb-6 border-b border-white/5">
+                                    <div className="text-white/50 text-xs uppercase font-bold text-center">Debug Move</div>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={moveUser}
+                                            onChange={(e) => setMoveUser(e.target.value)}
+                                            placeholder="User"
+                                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm flex-1 w-full"
+                                        />
+                                        <input
+                                            type="number"
+                                            value={moveSpaces}
+                                            onChange={(e) => setMoveSpaces(parseInt(e.target.value) || 0)}
+                                            placeholder="+/-"
+                                            className="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-white text-sm text-center"
+                                        />
+                                        <button
+                                            onClick={handleAdminMove}
+                                            className="px-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-sm font-bold hover:bg-blue-500/30"
+                                        >
+                                            Move
+                                        </button>
+                                    </div>
+                                </div>
 
                                 {/* Test Event */}
                                 <div className="space-y-3 mb-4">

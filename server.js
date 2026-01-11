@@ -887,20 +887,21 @@ app.post('/api/snakes/move', auth, async (req, res) => {
         let newPosition = fromPosition + roll;
         let specialMove = null;
 
-        // Can't go beyond 100
+        // Can't go beyond 100 - Bounce back
         if (newPosition > 100) {
-            newPosition = fromPosition; // Stay in place if roll exceeds 100
-        } else {
-            // Check for ladder
-            if (SNAKES_AND_LADDERS.ladders[newPosition]) {
-                specialMove = 'ladder';
-                newPosition = SNAKES_AND_LADDERS.ladders[newPosition];
-            }
-            // Check for snake
-            else if (SNAKES_AND_LADDERS.snakes[newPosition]) {
-                specialMove = 'snake';
-                newPosition = SNAKES_AND_LADDERS.snakes[newPosition];
-            }
+            const diff = newPosition - 100;
+            newPosition = 100 - diff;
+        }
+
+        // Check for ladder
+        if (SNAKES_AND_LADDERS.ladders[newPosition]) {
+            specialMove = 'ladder';
+            newPosition = SNAKES_AND_LADDERS.ladders[newPosition];
+        }
+        // Check for snake
+        else if (SNAKES_AND_LADDERS.snakes[newPosition]) {
+            specialMove = 'snake';
+            newPosition = SNAKES_AND_LADDERS.snakes[newPosition];
         }
 
         // Update player position
@@ -933,6 +934,33 @@ app.post('/api/snakes/move', auth, async (req, res) => {
             specialMove,
             isWinner
         });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Admin: Move player manually
+app.post('/api/snakes/admin/move', auth, async (req, res) => {
+    try {
+        const { user, spaces } = req.body;
+        if (!user || spaces === undefined) return res.status(400).json({ error: 'User and spaces required' });
+
+        // Case-insensitive search
+        let player = await SnakesPlayer.findOne({ user: new RegExp(`^${user}$`, 'i') });
+        if (!player) return res.status(404).json({ error: 'Player not found' });
+
+        let newPosition = player.position + parseInt(spaces);
+
+        // Clamp to valid board range 0-100
+        if (newPosition < 0) newPosition = 0;
+        if (newPosition > 100) newPosition = 100;
+
+        player.position = newPosition;
+        player.lastMovedAt = new Date();
+        await player.save();
+
+        console.log(`🔧 Admin moved ${player.user} by ${spaces} spaces to ${newPosition}`);
+        res.json({ success: true, newPosition });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
