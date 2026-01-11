@@ -21,6 +21,7 @@ const SnakesLadder: React.FC = () => {
     const [isRolling, setIsRolling] = useState(false);
     const [diceAnimation, setDiceAnimation] = useState<number | null>(null);
     const [moveResult, setMoveResult] = useState<MoveResult | null>(null);
+    const [showResultPopup, setShowResultPopup] = useState(false);
 
     // Test event form
     const [testUser, setTestUser] = useState('');
@@ -106,6 +107,7 @@ const SnakesLadder: React.FC = () => {
         if (result) {
             setDiceAnimation(result.roll);
             setMoveResult(result);
+            setShowResultPopup(true);
         }
 
         setIsRolling(false);
@@ -141,12 +143,26 @@ const SnakesLadder: React.FC = () => {
                     20%, 40%, 60%, 80% { transform: translateX(5px); }
                 }
                 .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-                @keyframes dice-roll {
-                    0%, 100% { transform: rotate(0deg) scale(1); }
-                    25% { transform: rotate(-15deg) scale(1.1); }
-                    75% { transform: rotate(15deg) scale(1.1); }
+                
+                /* 3D Dice Animation */
+                .dice-container {
+                    perspective: 300px;
                 }
-                .animate-dice { animation: dice-roll 0.15s ease-in-out infinite; }
+                @keyframes dice-roll-3d {
+                    0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+                    20% { transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg); }
+                    40% { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
+                    60% { transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg); }
+                    80% { transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg); }
+                    100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(0deg); }
+                }
+                @keyframes dice-bounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-20px); }
+                }
+                .animate-dice-3d {
+                    animation: dice-roll-3d 0.8s ease-in-out infinite, dice-bounce 0.4s ease-in-out infinite;
+                }
             `}</style>
 
             {/* Background Decorations */}
@@ -186,6 +202,78 @@ const SnakesLadder: React.FC = () => {
                                 {loginState === 'success' ? 'Success!' : 'Login'}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Result Popup Modal */}
+            {showResultPopup && moveResult && (
+                <div
+                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-lg flex items-center justify-center p-4 animate-in fade-in duration-300"
+                    onClick={() => setShowResultPopup(false)}
+                >
+                    <div
+                        className={`relative w-full max-w-md p-8 rounded-[2rem] border-[3px] shadow-[0_0_80px_rgba(0,0,0,0.5)] flex flex-col items-center animate-in zoom-in-95 duration-300 ${moveResult.isWinner
+                                ? 'bg-gradient-to-b from-yellow-900/90 to-yellow-950/90 border-yellow-400'
+                                : moveResult.specialMove === 'ladder'
+                                    ? 'bg-gradient-to-b from-emerald-900/90 to-emerald-950/90 border-emerald-400'
+                                    : moveResult.specialMove === 'snake'
+                                        ? 'bg-gradient-to-b from-red-900/90 to-red-950/90 border-red-400'
+                                        : 'bg-gradient-to-b from-[#2a0f13]/95 to-[#120507]/95 border-brand-accent/50'
+                            }`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Close button */}
+                        <button
+                            onClick={() => setShowResultPopup(false)}
+                            className="absolute top-4 right-4 text-white/50 hover:text-white text-2xl transition-colors"
+                        >
+                            ✕
+                        </button>
+
+                        {/* User avatar and name */}
+                        <img
+                            src={currentRoller?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(moveResult.user)}&background=random`}
+                            alt={moveResult.user}
+                            className="w-20 h-20 rounded-full border-4 border-white shadow-2xl mb-4"
+                        />
+                        <h3 className="text-2xl font-black text-white mb-2">{moveResult.user}</h3>
+
+                        {/* Dice result */}
+                        <div className="text-7xl mb-4">
+                            {['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][moveResult.roll - 1]}
+                        </div>
+                        <div className="text-3xl font-black text-brand-accent mb-4">
+                            Rolled a {moveResult.roll}!
+                        </div>
+
+                        {/* Movement */}
+                        <div className="text-lg text-gray-200 mb-4">
+                            <span className="text-white/60">{moveResult.fromPosition === 0 ? 'Started' : 'From'}</span>{' '}
+                            <span className="font-bold text-white text-xl">{moveResult.fromPosition || 'Start'}</span>
+                            <span className="mx-3 text-2xl">→</span>
+                            <span className="font-bold text-white text-xl">{moveResult.toPosition}</span>
+                        </div>
+
+                        {/* Special effect */}
+                        {moveResult.specialMove === 'ladder' && (
+                            <div className="text-2xl text-emerald-400 font-bold animate-bounce">
+                                🪜 Climbed a Ladder! 🪜
+                            </div>
+                        )}
+                        {moveResult.specialMove === 'snake' && (
+                            <div className="text-2xl text-red-400 font-bold animate-bounce">
+                                🐍 Bitten by a Snake! 🐍
+                            </div>
+                        )}
+                        {moveResult.isWinner && (
+                            <div className="text-3xl text-yellow-400 font-black animate-pulse">
+                                🏆 WINNER! 🏆
+                            </div>
+                        )}
+
+                        {/* Tap to continue */}
+                        <div className="mt-6 text-white/40 text-sm">Click anywhere to continue</div>
                     </div>
                 </div>
             )}
@@ -245,32 +333,17 @@ const SnakesLadder: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Dice Display - Clickable to roll */}
-                        <div className="flex justify-center mb-6">
+                        {/* Dice Display - Clickable to roll with 3D animation */}
+                        <div className="dice-container flex justify-center mb-6">
                             <button
                                 onClick={isAdmin ? handleRoll : undefined}
                                 disabled={!isAdmin || isRolling || !currentRoller}
-                                className={`text-8xl transition-transform ${isRolling ? 'animate-dice' : ''} ${isAdmin && !isRolling && currentRoller ? 'hover:scale-110 cursor-pointer active:scale-95' : 'cursor-default'}`}
+                                className={`text-8xl transition-transform ${isRolling ? 'animate-dice-3d' : ''} ${isAdmin && !isRolling && currentRoller ? 'hover:scale-110 cursor-pointer active:scale-95' : 'cursor-default'}`}
                                 title={isAdmin ? (currentRoller ? 'Click to roll!' : 'No one in queue') : 'Login as admin to roll'}
                             >
                                 {diceAnimation ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][diceAnimation - 1] : '🎲'}
                             </button>
                         </div>
-
-                        {/* Move Result */}
-                        {moveResult && !isRolling && (
-                            <div className={`text-center mb-6 p-4 rounded-xl border ${moveResult.isWinner ? 'bg-yellow-500/20 border-yellow-400/50' : moveResult.specialMove === 'ladder' ? 'bg-emerald-500/20 border-emerald-400/50' : moveResult.specialMove === 'snake' ? 'bg-red-500/20 border-red-400/50' : 'bg-white/5 border-white/10'}`}>
-                                <div className="text-xl font-bold text-white">
-                                    {moveResult.user} rolled a <span className="text-brand-accent">{moveResult.roll}</span>!
-                                </div>
-                                <div className="text-sm text-gray-300 mt-1">
-                                    {moveResult.fromPosition === 0 ? 'Started at' : 'Moved from'} <span className="font-bold">{moveResult.fromPosition || 'Start'}</span> → <span className="font-bold">{moveResult.toPosition}</span>
-                                    {moveResult.specialMove === 'ladder' && <span className="text-emerald-400 ml-2">🪜 Climbed a ladder!</span>}
-                                    {moveResult.specialMove === 'snake' && <span className="text-red-400 ml-2">🐍 Bitten by a snake!</span>}
-                                    {moveResult.isWinner && <span className="text-yellow-400 ml-2">🏆 WINNER!</span>}
-                                </div>
-                            </div>
-                        )}
 
                         {/* Game Board */}
                         <div className="flex justify-center">
