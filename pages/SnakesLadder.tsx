@@ -541,7 +541,15 @@ const SnakesLadder: React.FC = () => {
 
                         {/* Admin Lock Button - Top Right of Board */}
 
-                        {isAdmin && (
+                        {!isAdmin ? (
+                            <button
+                                onClick={() => setShowLogin(true)}
+                                className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 flex items-center justify-center text-lg hover:bg-white/20 hover:scale-110 transition-all shadow-lg"
+                                title="Admin Login"
+                            >
+                                🔒
+                            </button>
+                        ) : (
                             <div
                                 className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-green-500/20 backdrop-blur-xl border border-green-500/40 flex items-center justify-center text-lg shadow-lg"
                                 title="Admin Mode Active"
@@ -571,94 +579,56 @@ const SnakesLadder: React.FC = () => {
 
                         {/* 3D Dice Display - Clickable to roll */}
                         <div className="flex justify-center mb-6">
-                            {!isAdmin ? (
-                                <button
-                                    onClick={() => setShowLogin(true)}
-                                    className="group cursor-pointer transform hover:scale-105 transition-all duration-300"
-                                    title="Click to Unlock Admin Controls"
-                                >
-                                    <div className="relative w-24 h-24 bg-black/40 rounded-3xl border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md group-hover:border-brand-accent/50 group-hover:bg-brand-accent/10">
-                                        <div className="absolute inset-0 bg-rose-pattern opacity-10 rounded-3xl"></div>
-                                        <svg
-                                            width="48"
-                                            height="72"
-                                            viewBox="0 -20 80 120"
-                                            className="relative z-10 drop-shadow-xl"
-                                            style={{ overflow: 'visible' }}
-                                        >
-                                            <path
-                                                className="transition-colors duration-300"
-                                                d="M20 40 V25 A20 20 0 0 1 60 25 V40"
-                                                fill="none"
-                                                stroke="#f7c548"
-                                                strokeWidth="8"
-                                                strokeLinecap="round"
-                                            />
-                                            <rect
-                                                x="10" y="40" width="60" height="50" rx="8"
-                                                fill="#f7c548"
-                                                className="transition-colors duration-300 group-hover:fill-brand-accent"
-                                            />
-                                            <circle cx="40" cy="65" r="6" fill="#120507" />
-                                            <rect x="37" y="65" width="6" height="15" fill="#120507" />
-                                        </svg>
-                                        <div className="absolute -bottom-8 text-[10px] font-bold uppercase tracking-widest text-brand-accent/50 group-hover:text-brand-accent transition-colors">
-                                            Admin Locked
+                            <button
+                                onClick={isAdmin ? handleRoll : () => setShowLogin(true)}
+                                disabled={(isAdmin && (isRolling || !currentRoller))}
+                                className={`${isAdmin && !isRolling && currentRoller ? 'hover:scale-110 cursor-pointer' : !isAdmin ? 'hover:scale-105 cursor-pointer' : 'cursor-default'} transition-transform`}
+                                title={isAdmin ? (currentRoller ? 'Click to roll!' : 'No one in queue') : 'Login as admin to roll'}
+                            >
+                                <div className="dice-scene">
+                                    <div className={`dice-cube ${isRolling ? 'rolling' : (diceAnimation ? `dice-show-${diceAnimation}` : 'dice-show-1')}`}>
+                                        {/* Face 1 - 1 dot center */}
+                                        <div className="dice-face dice-face-1">
+                                            <div className="dice-dot"></div>
+                                        </div>
+                                        {/* Face 2 - 2 dots diagonal */}
+                                        <div className="dice-face dice-face-2">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                        </div>
+                                        {/* Face 3 - 3 dots diagonal */}
+                                        <div className="dice-face dice-face-3">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                            <div className="dice-dot d3"></div>
+                                        </div>
+                                        {/* Face 4 - 4 dots corners */}
+                                        <div className="dice-face dice-face-4">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                            <div className="dice-dot d3"></div>
+                                            <div className="dice-dot d4"></div>
+                                        </div>
+                                        {/* Face 5 - 5 dots (corners + center) */}
+                                        <div className="dice-face dice-face-5">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                            <div className="dice-dot d3"></div>
+                                            <div className="dice-dot d4"></div>
+                                            <div className="dice-dot d5"></div>
+                                        </div>
+                                        {/* Face 6 - 6 dots (2 columns of 3) */}
+                                        <div className="dice-face dice-face-6">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                            <div className="dice-dot d3"></div>
+                                            <div className="dice-dot d4"></div>
+                                            <div className="dice-dot d5"></div>
+                                            <div className="dice-dot d6"></div>
                                         </div>
                                     </div>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleRoll}
-                                    disabled={isRolling || !currentRoller}
-                                    className={`${!isRolling && currentRoller ? 'hover:scale-110 cursor-pointer' : 'cursor-default'} transition-transform`}
-                                    title={currentRoller ? 'Click to roll!' : 'No one in queue'}
-                                >
-                                    <div className="dice-scene">
-                                        <div className={`dice-cube ${isRolling ? 'rolling' : (diceAnimation ? `dice-show-${diceAnimation}` : 'dice-show-1')}`}>
-                                            {/* Face 1 - 1 dot center */}
-                                            <div className="dice-face dice-face-1">
-                                                <div className="dice-dot"></div>
-                                            </div>
-                                            {/* Face 2 - 2 dots diagonal */}
-                                            <div className="dice-face dice-face-2">
-                                                <div className="dice-dot d1"></div>
-                                                <div className="dice-dot d2"></div>
-                                            </div>
-                                            {/* Face 3 - 3 dots diagonal */}
-                                            <div className="dice-face dice-face-3">
-                                                <div className="dice-dot d1"></div>
-                                                <div className="dice-dot d2"></div>
-                                                <div className="dice-dot d3"></div>
-                                            </div>
-                                            {/* Face 4 - 4 dots corners */}
-                                            <div className="dice-face dice-face-4">
-                                                <div className="dice-dot d1"></div>
-                                                <div className="dice-dot d2"></div>
-                                                <div className="dice-dot d3"></div>
-                                                <div className="dice-dot d4"></div>
-                                            </div>
-                                            {/* Face 5 - 5 dots (corners + center) */}
-                                            <div className="dice-face dice-face-5">
-                                                <div className="dice-dot d1"></div>
-                                                <div className="dice-dot d2"></div>
-                                                <div className="dice-dot d3"></div>
-                                                <div className="dice-dot d4"></div>
-                                                <div className="dice-dot d5"></div>
-                                            </div>
-                                            {/* Face 6 - 6 dots (2 columns of 3) */}
-                                            <div className="dice-face dice-face-6">
-                                                <div className="dice-dot d1"></div>
-                                                <div className="dice-dot d2"></div>
-                                                <div className="dice-dot d3"></div>
-                                                <div className="dice-dot d4"></div>
-                                                <div className="dice-dot d5"></div>
-                                                <div className="dice-dot d6"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </button>
-                            )}
+                                </div>
+                            </button>
                         </div>
 
                         {/* Game Board */}
