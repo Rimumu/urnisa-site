@@ -656,85 +656,109 @@ const SnakesLadder: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Admin Controls */}
-                        {isAdmin && (
-                            <div className="bg-black/40 backdrop-blur-xl border border-red-500/20 rounded-3xl p-6">
-                                <h3 className="text-red-400 font-bold uppercase tracking-widest text-xs mb-4 text-center">Admin Controls</h3>
 
-                                {/* Manual Move */}
-                                <div className="space-y-3 mb-6 pb-6 border-b border-white/5">
-                                    <div className="text-white/50 text-xs uppercase font-bold text-center">Debug Move</div>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={moveUser}
-                                            onChange={(e) => setMoveUser(e.target.value)}
-                                            placeholder="User"
-                                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm flex-1 w-full"
-                                        />
-                                        <input
-                                            type="number"
-                                            value={moveSpaces}
-                                            onChange={(e) => setMoveSpaces(parseInt(e.target.value) || 0)}
-                                            placeholder="+/-"
-                                            className="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-2 text-white text-sm text-center"
-                                        />
-                                        <button
-                                            onClick={handleAdminMove}
-                                            className="px-3 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-sm font-bold hover:bg-blue-500/30"
-                                        >
-                                            Move
-                                        </button>
-                                    </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Floating Admin Control Deck */}
+            {isAdmin && (
+                <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-10 fade-in duration-500">
+                    <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-[0_0_50px_rgba(0,0,0,0.5)] w-[320px] flex flex-col gap-6">
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">🛠️</span>
+                                <h3 className="text-white font-black uppercase tracking-widest text-sm">Control Deck</h3>
+                            </div>
+                            <div className="text-[10px] font-bold bg-white/10 px-2 py-1 rounded text-white/50">ADMIN</div>
+                        </div>
+
+                        {/* Actions Grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                            {/* Toggle Active */}
+                            <button
+                                onClick={() => toggleActive(adminKey)}
+                                className={`col-span-2 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${state?.isActive
+                                        ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'
+                                        : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
+                                    }`}
+                            >
+                                <div className={`w-2 h-2 rounded-full ${state?.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`}></div>
+                                {state?.isActive ? 'Game Active' : 'Game Paused'}
+                            </button>
+
+                            {/* Reset Button */}
+                            <button
+                                onClick={handleReset}
+                                className="col-span-2 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                <span>🗑️</span> Reset Game
+                            </button>
+                        </div>
+
+                        {/* Debug Tools */}
+                        <div className="space-y-4">
+                            <div className="text-[10px] uppercase font-bold text-white/30 tracking-widest text-center">Debug Tools</div>
+
+                            {/* Move Player */}
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5 space-y-2">
+                                <div className="text-[10px] font-bold text-white/60 uppercase">Move Player</div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={moveUser}
+                                        onChange={(e) => setMoveUser(e.target.value)}
+                                        placeholder="User"
+                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-white text-xs"
+                                    />
+                                    <input
+                                        type="number"
+                                        value={moveSpaces}
+                                        onChange={(e) => setMoveSpaces(parseInt(e.target.value) || 0)}
+                                        placeholder="+/-"
+                                        className="w-12 bg-black/40 border border-white/10 rounded-lg px-1 py-1 text-white text-xs text-center"
+                                    />
                                 </div>
+                                <button
+                                    onClick={handleAdminMove}
+                                    className="w-full py-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-500/30"
+                                >
+                                    EXECUTE MOVE
+                                </button>
+                            </div>
 
-                                {/* Test Event */}
-                                <div className="space-y-3 mb-4">
+                            {/* Test Event */}
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5 space-y-2">
+                                <div className="text-[10px] font-bold text-white/60 uppercase">Add Test Rolls</div>
+                                <div className="flex gap-2">
                                     <input
                                         type="text"
                                         value={testUser}
                                         onChange={(e) => setTestUser(e.target.value)}
-                                        placeholder="Username"
-                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                        placeholder="User"
+                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-white text-xs"
                                     />
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="number"
-                                            value={testAmount}
-                                            onChange={(e) => setTestAmount(parseInt(e.target.value) || 1)}
-                                            min={1}
-                                            max={50}
-                                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm text-center"
-                                        />
-                                        <button
-                                            onClick={handleTestEvent}
-                                            className="flex-1 bg-brand-accent/20 border border-brand-accent/30 text-brand-accent rounded-lg px-3 py-2 text-sm font-bold hover:bg-brand-accent/30"
-                                        >
-                                            Add Test Rolls
-                                        </button>
-                                    </div>
+                                    <input
+                                        type="number"
+                                        value={testAmount}
+                                        onChange={(e) => setTestAmount(parseInt(e.target.value) || 1)}
+                                        placeholder="#"
+                                        className="w-12 bg-black/40 border border-white/10 rounded-lg px-1 py-1 text-white text-xs text-center"
+                                    />
                                 </div>
-
-                                {/* Toggle & Reset */}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => toggleActive(adminKey)}
-                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-bold transition-all ${state?.isActive ? 'bg-green-500/20 border border-green-500/30 text-green-400' : 'bg-gray-500/20 border border-gray-500/30 text-gray-400'}`}
-                                    >
-                                        {state?.isActive ? '🟢 Active' : '⚪ Inactive'}
-                                    </button>
-                                    <button
-                                        onClick={handleReset}
-                                        className="px-3 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30"
-                                    >
-                                        Reset
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={handleTestEvent}
+                                    className="w-full py-1.5 bg-brand-accent/20 border border-brand-accent/30 text-brand-accent rounded-lg text-xs font-bold hover:bg-brand-accent/30"
+                                >
+                                    ADD ROLLS
+                                </button>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
