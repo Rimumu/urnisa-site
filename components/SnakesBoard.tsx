@@ -67,11 +67,14 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
         const isEven = (coords.row + coords.col) % 2 === 0;
 
         // Winner tile
-        if (tile === 100) return 'bg-yellow-500/40 border-yellow-400/60';
+        if (tile === 100) return 'bg-yellow-500/50 border-yellow-400/70';
         // Start tile
-        if (tile === 1) return 'bg-blue-500/30 border-blue-400/40';
+        if (tile === 1) return 'bg-sky-400/40 border-sky-300/50';
 
-        return isEven ? 'bg-white/5 border-white/10' : 'bg-black/20 border-white/5';
+        // Alternating rose pink and cream/gold colors
+        return isEven
+            ? 'bg-rose-900/40 border-rose-700/30'
+            : 'bg-amber-100/10 border-amber-200/20';
     };
 
     // Generate ladder paths
@@ -95,7 +98,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
     return (
         <div className="relative w-full max-w-[600px] aspect-square">
             {/* Grid Container */}
-            <div className="grid grid-cols-10 gap-0 w-full h-full bg-black/50 p-0 rounded-2xl border border-white/10 overflow-hidden">
+            <div className="grid grid-cols-10 gap-0 w-full h-full bg-rose-950/60 p-0 rounded-2xl border border-rose-800/30 overflow-hidden">
                 {grid.map((row, rowIdx) => (
                     row.map((tile, colIdx) => {
                         const isHighlight = tile === highlightTile;
