@@ -31,7 +31,7 @@ const SnakesLadder: React.FC = () => {
     // Admin manual move form
     const [moveUser, setMoveUser] = useState('');
     const [moveSpaces, setMoveSpaces] = useState(0);
-    const [isDeckMinimized, setIsDeckMinimized] = useState(false);
+    const [isDeckMinimized, setIsDeckMinimized] = useState(true);
 
     // Tile detail popup state
     const [selectedTile, setSelectedTile] = useState<{ tile: number; players: SnakesPlayer[]; specialEvent?: string } | null>(null);
