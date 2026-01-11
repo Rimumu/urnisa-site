@@ -384,6 +384,7 @@ const Admin: React.FC = () => {
     const [newSnakeTile, setNewSnakeTile] = useState('');
     const [newSnakeText, setNewSnakeText] = useState('');
     const [snakesStatus, setSnakesStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [snakesActive, setSnakesActive] = useState(false);
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -534,7 +535,12 @@ const Admin: React.FC = () => {
             if (res.ok) {
                 setSnakesTiles(await res.json());
             }
-        } catch (e) { }
+            const settingsRes = await fetch(`${API_BASE_URL}/api/snakes/settings`);
+            if (settingsRes.ok) {
+                const data = await settingsRes.json();
+                setSnakesActive(data.isActive);
+            }
+        } catch (error) { console.error(error); }
     }, []);
 
     // Tab Data Fetching
@@ -1974,6 +1980,112 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     {snakesStatus.message}
                                 </div>
                             )}
+
+                            {/* Listener Control & Simulation */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Listener Control */}
+                                <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl flex flex-col justify-between">
+                                    <div>
+                                        <h3 className="font-bold text-white mb-2">Listener Status</h3>
+                                        <p className="text-sm text-gray-400 mb-4">Controls whether new Subs/Gifts are accepted.</p>
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                const res = await fetch(`${API_BASE_URL}/api/snakes/toggle-listener`, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json', Authorization: password }
+                                                });
+                                                const data = await res.json();
+                                                if (data.success) {
+                                                    setSnakesActive(data.isActive);
+                                                    setSnakesStatus({ type: 'success', message: `Listener ${data.isActive ? 'STARTED' : 'STOPPED'}` });
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                }
+                                            } catch (e) { }
+                                        }}
+                                        className={`w-full py-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all ${snakesActive ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/20'}`}
+                                    >
+                                        {snakesActive ? 'LISTENER ACTIVE' : 'LISTENER STOPPED'}
+                                    </button>
+                                </div>
+
+                                {/* Simulation Controls */}
+                                <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl">
+                                    <h3 className="font-bold text-white mb-2">Simulate Real Events</h3>
+                                    <p className="text-sm text-gray-400 mb-4">Test queue behavior safely.</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ type: 'subscriber', user: 'TestSub', amount: 1, tier: '1000' })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Sub' });
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                } catch (e) { }
+                                            }}
+                                            className="py-2 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/30"
+                                        >
+                                            SUB (1)
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ type: 'subscriber', user: 'TestTier2', amount: 1, tier: '2000' })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Tier 2' });
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                } catch (e) { }
+                                            }}
+                                            className="py-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-500/30"
+                                        >
+                                            SUB T2 (1)
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ type: 'gift', user: 'TestGifter', amount: 5 })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated 5 Gifts' });
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                } catch (e) { }
+                                            }}
+                                            className="py-2 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-xs font-bold hover:bg-pink-500/30"
+                                        >
+                                            GIFT 5
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ type: 'gift', user: 'TestGifter', amount: 1 })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated 1 Gift' });
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                } catch (e) { }
+                                            }}
+                                            className="py-2 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-xs font-bold hover:bg-pink-500/30"
+                                        >
+                                            GIFT 1
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Add New Tile */}
                             <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl">

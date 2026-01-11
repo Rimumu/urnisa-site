@@ -11,7 +11,7 @@ const DEFAULT_BOARD: SnakesBoardType = {
 };
 
 const SnakesLadder: React.FC = () => {
-    const { state, loading, lastMoveResult, processMove, toggleActive, addTestEvent, simulateSnakesEvent, resetGame, adminMovePlayer } = useSnakesGame();
+    const { state, loading, lastMoveResult, processMove, toggleActive, addTestEvent, resetGame, adminMovePlayer } = useSnakesGame();
 
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminKey, setAdminKey] = useState('');
@@ -710,17 +710,7 @@ const SnakesLadder: React.FC = () => {
                             <>
                                 {/* Actions Grid */}
                                 <div className="grid grid-cols-2 gap-3">
-                                    {/* Toggle Active */}
-                                    <button
-                                        onClick={() => toggleActive(adminKey)}
-                                        className={`col-span-2 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${state?.isActive
-                                            ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30'
-                                            : 'bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10'
-                                            }`}
-                                    >
-                                        <div className={`w-2 h-2 rounded-full ${state?.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`}></div>
-                                        {state?.isActive ? 'Listener Active' : 'Listener Stopped'}
-                                    </button>
+
 
                                     {/* Reset Button */}
                                     <button
@@ -789,36 +779,7 @@ const SnakesLadder: React.FC = () => {
                                         </button>
                                     </div>
 
-                                    {/* Real Event Simulation */}
-                                    <div className="bg-white/5 rounded-xl p-3 border border-white/5 space-y-2">
-                                        <div className="text-[10px] font-bold text-white/60 uppercase">Simulate Real Events</div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => simulateSnakesEvent(adminKey, 'subscriber', 'TestSub', 1)}
-                                                className="py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg text-[10px] font-bold hover:bg-purple-500/30"
-                                            >
-                                                SUB (1)
-                                            </button>
-                                            <button
-                                                onClick={() => simulateSnakesEvent(adminKey, 'subscriber', 'TestTier2', 1, '2000')}
-                                                className="py-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-[10px] font-bold hover:bg-blue-500/30"
-                                            >
-                                                SUB T2 (1)
-                                            </button>
-                                            <button
-                                                onClick={() => simulateSnakesEvent(adminKey, 'gift', 'TestGifter', 5)}
-                                                className="py-1.5 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-[10px] font-bold hover:bg-pink-500/30"
-                                            >
-                                                GIFT 5
-                                            </button>
-                                            <button
-                                                onClick={() => simulateSnakesEvent(adminKey, 'gift', 'TestGifter', 1)}
-                                                className="py-1.5 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-[10px] font-bold hover:bg-pink-500/30"
-                                            >
-                                                GIFT 1
-                                            </button>
-                                        </div>
-                                    </div>
+
                                 </div>
                             </>
                         )}
