@@ -385,6 +385,7 @@ const Admin: React.FC = () => {
     const [newSnakeText, setNewSnakeText] = useState('');
     const [snakesStatus, setSnakesStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [snakesActive, setSnakesActive] = useState(false);
+    const [snakesSimUser, setSnakesSimUser] = useState('');
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -2014,6 +2015,15 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl">
                                     <h3 className="font-bold text-white mb-2">Simulate Real Events</h3>
                                     <p className="text-sm text-gray-400 mb-4">Test queue behavior safely.</p>
+
+                                    <input
+                                        type="text"
+                                        placeholder="Target User (Optional)"
+                                        value={snakesSimUser}
+                                        onChange={(e) => setSnakesSimUser(e.target.value)}
+                                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm"
+                                    />
+
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
                                             onClick={async () => {
@@ -2021,7 +2031,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', Authorization: password },
-                                                        body: JSON.stringify({ type: 'subscriber', user: 'TestSub', amount: 1, tier: '1000' })
+                                                        body: JSON.stringify({ type: 'subscriber', user: snakesSimUser || 'TestSub', amount: 1, tier: '1000' })
                                                     });
                                                     const data = await res.json();
                                                     if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Sub' });
@@ -2038,7 +2048,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', Authorization: password },
-                                                        body: JSON.stringify({ type: 'subscriber', user: 'TestTier2', amount: 1, tier: '2000' })
+                                                        body: JSON.stringify({ type: 'subscriber', user: snakesSimUser || 'TestTier2', amount: 1, tier: '2000' })
                                                     });
                                                     const data = await res.json();
                                                     if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated Tier 2' });
@@ -2055,7 +2065,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', Authorization: password },
-                                                        body: JSON.stringify({ type: 'gift', user: 'TestGifter', amount: 5 })
+                                                        body: JSON.stringify({ type: 'gift', user: snakesSimUser || 'TestGifter', amount: 5 })
                                                     });
                                                     const data = await res.json();
                                                     if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated 5 Gifts' });
@@ -2072,7 +2082,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
                                                         method: 'POST',
                                                         headers: { 'Content-Type': 'application/json', Authorization: password },
-                                                        body: JSON.stringify({ type: 'gift', user: 'TestGifter', amount: 1 })
+                                                        body: JSON.stringify({ type: 'gift', user: snakesSimUser || 'TestGifter', amount: 1 })
                                                     });
                                                     const data = await res.json();
                                                     if (data.success) setSnakesStatus({ type: 'success', message: 'Simulated 1 Gift' });
