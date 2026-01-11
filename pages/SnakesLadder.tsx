@@ -36,10 +36,6 @@ const SnakesLadder: React.FC = () => {
     // Tile detail popup state
     const [selectedTile, setSelectedTile] = useState<{ tile: number; players: SnakesPlayer[]; specialEvent?: string } | null>(null);
 
-    // Special event landing popup
-    const [showSpecialEventPopup, setShowSpecialEventPopup] = useState(false);
-    const [specialEventData, setSpecialEventData] = useState<{ tile: number; text: string } | null>(null);
-
     const handleAdminMove = async () => {
         if (!moveUser) return;
         await adminMovePlayer(adminKey, moveUser, moveSpaces);
@@ -128,12 +124,6 @@ const SnakesLadder: React.FC = () => {
             setDiceAnimation(result.roll);
             setMoveResult(result);
             setShowResultPopup(true);
-
-            // Show special event popup if landed on special tile
-            if (result.specialTileEvent) {
-                setSpecialEventData(result.specialTileEvent);
-                setShowSpecialEventPopup(true);
-            }
         }
 
         setIsRolling(false);
@@ -347,7 +337,9 @@ const SnakesLadder: React.FC = () => {
                                 ? 'bg-gradient-to-b from-emerald-900/90 to-emerald-950/90 border-emerald-400'
                                 : moveResult.specialMove === 'snake'
                                     ? 'bg-gradient-to-b from-red-900/90 to-red-950/90 border-red-400'
-                                    : 'bg-gradient-to-b from-[#2a0f13]/95 to-[#120507]/95 border-brand-accent/50'
+                                    : moveResult.specialTileEvent
+                                        ? 'bg-gradient-to-b from-purple-900/90 to-purple-950/90 border-purple-400'
+                                        : 'bg-gradient-to-b from-[#2a0f13]/95 to-[#120507]/95 border-brand-accent/50'
                             }`}
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -434,6 +426,11 @@ const SnakesLadder: React.FC = () => {
                         {moveResult.specialMove === 'snake' && (
                             <div className="text-2xl text-red-400 font-bold animate-bounce">
                                 🐍 Bitten by a Snake! 🐍
+                            </div>
+                        )}
+                        {moveResult.specialTileEvent && (
+                            <div className="text-2xl text-purple-400 font-bold animate-bounce">
+                                ⭐ You landed on a Special Tile! ⭐
                             </div>
                         )}
                         {moveResult.isWinner && (
@@ -795,50 +792,6 @@ const SnakesLadder: React.FC = () => {
                     specialEvent={selectedTile.specialEvent}
                     onClose={() => setSelectedTile(null)}
                 />
-            )}
-
-            {/* Special Event Landing Popup */}
-            {showSpecialEventPopup && specialEventData && (
-                <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in duration-200"
-                    onClick={() => setShowSpecialEventPopup(false)}
-                >
-                    <div
-                        className="bg-gradient-to-br from-purple-900/95 to-purple-950/95 border border-purple-500/30 rounded-3xl p-8 max-w-md w-[90%] shadow-2xl shadow-purple-500/20 animate-in zoom-in-95 duration-300 text-center"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Decorative elements */}
-                        <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-purple-400/20 blur-[60px]"></div>
-                        </div>
-
-                        <div className="relative z-10">
-                            {/* Icon */}
-                            <div className="w-16 h-16 mx-auto mb-4 bg-purple-500/30 rounded-full flex items-center justify-center">
-                                <span className="text-3xl">⭐</span>
-                            </div>
-
-                            {/* Header */}
-                            <h2 className="text-purple-300 font-black text-2xl uppercase tracking-widest mb-2">
-                                Special Event!
-                            </h2>
-                            <p className="text-purple-400/70 text-sm mb-6">Tile #{specialEventData.tile}</p>
-
-                            {/* Event Text */}
-                            <div className="bg-black/30 rounded-2xl p-4 mb-6 border border-purple-500/20">
-                                <p className="text-white text-lg leading-relaxed">{specialEventData.text}</p>
-                            </div>
-
-                            {/* Close button */}
-                            <button
-                                onClick={() => setShowSpecialEventPopup(false)}
-                                className="px-8 py-3 bg-purple-500/30 border border-purple-400/50 text-purple-300 rounded-xl font-bold uppercase tracking-wider hover:bg-purple-500/50 transition-all"
-                            >
-                                Got it!
-                            </button>
-                        </div>
-                    </div>
-                </div>
             )}
         </div>
     );
