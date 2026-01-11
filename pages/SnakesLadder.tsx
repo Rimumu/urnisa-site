@@ -87,7 +87,7 @@ const SnakesLadder: React.FC = () => {
                     setShowLogin(false);
                     setPassword('');
                     setLoginState('idle');
-                }, 1000);
+                }, 1500);
             } else {
                 setLoginState('error');
                 setTimeout(() => setLoginState('idle'), 500);
@@ -286,6 +286,23 @@ const SnakesLadder: React.FC = () => {
                 .dice-show-4 { transform: rotateY(-90deg) rotateX(0deg); }
                 .dice-show-5 { transform: rotateX(-90deg) rotateY(0deg); }
                 .dice-show-6 { transform: rotateX(90deg) rotateY(0deg); }
+                /* Lock Animations */
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                    20%, 40%, 60%, 80% { transform: translateX(5px); }
+                }
+                .animate-shake {
+                    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+                }
+                @keyframes shackle-open {
+                    0% { transform: translateY(0); }
+                    40% { transform: translateY(-15px); }
+                    100% { transform: translateY(-15px) rotateY(45deg); transform-origin: 20% 100%; }
+                }
+                .animate-unlock .shackle {
+                    animation: shackle-open 0.8s forwards ease-out;
+                }
             `}</style>
 
             {/* Background Decorations */}
@@ -296,33 +313,87 @@ const SnakesLadder: React.FC = () => {
             {/* Login Modal */}
             {showLogin && (
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className={`relative w-full max-w-sm p-8 rounded-[3rem] bg-gradient-to-b from-[#2a0f13] to-[#120507] border-[2px] ${loginState === 'error' ? 'border-red-500 animate-shake' : loginState === 'success' ? 'border-green-500' : 'border-brand-accent/30'} shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col items-center`}>
-                        <button onClick={() => setShowLogin(false)} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">✕</button>
+                    <div
+                        className={`
+                            relative w-full max-w-sm p-8 rounded-[3rem] 
+                            bg-gradient-to-b from-[#2a0f13] to-[#120507] 
+                            border-[2px] ${loginState === 'error' ? 'border-red-500' : loginState === 'success' ? 'border-green-500' : 'border-brand-accent/30'}
+                            shadow-[0_0_50px_rgba(0,0,0,0.5)] 
+                            flex flex-col items-center
+                            transition-colors duration-500
+                            ${loginState === 'error' ? 'animate-shake' : ''}
+                        `}
+                    >
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setShowLogin(false)}
+                            className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors"
+                        >
+                            ✕
+                        </button>
 
-                        <div className="text-6xl mb-6">🎲</div>
+                        {/* Animated Lock SVG */}
+                        <div className={`mb-8 relative ${loginState === 'success' ? 'animate-unlock' : ''}`}>
+                            <div className={`absolute inset-0 blur-2xl rounded-full ${loginState === 'success' ? 'bg-green-500/30' : 'bg-brand-accent/10'}`}></div>
+                            <svg
+                                width="80"
+                                height="120"
+                                viewBox="0 -20 80 120"
+                                className="relative z-10 drop-shadow-2xl"
+                                style={{ overflow: 'visible' }}
+                            >
+                                {/* Shackle */}
+                                <path
+                                    className="shackle transition-colors duration-300"
+                                    d="M20 40 V25 A20 20 0 0 1 60 25 V40"
+                                    fill="none"
+                                    stroke={loginState === 'success' ? '#4ade80' : '#f7c548'}
+                                    strokeWidth="8"
+                                    strokeLinecap="round"
+                                />
+                                {/* Body */}
+                                <rect
+                                    x="10" y="40" width="60" height="50" rx="8"
+                                    fill={loginState === 'success' ? '#4ade80' : '#f7c548'}
+                                    className="transition-colors duration-300"
+                                />
+                                {/* Keyhole */}
+                                <circle cx="40" cy="65" r="6" fill="#120507" />
+                                <rect x="37" y="65" width="6" height="15" fill="#120507" />
+                            </svg>
+                        </div>
+
                         <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-1">
                             {loginState === 'success' ? 'Unlocked!' : 'Admin Login'}
                         </h3>
                         <p className="text-xs text-brand-accent/60 font-bold uppercase tracking-wider mb-6">
-                            {loginState === 'verifying' ? 'Verifying...' : 'Enter Password'}
+                            {loginState === 'verifying' ? 'Verifying Key...' : 'Enter Key Code'}
                         </p>
 
                         <form onSubmit={handleLogin} className="w-full space-y-6">
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-black/40 border-b-2 border-brand-accent/30 focus:border-brand-accent text-center text-white text-2xl font-bold tracking-[0.5em] py-3 outline-none transition-all"
-                                placeholder="••••••••"
-                                autoFocus
-                                disabled={loginState === 'success'}
-                            />
+                            <div className="relative group">
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full bg-black/40 border-b-2 border-brand-accent/30 focus:border-brand-accent text-center text-white text-2xl font-bold tracking-[0.5em] py-3 outline-none transition-all placeholder:tracking-normal placeholder:text-sm placeholder:font-normal placeholder:text-gray-600"
+                                    placeholder="••••••••"
+                                    autoFocus
+                                    disabled={loginState === 'success'}
+                                />
+                            </div>
+
                             <button
                                 type="submit"
                                 disabled={loginState !== 'idle'}
-                                className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg transition-all ${loginState === 'success' ? 'bg-green-500 text-black' : 'bg-gradient-to-r from-brand-primary to-brand-accent text-black hover:brightness-110'}`}
+                                className={`
+                                    w-full py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg transform transition-all active:scale-95
+                                    ${loginState === 'success'
+                                        ? 'bg-green-500 text-black'
+                                        : 'bg-gradient-to-r from-brand-primary to-brand-accent text-black hover:brightness-110'}
+                                `}
                             >
-                                {loginState === 'success' ? 'Success!' : 'Login'}
+                                {loginState === 'success' ? 'Unlocked' : 'Login'}
                             </button>
                         </form>
                     </div>
@@ -469,15 +540,8 @@ const SnakesLadder: React.FC = () => {
                         <div className="absolute top-0 left-0 w-full h-full bg-rose-pattern opacity-5 pointer-events-none"></div>
 
                         {/* Admin Lock Button - Top Right of Board */}
-                        {!isAdmin ? (
-                            <button
-                                onClick={() => setShowLogin(true)}
-                                className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 flex items-center justify-center text-lg hover:bg-white/20 hover:scale-110 transition-all shadow-lg"
-                                title="Admin Login"
-                            >
-                                🔒
-                            </button>
-                        ) : (
+
+                        {isAdmin && (
                             <div
                                 className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-green-500/20 backdrop-blur-xl border border-green-500/40 flex items-center justify-center text-lg shadow-lg"
                                 title="Admin Mode Active"
@@ -507,56 +571,94 @@ const SnakesLadder: React.FC = () => {
 
                         {/* 3D Dice Display - Clickable to roll */}
                         <div className="flex justify-center mb-6">
-                            <button
-                                onClick={isAdmin ? handleRoll : undefined}
-                                disabled={!isAdmin || isRolling || !currentRoller}
-                                className={`${isAdmin && !isRolling && currentRoller ? 'hover:scale-110 cursor-pointer' : 'cursor-default'} transition-transform`}
-                                title={isAdmin ? (currentRoller ? 'Click to roll!' : 'No one in queue') : 'Login as admin to roll'}
-                            >
-                                <div className="dice-scene">
-                                    <div className={`dice-cube ${isRolling ? 'rolling' : (diceAnimation ? `dice-show-${diceAnimation}` : 'dice-show-1')}`}>
-                                        {/* Face 1 - 1 dot center */}
-                                        <div className="dice-face dice-face-1">
-                                            <div className="dice-dot"></div>
-                                        </div>
-                                        {/* Face 2 - 2 dots diagonal */}
-                                        <div className="dice-face dice-face-2">
-                                            <div className="dice-dot d1"></div>
-                                            <div className="dice-dot d2"></div>
-                                        </div>
-                                        {/* Face 3 - 3 dots diagonal */}
-                                        <div className="dice-face dice-face-3">
-                                            <div className="dice-dot d1"></div>
-                                            <div className="dice-dot d2"></div>
-                                            <div className="dice-dot d3"></div>
-                                        </div>
-                                        {/* Face 4 - 4 dots corners */}
-                                        <div className="dice-face dice-face-4">
-                                            <div className="dice-dot d1"></div>
-                                            <div className="dice-dot d2"></div>
-                                            <div className="dice-dot d3"></div>
-                                            <div className="dice-dot d4"></div>
-                                        </div>
-                                        {/* Face 5 - 5 dots (corners + center) */}
-                                        <div className="dice-face dice-face-5">
-                                            <div className="dice-dot d1"></div>
-                                            <div className="dice-dot d2"></div>
-                                            <div className="dice-dot d3"></div>
-                                            <div className="dice-dot d4"></div>
-                                            <div className="dice-dot d5"></div>
-                                        </div>
-                                        {/* Face 6 - 6 dots (2 columns of 3) */}
-                                        <div className="dice-face dice-face-6">
-                                            <div className="dice-dot d1"></div>
-                                            <div className="dice-dot d2"></div>
-                                            <div className="dice-dot d3"></div>
-                                            <div className="dice-dot d4"></div>
-                                            <div className="dice-dot d5"></div>
-                                            <div className="dice-dot d6"></div>
+                            {!isAdmin ? (
+                                <button
+                                    onClick={() => setShowLogin(true)}
+                                    className="group cursor-pointer transform hover:scale-105 transition-all duration-300"
+                                    title="Click to Unlock Admin Controls"
+                                >
+                                    <div className="relative w-24 h-24 bg-black/40 rounded-3xl border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md group-hover:border-brand-accent/50 group-hover:bg-brand-accent/10">
+                                        <div className="absolute inset-0 bg-rose-pattern opacity-10 rounded-3xl"></div>
+                                        <svg
+                                            width="48"
+                                            height="72"
+                                            viewBox="0 -20 80 120"
+                                            className="relative z-10 drop-shadow-xl"
+                                            style={{ overflow: 'visible' }}
+                                        >
+                                            <path
+                                                className="transition-colors duration-300"
+                                                d="M20 40 V25 A20 20 0 0 1 60 25 V40"
+                                                fill="none"
+                                                stroke="#f7c548"
+                                                strokeWidth="8"
+                                                strokeLinecap="round"
+                                            />
+                                            <rect
+                                                x="10" y="40" width="60" height="50" rx="8"
+                                                fill="#f7c548"
+                                                className="transition-colors duration-300 group-hover:fill-brand-accent"
+                                            />
+                                            <circle cx="40" cy="65" r="6" fill="#120507" />
+                                            <rect x="37" y="65" width="6" height="15" fill="#120507" />
+                                        </svg>
+                                        <div className="absolute -bottom-8 text-[10px] font-bold uppercase tracking-widest text-brand-accent/50 group-hover:text-brand-accent transition-colors">
+                                            Admin Locked
                                         </div>
                                     </div>
-                                </div>
-                            </button>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleRoll}
+                                    disabled={isRolling || !currentRoller}
+                                    className={`${!isRolling && currentRoller ? 'hover:scale-110 cursor-pointer' : 'cursor-default'} transition-transform`}
+                                    title={currentRoller ? 'Click to roll!' : 'No one in queue'}
+                                >
+                                    <div className="dice-scene">
+                                        <div className={`dice-cube ${isRolling ? 'rolling' : (diceAnimation ? `dice-show-${diceAnimation}` : 'dice-show-1')}`}>
+                                            {/* Face 1 - 1 dot center */}
+                                            <div className="dice-face dice-face-1">
+                                                <div className="dice-dot"></div>
+                                            </div>
+                                            {/* Face 2 - 2 dots diagonal */}
+                                            <div className="dice-face dice-face-2">
+                                                <div className="dice-dot d1"></div>
+                                                <div className="dice-dot d2"></div>
+                                            </div>
+                                            {/* Face 3 - 3 dots diagonal */}
+                                            <div className="dice-face dice-face-3">
+                                                <div className="dice-dot d1"></div>
+                                                <div className="dice-dot d2"></div>
+                                                <div className="dice-dot d3"></div>
+                                            </div>
+                                            {/* Face 4 - 4 dots corners */}
+                                            <div className="dice-face dice-face-4">
+                                                <div className="dice-dot d1"></div>
+                                                <div className="dice-dot d2"></div>
+                                                <div className="dice-dot d3"></div>
+                                                <div className="dice-dot d4"></div>
+                                            </div>
+                                            {/* Face 5 - 5 dots (corners + center) */}
+                                            <div className="dice-face dice-face-5">
+                                                <div className="dice-dot d1"></div>
+                                                <div className="dice-dot d2"></div>
+                                                <div className="dice-dot d3"></div>
+                                                <div className="dice-dot d4"></div>
+                                                <div className="dice-dot d5"></div>
+                                            </div>
+                                            {/* Face 6 - 6 dots (2 columns of 3) */}
+                                            <div className="dice-face dice-face-6">
+                                                <div className="dice-dot d1"></div>
+                                                <div className="dice-dot d2"></div>
+                                                <div className="dice-dot d3"></div>
+                                                <div className="dice-dot d4"></div>
+                                                <div className="dice-dot d5"></div>
+                                                <div className="dice-dot d6"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            )}
                         </div>
 
                         {/* Game Board */}
