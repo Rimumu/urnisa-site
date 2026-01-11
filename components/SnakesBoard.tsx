@@ -113,17 +113,9 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                     ${isHighlight ? 'ring-2 ring-brand-accent z-20' : ''}
                                 `}
                             >
-                                {/* Tile Number */}
-                                <span className={`
-                                    absolute top-0.5 left-1 text-[8px] font-bold pointer-events-none select-none
-                                    ${tile === 100 ? 'text-yellow-400' : 'text-white/40'}
-                                `}>
-                                    {tile}
-                                </span>
-
                                 {/* Winner icon for tile 100 */}
                                 {tile === 100 && (
-                                    <span className="absolute inset-0 flex items-center justify-center text-lg pointer-events-none">🏆</span>
+                                    <span className="absolute inset-0 flex items-center justify-center text-lg pointer-events-none z-10">🏆</span>
                                 )}
                             </div>
                         );
@@ -271,8 +263,36 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                 })}
             </svg>
 
+            {/* Tile Numbers Overlay - Above snakes/ladders */}
+            <div className="absolute inset-0 pointer-events-none z-20">
+                {grid.map((row, rowIdx) => (
+                    row.map((tile, colIdx) => {
+                        const { row: r, col: c } = tileToCoords(tile);
+                        return (
+                            <div
+                                key={`num-${tile}`}
+                                className="absolute"
+                                style={{
+                                    left: `${c * 10}%`,
+                                    top: `${r * 10}%`,
+                                    width: '10%',
+                                    height: '10%',
+                                }}
+                            >
+                                <span className={`
+                                    absolute top-0.5 left-1 text-[8px] font-bold pointer-events-none select-none
+                                    ${tile === 100 ? 'text-yellow-400' : 'text-white/60'}
+                                `}>
+                                    {tile}
+                                </span>
+                            </div>
+                        );
+                    })
+                ))}
+            </div>
+
             {/* Players Overlay - Positioned absolutely over tiles */}
-            <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 pointer-events-none z-30">
                 {Object.entries(playersByTile).map(([tileStr, tilePlayers]) => {
                     const tile = parseInt(tileStr);
                     const { row, col } = tileToCoords(tile);
