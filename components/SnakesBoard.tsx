@@ -376,23 +376,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                 })}
             </div>
 
-            {/* Legend */}
-            <div className="absolute -bottom-10 left-0 right-0 flex justify-center gap-6 text-xs">
-                <div className="flex items-center gap-2">
-                    <svg width="20" height="12" viewBox="0 0 20 12">
-                        <line x1="2" y1="10" x2="18" y2="2" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
-                        <line x1="4" y1="10" x2="20" y2="2" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                    <span className="text-white/60">Ladder (Up)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <svg width="20" height="12" viewBox="0 0 20 12">
-                        <path d="M2 2 Q 10 6 18 10" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                        <circle cx="2" cy="2" r="2" fill="#ef4444" />
-                    </svg>
-                    <span className="text-white/60">Snake (Down)</span>
-                </div>
-            </div>
+
         </div>
     );
 };
