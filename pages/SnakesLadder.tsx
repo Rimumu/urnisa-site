@@ -245,11 +245,16 @@ const SnakesLadder: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Dice Display */}
+                        {/* Dice Display - Clickable to roll */}
                         <div className="flex justify-center mb-6">
-                            <div className={`text-8xl ${isRolling ? 'animate-dice' : ''} transition-transform`}>
+                            <button
+                                onClick={isAdmin ? handleRoll : undefined}
+                                disabled={!isAdmin || isRolling || !currentRoller}
+                                className={`text-8xl transition-transform ${isRolling ? 'animate-dice' : ''} ${isAdmin && !isRolling && currentRoller ? 'hover:scale-110 cursor-pointer active:scale-95' : 'cursor-default'}`}
+                                title={isAdmin ? (currentRoller ? 'Click to roll!' : 'No one in queue') : 'Login as admin to roll'}
+                            >
                                 {diceAnimation ? ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][diceAnimation - 1] : '🎲'}
-                            </div>
+                            </button>
                         </div>
 
                         {/* Move Result */}
@@ -264,19 +269,6 @@ const SnakesLadder: React.FC = () => {
                                     {moveResult.specialMove === 'snake' && <span className="text-red-400 ml-2">🐍 Bitten by a snake!</span>}
                                     {moveResult.isWinner && <span className="text-yellow-400 ml-2">🏆 WINNER!</span>}
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Roll Button */}
-                        {isAdmin && (
-                            <div className="flex justify-center mb-8">
-                                <button
-                                    onClick={handleRoll}
-                                    disabled={isRolling || !currentRoller}
-                                    className={`px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl transition-all transform active:scale-95 ${isRolling || !currentRoller ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-brand-primary to-brand-accent text-black hover:brightness-110 hover:scale-105'}`}
-                                >
-                                    {isRolling ? 'Rolling...' : 'Roll Dice!'}
-                                </button>
                             </div>
                         )}
 
