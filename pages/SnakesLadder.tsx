@@ -154,6 +154,25 @@ const SnakesLadder: React.FC = () => {
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
+            {/* Admin Lock Button - Top Right */}
+            {!isAdmin && (
+                <button
+                    onClick={() => setShowLogin(true)}
+                    className="fixed top-20 right-4 z-50 w-12 h-12 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl hover:bg-white/20 hover:scale-110 transition-all shadow-lg"
+                    title="Admin Login"
+                >
+                    🔒
+                </button>
+            )}
+            {isAdmin && (
+                <div
+                    className="fixed top-20 right-4 z-50 w-12 h-12 rounded-full bg-green-500/20 backdrop-blur-xl border border-green-500/40 flex items-center justify-center text-xl shadow-lg"
+                    title="Admin Mode Active"
+                >
+                    🔓
+                </div>
+            )}
+
             {/* Login Modal */}
             {showLogin && (
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -258,17 +277,6 @@ const SnakesLadder: React.FC = () => {
                                     className={`px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-lg shadow-xl transition-all transform active:scale-95 ${isRolling || !currentRoller ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gradient-to-r from-brand-primary to-brand-accent text-black hover:brightness-110 hover:scale-105'}`}
                                 >
                                     {isRolling ? 'Rolling...' : 'Roll Dice!'}
-                                </button>
-                            </div>
-                        )}
-
-                        {!isAdmin && (
-                            <div className="flex justify-center mb-8">
-                                <button
-                                    onClick={() => setShowLogin(true)}
-                                    className="px-8 py-3 rounded-xl bg-white/10 border border-white/20 text-white font-bold hover:bg-white/20 transition-all"
-                                >
-                                    🔒 Admin Login
                                 </button>
                             </div>
                         )}
