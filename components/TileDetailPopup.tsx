@@ -45,9 +45,10 @@ const TileDetailPopup: React.FC<Props> = ({ tile, players, specialEvent, board, 
                             <p className="text-gray-500 text-xs">
                                 {tile === 100 ? 'Winner Tile' :
                                     tile === 1 ? 'Start Tile' :
-                                        tileType === 'snake' ? 'Snake Head' :
-                                            tileType === 'ladder' ? 'Ladder Base' :
-                                                'Game Tile'}
+                                        tileType === 'snake' ? 'Snake Tile' :
+                                            tileType === 'ladder' ? 'Ladder Tile' :
+                                                specialEvent ? 'Special Tile' :
+                                                    'Game Tile'}
                             </p>
                         </div>
                     </div>
