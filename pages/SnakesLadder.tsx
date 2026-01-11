@@ -429,7 +429,7 @@ const SnakesLadder: React.FC = () => {
                             </div>
                         )}
                         {moveResult.specialTileEvent && (
-                            <div className="text-2xl text-purple-400 font-bold animate-bounce">
+                            <div className="text-2xl text-purple-400 font-bold animate-bounce text-center">
                                 ⭐ You landed on a Special Tile! ⭐
                             </div>
                         )}
@@ -652,20 +652,26 @@ const SnakesLadder: React.FC = () => {
                         <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
                             <h3 className="text-brand-primary font-bold uppercase tracking-widest text-xs mb-4 text-center">Recent Moves</h3>
                             <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
-                                {state?.history.slice(0, 10).map((h) => (
-                                    <div key={h._id} className="text-sm border-b border-white/5 pb-2 last:border-0">
-                                        <span className="font-bold text-white">{h.user}</span>
-                                        <span className="text-gray-400"> rolled </span>
-                                        <span className="text-brand-accent font-bold">{h.roll}</span>
-                                        <span className="text-gray-400"> → </span>
-                                        <span className="text-white">{h.toPosition}</span>
-                                        {h.specialMove && (
-                                            <span className={h.specialMove === 'ladder' ? 'text-emerald-400' : 'text-red-400'}>
-                                                {h.specialMove === 'ladder' ? ' 🪜' : ' 🐍'}
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
+                                {state?.history.slice(0, 10).map((h) => {
+                                    const isSpecialTile = state.specialTiles?.some(st => st.tile === h.toPosition);
+                                    return (
+                                        <div key={h._id} className="text-sm border-b border-white/5 pb-2 last:border-0">
+                                            <span className="font-bold text-white">{h.user}</span>
+                                            <span className="text-gray-400"> rolled </span>
+                                            <span className="text-brand-accent font-bold">{h.roll}</span>
+                                            <span className="text-gray-400"> → </span>
+                                            <span className="text-white">{h.toPosition}</span>
+                                            {h.specialMove && (
+                                                <span className={h.specialMove === 'ladder' ? 'text-emerald-400' : 'text-red-400'}>
+                                                    {h.specialMove === 'ladder' ? ' 🪜' : ' 🐍'}
+                                                </span>
+                                            )}
+                                            {isSpecialTile && (
+                                                <span className="text-purple-400"> ⭐</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                                 {(!state?.history || state.history.length === 0) && (
                                     <div className="text-gray-500 text-xs text-center py-4">No moves yet</div>
                                 )}
