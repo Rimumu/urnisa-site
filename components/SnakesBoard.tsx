@@ -367,12 +367,16 @@ const SnakesBoard: React.FC<Props> = ({ board, players, specialTiles = [], highl
                     return (
                         <div
                             key={`players-${tile}`}
-                            className="absolute pointer-events-auto group"
+                            className="absolute pointer-events-auto group cursor-pointer"
                             style={{
                                 left: `${col * 10}%`,
                                 top: `${row * 10}%`,
                                 width: '10%',
                                 height: '10%',
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation(); // Prevent double triggering if clicked on overlap 
+                                onTileClick?.(tile, players, specialTileMap[tile]);
                             }}
                         >
                             {/* Unified Tooltip */}
