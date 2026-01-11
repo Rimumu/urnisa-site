@@ -796,6 +796,7 @@ const SnakesLadder: React.FC = () => {
                     tile={selectedTile.tile}
                     players={selectedTile.players}
                     specialEvent={selectedTile.specialEvent}
+                    board={state?.board}
                     onClose={() => setSelectedTile(null)}
                 />
             )}

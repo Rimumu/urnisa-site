@@ -1,14 +1,24 @@
-import React from 'react';
-import { SnakesPlayer } from '../hooks/useSnakesGame';
+import React, { useMemo } from 'react';
+import { SnakesPlayer, SnakesBoard } from '../hooks/useSnakesGame';
 
 interface Props {
     tile: number;
     players: SnakesPlayer[];
     specialEvent?: string;
+    board?: SnakesBoard;
     onClose: () => void;
 }
 
-const TileDetailPopup: React.FC<Props> = ({ tile, players, specialEvent, onClose }) => {
+const TileDetailPopup: React.FC<Props> = ({ tile, players, specialEvent, board, onClose }) => {
+
+    // Determine tile type
+    const tileType = useMemo(() => {
+        if (!board) return 'normal';
+        if (board.snakes[tile]) return 'snake';
+        if (board.ladders[tile]) return 'ladder';
+        return 'normal';
+    }, [board, tile]);
+
     return (
         <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in duration-200"
@@ -22,16 +32,22 @@ const TileDetailPopup: React.FC<Props> = ({ tile, players, specialEvent, onClose
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black ${tile === 100 ? 'bg-yellow-500/30 text-yellow-400' :
-                                tile === 1 ? 'bg-sky-500/30 text-sky-400' :
-                                    specialEvent ? 'bg-purple-500/30 text-purple-400' :
-                                        'bg-white/10 text-white'
+                            tile === 1 ? 'bg-sky-500/30 text-sky-400' :
+                                tileType === 'snake' ? 'bg-red-500/30 text-red-400' :
+                                    tileType === 'ladder' ? 'bg-emerald-500/30 text-emerald-400' :
+                                        specialEvent ? 'bg-purple-500/30 text-purple-400' :
+                                            'bg-white/10 text-white'
                             }`}>
-                            {tile === 100 ? '🏆' : tile}
+                            {tile === 100 ? '🏆' : tileType === 'snake' ? '🐍' : tileType === 'ladder' ? '🪜' : tile}
                         </div>
                         <div>
                             <h3 className="text-white font-black text-lg">Tile #{tile}</h3>
                             <p className="text-gray-500 text-xs">
-                                {tile === 100 ? 'Winner Tile' : tile === 1 ? 'Start Tile' : 'Game Tile'}
+                                {tile === 100 ? 'Winner Tile' :
+                                    tile === 1 ? 'Start Tile' :
+                                        tileType === 'snake' ? 'Snake Head' :
+                                            tileType === 'ladder' ? 'Ladder Base' :
+                                                'Game Tile'}
                             </p>
                         </div>
                     </div>
@@ -45,10 +61,23 @@ const TileDetailPopup: React.FC<Props> = ({ tile, players, specialEvent, onClose
 
                 {/* Special Event Section */}
                 {specialEvent && (
-                    <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-2xl">
+                    <div className={`mb-6 p-4 rounded-2xl border ${tileType === 'snake' ? 'bg-red-500/10 border-red-500/30' :
+                        tileType === 'ladder' ? 'bg-emerald-500/10 border-emerald-500/30' :
+                            'bg-purple-500/10 border-purple-500/30'
+                        }`}>
                         <div className="flex items-center gap-2 mb-2">
-                            <span className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-black">!</span>
-                            <h4 className="text-purple-400 font-bold text-sm uppercase tracking-wider">Special Event</h4>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-black ${tileType === 'snake' ? 'bg-red-500' :
+                                tileType === 'ladder' ? 'bg-emerald-500' :
+                                    'bg-purple-500'
+                                }`}>!</span>
+                            <h4 className={`font-bold text-sm uppercase tracking-wider ${tileType === 'snake' ? 'text-red-400' :
+                                tileType === 'ladder' ? 'text-emerald-400' :
+                                    'text-purple-400'
+                                }`}>
+                                {tileType === 'snake' ? 'SNAKE TILE' :
+                                    tileType === 'ladder' ? 'LADDER TILE' :
+                                        'SPECIAL TILE'}
+                            </h4>
                         </div>
                         <p className="text-white text-sm leading-relaxed">{specialEvent}</p>
                     </div>
