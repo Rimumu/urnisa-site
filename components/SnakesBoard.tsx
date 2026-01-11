@@ -159,8 +159,8 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                     const dy = end.y - start.y;
                     const len = Math.sqrt(dx * dx + dy * dy);
 
-                    // Handle edge case for vertical/near-vertical ladders
-                    const railWidth = 1.5; // Width between rails
+                    // Width between the two rails (wider = more visible rungs)
+                    const railWidth = 2.5;
                     let perpX: number, perpY: number;
 
                     if (len < 0.001) {
@@ -168,13 +168,13 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                         perpX = railWidth;
                         perpY = 0;
                     } else {
-                        // Perpendicular vector (rotated 90 degrees)
+                        // Perpendicular vector (rotated 90 degrees from the ladder direction)
                         perpX = (-dy / len) * railWidth;
                         perpY = (dx / len) * railWidth;
                     }
 
                     // Number of rungs based on distance
-                    const numRungs = Math.max(3, Math.floor(len / 6));
+                    const numRungs = Math.max(4, Math.floor(len / 5));
                     const rungs = [];
                     for (let i = 0; i <= numRungs; i++) {
                         const t = i / numRungs;
@@ -188,7 +188,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 x2={rx + perpX}
                                 y2={ry + perpY}
                                 stroke="#a7f3d0"
-                                strokeWidth="0.5"
+                                strokeWidth="0.8"
                                 strokeLinecap="round"
                             />
                         );
@@ -203,7 +203,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 x2={end.x - perpX}
                                 y2={end.y - perpY}
                                 stroke="url(#ladderGradient)"
-                                strokeWidth="0.8"
+                                strokeWidth="1.2"
                                 strokeLinecap="round"
                             />
                             {/* Right rail */}
@@ -213,7 +213,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 x2={end.x + perpX}
                                 y2={end.y + perpY}
                                 stroke="url(#ladderGradient)"
-                                strokeWidth="0.8"
+                                strokeWidth="1.2"
                                 strokeLinecap="round"
                             />
                             {/* Rungs */}
