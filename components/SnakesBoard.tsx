@@ -336,11 +336,17 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                     const tile = parseInt(tileStr);
                     const { row, col } = tileToCoords(tile);
                     const players = tilePlayers as SnakesPlayer[];
+                    // Create comma separated list of names
+                    const allNames = players.map(p => p.user).join(', ');
+
+                    // Limit visible stack size to prevent crazy overflow
+                    const visiblePlayers = players.slice(0, 5);
+                    const remainingCount = players.length - 5;
 
                     return (
                         <div
                             key={`players-${tile}`}
-                            className="absolute flex flex-wrap items-center justify-center gap-0.5 pointer-events-auto"
+                            className="absolute pointer-events-auto group"
                             style={{
                                 left: `${col * 10}%`,
                                 top: `${row * 10}%`,
@@ -348,29 +354,43 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 height: '10%',
                             }}
                         >
-                            {players.slice(0, 4).map((player, idx) => (
-                                <div
-                                    key={player._id}
-                                    className={`
-                                        relative group
-                                        ${animatingPlayer === player.user ? 'animate-bounce' : ''}
-                                    `}
-                                    style={{ zIndex: 30 + idx }}
-                                >
-                                    <img
-                                        src={player.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.user)}&background=random`}
-                                        alt={player.user}
-                                        className="w-5 h-5 rounded-full border-2 border-white shadow-lg"
-                                    />
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/90 text-white text-[10px] font-bold rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                                        {player.user}
+                            {/* Unified Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-black/90 text-white text-[10px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-[100] border border-white/20 shadow-xl pointer-events-none">
+                                {allNames}
+                                {/* Arrow */}
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-black/90"></div>
+                            </div>
+
+                            {/* Stacked Avatars Container */}
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                {visiblePlayers.map((player, idx) => (
+                                    <div
+                                        key={player._id}
+                                        className={`absolute transition-all duration-300 ${animatingPlayer === player.user ? 'animate-bounce z-[60]' : ''}`}
+                                        style={{
+                                            zIndex: 40 + idx,
+                                            // Offset each player slightly up and to the right to create stack effect
+                                            // Center base, then offset
+                                            transform: `translate(${idx * 3}px, ${idx * -3}px)`
+                                        }}
+                                    >
+                                        <img
+                                            src={player.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.user)}&background=random`}
+                                            alt={player.user}
+                                            className="w-6 h-6 rounded-full border-2 border-white shadow-[0_2px_4px_rgba(0,0,0,0.3)] ring-1 ring-black/10 bg-gray-800"
+                                        />
                                     </div>
-                                </div>
-                            ))}
-                            {players.length > 4 && (
-                                <span className="text-[8px] text-white font-bold bg-black/60 px-1 rounded">+{players.length - 4}</span>
-                            )}
+                                ))}
+
+                                {remainingCount > 0 && (
+                                    <div
+                                        className="absolute z-[50] bg-black/80 text-white text-[8px] font-bold rounded-full w-5 h-5 flex items-center justify-center border border-white shadow-lg"
+                                        style={{ transform: `translate(${5 * 3}px, ${5 * -3}px)` }}
+                                    >
+                                        +{remainingCount}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     );
                 })}
