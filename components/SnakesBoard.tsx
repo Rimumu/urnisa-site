@@ -8,8 +8,7 @@ interface Props {
     animatingPlayer?: string;
 }
 
-// Convert tile number (1-100) to grid coordinates
-// Board is numbered bottom-left to top-right in a snake pattern
+// Convert tile number (1-100) to grid coordinates (0-9 for row and col)
 const tileToCoords = (tile: number): { row: number; col: number } => {
     if (tile < 1 || tile > 100) return { row: 9, col: 0 };
 
@@ -23,6 +22,16 @@ const tileToCoords = (tile: number): { row: number; col: number } => {
     return { row, col };
 };
 
+// Convert tile to percentage position for SVG overlay
+const tileToPercent = (tile: number): { x: number; y: number } => {
+    const { row, col } = tileToCoords(tile);
+    // Center of each tile (each tile is 10% of the board)
+    return {
+        x: col * 10 + 5,
+        y: row * 10 + 5
+    };
+};
+
 const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animatingPlayer }) => {
     // Create 10x10 grid with tile numbers
     const grid = useMemo(() => {
@@ -30,7 +39,6 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
         for (let row = 0; row < 10; row++) {
             const rowCells: number[] = [];
             for (let col = 0; col < 10; col++) {
-                // Calculate tile number based on row and snake pattern
                 const rowFromBottom = 9 - row;
                 const isRightToLeft = rowFromBottom % 2 === 1;
                 const tileInRow = isRightToLeft ? 9 - col : col;
@@ -58,88 +66,61 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
         const coords = tileToCoords(tile);
         const isEven = (coords.row + coords.col) % 2 === 0;
 
-        // Special colors for snakes/ladders
-        if (board.ladders[tile]) return 'bg-emerald-600/40 border-emerald-400/50';
-        if (board.snakes[tile]) return 'bg-red-600/40 border-red-400/50';
-
         // Winner tile
         if (tile === 100) return 'bg-yellow-500/40 border-yellow-400/60';
-
         // Start tile
         if (tile === 1) return 'bg-blue-500/30 border-blue-400/40';
 
         return isEven ? 'bg-white/5 border-white/10' : 'bg-black/20 border-white/5';
     };
 
+    // Generate ladder paths
+    const ladderPaths = useMemo(() => {
+        return Object.entries(board.ladders).map(([from, to]) => {
+            const start = tileToPercent(parseInt(from));
+            const end = tileToPercent(to as number);
+            return { from: parseInt(from), to: to as number, start, end };
+        });
+    }, [board.ladders]);
+
+    // Generate snake paths
+    const snakePaths = useMemo(() => {
+        return Object.entries(board.snakes).map(([from, to]) => {
+            const start = tileToPercent(parseInt(from));
+            const end = tileToPercent(to as number);
+            return { from: parseInt(from), to: to as number, start, end };
+        });
+    }, [board.snakes]);
+
     return (
         <div className="relative w-full max-w-[600px] aspect-square">
-            {/* Grid */}
-            <div className="grid grid-cols-10 gap-0.5 w-full h-full bg-black/50 p-1 rounded-2xl border border-white/10">
+            {/* Grid Container */}
+            <div className="grid grid-cols-10 gap-0 w-full h-full bg-black/50 p-0 rounded-2xl border border-white/10 overflow-hidden">
                 {grid.map((row, rowIdx) => (
                     row.map((tile, colIdx) => {
-                        const tilePlayers = playersByTile[tile] || [];
                         const isHighlight = tile === highlightTile;
-                        const isLadderStart = !!board.ladders[tile];
-                        const isSnakeStart = !!board.snakes[tile];
 
                         return (
                             <div
                                 key={`${rowIdx}-${colIdx}`}
                                 className={`
-                                    relative flex items-center justify-center
-                                    border rounded-sm transition-all duration-300
+                                    relative aspect-square
+                                    border-[0.5px] transition-all duration-300
                                     ${getTileColor(tile)}
-                                    ${isHighlight ? 'ring-2 ring-brand-accent scale-105 z-10' : ''}
+                                    ${isHighlight ? 'ring-2 ring-brand-accent z-20' : ''}
                                 `}
                             >
                                 {/* Tile Number */}
                                 <span className={`
-                                    absolute top-0.5 left-1 text-[8px] font-bold
+                                    absolute top-0.5 left-1 text-[8px] font-bold pointer-events-none select-none
                                     ${tile === 100 ? 'text-yellow-400' : 'text-white/40'}
                                 `}>
                                     {tile}
                                 </span>
 
-                                {/* Ladder/Snake indicator */}
-                                {isLadderStart && (
-                                    <span className="absolute bottom-0.5 right-0.5 text-[10px]">🪜</span>
-                                )}
-                                {isSnakeStart && (
-                                    <span className="absolute bottom-0.5 right-0.5 text-[10px]">🐍</span>
-                                )}
-
-                                {/* Players on this tile */}
-                                {tilePlayers.length > 0 && (
-                                    <div className="flex flex-wrap gap-0.5 items-center justify-center max-w-full p-0.5">
-                                        {tilePlayers.slice(0, 4).map((player, idx) => (
-                                            <div
-                                                key={player._id}
-                                                className={`
-                                                    relative group
-                                                    ${animatingPlayer === player.user ? 'animate-bounce' : ''}
-                                                `}
-                                                style={{ zIndex: 10 + idx }}
-                                            >
-                                                <img
-                                                    src={player.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.user)}&background=random`}
-                                                    alt={player.user}
-                                                    className="w-6 h-6 rounded-full border-2 border-white shadow-lg"
-                                                />
-                                                {/* Tooltip */}
-                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/90 text-white text-[10px] font-bold rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                                    {player.user}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {tilePlayers.length > 4 && (
-                                            <span className="text-[8px] text-white/60">+{tilePlayers.length - 4}</span>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Winner celebration for tile 100 */}
+                                {/* Winner icon for tile 100 */}
                                 {tile === 100 && (
-                                    <span className="absolute text-lg">🏆</span>
+                                    <span className="absolute inset-0 flex items-center justify-center text-lg pointer-events-none">🏆</span>
                                 )}
                             </div>
                         );
@@ -147,15 +128,195 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                 ))}
             </div>
 
+            {/* SVG Overlay for Snakes and Ladders */}
+            <svg
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+            >
+                <defs>
+                    {/* Ladder gradient */}
+                    <linearGradient id="ladderGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#059669" stopOpacity="0.9" />
+                    </linearGradient>
+                    {/* Snake gradient */}
+                    <linearGradient id="snakeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+                        <stop offset="50%" stopColor="#dc2626" stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.9" />
+                    </linearGradient>
+                    {/* Snake head marker */}
+                    <marker id="snakeHead" markerWidth="4" markerHeight="4" refX="2" refY="2" orient="auto">
+                        <circle cx="2" cy="2" r="1.5" fill="#ef4444" />
+                    </marker>
+                </defs>
+
+                {/* Ladders */}
+                {ladderPaths.map(({ from, to, start, end }) => {
+                    // Draw ladder with two rails and rungs
+                    const dx = end.x - start.x;
+                    const dy = end.y - start.y;
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    const perpX = (-dy / len) * 1.2;
+                    const perpY = (dx / len) * 1.2;
+
+                    // Number of rungs based on distance
+                    const numRungs = Math.max(3, Math.floor(len / 8));
+                    const rungs = [];
+                    for (let i = 0; i <= numRungs; i++) {
+                        const t = i / numRungs;
+                        const rx = start.x + dx * t;
+                        const ry = start.y + dy * t;
+                        rungs.push(
+                            <line
+                                key={`rung-${from}-${i}`}
+                                x1={rx - perpX}
+                                y1={ry - perpY}
+                                x2={rx + perpX}
+                                y2={ry + perpY}
+                                stroke="#a7f3d0"
+                                strokeWidth="0.4"
+                                strokeLinecap="round"
+                            />
+                        );
+                    }
+
+                    return (
+                        <g key={`ladder-${from}`}>
+                            {/* Left rail */}
+                            <line
+                                x1={start.x - perpX}
+                                y1={start.y - perpY}
+                                x2={end.x - perpX}
+                                y2={end.y - perpY}
+                                stroke="url(#ladderGradient)"
+                                strokeWidth="0.8"
+                                strokeLinecap="round"
+                            />
+                            {/* Right rail */}
+                            <line
+                                x1={start.x + perpX}
+                                y1={start.y + perpY}
+                                x2={end.x + perpX}
+                                y2={end.y + perpY}
+                                stroke="url(#ladderGradient)"
+                                strokeWidth="0.8"
+                                strokeLinecap="round"
+                            />
+                            {/* Rungs */}
+                            {rungs}
+                        </g>
+                    );
+                })}
+
+                {/* Snakes */}
+                {snakePaths.map(({ from, to, start, end }) => {
+                    // Create a curved snake path
+                    const midX = (start.x + end.x) / 2;
+                    const midY = (start.y + end.y) / 2;
+                    // Add some curve
+                    const dx = end.x - start.x;
+                    const offset = dx > 0 ? 8 : -8;
+                    const ctrl1X = start.x + dx * 0.25 + offset;
+                    const ctrl1Y = start.y + (end.y - start.y) * 0.25 - 5;
+                    const ctrl2X = start.x + dx * 0.75 - offset;
+                    const ctrl2Y = start.y + (end.y - start.y) * 0.75 + 5;
+
+                    return (
+                        <g key={`snake-${from}`}>
+                            {/* Snake body - main curve */}
+                            <path
+                                d={`M ${start.x} ${start.y} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${end.x} ${end.y}`}
+                                fill="none"
+                                stroke="url(#snakeGradient)"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                            />
+                            {/* Snake body - thinner highlight */}
+                            <path
+                                d={`M ${start.x} ${start.y} C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${end.x} ${end.y}`}
+                                fill="none"
+                                stroke="#fca5a5"
+                                strokeWidth="0.5"
+                                strokeLinecap="round"
+                                strokeDasharray="0.5 1"
+                            />
+                            {/* Snake head */}
+                            <circle cx={start.x} cy={start.y} r="1.8" fill="#ef4444" stroke="#fca5a5" strokeWidth="0.3" />
+                            {/* Snake eyes */}
+                            <circle cx={start.x - 0.5} cy={start.y - 0.3} r="0.4" fill="#fff" />
+                            <circle cx={start.x + 0.5} cy={start.y - 0.3} r="0.4" fill="#fff" />
+                            <circle cx={start.x - 0.5} cy={start.y - 0.3} r="0.2" fill="#000" />
+                            <circle cx={start.x + 0.5} cy={start.y - 0.3} r="0.2" fill="#000" />
+                            {/* Snake tail */}
+                            <circle cx={end.x} cy={end.y} r="0.8" fill="#b91c1c" />
+                        </g>
+                    );
+                })}
+            </svg>
+
+            {/* Players Overlay - Positioned absolutely over tiles */}
+            <div className="absolute inset-0 pointer-events-none">
+                {Object.entries(playersByTile).map(([tileStr, tilePlayers]) => {
+                    const tile = parseInt(tileStr);
+                    const { row, col } = tileToCoords(tile);
+                    const players = tilePlayers as SnakesPlayer[];
+
+                    return (
+                        <div
+                            key={`players-${tile}`}
+                            className="absolute flex flex-wrap items-center justify-center gap-0.5 pointer-events-auto"
+                            style={{
+                                left: `${col * 10}%`,
+                                top: `${row * 10}%`,
+                                width: '10%',
+                                height: '10%',
+                            }}
+                        >
+                            {players.slice(0, 4).map((player, idx) => (
+                                <div
+                                    key={player._id}
+                                    className={`
+                                        relative group
+                                        ${animatingPlayer === player.user ? 'animate-bounce' : ''}
+                                    `}
+                                    style={{ zIndex: 30 + idx }}
+                                >
+                                    <img
+                                        src={player.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(player.user)}&background=random`}
+                                        alt={player.user}
+                                        className="w-5 h-5 rounded-full border-2 border-white shadow-lg"
+                                    />
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/90 text-white text-[10px] font-bold rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                                        {player.user}
+                                    </div>
+                                </div>
+                            ))}
+                            {players.length > 4 && (
+                                <span className="text-[8px] text-white font-bold bg-black/60 px-1 rounded">+{players.length - 4}</span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
             {/* Legend */}
-            <div className="absolute -bottom-10 left-0 right-0 flex justify-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 bg-emerald-600/40 rounded border border-emerald-400/50"></span>
-                    <span className="text-white/60">Ladder</span>
+            <div className="absolute -bottom-10 left-0 right-0 flex justify-center gap-6 text-xs">
+                <div className="flex items-center gap-2">
+                    <svg width="20" height="12" viewBox="0 0 20 12">
+                        <line x1="2" y1="10" x2="18" y2="2" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
+                        <line x1="4" y1="10" x2="20" y2="2" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    <span className="text-white/60">Ladder (Up)</span>
                 </div>
-                <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 bg-red-600/40 rounded border border-red-400/50"></span>
-                    <span className="text-white/60">Snake</span>
+                <div className="flex items-center gap-2">
+                    <svg width="20" height="12" viewBox="0 0 20 12">
+                        <path d="M2 2 Q 10 6 18 10" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                        <circle cx="2" cy="2" r="2" fill="#ef4444" />
+                    </svg>
+                    <span className="text-white/60">Snake (Down)</span>
                 </div>
             </div>
         </div>

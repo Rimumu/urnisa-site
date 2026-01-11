@@ -154,25 +154,6 @@ const SnakesLadder: React.FC = () => {
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-            {/* Admin Lock Button - Top Right */}
-            {!isAdmin && (
-                <button
-                    onClick={() => setShowLogin(true)}
-                    className="fixed top-20 right-4 z-50 w-12 h-12 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 flex items-center justify-center text-xl hover:bg-white/20 hover:scale-110 transition-all shadow-lg"
-                    title="Admin Login"
-                >
-                    🔒
-                </button>
-            )}
-            {isAdmin && (
-                <div
-                    className="fixed top-20 right-4 z-50 w-12 h-12 rounded-full bg-green-500/20 backdrop-blur-xl border border-green-500/40 flex items-center justify-center text-xl shadow-lg"
-                    title="Admin Mode Active"
-                >
-                    🔓
-                </div>
-            )}
-
             {/* Login Modal */}
             {showLogin && (
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -226,6 +207,24 @@ const SnakesLadder: React.FC = () => {
                     {/* Board Section */}
                     <div className="lg:col-span-2 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-full bg-rose-pattern opacity-5 pointer-events-none"></div>
+
+                        {/* Admin Lock Button - Top Right of Board */}
+                        {!isAdmin ? (
+                            <button
+                                onClick={() => setShowLogin(true)}
+                                className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur-xl border border-white/20 flex items-center justify-center text-lg hover:bg-white/20 hover:scale-110 transition-all shadow-lg"
+                                title="Admin Login"
+                            >
+                                🔒
+                            </button>
+                        ) : (
+                            <div
+                                className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-green-500/20 backdrop-blur-xl border border-green-500/40 flex items-center justify-center text-lg shadow-lg"
+                                title="Admin Mode Active"
+                            >
+                                🔓
+                            </div>
+                        )}
 
                         {/* Current Roller Banner */}
                         {currentRoller ? (
