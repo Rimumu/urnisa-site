@@ -306,8 +306,8 @@ const SnakesLadder: React.FC = () => {
                 /* Custom Scrollbar */
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #f7c548; border-radius: 3px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ffdb7d; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5383b; border-radius: 3px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ef4444; }
             `}</style>
 
             {/* Background Decorations */}
