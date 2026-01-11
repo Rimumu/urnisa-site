@@ -50,7 +50,12 @@ const SnakesLadder: React.FC = () => {
 
         state.queue.forEach((item) => {
             const last = grouped[grouped.length - 1];
-            if (last && last.user === item.user) {
+            // Check if user matches AND sourceEventId matches (if present)
+            // If sourceEventId is missing (legacy), fallback to merging consecutive users
+            const sameBatch = last && last.user === item.user &&
+                (item.sourceEventId ? last.sourceEventId === item.sourceEventId : true);
+
+            if (sameBatch) {
                 last.count += 1;
             } else {
                 grouped.push({ ...item, count: 1 });

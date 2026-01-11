@@ -7,6 +7,7 @@ export interface SnakesQueueItem {
     avatarUrl?: string;
     amount: number;
     type: string;
+    sourceEventId?: string;
     createdAt: string;
 }
 
