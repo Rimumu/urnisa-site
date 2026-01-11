@@ -524,11 +524,10 @@ const SnakesLadder: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 relative z-10 animate-in fade-in duration-700">
                 {/* Header */}
                 <div className="text-center space-y-3 mb-8">
-                    <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-2xl">
-                        SNAKES <span className="text-emerald-400">&</span> <span className="text-brand-primary">LADDERS</span>
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter drop-shadow-2xl">
+                        <span className="text-red-500">SNAKES</span> <span className="text-white">&</span> <span className="text-green-500">LADDERS</span>
                     </h1>
                     <div className="inline-flex items-center gap-2 bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
-                        <span className="text-xl">🎲</span>
                         <h2 className="text-lg md:text-xl font-bold text-brand-accent tracking-widest uppercase">Interactive Chat Game</h2>
                     </div>
                     <p className="text-gray-400 text-sm">1 Sub / 1 Gifted Sub = 1 Dice Roll</p>
