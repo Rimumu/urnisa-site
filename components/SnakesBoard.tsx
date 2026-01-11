@@ -213,6 +213,32 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                             />
                             {/* Rungs */}
                             {rungs}
+                            {/* Bottom circles (feet) */}
+                            <circle
+                                cx={start.x - perpX}
+                                cy={start.y - perpY}
+                                r="1.8"
+                                fill="#059669"
+                                stroke="#10b981"
+                                strokeWidth="0.5"
+                            />
+                            <circle
+                                cx={start.x + perpX}
+                                cy={start.y + perpY}
+                                r="1.8"
+                                fill="#059669"
+                                stroke="#10b981"
+                                strokeWidth="0.5"
+                            />
+                            {/* Rounded top arc connecting the rails */}
+                            <path
+                                d={`M ${end.x - perpX} ${end.y - perpY} 
+                                    Q ${end.x} ${end.y - 2.5} ${end.x + perpX} ${end.y + perpY}`}
+                                fill="none"
+                                stroke="#10b981"
+                                strokeWidth="1.0"
+                                strokeLinecap="round"
+                            />
                         </g>
                     );
                 })}
