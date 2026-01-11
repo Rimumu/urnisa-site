@@ -160,7 +160,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                     const len = Math.sqrt(dx * dx + dy * dy);
 
                     // Width between the two rails (wider = more visible rungs)
-                    const railWidth = 2.5;
+                    const railWidth = 2.0;
                     let perpX: number, perpY: number;
 
                     if (len < 0.001) {
@@ -203,7 +203,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 x2={end.x - perpX}
                                 y2={end.y - perpY}
                                 stroke="#10b981"
-                                strokeWidth="1.5"
+                                strokeWidth="1.0"
                                 strokeLinecap="round"
                             />
                             {/* Right rail */}
@@ -213,7 +213,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 x2={end.x + perpX}
                                 y2={end.y + perpY}
                                 stroke="#10b981"
-                                strokeWidth="1.5"
+                                strokeWidth="1.0"
                                 strokeLinecap="round"
                             />
                             {/* Rungs */}
