@@ -202,8 +202,8 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 y1={start.y - perpY}
                                 x2={end.x - perpX}
                                 y2={end.y - perpY}
-                                stroke="url(#ladderGradient)"
-                                strokeWidth="1.2"
+                                stroke="#10b981"
+                                strokeWidth="1.5"
                                 strokeLinecap="round"
                             />
                             {/* Right rail */}
@@ -212,8 +212,8 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 y1={start.y + perpY}
                                 x2={end.x + perpX}
                                 y2={end.y + perpY}
-                                stroke="url(#ladderGradient)"
-                                strokeWidth="1.2"
+                                stroke="#10b981"
+                                strokeWidth="1.5"
                                 strokeLinecap="round"
                             />
                             {/* Rungs */}
