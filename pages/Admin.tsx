@@ -41,7 +41,7 @@ const isDiscordLink = (url: string) => {
 
 const LinkWarning: React.FC<{ url: string }> = ({ url }) => {
     if (!url) return null;
-    
+
     if (isDiscordLink(url)) {
         return (
             <div className="text-red-400 text-xs mt-1 flex items-start gap-1 font-bold">
@@ -65,9 +65,9 @@ const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void 
 
     useEffect(() => {
         if (contentRef.current && contentRef.current.innerHTML !== value) {
-             if (document.activeElement !== contentRef.current) {
-                 contentRef.current.innerHTML = value;
-             }
+            if (document.activeElement !== contentRef.current) {
+                contentRef.current.innerHTML = value;
+            }
         }
     }, [value]);
 
@@ -96,7 +96,7 @@ const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void 
 
     return (
         <div className="w-full bg-black/20 border border-white/10 rounded-xl overflow-hidden flex flex-col h-56 group focus-within:border-brand-primary/50 transition-colors">
-             <style>{`
+            <style>{`
                 .editor-content ul {
                     list-style-type: disc !important;
                     padding-left: 1.5em !important;
@@ -107,36 +107,36 @@ const RichTextEditor: React.FC<{ value: string; onChange: (val: string) => void 
                     display: list-item !important;
                 }
              `}</style>
-             <div className="flex gap-1 p-2 bg-white/5 border-b border-white/5 select-none items-center">
-                <button 
-                    type="button" 
-                    onMouseDown={(e) => { e.preventDefault(); exec('bold'); }} 
-                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center font-bold ${activeFormats.bold ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+            <div className="flex gap-1 p-2 bg-white/5 border-b border-white/5 select-none items-center">
+                <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); exec('bold'); }}
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center font-bold ${activeFormats.bold ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`}
                     title="Bold"
                 >
                     B
                 </button>
-                <button 
-                    type="button" 
-                    onMouseDown={(e) => { e.preventDefault(); exec('italic'); }} 
-                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center italic ${activeFormats.italic ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+                <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); exec('italic'); }}
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center italic ${activeFormats.italic ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`}
                     title="Italic"
                 >
                     I
                 </button>
-                <button 
-                    type="button" 
-                    onMouseDown={(e) => { e.preventDefault(); exec('underline'); }} 
-                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center underline ${activeFormats.underline ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+                <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); exec('underline'); }}
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center underline ${activeFormats.underline ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`}
                     title="Underline"
                 >
                     U
                 </button>
                 <div className="w-px h-5 bg-white/10 mx-1"></div>
-                <button 
-                    type="button" 
-                    onMouseDown={(e) => { e.preventDefault(); exec('insertUnorderedList'); }} 
-                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center ${activeFormats.list ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`} 
+                <button
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); exec('insertUnorderedList'); }}
+                    className={`p-1.5 rounded transition-all w-8 h-8 flex items-center justify-center ${activeFormats.list ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/10 hover:text-white'}`}
                     title="Bullet List"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -201,7 +201,7 @@ const PokemonAdminImage: React.FC<{ pokemon: { id: number; name: string } }> = (
             try {
                 const response = await fetch(`${API_BASE_URL}/api/utils/check-image?url=${encodeURIComponent(primaryUrl)}`);
                 const data = await response.json();
-                
+
                 clientImageCache.set(primaryUrl, data.valid);
 
                 if (isMounted) {
@@ -228,9 +228,9 @@ const PokemonAdminImage: React.FC<{ pokemon: { id: number; name: string } }> = (
     };
 
     return (
-        <OptimizedImage 
-            src={imgSrc} 
-            alt={pokemon.name} 
+        <OptimizedImage
+            src={imgSrc}
+            alt={pokemon.name}
             className={`w-full h-full object-contain`}
             contain
             onError={handleImageError}
@@ -276,9 +276,9 @@ const Admin: React.FC = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loginError, setLoginError] = useState('');
-    
+
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament' | 'snakes'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -315,7 +315,7 @@ const Admin: React.FC = () => {
 
     // --- NEW STATE FOR EVENT LOGS ---
     const [recentEvents, setRecentEvents] = useState<ContributorEvent[]>([]);
-    const [confirmDelete, setConfirmDelete] = useState<{id: string, revert: boolean} | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{ id: string, revert: boolean } | null>(null);
     const [filterType, setFilterType] = useState<string>('all'); // New Filter State
     const [filterUser, setFilterUser] = useState<string>(''); // New User Filter
 
@@ -338,7 +338,7 @@ const Admin: React.FC = () => {
     const [bingoWinCondition, setBingoWinCondition] = useState('');
     const [bingoStatus, setBingoStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [bingoWinners, setBingoWinners] = useState<BingoWinner[]>([]);
-    
+
     // Bingo Winners Form State
     const [winDiscordId, setWinDiscordId] = useState('');
     const [winUsername, setWinUsername] = useState('');
@@ -359,7 +359,7 @@ const Admin: React.FC = () => {
     // --- USER MANAGEMENT STATE ---
     const [userQuery, setUserQuery] = useState('');
     const [userActionStatus, setUserActionStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-    
+
     // --- USER MERGE STATE ---
     const [mergeSource, setMergeSource] = useState('');
     const [mergeTarget, setMergeTarget] = useState('');
@@ -378,6 +378,12 @@ const Admin: React.FC = () => {
     const [confirmSync, setConfirmSync] = useState(false);
     const [confirmRebuild, setConfirmRebuild] = useState(false);
     const [confirmEnd, setConfirmEnd] = useState(false); // For Ending Nisathon
+
+    // --- SNAKES & LADDERS SPECIAL TILES STATE ---
+    const [snakesTiles, setSnakesTiles] = useState<{ _id: string; tile: number; text: string }[]>([]);
+    const [newSnakeTile, setNewSnakeTile] = useState('');
+    const [newSnakeText, setNewSnakeText] = useState('');
+    const [snakesStatus, setSnakesStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -420,7 +426,7 @@ const Admin: React.FC = () => {
             const sStr = seconds < 10 ? "0" + seconds : seconds;
 
             setTimeLeftString(`${hStr}:${mStr}:${sStr}`);
-            
+
             if (!stats.isPaused) {
                 timerRef.current = requestAnimationFrame(updateTimer);
             }
@@ -441,8 +447,8 @@ const Admin: React.FC = () => {
         try {
             // Fetch 500 most recent events from backend
             const res = await fetch(`${API_BASE_URL}/api/nisathon/recent?limit=500`);
-            if(res.ok) setRecentEvents(await res.json());
-        } catch(e) {}
+            if (res.ok) setRecentEvents(await res.json());
+        } catch (e) { }
     };
 
     useEffect(() => {
@@ -457,7 +463,7 @@ const Admin: React.FC = () => {
         try {
             // Pending
             const resPending = await fetch(`${DISCORD_API_URL}/api/admin/whitelist`, {
-                headers: { Authorization: password } 
+                headers: { Authorization: password }
             });
             if (resPending.ok) {
                 setWhitelistApps(await resPending.json());
@@ -470,7 +476,7 @@ const Admin: React.FC = () => {
             if (resApproved.ok) {
                 setApprovedApps(await resApproved.json());
             }
-        } catch (e) {}
+        } catch (e) { }
     }, [password]);
 
     const fetchCodes = useCallback(async () => {
@@ -481,7 +487,7 @@ const Admin: React.FC = () => {
             if (res.ok) {
                 setExistingCodes(await res.json());
             }
-        } catch(e) {}
+        } catch (e) { }
     }, [password]);
 
     const fetchBingoConfig = useCallback(async () => {
@@ -492,7 +498,7 @@ const Admin: React.FC = () => {
                 setBingoCardId(data.cardId || '');
                 setBingoWinCondition(data.winCondition || '');
             }
-        } catch(e) {}
+        } catch (e) { }
     }, []);
 
     const fetchBingoWinners = useCallback(async () => {
@@ -501,7 +507,7 @@ const Admin: React.FC = () => {
             if (res.ok) {
                 setBingoWinners(await res.json());
             }
-        } catch(e) {}
+        } catch (e) { }
     }, []);
 
     const fetchTournamentData = useCallback(async () => {
@@ -512,15 +518,24 @@ const Admin: React.FC = () => {
             if (resPlayers.ok) {
                 setTournamentPlayers(await resPlayers.json());
             }
-            
+
             // Config
             const resConfig = await fetch(`${API_BASE_URL}/api/tournament/config`);
-            if(resConfig.ok) {
+            if (resConfig.ok) {
                 const conf = await resConfig.json();
                 setTournamentStatus(conf.status || 'DRAFTING');
             }
-        } catch (e) {}
+        } catch (e) { }
     }, [password]);
+
+    const fetchSnakesTiles = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/snakes/special-tiles`);
+            if (res.ok) {
+                setSnakesTiles(await res.json());
+            }
+        } catch (e) { }
+    }, []);
 
     // Tab Data Fetching
     useEffect(() => {
@@ -539,10 +554,12 @@ const Admin: React.FC = () => {
             } else if (activeTab === 'tournament') {
                 fetchTournamentData();
                 interval = window.setInterval(fetchTournamentData, 15000);
+            } else if (activeTab === 'snakes') {
+                fetchSnakesTiles();
             }
         }
-        return () => { if(interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchBingoWinners, fetchTournamentData]);
+        return () => { if (interval) clearInterval(interval); };
+    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchBingoWinners, fetchTournamentData, fetchSnakesTiles]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -703,8 +720,8 @@ const Admin: React.FC = () => {
             const response = await fetch(`${DISCORD_API_URL}/api/admin/codes/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ 
-                    type: genType, 
+                body: JSON.stringify({
+                    type: genType,
                     amount: genAmount,
                     packAmount: genPackAmount,
                     usageType: genUsageType,
@@ -716,7 +733,7 @@ const Admin: React.FC = () => {
                 setGeneratedCodes(data.codes);
                 fetchCodes(); // Refresh list
             }
-        } catch(e) {} finally { setLoading(false); }
+        } catch (e) { } finally { setLoading(false); }
     };
 
     const handleDeleteCode = async (id: string) => {
@@ -728,7 +745,7 @@ const Admin: React.FC = () => {
                 body: JSON.stringify({ id })
             });
             fetchCodes();
-        } catch(e) {}
+        } catch (e) { }
     };
 
     const handleResetDaily = async () => {
@@ -755,10 +772,10 @@ const Admin: React.FC = () => {
             setLoading(false);
         }
     };
-    
+
     const handleMergeUsers = async () => {
         if (!mergeSource || !mergeTarget) return;
-        const confirmMsg = mergeSource.trim().toLowerCase() === mergeTarget.trim().toLowerCase() 
+        const confirmMsg = mergeSource.trim().toLowerCase() === mergeTarget.trim().toLowerCase()
             ? `Confirm cleaning up all name variations into "${mergeTarget}"? This will sum their totals.`
             : `Are you sure you want to merge ALL data from "${mergeSource}" into "${mergeTarget}"? This will combine their event totals.`;
 
@@ -809,7 +826,7 @@ const Admin: React.FC = () => {
                 setBingoStatus({ type: 'error', message: "Failed to update config" });
                 setTimeout(() => setBingoStatus(null), 3000);
             }
-        } catch(e) {
+        } catch (e) {
             setBingoStatus({ type: 'error', message: "Network Error" });
             setTimeout(() => setBingoStatus(null), 3000);
         } finally {
@@ -843,7 +860,7 @@ const Admin: React.FC = () => {
             } else {
                 alert("Failed to add winner");
             }
-        } catch(e) {
+        } catch (e) {
             alert("Network Error");
         } finally { setLoading(false); }
     };
@@ -858,7 +875,7 @@ const Admin: React.FC = () => {
                 body: JSON.stringify({ id })
             });
             fetchBingoWinners();
-        } catch(e) {
+        } catch (e) {
             alert("Network Error");
         } finally { setLoading(false); }
     };
@@ -869,19 +886,19 @@ const Admin: React.FC = () => {
         try {
             // Mapping for legacy backend fields if needed, but we now use status primarily
             const lockVal = status === 'LOCK_IN';
-            
+
             await fetch(`${API_BASE_URL}/api/admin/tournament/config`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ 
-                    status, 
-                    lockEnabled: lockVal 
+                body: JSON.stringify({
+                    status,
+                    lockEnabled: lockVal
                 })
             });
             setTournamentStatus(status);
             setManagerStatus({ type: 'success', message: `Tournament Status set to ${status}` });
             setTimeout(() => setManagerStatus(null), 3000);
-        } catch(e) {
+        } catch (e) {
             setManagerStatus({ type: 'error', message: "Failed to update status" });
             setTimeout(() => setManagerStatus(null), 3000);
         } finally {
@@ -902,7 +919,7 @@ const Admin: React.FC = () => {
             const data = await res.json();
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentData(); 
+                fetchTournamentData();
                 setTimeout(() => setManagerStatus(null), 3000);
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to unlock team." });
@@ -929,7 +946,7 @@ const Admin: React.FC = () => {
             const data = await res.json();
             if (res.ok) {
                 setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentData(); 
+                fetchTournamentData();
                 setTimeout(() => setManagerStatus(null), 3000);
             } else {
                 setManagerStatus({ type: 'error', message: data.error || "Failed to revoke." });
@@ -1024,7 +1041,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
         setLoading(true);
         setManagerStatus(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, { 
+            const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': password },
                 body: JSON.stringify(body)
@@ -1053,7 +1070,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     const handlePauseTimer = () => apiCall('nisathon/timer/pause', {});
     const handleSimulateEvent = () => apiCall('nisathon/test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
     const handleToggleDoubleTimer = () => apiCall('nisathon/event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
-    
+
     // NEW: End Nisathon Handler
     const handleEndNisathon = () => {
         if (confirmEnd) {
@@ -1080,57 +1097,57 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     const handleCountdownAdd = () => apiCall('countdown/add', { minutes: cdAddM });
     const handleCountdownPause = () => apiCall('countdown/pause', {});
     const handleCountdownReset = () => apiCall('countdown/reset', {});
-    
+
     // MINECRAFT HANDLERS
     const handleApproveApp = async (id: string) => {
         setLoading(true);
         try {
             await fetch(`${DISCORD_API_URL}/api/admin/whitelist/approve`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': password 
-                },
-                body: JSON.stringify({ id }) 
-            });
-            fetchWhitelistData();
-        } catch(e){} finally { setLoading(false); }
-    };
-
-    const handleRejectApp = async (id: string) => {
-         const confirmed = window.confirm("Reject this application?");
-         if(!confirmed) return;
-         
-         setLoading(true);
-         try {
-             await fetch(`${DISCORD_API_URL}/api/admin/whitelist/reject`, {
-                 method: 'POST',
-                 headers: { 
-                     'Content-Type': 'application/json',
-                     'Authorization': password
-                 },
-                 body: JSON.stringify({ id })
-             });
-             fetchWhitelistData();
-         } catch(e){} finally { setLoading(false); }
-    };
-
-    const handleRevokeApp = async (id: string, username: string) => {
-        const confirmed = window.confirm(`Remove ${username} from the whitelist? (Simulates RCON command)`);
-        if(!confirmed) return;
-
-        setLoading(true);
-        try {
-            await fetch(`${DISCORD_API_URL}/api/admin/whitelist/revoke`, {
-                method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': password
                 },
                 body: JSON.stringify({ id })
             });
             fetchWhitelistData();
-        } catch(e){} finally { setLoading(false); }
+        } catch (e) { } finally { setLoading(false); }
+    };
+
+    const handleRejectApp = async (id: string) => {
+        const confirmed = window.confirm("Reject this application?");
+        if (!confirmed) return;
+
+        setLoading(true);
+        try {
+            await fetch(`${DISCORD_API_URL}/api/admin/whitelist/reject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password
+                },
+                body: JSON.stringify({ id })
+            });
+            fetchWhitelistData();
+        } catch (e) { } finally { setLoading(false); }
+    };
+
+    const handleRevokeApp = async (id: string, username: string) => {
+        const confirmed = window.confirm(`Remove ${username} from the whitelist? (Simulates RCON command)`);
+        if (!confirmed) return;
+
+        setLoading(true);
+        try {
+            await fetch(`${DISCORD_API_URL}/api/admin/whitelist/revoke`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password
+                },
+                body: JSON.stringify({ id })
+            });
+            fetchWhitelistData();
+        } catch (e) { } finally { setLoading(false); }
     };
 
     // --- HELPERS ---
@@ -1160,7 +1177,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
     // FILTER LOGIC
     const filteredEvents = recentEvents.filter(evt => {
-        const typeMatch = (filterType === 'all') 
+        const typeMatch = (filterType === 'all')
             || (filterType === 'sub' && (evt.type === 'sub' || evt.type === 'subscriber'))
             || (filterType === 'gift' && evt.type === 'gift')
             || (filterType === 'bits' && (evt.type === 'bits' || evt.type === 'cheer'))
@@ -1238,6 +1255,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     <button onClick={() => setActiveTab('tournament')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'tournament' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>🏆</span> Tournament
                     </button>
+                    <button onClick={() => setActiveTab('snakes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'snakes' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                        <span>🐍</span> Snakes Game
+                    </button>
                     <button onClick={() => setActiveTab('codes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'codes' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <span>🎁</span> Gacha Codes
                     </button>
@@ -1253,11 +1273,11 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
             {/* --- CONTENT AREA --- */}
             <div className="flex-1 p-6 md:p-10 overflow-y-auto min-h-screen">
                 <div className="max-w-6xl mx-auto space-y-8">
-                    
+
                     {/* --- STATUS TOASTS (STACKED & POINTER-EVENTS CONTROLLED) --- */}
                     <div className="fixed top-24 right-4 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-sm">
                         {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus].map((status, i) => status && (
-                             <div key={i} className={`pointer-events-auto p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
+                            <div key={i} className={`pointer-events-auto p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
                                 {status.message}
                             </div>
                         ))}
@@ -1311,15 +1331,15 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         <div className="space-y-4">
                                             <label className="text-xs text-gray-500 font-bold uppercase">Set Absolute Time</label>
                                             <div className="flex gap-2">
-                                                <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerH} onChange={e => setTimerH(parseInt(e.target.value)||0)} />
-                                                <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerM} onChange={e => setTimerM(parseInt(e.target.value)||0)} />
-                                                <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerS} onChange={e => setTimerS(parseInt(e.target.value)||0)} />
+                                                <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerH} onChange={e => setTimerH(parseInt(e.target.value) || 0)} />
+                                                <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerM} onChange={e => setTimerM(parseInt(e.target.value) || 0)} />
+                                                <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerS} onChange={e => setTimerS(parseInt(e.target.value) || 0)} />
                                             </div>
                                             <button onClick={handleSetTimer} className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-bold transition-colors">Set Time</button>
                                         </div>
                                         <div className="space-y-4">
                                             <label className="text-xs text-gray-500 font-bold uppercase">Quick Adjust</label>
-                                            <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={addM} onChange={e => setAddM(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={addM} onChange={e => setAddM(parseInt(e.target.value) || 0)} />
                                             <div className="grid grid-cols-3 gap-2">
                                                 <button onClick={handleAddTimer} className="bg-green-600/80 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition-colors">+</button>
                                                 <button onClick={handleRemoveTimer} className="bg-red-600/80 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors">-</button>
@@ -1349,18 +1369,18 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <button onClick={() => handleSetStreamStatus('offline')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'offline' ? 'bg-red-600 text-white' : 'text-gray-500 hover:text-white'}`}>OFFLINE</button>
                                 </div>
                             </div>
-                            
+
                             {/* Revamped Event Log */}
                             <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl h-[600px] flex flex-col">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                                     <h3 className="font-bold text-white text-lg flex items-center gap-2"><span>📜</span> Event Log ({filteredEvents.length})</h3>
-                                    
+
                                     <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search User..." 
-                                            value={filterUser} 
-                                            onChange={(e) => setFilterUser(e.target.value)} 
+                                        <input
+                                            type="text"
+                                            placeholder="Search User..."
+                                            value={filterUser}
+                                            onChange={(e) => setFilterUser(e.target.value)}
                                             className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-primary outline-none min-w-[150px] flex-1 md:flex-none"
                                         />
                                         <div className="flex bg-black/40 rounded-lg p-1 border border-white/10">
@@ -1371,9 +1391,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 { id: 'bits', label: 'BITS' },
                                                 { id: 'dono', label: 'DONO' }
                                             ].map(f => (
-                                                <button 
+                                                <button
                                                     key={f.id}
-                                                    onClick={() => setFilterType(f.id)} 
+                                                    onClick={() => setFilterType(f.id)}
                                                     className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${filterType === f.id ? 'bg-brand-primary text-white' : 'text-gray-500 hover:text-white'}`}
                                                 >
                                                     {f.label}
@@ -1387,7 +1407,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     {filteredEvents.map(evt => {
                                         let icon = '✨';
                                         let colorClass = 'text-gray-400 bg-gray-500/10 border-gray-500/20';
-                                        
+
                                         if (evt.type === 'sub' || evt.type === 'subscriber') { icon = '⭐'; colorClass = 'text-purple-400 bg-purple-500/10 border-purple-500/20'; }
                                         else if (evt.type === 'gift') { icon = '🎁'; colorClass = 'text-pink-400 bg-pink-500/10 border-pink-500/20'; }
                                         else if (evt.type === 'bits' || evt.type === 'cheer') { icon = '💎'; colorClass = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'; }
@@ -1454,15 +1474,15 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className="space-y-4">
                                         <label className="text-gray-400 text-xs uppercase font-bold">Set Time</label>
                                         <div className="flex gap-2">
-                                            <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdH} onChange={e => setCdH(parseInt(e.target.value)||0)} />
-                                            <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdM} onChange={e => setCdM(parseInt(e.target.value)||0)} />
-                                            <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdS} onChange={e => setCdS(parseInt(e.target.value)||0)} />
+                                            <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdH} onChange={e => setCdH(parseInt(e.target.value) || 0)} />
+                                            <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdM} onChange={e => setCdM(parseInt(e.target.value) || 0)} />
+                                            <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdS} onChange={e => setCdS(parseInt(e.target.value) || 0)} />
                                         </div>
                                         <button onClick={handleCountdownSet} className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-lg font-bold">Set Countdown</button>
                                     </div>
                                     <div className="space-y-4">
                                         <label className="text-gray-400 text-xs uppercase font-bold">Quick Actions</label>
-                                        <input type="number" placeholder="Minutes to Add" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdAddM} onChange={e => setCdAddM(parseInt(e.target.value)||0)} />
+                                        <input type="number" placeholder="Minutes to Add" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdAddM} onChange={e => setCdAddM(parseInt(e.target.value) || 0)} />
                                         <div className="flex gap-2">
                                             <button onClick={handleCountdownAdd} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold">Add</button>
                                             <button onClick={handleCountdownPause} className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-3 rounded-lg font-bold">Pause/Resume</button>
@@ -1481,17 +1501,17 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <form onSubmit={handleUpdateSchedule} className="space-y-6">
                                     <div>
                                         <label className="block text-sm font-bold text-gray-400 mb-2">Schedule Image URL</label>
-                                        <input 
-                                            type="text" 
-                                            value={newScheduleUrl} 
-                                            onChange={(e) => setNewScheduleUrl(e.target.value)} 
+                                        <input
+                                            type="text"
+                                            value={newScheduleUrl}
+                                            onChange={(e) => setNewScheduleUrl(e.target.value)}
                                             className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors"
                                             placeholder="https://..."
                                         />
                                         <LinkWarning url={newScheduleUrl} />
                                     </div>
                                     <ImageUploader onUploadSuccess={setNewScheduleUrl} />
-                                    
+
                                     {newScheduleUrl && (
                                         <div className="rounded-xl overflow-hidden border border-white/10">
                                             <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-auto" />
@@ -1601,7 +1621,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         <div key={credit.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-3">
                                             <div className="flex gap-3">
                                                 <div className="w-12 h-12 shrink-0 bg-black/40 rounded-full overflow-hidden border border-white/10">
-                                                    {credit.image ? <img src={credit.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white font-bold" style={{backgroundColor: credit.color}}>{credit.initial}</div>}
+                                                    {credit.image ? <img src={credit.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: credit.color }}>{credit.initial}</div>}
                                                 </div>
                                                 <div className="flex-1 grid grid-cols-2 gap-2">
                                                     <input type="text" value={credit.name} onChange={(e) => updateCreditItem(i, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm" placeholder="Name" />
@@ -1647,7 +1667,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 ))}
                                             </div>
                                             <div className="flex gap-2">
-                                                <input type="text" placeholder="Add Image URL" className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-2 text-white text-sm" onKeyDown={(e) => { if(e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; }}} />
+                                                <input type="text" placeholder="Add Image URL" className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-2 text-white text-sm" onKeyDown={(e) => { if (e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; } }} />
                                                 <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0" />
                                             </div>
                                         </div>
@@ -1673,7 +1693,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <span className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse"></span>
                                     Pending Applications ({whitelistApps.length})
                                 </h3>
-                                
+
                                 {whitelistApps.length === 0 ? (
                                     <div className="text-center py-10 text-gray-500 italic">No pending applications.</div>
                                 ) : (
@@ -1705,9 +1725,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                                     <h3 className="font-bold text-white text-lg">Approved Users ({approvedApps.length})</h3>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search User..." 
+                                    <input
+                                        type="text"
+                                        placeholder="Search User..."
                                         className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full md:w-64"
                                         value={approvedSearch}
                                         onChange={(e) => setApprovedSearch(e.target.value)}
@@ -1755,7 +1775,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* BINGO CONFIGURATION */}
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="font-bold text-white text-lg mb-6">Bingo Configuration</h3>
@@ -1775,7 +1795,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             {/* BINGO WINNERS MANAGEMENT (NEW) */}
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <h3 className="font-bold text-white text-lg mb-6">Bingo Winners Management</h3>
-                                
+
                                 {/* Add Winner Form */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8 bg-white/5 p-4 rounded-xl border border-white/5">
                                     <div>
@@ -1839,13 +1859,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 { id: 'LOCK_IN', label: 'Lock-In', icon: '🔒', color: 'bg-green-600', desc: 'Allowing Locks' },
                                                 { id: 'ONGOING', label: 'Ongoing', icon: '⚔️', color: 'bg-red-600', desc: 'Signups Closed' }
                                             ].map(s => (
-                                                <button 
+                                                <button
                                                     key={s.id}
                                                     onClick={() => handleSetTournamentStatus(s.id as any)}
                                                     className={`
                                                         flex-1 flex flex-col items-center justify-center p-4 rounded-xl border transition-all
-                                                        ${tournamentStatus === s.id 
-                                                            ? `${s.color} border-white/40 shadow-lg scale-105 z-10` 
+                                                        ${tournamentStatus === s.id
+                                                            ? `${s.color} border-white/40 shadow-lg scale-105 z-10`
                                                             : 'bg-black/40 border-white/5 opacity-60 hover:opacity-100'}
                                                     `}
                                                 >
@@ -1856,7 +1876,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             ))}
                                         </div>
                                     </div>
-                                    
+
                                     {/* Link to Live Bracket Manager */}
                                     <Link to="/admin/tournament" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 border border-purple-400/50">
                                         <span className="text-xl">🎮</span>
@@ -1909,10 +1929,10 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                                     <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Type</label><select value={genType} onChange={e => setGenType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white"><option value="lamb">Lamb Chop</option><option value="wagyu">Wagyu A5</option></select></div>
-                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Packs per Code</label><input type="number" value={genPackAmount} onChange={e => setGenPackAmount(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>
-                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Qty of Codes</label><input type="number" value={genAmount} onChange={e => setGenAmount(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" max="50" /></div>
+                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Packs per Code</label><input type="number" value={genPackAmount} onChange={e => setGenPackAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>
+                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Qty of Codes</label><input type="number" value={genAmount} onChange={e => setGenAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" max="50" /></div>
                                     <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Usage Type</label><select value={genUsageType} onChange={e => setGenUsageType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm"><option value="once_global">One Use (Global)</option><option value="once_per_user">Once Per User (Global)</option><option value="time_limited">Time Limited (Unlimited)</option></select></div>
-                                    {genUsageType === 'time_limited' && (<div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Hours Valid</label><input type="number" value={genHours} onChange={e => setGenHours(parseInt(e.target.value)||1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>)}
+                                    {genUsageType === 'time_limited' && (<div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Hours Valid</label><input type="number" value={genHours} onChange={e => setGenHours(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>)}
                                     <button onClick={handleGenerateCodes} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all h-[40px] lg:col-span-1">Generate</button>
                                 </div>
                                 {generatedCodes.length > 0 && (<div className="mt-6 bg-green-900/20 p-4 rounded-xl border border-green-500/30"><h4 className="text-green-400 font-bold mb-2">New Codes:</h4><div className="flex flex-wrap gap-2">{generatedCodes.map(c => <code key={c} className="bg-black/40 px-3 py-1 rounded text-white font-mono border border-white/10">{c}</code>)}</div></div>)}
@@ -1933,6 +1953,126 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">JSON Merger Tool</h2>
                             <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl"><input type="file" multiple accept=".json" onChange={handleJsonUpload} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-brand-primary/80 mb-6" /><textarea readOnly value={mergedOutput} className="w-full h-96 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-xs text-gray-300 focus:outline-none" placeholder="Merged output..." /><button onClick={() => navigator.clipboard.writeText(mergedOutput)} className="mt-4 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-lg transition-all w-full" disabled={!mergedOutput}>Copy Code</button></div>
+                        </div>
+                    )}
+
+                    {activeTab === 'snakes' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center">
+                                    <span className="text-2xl">🐍</span>
+                                </div>
+                                <div>
+                                    <h2 className="text-3xl font-black text-white">Snakes & Ladders</h2>
+                                    <p className="text-gray-400 text-sm">Manage special event tiles</p>
+                                </div>
+                            </div>
+
+                            {/* Status Toast */}
+                            {snakesStatus && (
+                                <div className={`p-4 rounded-lg ${snakesStatus.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white font-bold`}>
+                                    {snakesStatus.message}
+                                </div>
+                            )}
+
+                            {/* Add New Tile */}
+                            <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl">
+                                <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                                    <span className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-black">+</span>
+                                    Add Special Event Tile
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        placeholder="Tile # (1-100)"
+                                        value={newSnakeTile}
+                                        onChange={(e) => setNewSnakeTile(e.target.value)}
+                                        className="bg-black/40 border border-white/10 rounded-lg p-3 text-white"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Event text (e.g., 'Do 10 pushups!')"
+                                        value={newSnakeText}
+                                        onChange={(e) => setNewSnakeText(e.target.value)}
+                                        className="md:col-span-2 bg-black/40 border border-white/10 rounded-lg p-3 text-white"
+                                    />
+                                    <button
+                                        onClick={async () => {
+                                            if (!newSnakeTile || !newSnakeText) return;
+                                            try {
+                                                const res = await fetch(`${API_BASE_URL}/api/snakes/special-tiles`, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                    body: JSON.stringify({ tile: parseInt(newSnakeTile), text: newSnakeText })
+                                                });
+                                                if (res.ok) {
+                                                    setSnakesStatus({ type: 'success', message: 'Special tile added!' });
+                                                    setNewSnakeTile('');
+                                                    setNewSnakeText('');
+                                                    fetchSnakesTiles();
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                } else {
+                                                    setSnakesStatus({ type: 'error', message: 'Failed to add tile' });
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                }
+                                            } catch (e) {
+                                                setSnakesStatus({ type: 'error', message: 'Network error' });
+                                                setTimeout(() => setSnakesStatus(null), 3000);
+                                            }
+                                        }}
+                                        className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-all"
+                                    >
+                                        Add Tile
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Existing Tiles */}
+                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl">
+                                <h3 className="font-bold text-white mb-4">Current Special Tiles ({snakesTiles.length})</h3>
+                                {snakesTiles.length === 0 ? (
+                                    <p className="text-gray-500 text-center py-8 italic">No special tiles configured yet</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {snakesTiles.map((tile) => (
+                                            <div key={tile._id} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-purple-500/20">
+                                                <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-purple-300 font-black text-lg">#{tile.tile}</span>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-white text-sm truncate">{tile.text}</p>
+                                                </div>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!confirm(`Delete special event for tile #${tile.tile}?`)) return;
+                                                        try {
+                                                            await fetch(`${API_BASE_URL}/api/snakes/special-tiles/${tile.tile}`, {
+                                                                method: 'DELETE',
+                                                                headers: { Authorization: password }
+                                                            });
+                                                            fetchSnakesTiles();
+                                                            setSnakesStatus({ type: 'success', message: 'Tile removed!' });
+                                                            setTimeout(() => setSnakesStatus(null), 3000);
+                                                        } catch (e) { }
+                                                    }}
+                                                    className="px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all flex-shrink-0"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Quick Link */}
+                            <div className="text-center">
+                                <Link to="/snakes" className="text-purple-400 hover:text-purple-300 font-bold transition-colors">
+                                    → Open Snakes & Ladders Game
+                                </Link>
+                            </div>
                         </div>
                     )}
 

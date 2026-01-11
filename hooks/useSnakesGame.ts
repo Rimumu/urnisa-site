@@ -36,6 +36,13 @@ export interface SnakesWinner {
     lastWinAt: string;
 }
 
+export interface SnakesSpecialTile {
+    _id: string;
+    tile: number;
+    text: string;
+    createdAt: string;
+}
+
 export interface SnakesBoard {
     ladders: Record<number, number>;
     snakes: Record<number, number>;
@@ -46,6 +53,7 @@ export interface SnakesGameState {
     players: SnakesPlayer[];
     history: SnakesHistoryItem[];
     winners: SnakesWinner[];
+    specialTiles: SnakesSpecialTile[];
     isActive: boolean;
     board: SnakesBoard;
 }
@@ -57,6 +65,7 @@ export interface MoveResult {
     fromPosition: number;
     toPosition: number;
     specialMove?: string;
+    specialTileEvent?: { tile: number; text: string };
     isWinner: boolean;
 }
 

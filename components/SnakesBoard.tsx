@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
-import { SnakesPlayer, SnakesBoard as SnakesBoardType } from '../hooks/useSnakesGame';
+import { SnakesPlayer, SnakesBoard as SnakesBoardType, SnakesSpecialTile } from '../hooks/useSnakesGame';
 
 interface Props {
     board: SnakesBoardType;
     players: SnakesPlayer[];
+    specialTiles?: SnakesSpecialTile[];
     highlightTile?: number;
     animatingPlayer?: string;
+    onTileClick?: (tile: number, players: SnakesPlayer[], specialEvent?: string) => void;
 }
 
 // Convert tile number (1-100) to grid coordinates (0-9 for row and col)
@@ -32,7 +34,7 @@ const tileToPercent = (tile: number): { x: number; y: number } => {
     };
 };
 
-const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animatingPlayer }) => {
+const SnakesBoard: React.FC<Props> = ({ board, players, specialTiles = [], highlightTile, animatingPlayer, onTileClick }) => {
     // Create 10x10 grid with tile numbers
     const grid = useMemo(() => {
         const cells: number[][] = [];
@@ -61,6 +63,15 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
         });
         return map;
     }, [players]);
+
+    // Create a Set of special tile numbers for quick lookup
+    const specialTileMap = useMemo(() => {
+        const map: Record<number, string> = {};
+        specialTiles.forEach(st => {
+            map[st.tile] = st.text;
+        });
+        return map;
+    }, [specialTiles]);
 
     const getTileColor = (tile: number) => {
         const coords = tileToCoords(tile);
@@ -102,17 +113,27 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                 {grid.map((row, rowIdx) => (
                     row.map((tile, colIdx) => {
                         const isHighlight = tile === highlightTile;
+                        const isSpecial = tile in specialTileMap;
+                        const tilePlayers = playersByTile[tile] || [];
 
                         return (
                             <div
                                 key={`${rowIdx}-${colIdx}`}
                                 className={`
-                                    relative aspect-square
+                                    relative aspect-square cursor-pointer
                                     border-[0.5px] transition-all duration-300
                                     ${getTileColor(tile)}
                                     ${isHighlight ? 'ring-2 ring-brand-accent z-20' : ''}
+                                    hover:brightness-125 hover:z-10
                                 `}
+                                onClick={() => onTileClick?.(tile, tilePlayers, specialTileMap[tile])}
                             >
+                                {/* Special tile indicator */}
+                                {isSpecial && (
+                                    <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-purple-500/90 rounded-full flex items-center justify-center z-20 shadow-lg shadow-purple-500/50" title="Special Event Tile">
+                                        <span className="text-white text-[8px] font-black">!</span>
+                                    </div>
+                                )}
                                 {/* Winner icon for tile 100 */}
                                 {tile === 100 && (
                                     <span className="absolute inset-0 flex items-center justify-center text-lg pointer-events-none z-10">🏆</span>
