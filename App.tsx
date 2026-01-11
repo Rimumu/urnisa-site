@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Subathon from './pages/Subathon';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
+import Rankings from './pages/Rankings';
 import Gacha from './pages/Gacha';
 import GachaDev from './pages/GachaDev'; // Import Dev Page
 import TournamentDev from './pages/TournamentDev'; // New Import
@@ -78,6 +79,7 @@ const App: React.FC = () => {
           <Route path="/nisathon/wheel" element={<Wheel />} />
           <Route path="/minecraft" element={<Minecraft />} />
           <Route path="/minecraft/gacha" element={<Gacha />} />
+          <Route path="/minecraft/rankings" element={<Rankings />} />
           <Route path="/minecraft/tournament" element={<Tournament />} />
           {/* Dev Routes */}
           <Route path="/dev/gacha" element={<GachaDev />} />
