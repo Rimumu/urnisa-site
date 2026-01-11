@@ -158,11 +158,23 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                     const dx = end.x - start.x;
                     const dy = end.y - start.y;
                     const len = Math.sqrt(dx * dx + dy * dy);
-                    const perpX = (-dy / len) * 1.2;
-                    const perpY = (dx / len) * 1.2;
+
+                    // Handle edge case for vertical/near-vertical ladders
+                    const railWidth = 1.5; // Width between rails
+                    let perpX: number, perpY: number;
+
+                    if (len < 0.001) {
+                        // Essentially same point, use default horizontal offset
+                        perpX = railWidth;
+                        perpY = 0;
+                    } else {
+                        // Perpendicular vector (rotated 90 degrees)
+                        perpX = (-dy / len) * railWidth;
+                        perpY = (dx / len) * railWidth;
+                    }
 
                     // Number of rungs based on distance
-                    const numRungs = Math.max(3, Math.floor(len / 8));
+                    const numRungs = Math.max(3, Math.floor(len / 6));
                     const rungs = [];
                     for (let i = 0; i <= numRungs; i++) {
                         const t = i / numRungs;
@@ -176,7 +188,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                                 x2={rx + perpX}
                                 y2={ry + perpY}
                                 stroke="#a7f3d0"
-                                strokeWidth="0.4"
+                                strokeWidth="0.5"
                                 strokeLinecap="round"
                             />
                         );
