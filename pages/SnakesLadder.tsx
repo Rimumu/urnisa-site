@@ -170,6 +170,8 @@ const SnakesLadder: React.FC = () => {
                 }
                 .dice-face {
                     position: absolute;
+                    top: 0;
+                    left: 0;
                     width: 80px;
                     height: 80px;
                     background: linear-gradient(145deg, #ffffff, #e6e6e6);
@@ -242,7 +244,7 @@ const SnakesLadder: React.FC = () => {
                 .dice-face-5 .d5 { grid-area: 3 / 3; justify-self: end; align-self: end; }
                 /* Face 6 - 2 columns of 3 (using grid) */
                 .dice-face-6 { 
-                    transform: rotateX(-90deg) translateZ(40px);
+                    transform: rotateX(270deg) translateZ(40px);
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     grid-template-rows: 1fr 1fr 1fr;
