@@ -149,6 +149,7 @@ const SnakesLadder: React.FC = () => {
                     width: 80px;
                     height: 80px;
                     perspective: 300px;
+                    position: relative;
                 }
                 .dice-cube {
                     width: 100%;
@@ -249,6 +250,7 @@ const SnakesLadder: React.FC = () => {
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
+                    height: 100%;
                 }
                 
                 /* Result rotations - show specific face */
