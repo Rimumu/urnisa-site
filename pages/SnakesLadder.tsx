@@ -211,29 +211,34 @@ const SnakesLadder: React.FC = () => {
                 .dice-face-3 .d1 { align-self: flex-start; }
                 .dice-face-3 .d2 { align-self: center; }
                 .dice-face-3 .d3 { align-self: flex-end; }
-                /* Face 4 - corners */
+                /* Face 4 - 4 corners (2x2 grid) */
                 .dice-face-4 { 
                     transform: rotateY(90deg) translateZ(40px);
-                    display: flex;
-                    flex-wrap: wrap;
-                    justify-content: space-between;
-                    align-content: space-between;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 1fr 1fr;
+                    align-items: center;
+                    justify-items: center;
                 }
-                .dice-face-4 .dice-dot { width: 12px; height: 12px; }
-                /* Face 5 - corners + center */
+                .dice-face-4 .d1 { justify-self: start; align-self: start; }
+                .dice-face-4 .d2 { justify-self: end; align-self: start; }
+                .dice-face-4 .d3 { justify-self: start; align-self: end; }
+                .dice-face-4 .d4 { justify-self: end; align-self: end; }
+                /* Face 5 - 4 corners + center */
                 .dice-face-5 { 
                     transform: rotateX(90deg) translateZ(40px);
-                    display: flex;
-                    flex-wrap: wrap;
-                    justify-content: space-between;
-                    align-content: space-between;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    grid-template-rows: 1fr 1fr 1fr;
+                    align-items: center;
+                    justify-items: center;
+                    position: relative;
                 }
-                .dice-face-5 .d3 { 
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                }
+                .dice-face-5 .d1 { grid-area: 1 / 1; justify-self: start; align-self: start; }
+                .dice-face-5 .d2 { grid-area: 1 / 3; justify-self: end; align-self: start; }
+                .dice-face-5 .d3 { grid-area: 2 / 2; justify-self: center; align-self: center; }
+                .dice-face-5 .d4 { grid-area: 3 / 1; justify-self: start; align-self: end; }
+                .dice-face-5 .d5 { grid-area: 3 / 3; justify-self: end; align-self: end; }
                 /* Face 6 - 2 columns of 3 */
                 .dice-face-6 { 
                     transform: rotateX(-90deg) translateZ(40px);
