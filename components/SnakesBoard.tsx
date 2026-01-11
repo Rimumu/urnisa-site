@@ -281,7 +281,7 @@ const SnakesBoard: React.FC<Props> = ({ board, players, highlightTile, animating
                             >
                                 <span className={`
                                     absolute top-0.5 left-1 text-[8px] font-bold pointer-events-none select-none
-                                    ${tile === 100 ? 'text-yellow-400' : 'text-white/60'}
+                                    ${tile === 100 ? 'text-yellow-400' : 'text-white'}
                                 `}>
                                     {tile}
                                 </span>
