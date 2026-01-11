@@ -11,7 +11,7 @@ const DEFAULT_BOARD: SnakesBoardType = {
 };
 
 const SnakesLadder: React.FC = () => {
-    const { state, loading, lastMoveResult, processMove, toggleActive, addTestEvent, resetGame, adminMovePlayer } = useSnakesGame();
+    const { state, loading, lastMoveResult, processMove, toggleActive, addTestEvent, simulateSnakesEvent, resetGame, adminMovePlayer } = useSnakesGame();
 
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminKey, setAdminKey] = useState('');
@@ -719,7 +719,7 @@ const SnakesLadder: React.FC = () => {
                                             }`}
                                     >
                                         <div className={`w-2 h-2 rounded-full ${state?.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`}></div>
-                                        {state?.isActive ? 'Game Active' : 'Game Paused'}
+                                        {state?.isActive ? 'Listener Active' : 'Listener Stopped'}
                                     </button>
 
                                     {/* Reset Button */}
@@ -787,6 +787,37 @@ const SnakesLadder: React.FC = () => {
                                         >
                                             ADD ROLLS
                                         </button>
+                                    </div>
+
+                                    {/* Real Event Simulation */}
+                                    <div className="bg-white/5 rounded-xl p-3 border border-white/5 space-y-2">
+                                        <div className="text-[10px] font-bold text-white/60 uppercase">Simulate Real Events</div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                onClick={() => simulateSnakesEvent(adminKey, 'subscriber', 'TestSub', 1)}
+                                                className="py-1.5 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg text-[10px] font-bold hover:bg-purple-500/30"
+                                            >
+                                                SUB (1)
+                                            </button>
+                                            <button
+                                                onClick={() => simulateSnakesEvent(adminKey, 'subscriber', 'TestTier2', 1, '2000')}
+                                                className="py-1.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-[10px] font-bold hover:bg-blue-500/30"
+                                            >
+                                                SUB T2 (1)
+                                            </button>
+                                            <button
+                                                onClick={() => simulateSnakesEvent(adminKey, 'gift', 'TestGifter', 5)}
+                                                className="py-1.5 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-[10px] font-bold hover:bg-pink-500/30"
+                                            >
+                                                GIFT 5
+                                            </button>
+                                            <button
+                                                onClick={() => simulateSnakesEvent(adminKey, 'gift', 'TestGifter', 1)}
+                                                className="py-1.5 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-[10px] font-bold hover:bg-pink-500/30"
+                                            >
+                                                GIFT 1
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </>

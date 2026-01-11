@@ -206,6 +206,18 @@ export const useSnakesGame = () => {
         lastMoveResult,
         processMove,
         toggleActive,
+        simulateSnakesEvent: async (password: string, type: string, user: string, amount: number, tier: string = '1000') => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                    body: JSON.stringify({ type, user, amount, tier })
+                });
+                const data = await res.json();
+                if (data.success) fetchState();
+                return data;
+            } catch (e) { console.error(e); return null; }
+        },
         addTestEvent,
         resetGame,
         adminMovePlayer,
