@@ -174,18 +174,63 @@ const SnakesLadder: React.FC = () => {
                     background: linear-gradient(145deg, #ffffff, #e6e6e6);
                     border: 3px solid #ccc;
                     border-radius: 12px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 48px;
+                    display: grid;
+                    padding: 12px;
                     box-shadow: inset 0 0 15px rgba(0,0,0,0.1);
                 }
-                .dice-face-1 { transform: rotateY(0deg) translateZ(40px); }
-                .dice-face-2 { transform: rotateY(180deg) translateZ(40px); }
-                .dice-face-3 { transform: rotateY(-90deg) translateZ(40px); }
-                .dice-face-4 { transform: rotateY(90deg) translateZ(40px); }
-                .dice-face-5 { transform: rotateX(90deg) translateZ(40px); }
-                .dice-face-6 { transform: rotateX(-90deg) translateZ(40px); }
+                .dice-dot {
+                    width: 14px;
+                    height: 14px;
+                    background: #222;
+                    border-radius: 50%;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+                }
+                /* Face 1 - center dot */
+                .dice-face-1 { 
+                    transform: rotateY(0deg) translateZ(40px);
+                    grid-template-columns: 1fr;
+                    place-items: center;
+                }
+                /* Face 2 - diagonal corners */
+                .dice-face-2 { 
+                    transform: rotateY(180deg) translateZ(40px);
+                    grid-template-columns: 1fr 1fr 1fr;
+                    grid-template-rows: 1fr 1fr 1fr;
+                }
+                .dice-face-2 .d1 { grid-area: 1 / 1; justify-self: start; align-self: start; }
+                .dice-face-2 .d2 { grid-area: 3 / 3; justify-self: end; align-self: end; }
+                /* Face 3 - diagonal */
+                .dice-face-3 { 
+                    transform: rotateY(-90deg) translateZ(40px);
+                    grid-template-columns: 1fr 1fr 1fr;
+                    grid-template-rows: 1fr 1fr 1fr;
+                }
+                .dice-face-3 .d1 { grid-area: 1 / 1; justify-self: start; align-self: start; }
+                .dice-face-3 .d2 { grid-area: 2 / 2; justify-self: center; align-self: center; }
+                .dice-face-3 .d3 { grid-area: 3 / 3; justify-self: end; align-self: end; }
+                /* Face 4 - corners */
+                .dice-face-4 { 
+                    transform: rotateY(90deg) translateZ(40px);
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 1fr 1fr;
+                }
+                /* Face 5 - corners + center */
+                .dice-face-5 { 
+                    transform: rotateX(90deg) translateZ(40px);
+                    grid-template-columns: 1fr 1fr 1fr;
+                    grid-template-rows: 1fr 1fr 1fr;
+                }
+                .dice-face-5 .d1 { grid-area: 1 / 1; justify-self: start; align-self: start; }
+                .dice-face-5 .d2 { grid-area: 1 / 3; justify-self: end; align-self: start; }
+                .dice-face-5 .d3 { grid-area: 2 / 2; justify-self: center; align-self: center; }
+                .dice-face-5 .d4 { grid-area: 3 / 1; justify-self: start; align-self: end; }
+                .dice-face-5 .d5 { grid-area: 3 / 3; justify-self: end; align-self: end; }
+                /* Face 6 - 2 columns of 3 */
+                .dice-face-6 { 
+                    transform: rotateX(-90deg) translateZ(40px);
+                    grid-template-columns: 1fr 1fr;
+                    grid-template-rows: 1fr 1fr 1fr;
+                }
                 
                 /* Result rotations - show specific face */
                 .dice-show-1 { transform: rotateY(0deg) rotateX(0deg); }
@@ -374,12 +419,45 @@ const SnakesLadder: React.FC = () => {
                             >
                                 <div className="dice-scene">
                                     <div className={`dice-cube ${isRolling ? 'rolling' : (diceAnimation ? `dice-show-${diceAnimation}` : 'dice-show-1')}`}>
-                                        <div className="dice-face dice-face-1">⚀</div>
-                                        <div className="dice-face dice-face-2">⚁</div>
-                                        <div className="dice-face dice-face-3">⚂</div>
-                                        <div className="dice-face dice-face-4">⚃</div>
-                                        <div className="dice-face dice-face-5">⚄</div>
-                                        <div className="dice-face dice-face-6">⚅</div>
+                                        {/* Face 1 - 1 dot center */}
+                                        <div className="dice-face dice-face-1">
+                                            <div className="dice-dot"></div>
+                                        </div>
+                                        {/* Face 2 - 2 dots diagonal */}
+                                        <div className="dice-face dice-face-2">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                        </div>
+                                        {/* Face 3 - 3 dots diagonal */}
+                                        <div className="dice-face dice-face-3">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                            <div className="dice-dot d3"></div>
+                                        </div>
+                                        {/* Face 4 - 4 dots corners */}
+                                        <div className="dice-face dice-face-4">
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                        </div>
+                                        {/* Face 5 - 5 dots */}
+                                        <div className="dice-face dice-face-5">
+                                            <div className="dice-dot d1"></div>
+                                            <div className="dice-dot d2"></div>
+                                            <div className="dice-dot d3"></div>
+                                            <div className="dice-dot d4"></div>
+                                            <div className="dice-dot d5"></div>
+                                        </div>
+                                        {/* Face 6 - 6 dots */}
+                                        <div className="dice-face dice-face-6">
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                            <div className="dice-dot"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </button>
