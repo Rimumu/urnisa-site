@@ -430,7 +430,7 @@ const SnakesLadder: React.FC = () => {
                         {/* User avatar and name - horizontal layout */}
                         <div className="flex items-center gap-4 mb-6">
                             <img
-                                src={currentRoller?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(moveResult.user)}&background=random`}
+                                src={moveResult.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(moveResult.user)}&background=random`}
                                 alt={moveResult.user}
                                 className="w-16 h-16 rounded-full border-4 border-white shadow-2xl"
                             />

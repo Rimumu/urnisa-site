@@ -68,6 +68,7 @@ export interface MoveResult {
     specialMove?: string;
     specialTileEvent?: { tile: number; text: string };
     isWinner: boolean;
+    avatarUrl?: string;
 }
 
 export const useSnakesGame = () => {
