@@ -371,7 +371,7 @@ const Admin: React.FC = () => {
     // --- TOURNAMENT STATE ---
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayer[]>([]);
     const [tournamentSearch, setTournamentSearch] = useState('');
-    const [tournamentStatus, setTournamentStatus] = useState<'DRAFTING' | 'LOCK_IN' | 'ONGOING'>('DRAFTING');
+    const [tournamentStatus, setTournamentStatus] = useState<'DRAFTING' | 'LOCK_IN' | 'ONGOING' | 'ENDED'>('DRAFTING');
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -889,7 +889,7 @@ const Admin: React.FC = () => {
     };
 
     // --- TOURNAMENT HANDLERS ---
-    const handleSetTournamentStatus = async (status: 'DRAFTING' | 'LOCK_IN' | 'ONGOING') => {
+    const handleSetTournamentStatus = async (status: 'DRAFTING' | 'LOCK_IN' | 'ONGOING' | 'ENDED') => {
         setLoading(true);
         try {
             // Mapping for legacy backend fields if needed, but we now use status primarily
@@ -1865,7 +1865,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             {[
                                                 { id: 'DRAFTING', label: 'Drafting', icon: '📝', color: 'bg-blue-600', desc: 'Signups Open' },
                                                 { id: 'LOCK_IN', label: 'Lock-In', icon: '🔒', color: 'bg-green-600', desc: 'Allowing Locks' },
-                                                { id: 'ONGOING', label: 'Ongoing', icon: '⚔️', color: 'bg-red-600', desc: 'Signups Closed' }
+                                                { id: 'ONGOING', label: 'Ongoing', icon: '⚔️', color: 'bg-red-600', desc: 'Signups Closed' },
+                                                { id: 'ENDED', label: 'Ended', icon: '🏆', color: 'bg-yellow-600', desc: 'Season Complete' }
                                             ].map(s => (
                                                 <button
                                                     key={s.id}

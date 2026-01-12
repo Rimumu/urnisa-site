@@ -23,10 +23,10 @@ interface TournamentPlayer {
     isDev: boolean;
 }
 
-const BracketMatchCard: React.FC<{ 
-    match: TournamentMatch; 
-    onEdit: (m: TournamentMatch) => void; 
-    onResult: (id: string, p: string, s: string) => void 
+const BracketMatchCard: React.FC<{
+    match: TournamentMatch;
+    onEdit: (m: TournamentMatch) => void;
+    onResult: (id: string, p: string, s: string) => void
 }> = ({ match, onEdit, onResult }) => {
     // Parse Score
     const scoreObj = useMemo(() => {
@@ -57,16 +57,16 @@ const BracketMatchCard: React.FC<{
                 {/* Content */}
                 <div className="flex flex-col">
                     {/* Player 1 */}
-                    <div 
+                    <div
                         className={`px-3 py-2.5 flex items-center justify-between border-b border-white/5 cursor-pointer hover:bg-white/5 transition-colors ${isP1Winner ? 'bg-brand-primary/10' : ''}`}
                         onClick={() => match.player1 && onResult(match.id, match.player1, match.score || "1-0")}
                         title="Click to set as winner"
                     >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             {match.player1 && (
-                                <img 
-                                    src={`https://mc-heads.net/avatar/${match.player1}/24`} 
-                                    alt="" 
+                                <img
+                                    src={`https://mc-heads.net/avatar/${match.player1}/24`}
+                                    alt=""
                                     className="w-5 h-5 rounded-sm shadow-sm"
                                 />
                             )}
@@ -87,16 +87,16 @@ const BracketMatchCard: React.FC<{
                     </div>
 
                     {/* Player 2 */}
-                    <div 
+                    <div
                         className={`px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors ${isP2Winner ? 'bg-brand-primary/10' : ''}`}
                         onClick={() => match.player2 && onResult(match.id, match.player2, match.score || "0-1")}
                         title="Click to set as winner"
                     >
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             {match.player2 && (
-                                <img 
-                                    src={`https://mc-heads.net/avatar/${match.player2}/24`} 
-                                    alt="" 
+                                <img
+                                    src={`https://mc-heads.net/avatar/${match.player2}/24`}
+                                    alt=""
                                     className="w-5 h-5 rounded-sm shadow-sm"
                                 />
                             )}
@@ -126,7 +126,7 @@ const BracketMatchCard: React.FC<{
             </div>
 
             {/* Edit Button */}
-            <button 
+            <button
                 onClick={(e) => { e.stopPropagation(); onEdit(match); }}
                 className="absolute -top-2 -right-2 bg-gray-700 hover:bg-white text-white hover:text-black p-1.5 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all z-20 scale-75 hover:scale-100"
                 title="Edit Match Details"
@@ -142,20 +142,28 @@ const BracketMatchCard: React.FC<{
 const AdminTournament: React.FC = () => {
     const [password, setPassword] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    
+
     // Data State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
     const [allPlayers, setAllPlayers] = useState<TournamentPlayer[]>([]);
     const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
-    
+
     const [bracketType, setBracketType] = useState('SINGLE');
     const [statusMsg, setStatusMsg] = useState('');
-    
+
     // Edit Mode State for Matchups
     const [editingMatch, setEditingMatch] = useState<TournamentMatch | null>(null);
     const [editP1, setEditP1] = useState('');
     const [editP2, setEditP2] = useState('');
     const [editScore, setEditScore] = useState('');
+
+    // End Tournament State
+    const [showEndModal, setShowEndModal] = useState(false);
+    const [finalWinners, setFinalWinners] = useState({
+        rank1: { user: '', score: 'W-L' },
+        rank2: { user: '', score: 'W-L' },
+        rank3: { user: '', score: 'W-L' }
+    });
 
     // --- ZOOM & PAN STATE ---
     const [zoomScale, setZoomScale] = useState(1);
@@ -183,7 +191,7 @@ const AdminTournament: React.FC = () => {
 
             const { zoomScale: currentZoom, panPos: currentPan } = stateRef.current;
             const zoomSensitivity = 0.001;
-            const delta = -e.deltaY * zoomSensitivity; 
+            const delta = -e.deltaY * zoomSensitivity;
             const newScale = Math.min(Math.max(0.2, currentZoom + delta), 3);
 
             const rect = container.getBoundingClientRect();
@@ -215,7 +223,7 @@ const AdminTournament: React.FC = () => {
                 fetchPlayers();
             }
             else alert("Invalid password");
-        } catch(e) { alert("Error connecting"); }
+        } catch (e) { alert("Error connecting"); }
     };
 
     const fetchBracket = async () => {
@@ -227,7 +235,7 @@ const AdminTournament: React.FC = () => {
                 setMatches(data.matches || []);
                 setBracketType(data.type || 'SINGLE');
             }
-        } catch(e) {}
+        } catch (e) { }
     };
 
     const fetchPlayers = async () => {
@@ -238,7 +246,7 @@ const AdminTournament: React.FC = () => {
             if (res.ok) {
                 setAllPlayers(await res.json());
             }
-        } catch(e) {}
+        } catch (e) { }
     };
 
     useEffect(() => {
@@ -264,7 +272,7 @@ const AdminTournament: React.FC = () => {
             } else {
                 setStatusMsg("Error: " + data.error);
             }
-        } catch(e) {
+        } catch (e) {
             setStatusMsg("Network Error");
         }
         setTimeout(() => setStatusMsg(''), 3000);
@@ -277,18 +285,18 @@ const AdminTournament: React.FC = () => {
         }
         apiCall('generate', { type: bracketType, participants: selectedParticipants });
     };
-    
+
     const handleClear = () => apiCall('clear', {});
-    
+
     const handleUpdateMatchResult = (matchId: string, winner: string, score: string) => {
         apiCall('match/update', { matchId, winner, score });
     };
 
     const handleSaveEdit = () => {
         if (!editingMatch) return;
-        apiCall('match/update', { 
-            matchId: editingMatch.id, 
-            player1: editP1, 
+        apiCall('match/update', {
+            matchId: editingMatch.id,
+            player1: editP1,
             player2: editP2,
             score: editScore
         });
@@ -300,6 +308,87 @@ const AdminTournament: React.FC = () => {
         setEditP1(m.player1 || '');
         setEditP2(m.player2 || '');
         setEditScore(m.score || '');
+    };
+
+    // --- WINNER CALCULATION & END TOURNAMENT ---
+    const getPlayerStats = (username: string) => {
+        if (!username) return '0-0';
+        let wins = 0;
+        let losses = 0;
+        matches.forEach(m => {
+            if (m.winner === username) wins++;
+            else if ((m.player1 === username || m.player2 === username) && m.status === 'COMPLETED') losses++;
+        });
+        return `${wins}-${losses}`;
+    };
+
+    const handleEndTournamentClick = () => {
+        // Auto-detect winners
+        let r1 = '', r2 = '', r3 = '';
+
+        if (matches.length > 0) {
+            // Priority: Finals Bracket
+            const finals = matches.filter(m => m.bracketGroup === 'finals');
+            if (finals.length > 0) {
+                // Last finals match determines 1st/2nd
+                const lastFinal = finals[finals.length - 1]; // Usually single match, or reset
+                if (lastFinal.status === 'COMPLETED' && lastFinal.winner) {
+                    r1 = lastFinal.winner;
+                    r2 = lastFinal.player1 === lastFinal.winner ? (lastFinal.player2 || '') : (lastFinal.player1 || '');
+                }
+            } else {
+                // If Single Elim and no 'finals' group labeled, find last match
+                const completed = matches.filter(m => m.status === 'COMPLETED');
+                if (completed.length > 0) {
+                    // Start from max round
+                    const maxRound = Math.max(...completed.map(m => m.round));
+                    const final = completed.find(m => m.round === maxRound);
+                    if (final && final.winner) {
+                        r1 = final.winner;
+                        r2 = final.player1 === final.winner ? (final.player2 || '') : (final.player1 || '');
+                    }
+                }
+            }
+
+            // 3rd Place
+            if (bracketType === 'DOUBLE_ELIMINATION') {
+                // Loser of Losers Finals
+                const losersMatches = matches.filter(m => m.bracketGroup === 'losers');
+                if (losersMatches.length > 0) {
+                    const maxLRound = Math.max(...losersMatches.map(m => m.round));
+                    const losersFinal = losersMatches.find(m => m.round === maxLRound);
+                    if (losersFinal && losersFinal.status === 'COMPLETED' && losersFinal.winner) {
+                        // The winner of Losers Finals goes to Grand Finals (so they are 1st/2nd)
+                        // The LOSER of Losers final is 3rd place? 
+                        // Wait, usually: Losers Final Winner -> Grand Final (vs Winners Winner).
+                        // Losers Final Loser = 3rd.
+                        // YES.
+                        r3 = losersFinal.player1 === losersFinal.winner ? (losersFinal.player2 || '') : (losersFinal.player1 || '');
+                    }
+                }
+            } else {
+                // Single Elim: Semi-Final Losers share 3rd/4th usually. Pick one or leave empty?
+                // We'll leave empty for manual fill if needed
+            }
+        }
+
+        setFinalWinners({
+            rank1: { user: r1, score: getPlayerStats(r1) },
+            rank2: { user: r2, score: getPlayerStats(r2) },
+            rank3: { user: r3, score: getPlayerStats(r3) }
+        });
+        setShowEndModal(true);
+    };
+
+    const submitEndTournament = () => {
+        const winnersPayload = [
+            { rank: 1, username: finalWinners.rank1.user, score: finalWinners.rank1.score },
+            { rank: 2, username: finalWinners.rank2.user, score: finalWinners.rank2.score },
+            { rank: 3, username: finalWinners.rank3.user, score: finalWinners.rank3.score }
+        ].filter(w => w.username); // Filter empty
+
+        apiCall('end', { winners: winnersPayload });
+        setShowEndModal(false);
     };
 
     // Pool Management Helpers
@@ -320,13 +409,13 @@ const AdminTournament: React.FC = () => {
 
     // Drag Handlers
     const handleMouseDown = (e: React.MouseEvent) => {
-        if(matches.length === 0) return;
-        if(e.button !== 0) return;
-        
+        if (matches.length === 0) return;
+        if (e.button !== 0) return;
+
         setIsDragging(true);
         setHasInteracted(true);
         setLastMousePos({ x: e.clientX, y: e.clientY });
-        e.preventDefault(); 
+        e.preventDefault();
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -365,7 +454,7 @@ const AdminTournament: React.FC = () => {
             grouped[m.round].push(m);
         });
         Object.keys(grouped).forEach(r => {
-            grouped[Number(r)].sort((a,b) => a.matchIndex - b.matchIndex);
+            grouped[Number(r)].sort((a, b) => a.matchIndex - b.matchIndex);
         });
         return grouped;
     };
@@ -377,9 +466,9 @@ const AdminTournament: React.FC = () => {
 
     const winnerRounds = useMemo(() => organizeByRound(winners), [winners]);
     const loserRounds = useMemo(() => organizeByRound(losers), [losers]);
-    
-    const wRoundKeys = Object.keys(winnerRounds).map(Number).sort((a,b) => a-b);
-    const lRoundKeys = Object.keys(loserRounds).map(Number).sort((a,b) => a-b);
+
+    const wRoundKeys = Object.keys(winnerRounds).map(Number).sort((a, b) => a - b);
+    const lRoundKeys = Object.keys(loserRounds).map(Number).sort((a, b) => a - b);
 
     if (!isAuthenticated) {
         return (
@@ -401,7 +490,7 @@ const AdminTournament: React.FC = () => {
                     ← Back to Dashboard
                 </Link>
             </div>
-            
+
             {statusMsg && <div className="fixed top-4 right-4 bg-blue-600 text-white p-4 rounded-xl shadow-lg z-50 animate-bounce">{statusMsg}</div>}
 
             {/* EDIT MODAL */}
@@ -429,12 +518,67 @@ const AdminTournament: React.FC = () => {
                 </div>
             )}
 
+            {/* END TOURNAMENT MODAL */}
+            {showEndModal && (
+                <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-[#1a0b0e] p-8 rounded-3xl border border-brand-primary/30 w-full max-w-lg space-y-6 shadow-2xl relative">
+                        <h3 className="font-black text-3xl text-brand-primary uppercase tracking-tighter text-center">🏆 Declare Winners</h3>
+                        <p className="text-gray-400 text-center text-sm">Review and confirm the top 3 winners to officially end the tournament.</p>
+
+                        <div className="space-y-4">
+                            {[1, 2, 3].map((rank) => {
+                                const key = `rank${rank}` as keyof typeof finalWinners;
+                                return (
+                                    <div key={rank} className="flex items-center gap-4 bg-black/40 p-3 rounded-xl border border-white/10">
+                                        <div className={`
+                                            w-10 h-10 flex items-center justify-center rounded-full font-black text-lg border-2
+                                            ${rank === 1 ? 'border-yellow-400 text-yellow-400 bg-yellow-400/10' :
+                                                rank === 2 ? 'border-gray-300 text-gray-300 bg-gray-300/10' :
+                                                    'border-amber-600 text-amber-600 bg-amber-600/10'}
+                                        `}>
+                                            {rank}
+                                        </div>
+                                        <div className="flex-1 space-y-1">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Username</label>
+                                            <input
+                                                type="text"
+                                                value={finalWinners[key].user}
+                                                onChange={e => setFinalWinners({ ...finalWinners, [key]: { ...finalWinners[key], user: e.target.value } })}
+                                                className="w-full bg-transparent font-bold text-white outline-none placeholder-gray-700"
+                                                placeholder={`Winner #${rank}`}
+                                            />
+                                        </div>
+                                        <div className="w-24 space-y-1">
+                                            <label className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Score</label>
+                                            <input
+                                                type="text"
+                                                value={finalWinners[key].score}
+                                                onChange={e => setFinalWinners({ ...finalWinners, [key]: { ...finalWinners[key], score: e.target.value } })}
+                                                className="w-full bg-transparent font-mono font-bold text-right text-brand-primary outline-none placeholder-gray-700"
+                                                placeholder="W-L"
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex gap-4 pt-4 border-t border-white/10">
+                            <button onClick={() => setShowEndModal(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition-colors">Cancel</button>
+                            <button onClick={submitEndTournament} className="flex-[2] bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 text-white font-black py-3 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] uppercase tracking-widest">
+                                CONFIRM & END SEASON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                
+
                 {/* 1. PLAYER POOL SELECTION (Left Sidebar) */}
                 <div className="lg:col-span-1 bg-black/40 p-6 rounded-2xl border border-white/10 flex flex-col h-[800px]">
                     <h3 className="font-bold text-xl border-b border-white/10 pb-2 mb-4">Player Selection</h3>
-                    
+
                     {/* Available Players */}
                     <div className="flex-1 overflow-hidden flex flex-col mb-4 min-h-0">
                         <div className="flex justify-between items-center mb-2">
@@ -470,7 +614,7 @@ const AdminTournament: React.FC = () => {
                         <div className="flex-1 overflow-y-auto custom-scrollbar border border-brand-primary/30 rounded bg-black/20 p-2 space-y-1">
                             {selectedParticipants.map((name, idx) => (
                                 <div key={idx} className="flex justify-between items-center p-2 rounded bg-brand-primary/10 border border-brand-primary/20 group">
-                                    <span className="font-mono text-xs text-gray-400 mr-2 w-4">{idx+1}.</span>
+                                    <span className="font-mono text-xs text-gray-400 mr-2 w-4">{idx + 1}.</span>
                                     <span className="font-bold text-sm flex-1 truncate">{name}</span>
                                     <button onClick={() => removeFromPool(name)} className="text-red-400 hover:text-red-300 font-bold px-2 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                                 </div>
@@ -491,6 +635,9 @@ const AdminTournament: React.FC = () => {
                     <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4 z-20 relative bg-[#1a0b0e]/80 backdrop-blur-sm px-4 rounded-xl">
                         <h3 className="font-bold text-xl text-white">Live Bracket View</h3>
                         <div className="flex gap-4">
+                            <button onClick={handleEndTournamentClick} className="bg-yellow-600 hover:bg-yellow-500 text-white font-black py-2 px-4 rounded text-sm transition-colors border border-yellow-400/30 shadow-lg shadow-yellow-900/20 uppercase tracking-widest flex items-center gap-2">
+                                <span>🏆</span> END SEASON
+                            </button>
                             <select value={bracketType} onChange={e => setBracketType(e.target.value)} className="bg-black/40 border border-white/10 p-2 rounded text-white text-sm">
                                 <option value="SINGLE_ELIMINATION">Single Elimination</option>
                                 <option value="DOUBLE_ELIMINATION">Double Elimination</option>
@@ -499,7 +646,7 @@ const AdminTournament: React.FC = () => {
                         </div>
                     </div>
 
-                    <div 
+                    <div
                         className="flex-1 overflow-hidden relative cursor-move bg-[#1a0b0e]/50 select-none rounded-xl border border-white/5"
                         ref={containerRef}
                         onMouseDown={handleMouseDown}
@@ -521,16 +668,16 @@ const AdminTournament: React.FC = () => {
                                 No bracket generated yet. Select players and click Generate.
                             </div>
                         ) : (
-                            <div 
-                                style={{ 
-                                    transform: `translate(${panPos.x}px, ${panPos.y}px) scale(${zoomScale})`, 
+                            <div
+                                style={{
+                                    transform: `translate(${panPos.x}px, ${panPos.y}px) scale(${zoomScale})`,
                                     transformOrigin: '0 0',
                                     transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                                 }}
                                 className="w-full h-full origin-top-left"
                             >
                                 <div className="flex flex-col gap-20 p-10 min-w-max relative h-full">
-                                    
+
                                     {/* WINNERS BRACKET */}
                                     <div className="relative">
                                         {bracketType === 'DOUBLE_ELIMINATION' && (
@@ -549,24 +696,24 @@ const AdminTournament: React.FC = () => {
                                                                 const top = getMatchOffsetBinary(round, m.matchIndex);
                                                                 return (
                                                                     <div key={m.id} className="absolute left-0 w-full" style={{ top: `${top}px` }}>
-                                                                        <BracketMatchCard 
-                                                                            match={m} 
+                                                                        <BracketMatchCard
+                                                                            match={m}
                                                                             onEdit={openEditModal}
                                                                             onResult={handleUpdateMatchResult}
                                                                         />
                                                                         {/* Binary SVG Lines */}
                                                                         {round < wRoundKeys.length && m.matchIndex % 2 === 0 && (
                                                                             <svg className="absolute top-0 left-full overflow-visible pointer-events-none z-0" width={COLUMN_GAP} height="1" style={{ top: '50%' }}>
-                                                                                <path 
-                                                                                    d={`M 0 0 H ${COLUMN_GAP/2} V ${getMatchOffsetBinary(round+1, Math.floor(m.matchIndex/2)) - top} H ${COLUMN_GAP}`}
+                                                                                <path
+                                                                                    d={`M 0 0 H ${COLUMN_GAP / 2} V ${getMatchOffsetBinary(round + 1, Math.floor(m.matchIndex / 2)) - top} H ${COLUMN_GAP}`}
                                                                                     fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2"
                                                                                 />
                                                                             </svg>
                                                                         )}
                                                                         {round < wRoundKeys.length && m.matchIndex % 2 !== 0 && (
                                                                             <svg className="absolute top-0 left-full overflow-visible pointer-events-none z-0" width={COLUMN_GAP} height="1" style={{ top: '50%' }}>
-                                                                                <path 
-                                                                                    d={`M 0 0 H ${COLUMN_GAP/2} V ${getMatchOffsetBinary(round+1, Math.floor(m.matchIndex/2)) - top} H ${COLUMN_GAP}`}
+                                                                                <path
+                                                                                    d={`M 0 0 H ${COLUMN_GAP / 2} V ${getMatchOffsetBinary(round + 1, Math.floor(m.matchIndex / 2)) - top} H ${COLUMN_GAP}`}
                                                                                     fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2"
                                                                                 />
                                                                             </svg>
@@ -597,7 +744,7 @@ const AdminTournament: React.FC = () => {
                                                                 {roundMatches.map((m, idx) => {
                                                                     // Linear stacking for Losers
                                                                     const top = idx * CARD_TOTAL_H;
-                                                                    
+
                                                                     // Explicit Line Calculation to Next Match
                                                                     let lineSvg = null;
                                                                     if (m.nextMatchId) {
@@ -607,15 +754,15 @@ const AdminTournament: React.FC = () => {
                                                                             const targetIdx = loserRounds[targetMatch.round].findIndex(tm => tm.id === targetMatch.id);
                                                                             const targetTop = targetIdx * CARD_TOTAL_H;
                                                                             const diffY = targetTop - top;
-                                                                            
+
                                                                             // Check if target is in immediate next round column
                                                                             const roundDiff = targetMatch.round - round;
                                                                             const width = (roundDiff * (COLUMN_WIDTH + COLUMN_GAP)) - COLUMN_WIDTH;
-                                                                            
+
                                                                             lineSvg = (
                                                                                 <svg className="absolute top-0 left-full overflow-visible pointer-events-none z-0" width={width} height="1" style={{ top: '50%' }}>
-                                                                                    <path 
-                                                                                        d={`M 0 0 C ${width/2} 0, ${width/2} ${diffY}, ${width} ${diffY}`}
+                                                                                    <path
+                                                                                        d={`M 0 0 C ${width / 2} 0, ${width / 2} ${diffY}, ${width} ${diffY}`}
                                                                                         fill="none" stroke="rgba(239,68,68,0.3)" strokeWidth="2"
                                                                                     />
                                                                                 </svg>
@@ -625,8 +772,8 @@ const AdminTournament: React.FC = () => {
 
                                                                     return (
                                                                         <div key={m.id} className="absolute left-0 w-full" style={{ top: `${top}px` }}>
-                                                                            <BracketMatchCard 
-                                                                                match={m} 
+                                                                            <BracketMatchCard
+                                                                                match={m}
                                                                                 onEdit={openEditModal}
                                                                                 onResult={handleUpdateMatchResult}
                                                                             />
@@ -648,8 +795,8 @@ const AdminTournament: React.FC = () => {
                                             <div className="font-black text-yellow-400 uppercase tracking-widest mb-6 text-xl text-center">Grand Finals</div>
                                             {finals.map(m => (
                                                 <div key={m.id} className="mb-4">
-                                                    <BracketMatchCard 
-                                                        match={m} 
+                                                    <BracketMatchCard
+                                                        match={m}
                                                         onEdit={openEditModal}
                                                         onResult={handleUpdateMatchResult}
                                                     />
