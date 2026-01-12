@@ -731,7 +731,11 @@ const Tournament: React.FC = () => {
                                         <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl pointer-events-none text-brand-primary">🏆</div>
                                         <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Official Format</h2>
                                         <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
-                                            Single-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!
+                                            {activeSeason.format.includes('Duos') || activeSeason.name.includes('Season 2') ? (
+                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Duos 2v2</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                            ) : (
+                                                <>Single-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                            )}
                                         </p>
                                     </div>
                                 </div>
