@@ -806,7 +806,8 @@ const Tournament: React.FC = () => {
                                 </div>
 
                                 {bracketView === 'bracket' ? (
-                                    (tournamentStatus === 'DRAFTING' || tournamentStatus === 'LOCK_IN' || matches.length === 0) ? (
+                                    // Show "Not Generated" only for DRAFTING/LOCK_IN phases
+                                    (tournamentStatus === 'DRAFTING' || tournamentStatus === 'LOCK_IN') ? (
                                         <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] text-center space-y-6">
                                             <div className="w-24 h-24 bg-brand-primary/10 rounded-full flex items-center justify-center text-6xl animate-pulse">🗓️</div>
                                             <div className="space-y-2">
@@ -815,6 +816,7 @@ const Tournament: React.FC = () => {
                                             </div>
                                         </div>
                                     ) : (
+                                        // Show Challonge iframe for ONGOING/ENDED seasons
                                         <div className="flex-1 w-full bg-white rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507] min-h-[800px]">
                                             <iframe
                                                 src={activeSeason.challongeUrl ? `${activeSeason.challongeUrl}/module` : "https://challonge.com/nisamon1/module"}
