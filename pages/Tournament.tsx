@@ -355,6 +355,8 @@ const Tournament: React.FC = () => {
                 setTournamentStatus(data.status || 'DRAFTING');
             })
             .catch(e => console.error("Config fetch error", e));
+
+        fetchPlayers(); // Load players immediately
     }, []);
 
     useEffect(() => {
@@ -1022,7 +1024,7 @@ const Tournament: React.FC = () => {
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                                {(tournamentStatus === 'ONGOING' && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
+                                {((tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
                                     <PokemonDetailCard
                                         key={idx}
                                         pokemon={pokemon}
