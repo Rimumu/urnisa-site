@@ -79,12 +79,15 @@ const AdminTournament: React.FC = () => {
     // --- AUTH ---
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/admin/verify`, {
+            const res = await fetch(`${API_BASE_URL}/api/verify`, {
                 method: 'POST',
-                headers: { Authorization: password }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
             });
-            if (res.ok) {
+            const data = await res.json();
+            if (res.ok && data.success) {
                 setIsAuthenticated(true);
                 fetchSeasons();
             } else {
@@ -93,6 +96,9 @@ const AdminTournament: React.FC = () => {
             }
         } catch (e) {
             setStatusMsg('Auth failed');
+            setTimeout(() => setStatusMsg(''), 3000);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -338,8 +344,8 @@ const AdminTournament: React.FC = () => {
                                 <div className="flex justify-between">
                                     <span className="text-gray-500">Status:</span>
                                     <span className={`font-bold ${activeSeason.status === 'ENDED' ? 'text-yellow-400' :
-                                            activeSeason.status === 'ONGOING' ? 'text-green-400' :
-                                                activeSeason.status === 'LOCK_IN' ? 'text-orange-400' : 'text-red-400'
+                                        activeSeason.status === 'ONGOING' ? 'text-green-400' :
+                                            activeSeason.status === 'LOCK_IN' ? 'text-orange-400' : 'text-red-400'
                                         }`}>{activeSeason.status}</span>
                                 </div>
                             </div>
@@ -356,8 +362,8 @@ const AdminTournament: React.FC = () => {
                                     onClick={() => handleSetStatus(status)}
                                     disabled={loading || activeSeason?.status === status}
                                     className={`py-2 px-3 rounded text-xs font-bold uppercase transition-all ${activeSeason?.status === status
-                                            ? 'bg-white/20 text-white border-2 border-white/40'
-                                            : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10'
+                                        ? 'bg-white/20 text-white border-2 border-white/40'
+                                        : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10'
                                         }`}
                                 >
                                     {status.replace('_', ' ')}
@@ -528,8 +534,8 @@ const AdminTournament: React.FC = () => {
                                 return (
                                     <div key={rank} className="flex gap-2 items-center">
                                         <span className={`w-8 h-8 flex items-center justify-center rounded-full font-black ${rank === 1 ? 'bg-yellow-500 text-yellow-900' :
-                                                rank === 2 ? 'bg-gray-400 text-gray-900' :
-                                                    'bg-orange-700 text-orange-200'
+                                            rank === 2 ? 'bg-gray-400 text-gray-900' :
+                                                'bg-orange-700 text-orange-200'
                                             }`}>{rank}</span>
                                         <input
                                             type="text"
