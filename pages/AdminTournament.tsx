@@ -323,60 +323,60 @@ const AdminTournament: React.FC = () => {
     };
 
     const handleEndTournamentClick = () => {
-        // Auto-detect winners
-        let r1 = '', r2 = '', r3 = '';
+        console.log("End Tournament Clicked");
+        try {
+            // Auto-detect winners
+            let r1 = '', r2 = '', r3 = '';
 
-        if (matches.length > 0) {
-            // Priority: Finals Bracket
-            const finals = matches.filter(m => m.bracketGroup === 'finals');
-            if (finals.length > 0) {
-                // Last finals match determines 1st/2nd
-                const lastFinal = finals[finals.length - 1]; // Usually single match, or reset
-                if (lastFinal.status === 'COMPLETED' && lastFinal.winner) {
-                    r1 = lastFinal.winner;
-                    r2 = lastFinal.player1 === lastFinal.winner ? (lastFinal.player2 || '') : (lastFinal.player1 || '');
-                }
-            } else {
-                // If Single Elim and no 'finals' group labeled, find last match
-                const completed = matches.filter(m => m.status === 'COMPLETED');
-                if (completed.length > 0) {
-                    // Start from max round
-                    const maxRound = Math.max(...completed.map(m => m.round));
-                    const final = completed.find(m => m.round === maxRound);
-                    if (final && final.winner) {
-                        r1 = final.winner;
-                        r2 = final.player1 === final.winner ? (final.player2 || '') : (final.player1 || '');
+            if (matches.length > 0) {
+                // Priority: Finals Bracket
+                const finals = matches.filter(m => m.bracketGroup === 'finals');
+                if (finals.length > 0) {
+                    // Last finals match determines 1st/2nd
+                    const lastFinal = finals[finals.length - 1]; // Usually single match, or reset
+                    if (lastFinal.status === 'COMPLETED' && lastFinal.winner) {
+                        r1 = lastFinal.winner;
+                        r2 = lastFinal.player1 === lastFinal.winner ? (lastFinal.player2 || '') : (lastFinal.player1 || '');
                     }
+                } else {
+                    // If Single Elim and no 'finals' group labeled, find last match
+                    const completed = matches.filter(m => m.status === 'COMPLETED');
+                    if (completed.length > 0) {
+                        // Start from max round
+                        const maxRound = Math.max(...completed.map(m => m.round));
+                        const final = completed.find(m => m.round === maxRound);
+                        if (final && final.winner) {
+                            r1 = final.winner;
+                            r2 = final.player1 === final.winner ? (final.player2 || '') : (final.player1 || '');
+                        }
+                    }
+                }
+
+                // 3rd Place
+                if (bracketType === 'DOUBLE_ELIMINATION') {
+                    // Loser of Losers Finals
+                    const losersMatches = matches.filter(m => m.bracketGroup === 'losers');
+                    if (losersMatches.length > 0) {
+                        const maxLRound = Math.max(...losersMatches.map(m => m.round));
+                        const losersFinal = losersMatches.find(m => m.round === maxLRound);
+                        if (losersFinal && losersFinal.status === 'COMPLETED' && losersFinal.winner) {
+                            r3 = losersFinal.player1 === losersFinal.winner ? (losersFinal.player2 || '') : (losersFinal.player1 || '');
+                        }
+                    }
+                } else {
+                    // Single Elim: Semi-Final Losers share 3rd/4th usually. Pick one or leave empty
                 }
             }
 
-            // 3rd Place
-            if (bracketType === 'DOUBLE_ELIMINATION') {
-                // Loser of Losers Finals
-                const losersMatches = matches.filter(m => m.bracketGroup === 'losers');
-                if (losersMatches.length > 0) {
-                    const maxLRound = Math.max(...losersMatches.map(m => m.round));
-                    const losersFinal = losersMatches.find(m => m.round === maxLRound);
-                    if (losersFinal && losersFinal.status === 'COMPLETED' && losersFinal.winner) {
-                        // The winner of Losers Finals goes to Grand Finals (so they are 1st/2nd)
-                        // The LOSER of Losers final is 3rd place? 
-                        // Wait, usually: Losers Final Winner -> Grand Final (vs Winners Winner).
-                        // Losers Final Loser = 3rd.
-                        // YES.
-                        r3 = losersFinal.player1 === losersFinal.winner ? (losersFinal.player2 || '') : (losersFinal.player1 || '');
-                    }
-                }
-            } else {
-                // Single Elim: Semi-Final Losers share 3rd/4th usually. Pick one or leave empty?
-                // We'll leave empty for manual fill if needed
-            }
+            setFinalWinners({
+                rank1: { user: r1, score: getPlayerStats(r1) },
+                rank2: { user: r2, score: getPlayerStats(r2) },
+                rank3: { user: r3, score: getPlayerStats(r3) }
+            });
+        } catch (e) {
+            console.error("Error auto-detecting winners:", e);
         }
-
-        setFinalWinners({
-            rank1: { user: r1, score: getPlayerStats(r1) },
-            rank2: { user: r2, score: getPlayerStats(r2) },
-            rank3: { user: r3, score: getPlayerStats(r3) }
-        });
+        // ALWAYS open modal
         setShowEndModal(true);
     };
 
