@@ -516,7 +516,8 @@ const Tournament: React.FC = () => {
             if (res.ok) {
                 setHasStartedRegistration(true);
             } else {
-                alert("Registration failed. Please try again.");
+                const err = await res.json();
+                alert(err.error || "Registration failed. Please refresh and try again.");
             }
         } catch (e) {
             alert("Network error.");
