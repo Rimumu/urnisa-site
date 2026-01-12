@@ -629,6 +629,38 @@ const AdminTournament: React.FC = () => {
                             GENERATE BRACKET
                         </button>
                     </div>
+
+                    {/* MANUAL WINNER FALLBACK */}
+                    <div className="mt-8 pt-8 border-t-2 border-white/10 flex flex-col gap-4">
+                        <h3 className="font-bold text-lg text-yellow-500 uppercase">🏆 Manual End Season</h3>
+                        <div className="space-y-2">
+                            {[1, 2, 3].map((rank) => {
+                                const key = `rank${rank}` as keyof typeof finalWinners;
+                                return (
+                                    <div key={rank} className="flex gap-2">
+                                        <div className="w-6 h-8 flex items-center justify-center font-bold text-gray-500">#{rank}</div>
+                                        <input
+                                            type="text"
+                                            value={finalWinners[key].user}
+                                            onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], user: e.target.value } }))}
+                                            className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white"
+                                            placeholder="Username"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={finalWinners[key].score}
+                                            onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], score: e.target.value } }))}
+                                            className="w-16 bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-right text-gray-400"
+                                            placeholder="Score"
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <button onClick={submitEndTournament} className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded transition-colors uppercase tracking-widest text-sm shadow-lg">
+                            CONFIRM WINNERS
+                        </button>
+                    </div>
                 </div>
 
                 {/* 2. BRACKET VIEW (Main Area) */}
