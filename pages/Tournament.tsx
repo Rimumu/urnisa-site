@@ -1078,57 +1078,112 @@ const Tournament: React.FC = () => {
                                     </div>
                                 ) : (
                                     <div className="space-y-10">
-                                        {(isLocked || tournamentStatus === 'ONGOING') && (
-                                            <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2.5rem] p-6 text-center shadow-[0_0_30px_rgba(34,197,94,0.1)]">
-                                                <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">{tournamentStatus === 'ONGOING' ? '⚔️ TOURNAMENT ONGOING' : '🛡️ ROSTER SECURED'}</h3>
-                                                <p className="text-green-200/60 text-xs">Selection locked and synced with database.</p>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
-                                            <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
-                                            <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
-                                        </div>
-                                        <div className="space-y-6">
-                                            <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
-                                                {selectedTeam.map((p, idx) => {
-                                                    const banned = p !== null && isBanned(p.id);
-                                                    return (
-                                                        <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
-                                                            {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
+                                        {/* Duos Logic Check */}
+                                        {activeSeason.format.includes('Duos') && (!myDuo || (myDuo.captainDiscordId !== user?.id)) ? (
+                                            <div className="bg-black/40 p-12 rounded-[2.5rem] border border-white/5 mb-8 text-center flex flex-col items-center justify-center min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
+                                                {myDuo ? (
+                                                    <div className="space-y-6">
+                                                        <div className="w-24 h-24 bg-purple-900/30 rounded-full flex items-center justify-center border-2 border-purple-500/30 mx-auto animate-pulse shadow-[0_0_30px_rgba(168,85,247,0.2)]">
+                                                            <span className="text-5xl">👑</span>
                                                         </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                        {!isLocked && tournamentStatus !== 'ONGOING' && (
-                                            <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl">
-                                                <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Pokemon Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
-                                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
-                                                    {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
-                                                        const isSelected = selectedTeam.some(sp => sp?.id === p.id);
-                                                        const isFull = !selectedTeam.includes(null);
-                                                        const banned = isBanned(p.id);
-                                                        return (<button key={p.id} disabled={isSelected || isFull || banned} onClick={() => handleSelectPokemon(p)} className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50' : (isFull || banned) ? 'bg-gray-900 opacity-30 grayscale' : 'bg-white/5 border border-white/10 hover:border-brand-primary/50'}`} title={p.name}><div className="w-full h-full relative"><PokemonTeamImage pokemon={p} />{banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}</div>{banned && <div className="banned-tooltip">BANNED</div>}</button>);
-                                                    })
-                                                    }
-                                                </div>
-                                            </div>
-                                        )}
-                                        {!isLocked && tournamentStatus !== 'ONGOING' && (
-                                            <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
-                                                <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1">{saveStatus === 'success' ? 'SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE DRAFT'}</button>
-                                                {tournamentStatus === 'LOCK_IN' && (
-                                                    <button onClick={handleLockIn} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon} className="px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] bg-green-600 hover:bg-green-500 text-white border-green-800 border-b-4">🔒 FINALIZE & LOCK TEAM</button>
+                                                        <div className="space-y-2">
+                                                            <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Team Captain Only</h3>
+                                                            <p className="text-gray-400 max-w-md mx-auto leading-relaxed">
+                                                                Your partner <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded">{myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}</span> is the Team Captain.
+                                                                <br />They are responsible for selecting and locking in the team.
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="mt-12 p-6 bg-black/60 rounded-3xl border border-white/10">
+                                                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-6">Current Selection</h4>
+                                                            <div className="flex gap-3 justify-center flex-wrap">
+                                                                {selectedTeam?.map((poke, i) => (
+                                                                    <div key={i} className="w-14 h-14 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center relative">
+                                                                        {poke ? (
+                                                                            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} className="w-10 h-10 pixelated scale-125" />
+                                                                        ) : <div className="w-2 h-2 bg-white/10 rounded-full" />}
+                                                                        <div className="absolute -bottom-2 text-[8px] font-mono text-gray-600">{i + 1}</div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-6">
+                                                        <div className="w-24 h-24 bg-yellow-900/20 rounded-full flex items-center justify-center border-2 border-yellow-500/20 mx-auto shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+                                                            <span className="text-5xl">⏳</span>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Awaiting Duo Pairing</h3>
+                                                            <p className="text-gray-400 max-w-md mx-auto leading-relaxed">
+                                                                You are signed up! Admins will pair you with a partner soon.
+                                                                <br />Once paired, the Captain will select the team.
+                                                            </p>
+                                                        </div>
+                                                        <div className="pt-8">
+                                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-full border border-yellow-500/20 text-yellow-500 text-xs font-bold uppercase tracking-widest">
+                                                                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                                                                In Queue
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
-                                        )}
-                                        {tournamentStatus === 'ONGOING' && !isLocked && hasStartedRegistration && (
-                                            <div className="bg-amber-900/20 border-2 border-amber-500/30 p-8 rounded-[2.5rem] text-center">
-                                                <span className="text-4xl mb-4 block">⌛</span>
-                                                <h3 className="text-2xl font-black text-white uppercase italic mb-2">Phase Expired</h3>
-                                                <p className="text-gray-400">The tournament has already begun. Drafting is closed, and unfinalized teams have been disqualified.</p>
-                                            </div>
+                                        ) : (
+                                            <>
+                                                {(isLocked || tournamentStatus === 'ONGOING') && (
+                                                    <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2.5rem] p-6 text-center shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+                                                        <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">{tournamentStatus === 'ONGOING' ? '⚔️ TOURNAMENT ONGOING' : '🛡️ ROSTER SECURED'}</h3>
+                                                        <p className="text-green-200/60 text-xs">Selection locked and synced with database.</p>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
+                                                    <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
+                                                    <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
+                                                </div>
+                                                <div className="space-y-6">
+                                                    <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
+                                                        {selectedTeam.map((p, idx) => {
+                                                            const banned = p !== null && isBanned(p.id);
+                                                            return (
+                                                                <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
+                                                                    {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                                {!isLocked && tournamentStatus !== 'ONGOING' && (
+                                                    <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl">
+                                                        <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Pokemon Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
+                                                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
+                                                            {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
+                                                                const isSelected = selectedTeam.some(sp => sp?.id === p.id);
+                                                                const isFull = !selectedTeam.includes(null);
+                                                                const banned = isBanned(p.id);
+                                                                return (<button key={p.id} disabled={isSelected || isFull || banned} onClick={() => handleSelectPokemon(p)} className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50' : (isFull || banned) ? 'bg-gray-900 opacity-30 grayscale' : 'bg-white/5 border border-white/10 hover:border-brand-primary/50'}`} title={p.name}><div className="w-full h-full relative"><PokemonTeamImage pokemon={p} />{banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}</div>{banned && <div className="banned-tooltip">BANNED</div>}</button>);
+                                                            })
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {!isLocked && tournamentStatus !== 'ONGOING' && (
+                                                    <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
+                                                        <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1">{saveStatus === 'success' ? 'SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE DRAFT'}</button>
+                                                        {tournamentStatus === 'LOCK_IN' && (
+                                                            <button onClick={handleLockIn} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon} className="px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] bg-green-600 hover:bg-green-500 text-white border-green-800 border-b-4">🔒 FINALIZE & LOCK TEAM</button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {tournamentStatus === 'ONGOING' && !isLocked && hasStartedRegistration && (
+                                                    <div className="bg-amber-900/20 border-2 border-amber-500/30 p-8 rounded-[2.5rem] text-center">
+                                                        <span className="text-4xl mb-4 block">⌛</span>
+                                                        <h3 className="text-2xl font-black text-white uppercase italic mb-2">Phase Expired</h3>
+                                                        <p className="text-gray-400">The tournament has already begun. Drafting is closed, and unfinalized teams have been disqualified.</p>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 )}
