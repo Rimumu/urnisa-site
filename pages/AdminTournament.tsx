@@ -24,6 +24,18 @@ interface Season {
     challongeUrl?: string;
 }
 
+interface Duo {
+    duoId: string;
+    seasonId: number;
+    player1DiscordId: string;
+    player1Username: string;
+    player2DiscordId: string;
+    player2Username: string;
+    captainDiscordId: string;
+    team: ({ id: number; name: string } | null)[];
+    isLocked: boolean;
+}
+
 // --- POKEMON IMAGE COMPONENT ---
 const PokemonImage: React.FC<{ pokemon: { id: number; name: string } | null }> = ({ pokemon }) => {
     if (!pokemon) return (
@@ -63,6 +75,14 @@ const AdminTournament: React.FC = () => {
     const [players, setPlayers] = useState<TournamentPlayer[]>([]);
     const [playerSearch, setPlayerSearch] = useState('');
     const [selectedPlayer, setSelectedPlayer] = useState<TournamentPlayer | null>(null);
+
+    // Duo State (Season 2)
+    const [duos, setDuos] = useState<Duo[]>([]);
+    const [playerListTab, setPlayerListTab] = useState<'solo' | 'duos'>('solo');
+    const [showPairModal, setShowPairModal] = useState(false);
+    const [pairPlayer1, setPairPlayer1] = useState<TournamentPlayer | null>(null);
+    const [pairPlayer2, setPairPlayer2] = useState<TournamentPlayer | null>(null);
+    const [pairCaptain, setPairCaptain] = useState<'player1' | 'player2'>('player1');
 
     // UI State
     const [statusMsg, setStatusMsg] = useState('');
@@ -128,9 +148,20 @@ const AdminTournament: React.FC = () => {
         }
     };
 
+    const fetchDuos = async (seasonId: number) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/tournament/duos?seasonId=${seasonId}`);
+            const data = await res.json();
+            setDuos(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error('Failed to fetch duos', e);
+        }
+    };
+
     useEffect(() => {
         if (activeSeason?.seasonId) {
             fetchPlayers(activeSeason.seasonId);
+            fetchDuos(activeSeason.seasonId);
             setEditingChallongeUrl(activeSeason.challongeUrl || '');
         }
     }, [activeSeason?.seasonId]);
@@ -244,6 +275,71 @@ const AdminTournament: React.FC = () => {
         }
         setTimeout(() => setStatusMsg(''), 3000);
     };
+
+    // --- DUO HANDLERS ---
+    const handleCreateDuo = async () => {
+        if (!pairPlayer1 || !pairPlayer2) {
+            setStatusMsg('Please select two players');
+            return;
+        }
+        if (pairPlayer1.discordId === pairPlayer2.discordId) {
+            setStatusMsg('Cannot pair a player with themselves');
+            return;
+        }
+        try {
+            await apiCall('/api/admin/tournament/duo/create', {
+                seasonId: activeSeason!.seasonId,
+                player1DiscordId: pairPlayer1.discordId,
+                player1Username: pairPlayer1.minecraftUsername,
+                player2DiscordId: pairPlayer2.discordId,
+                player2Username: pairPlayer2.minecraftUsername,
+                captainDiscordId: pairCaptain === 'player1' ? pairPlayer1.discordId : pairPlayer2.discordId
+            });
+            setStatusMsg('Duo created!');
+            setShowPairModal(false);
+            setPairPlayer1(null);
+            setPairPlayer2(null);
+            fetchDuos(activeSeason!.seasonId);
+        } catch (e: any) {
+            setStatusMsg(e.message);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    const handleDeleteDuo = async (duo: Duo) => {
+        if (!window.confirm(`Remove duo: ${duo.player1Username} & ${duo.player2Username}?`)) return;
+        try {
+            await apiCall('/api/admin/tournament/duo/delete', { duoId: duo.duoId });
+            setStatusMsg('Duo removed!');
+            fetchDuos(activeSeason!.seasonId);
+        } catch (e: any) {
+            setStatusMsg(e.message);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    const handleChangeCaptain = async (duo: Duo) => {
+        const newCaptain = duo.captainDiscordId === duo.player1DiscordId ? duo.player2DiscordId : duo.player1DiscordId;
+        try {
+            await apiCall('/api/admin/tournament/duo/update-captain', {
+                duoId: duo.duoId,
+                captainDiscordId: newCaptain
+            });
+            setStatusMsg('Captain updated!');
+            fetchDuos(activeSeason!.seasonId);
+        } catch (e: any) {
+            setStatusMsg(e.message);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    // Helper to check if player is already in a duo
+    const isPlayerInDuo = (discordId: string) => {
+        return duos.some(d => d.player1DiscordId === discordId || d.player2DiscordId === discordId);
+    };
+
+    // Get unpaired players for the pair modal
+    const unpairedPlayers = players.filter(p => !isPlayerInDuo(p.discordId));
 
     // --- END TOURNAMENT ---
     const handleEndTournament = async () => {
@@ -448,78 +544,283 @@ const AdminTournament: React.FC = () => {
                     </div>
                 </div>
 
-                {/* MAIN: Player List */}
+                {/* MAIN: Player List with Tabs */}
                 <div className="lg:col-span-3 bg-black/40 p-6 rounded-2xl border border-white/10">
-                    <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
-                        <div>
-                            <h3 className="font-bold text-xl">Players</h3>
-                            <p className="text-gray-500 text-sm">{players.length} registered for {activeSeason?.name}</p>
+                    {/* Tab Switcher */}
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setPlayerListTab('solo')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${playerListTab === 'solo'
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    }`}
+                            >
+                                Solo Players ({unpairedPlayers.length})
+                            </button>
+                            <button
+                                onClick={() => setPlayerListTab('duos')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${playerListTab === 'duos'
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    }`}
+                            >
+                                Duos ({duos.length})
+                            </button>
                         </div>
-                        <input
-                            type="text"
-                            value={playerSearch}
-                            onChange={e => setPlayerSearch(e.target.value)}
-                            placeholder="Search players..."
-                            className="bg-black/40 border border-white/10 px-4 py-2 rounded-xl text-sm text-white w-64"
-                        />
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={playerSearch}
+                                onChange={e => setPlayerSearch(e.target.value)}
+                                placeholder="Search..."
+                                className="bg-black/40 border border-white/10 px-4 py-2 rounded-xl text-sm text-white w-48"
+                            />
+                            {activeSeason?.format.includes('Duos') && (
+                                <button
+                                    onClick={() => setShowPairModal(true)}
+                                    className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl text-sm"
+                                >
+                                    + Pair Players
+                                </button>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[700px] overflow-y-auto pr-2">
-                        {filteredPlayers.map(player => (
-                            <div
-                                key={player._id}
-                                className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all"
-                            >
-                                <div className="flex items-center gap-3 mb-3">
-                                    <img
-                                        src={`https://mc-heads.net/avatar/${player.minecraftUsername}/40`}
-                                        alt={player.minecraftUsername}
-                                        className="w-10 h-10 rounded-lg"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-bold text-white truncate">{player.minecraftUsername}</div>
-                                        <div className={`text-[10px] font-bold uppercase ${player.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
-                                            {player.isLocked ? '✓ Locked' : '⏳ Drafting'}
-                                            {player.isDev && <span className="ml-2 text-orange-400">[DEV]</span>}
+                    {/* Solo Players Tab */}
+                    {playerListTab === 'solo' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2">
+                            {filteredPlayers.filter(p => !isPlayerInDuo(p.discordId)).map(player => (
+                                <div
+                                    key={player._id}
+                                    className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all"
+                                >
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <img
+                                            src={`https://mc-heads.net/avatar/${player.minecraftUsername}/40`}
+                                            alt={player.minecraftUsername}
+                                            className="w-10 h-10 rounded-lg"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold text-white truncate">{player.minecraftUsername}</div>
+                                            <div className="text-[10px] font-bold uppercase text-blue-400">
+                                                {isPlayerInDuo(player.discordId) ? '✓ In Duo' : '⏳ Awaiting Partner'}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Team Preview */}
-                                <div className="grid grid-cols-6 gap-1 mb-3">
-                                    {player.team.map((poke, idx) => (
-                                        <PokemonImage key={idx} pokemon={poke} />
-                                    ))}
-                                </div>
+                                    {/* Show Pokemon grid only for Singles format */}
+                                    {!activeSeason?.format.includes('Duos') && (
+                                        <div className="grid grid-cols-6 gap-1 mb-3">
+                                            {player.team.map((poke, idx) => (
+                                                <PokemonImage key={idx} pokemon={poke} />
+                                            ))}
+                                        </div>
+                                    )}
 
-                                {/* Actions */}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setSelectedPlayer(player)}
-                                        className="flex-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold py-1.5 rounded transition-colors"
-                                    >
-                                        View
-                                    </button>
-                                    <button
-                                        onClick={() => handleUnlockTeam(player)}
-                                        disabled={loading}
-                                        className="flex-1 bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 text-xs font-bold py-1.5 rounded transition-colors"
-                                    >
-                                        Unlock
-                                    </button>
-                                    <button
-                                        onClick={() => handleRevokeRegistration(player)}
-                                        disabled={loading}
-                                        className="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold py-1.5 rounded transition-colors"
-                                    >
-                                        Revoke
-                                    </button>
+                                    {/* Actions */}
+                                    <div className="flex gap-2">
+                                        {activeSeason?.format.includes('Duos') ? (
+                                            <button
+                                                onClick={() => {
+                                                    if (!pairPlayer1) setPairPlayer1(player);
+                                                    else if (!pairPlayer2) {
+                                                        setPairPlayer2(player);
+                                                        setShowPairModal(true);
+                                                    }
+                                                }}
+                                                disabled={loading || isPlayerInDuo(player.discordId)}
+                                                className="flex-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 text-xs font-bold py-1.5 rounded transition-colors disabled:opacity-50"
+                                            >
+                                                {pairPlayer1?.discordId === player.discordId ? '✓ Selected' : 'Select for Duo'}
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => setSelectedPlayer(player)}
+                                                    className="flex-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                                >
+                                                    View
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUnlockTeam(player)}
+                                                    disabled={loading}
+                                                    className="flex-1 bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                                >
+                                                    Unlock
+                                                </button>
+                                            </>
+                                        )}
+                                        <button
+                                            onClick={() => handleRevokeRegistration(player)}
+                                            disabled={loading}
+                                            className="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                        >
+                                            Revoke
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Duos Tab */}
+                    {playerListTab === 'duos' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
+                            {duos.length === 0 ? (
+                                <div className="col-span-full text-center py-12 text-gray-500">
+                                    <span className="text-4xl block mb-2">👥</span>
+                                    No duos created yet. Select two players and pair them!
+                                </div>
+                            ) : duos.map(duo => (
+                                <div
+                                    key={duo.duoId}
+                                    className="bg-gradient-to-br from-purple-900/30 to-black border border-purple-500/30 rounded-xl p-4"
+                                >
+                                    {/* Duo Header */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="flex -space-x-3">
+                                            <img
+                                                src={`https://mc-heads.net/avatar/${duo.player1Username}/36`}
+                                                alt={duo.player1Username}
+                                                className={`w-9 h-9 rounded-lg border-2 ${duo.captainDiscordId === duo.player1DiscordId ? 'border-yellow-500' : 'border-white/20'}`}
+                                            />
+                                            <img
+                                                src={`https://mc-heads.net/avatar/${duo.player2Username}/36`}
+                                                alt={duo.player2Username}
+                                                className={`w-9 h-9 rounded-lg border-2 ${duo.captainDiscordId === duo.player2DiscordId ? 'border-yellow-500' : 'border-white/20'}`}
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="font-bold text-white text-sm">
+                                                {duo.player1Username}
+                                                {duo.captainDiscordId === duo.player1DiscordId && <span className="ml-1 text-yellow-400">👑</span>}
+                                                {' & '}
+                                                {duo.player2Username}
+                                                {duo.captainDiscordId === duo.player2DiscordId && <span className="ml-1 text-yellow-400">👑</span>}
+                                            </div>
+                                            <div className={`text-[10px] font-bold uppercase ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
+                                                {duo.isLocked ? '✓ Team Locked' : '⏳ Drafting Pokemon'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Team Preview */}
+                                    {duo.team.length > 0 && (
+                                        <div className="grid grid-cols-6 gap-1 mb-3">
+                                            {duo.team.map((poke, idx) => (
+                                                <PokemonImage key={idx} pokemon={poke} />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Actions */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleChangeCaptain(duo)}
+                                            disabled={loading}
+                                            className="flex-1 bg-yellow-600/20 hover:bg-yellow-600/40 text-yellow-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                        >
+                                            Swap Captain
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteDuo(duo)}
+                                            disabled={loading}
+                                            className="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                        >
+                                            Remove Duo
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* PAIR PLAYERS MODAL */}
+            {showPairModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
+                    <div className="bg-[#1a0b0e] p-8 rounded-2xl border border-purple-500/30 w-full max-w-lg space-y-6">
+                        <h3 className="text-2xl font-black text-purple-400 text-center uppercase">👥 Create Duo</h3>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs text-gray-400 font-bold uppercase block mb-2">Player 1</label>
+                                <select
+                                    value={pairPlayer1?.discordId || ''}
+                                    onChange={e => setPairPlayer1(unpairedPlayers.find(p => p.discordId === e.target.value) || null)}
+                                    className="w-full bg-black/40 border border-white/10 p-2 rounded text-white"
+                                >
+                                    <option value="">Select player...</option>
+                                    {unpairedPlayers.map(p => (
+                                        <option key={p.discordId} value={p.discordId}>{p.minecraftUsername}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-400 font-bold uppercase block mb-2">Player 2</label>
+                                <select
+                                    value={pairPlayer2?.discordId || ''}
+                                    onChange={e => setPairPlayer2(unpairedPlayers.find(p => p.discordId === e.target.value) || null)}
+                                    className="w-full bg-black/40 border border-white/10 p-2 rounded text-white"
+                                >
+                                    <option value="">Select player...</option>
+                                    {unpairedPlayers.filter(p => p.discordId !== pairPlayer1?.discordId).map(p => (
+                                        <option key={p.discordId} value={p.discordId}>{p.minecraftUsername}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-xs text-gray-400 font-bold uppercase block mb-2">Team Captain</label>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setPairCaptain('player1')}
+                                    className={`flex-1 p-3 rounded-xl border transition-all ${pairCaptain === 'player1'
+                                            ? 'bg-yellow-600 border-yellow-400 text-white'
+                                            : 'bg-black/40 border-white/10 text-gray-400'
+                                        }`}
+                                >
+                                    <span className="text-xl">👑</span>
+                                    <div className="font-bold text-sm mt-1">{pairPlayer1?.minecraftUsername || 'Player 1'}</div>
+                                </button>
+                                <button
+                                    onClick={() => setPairCaptain('player2')}
+                                    className={`flex-1 p-3 rounded-xl border transition-all ${pairCaptain === 'player2'
+                                            ? 'bg-yellow-600 border-yellow-400 text-white'
+                                            : 'bg-black/40 border-white/10 text-gray-400'
+                                        }`}
+                                >
+                                    <span className="text-xl">👑</span>
+                                    <div className="font-bold text-sm mt-1">{pairPlayer2?.minecraftUsername || 'Player 2'}</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowPairModal(false);
+                                    setPairPlayer1(null);
+                                    setPairPlayer2(null);
+                                }}
+                                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCreateDuo}
+                                disabled={loading || !pairPlayer1 || !pairPlayer2}
+                                className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded disabled:opacity-50"
+                            >
+                                Create Duo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* END TOURNAMENT MODAL */}
             {showEndModal && (

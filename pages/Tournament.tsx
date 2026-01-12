@@ -33,6 +33,18 @@ interface TournamentMatch {
     nextMatchId: string | null;
 }
 
+interface Duo {
+    duoId: string;
+    seasonId: number;
+    player1DiscordId: string;
+    player1Username: string;
+    player2DiscordId: string;
+    player2Username: string;
+    captainDiscordId: string;
+    team: ({ id: number; name: string } | null)[];
+    isLocked: boolean;
+}
+
 // --- CONSTANTS ---
 const TYPE_COLORS: Record<string, string> = {
     normal: 'bg-stone-400 text-stone-900',
@@ -230,7 +242,7 @@ const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNod
 
 const Tournament: React.FC = () => {
     const [user, setUser] = useState<UserData | null>(null);
-    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('rules');
+    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players' | 'duos'>('rules');
     const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
     const [loadingPokemon, setLoadingPokemon] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -255,6 +267,11 @@ const Tournament: React.FC = () => {
     const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
     const [loadingPlayers, setLoadingPlayers] = useState(false);
     const [selectedPlayer, setSelectedPlayer] = useState<TournamentEntry | null>(null);
+
+    // Duos State
+    const [duos, setDuos] = useState<Duo[]>([]);
+    const [myDuo, setMyDuo] = useState<Duo | null>(null);
+    const [viewMode, setViewMode] = useState<'players' | 'duos'>('players');
 
     // Bracket & Winners State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
@@ -373,8 +390,9 @@ const Tournament: React.FC = () => {
     useEffect(() => {
         if (user?.id) {
             fetchMyTeam();
+            fetchMyDuo();
         }
-    }, [user]);
+    }, [user, activeSeason.seasonId]);
 
     useEffect(() => {
         if (activeTab === 'brackets') {
@@ -384,6 +402,8 @@ const Tournament: React.FC = () => {
                 .catch(console.error);
         } else if (activeTab === 'players') {
             fetchPlayersForSeason(activeSeason.seasonId);
+        } else if (activeTab === 'duos') {
+            fetchDuosForSeason(activeSeason.seasonId);
         }
     }, [activeTab, activeSeason.seasonId]);
 
@@ -427,6 +447,26 @@ const Tournament: React.FC = () => {
             }
         } catch (e) { console.error(e); }
         finally { setLoadingPlayers(false); }
+    };
+
+    const fetchDuosForSeason = async (seasonId: number) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/tournament/duos?seasonId=${seasonId}`);
+            if (res.ok) {
+                setDuos(await res.json());
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    const fetchMyDuo = async () => {
+        if (!user?.id) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/tournament/duo/by-player?discordId=${user.id}&seasonId=${activeSeason.seasonId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setMyDuo(data);
+            }
+        } catch (e) { console.error(e); }
     };
 
     const filteredPokemon = useMemo(() => {
@@ -613,27 +653,26 @@ const Tournament: React.FC = () => {
                     <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md h-10 shrink-0">
                         <span>←</span> Back to Dashboard
                     </Link>
-
-                    <div className="dock-pill rounded-full p-1 flex items-center gap-1 shadow-xl">
+                    {/* TABS */}
+                    <div className="flex gap-1 md:gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
                         {[
-                            { id: 'rules', label: 'RULES', icon: '📜' },
-                            { id: 'signup', label: 'JOIN', icon: '📝', notify: hasStartedRegistration && !isLocked && tournamentStatus !== 'ONGOING' },
-                            { id: 'brackets', label: 'BRACKET', icon: '📊' },
-                            { id: 'players', label: 'PLAYERS', icon: '👥' }
-                        ].map((tab) => (
+                            { id: 'rules', label: 'Rules' },
+                            { id: 'brackets', label: 'Bracket' },
+                            { id: 'players', label: `Players (${playersList?.length || 0})` },
+                            ...(activeSeason.format.includes('Duos') ? [{ id: 'duos' as const, label: `Duos (${duos?.length || 0})` }] : []),
+                            { id: 'signup', label: hasStartedRegistration ? 'My Team' : 'Sign Up' }
+                        ].map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`
-                      relative flex items-center gap-2 px-3 h-full transition-all duration-300 rounded-full
-                      ${activeTab === tab.id
-                                        ? 'nav-link-active'
-                                        : 'text-gray-500 hover:text-white group'}
+                        px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] md:text-xs transition-all whitespace-nowrap
+                        ${activeTab === tab.id
+                                        ? 'bg-white text-black shadow-lg shadow-white/10 scale-105'
+                                        : 'bg-black/40 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}
                     `}
                             >
-                                <span className="text-sm md:text-base transition-transform group-hover:scale-110">{tab.icon}</span>
-                                <span className="text-[9px] font-black uppercase tracking-[0.05em]">{tab.label}</span>
-                                {tab.notify && <div className="absolute top-1 right-1 w-1 h-1 bg-brand-primary rounded-full animate-pulse shadow-[0_0_8px_#e5383b]"></div>}
+                                {tab.label}
                             </button>
                         ))}
                     </div>
@@ -767,6 +806,63 @@ const Tournament: React.FC = () => {
                                         <li className="flex gap-2"><span className="text-green-400">•</span> Keep your pokemon on your shoulders or in your balls.</li>
                                     </ul>
                                 </RuleCard>
+                            </div>
+                        )}
+
+                        {activeTab === 'duos' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {duos.length === 0 ? (
+                                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center bg-black/40 rounded-2xl border border-white/5">
+                                        <span className="text-4xl mb-4">👥</span>
+                                        <h3 className="text-xl font-bold text-white mb-2">No Duos Yet</h3>
+                                        <p className="text-gray-400">Admins will pair signed-up players into duos soon!</p>
+                                    </div>
+                                ) : duos.map(duo => (
+                                    <div key={duo.duoId} className="bg-gradient-to-br from-purple-900/30 to-black/80 border border-purple-500/20 p-6 rounded-2xl relative overflow-hidden group hover:scale-[1.02] transition-all">
+                                        <div className="absolute top-0 right-0 p-3 opacity-10 text-6xl pointer-events-none group-hover:scale-110 transition-transform">👥</div>
+
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <div className="flex -space-x-3">
+                                                <img src={`https://mc-heads.net/avatar/${duo.player1Username}/48`} className={`w-12 h-12 rounded-xl border-2 ${duo.captainDiscordId === duo.player1DiscordId ? 'border-yellow-500 z-10' : 'border-white/10'}`} />
+                                                <img src={`https://mc-heads.net/avatar/${duo.player2Username}/48`} className={`w-12 h-12 rounded-xl border-2 ${duo.captainDiscordId === duo.player2DiscordId ? 'border-yellow-500 z-10' : 'border-white/10'}`} />
+                                            </div>
+                                            <div>
+                                                <div className="text-white font-bold flex items-center gap-2 text-sm">
+                                                    {duo.player1Username} & {duo.player2Username}
+                                                </div>
+                                                <div className={`text-[10px] font-bold uppercase tracking-widest ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
+                                                    {duo.isLocked ? 'Ready for Battle' : 'Drafting Team'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Team Grid */}
+                                        <div className="grid grid-cols-6 gap-2">
+                                            {duo.team.map((poke, i) => (
+                                                <div key={i} className="aspect-square bg-black/40 rounded-lg flex items-center justify-center border border-white/5 relative group/poke">
+                                                    {poke ? (
+                                                        <>
+                                                            <img
+                                                                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`}
+                                                                alt={poke.name}
+                                                                className="w-10 h-10 object-contain pixelated rendering-pixelated"
+                                                            />
+                                                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/poke:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none border border-white/10">
+                                                                {poke.name}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-white/10 text-lg font-bold">?</span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {/* Fill remaining slots */}
+                                            {Array.from({ length: 6 - duo.team.length }).map((_, i) => (
+                                                <div key={`empty-${i}`} className="aspect-square bg-black/20 rounded-lg border border-white/5"></div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
@@ -1041,62 +1137,64 @@ const Tournament: React.FC = () => {
             </div>
 
             {/* PLAYER DETAILS MODAL */}
-            {selectedPlayer && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-[#120507] w-full max-w-5xl max-h-[90vh] rounded-[3rem] border-2 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
+            {
+                selectedPlayer && (
+                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+                        <div className="bg-[#120507] w-full max-w-5xl max-h-[90vh] rounded-[3rem] border-2 border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
 
-                        {/* Decorative Header Background */}
-                        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-primary/10 to-transparent pointer-events-none"></div>
+                            {/* Decorative Header Background */}
+                            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand-primary/10 to-transparent pointer-events-none"></div>
 
-                        {/* Modal Header */}
-                        <div className="p-8 md:p-10 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/20 relative z-10">
-                            <div className="flex items-center gap-6">
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full"></div>
-                                    <img src={`https://mc-heads.net/avatar/${selectedPlayer.minecraftUsername}/128`} className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] border-4 border-brand-primary shadow-2xl relative z-10" alt={selectedPlayer.minecraftUsername} />
-                                </div>
-                                <div>
-                                    <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg">{selectedPlayer.minecraftUsername}</h2>
-                                    <div className={`
+                            {/* Modal Header */}
+                            <div className="p-8 md:p-10 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/20 relative z-10">
+                                <div className="flex items-center gap-6">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-brand-primary/20 blur-xl rounded-full"></div>
+                                        <img src={`https://mc-heads.net/avatar/${selectedPlayer.minecraftUsername}/128`} className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] border-4 border-brand-primary shadow-2xl relative z-10" alt={selectedPlayer.minecraftUsername} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg">{selectedPlayer.minecraftUsername}</h2>
+                                        <div className={`
                                 flex items-center gap-2 px-4 py-1.5 rounded-full w-fit border shadow-lg
                                 ${selectedPlayer.isLocked
-                                            ? 'bg-green-500/10 text-green-400 border-green-500/30'
-                                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}
+                                                ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}
                               `}>
-                                        <span className={`w-2 h-2 rounded-full ${selectedPlayer.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
-                                        <span className="text-xs font-black uppercase tracking-widest">{selectedPlayer.isLocked ? 'Ready for Battle' : 'Drafting Phase'}</span>
+                                            <span className={`w-2 h-2 rounded-full ${selectedPlayer.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
+                                            <span className="text-xs font-black uppercase tracking-widest">{selectedPlayer.isLocked ? 'Ready for Battle' : 'Drafting Phase'}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <button
-                                onClick={() => setSelectedPlayer(null)}
-                                className="group p-4 rounded-full bg-white/5 hover:bg-red-600 hover:text-white text-gray-400 transition-all duration-300 border border-white/10 hover:border-red-500 hover:rotate-90 hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]"
-                            >
-                                <span className="text-2xl leading-none font-bold">✕</span>
-                            </button>
-                        </div>
-
-                        {/* Modal Content - Team Grid */}
-                        <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#120507]">
-                            <div className="flex items-center gap-4 mb-8">
-                                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Active Roster</h3>
-                                <div className="h-px bg-white/10 flex-1"></div>
+                                <button
+                                    onClick={() => setSelectedPlayer(null)}
+                                    className="group p-4 rounded-full bg-white/5 hover:bg-red-600 hover:text-white text-gray-400 transition-all duration-300 border border-white/10 hover:border-red-500 hover:rotate-90 hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]"
+                                >
+                                    <span className="text-2xl leading-none font-bold">✕</span>
+                                </button>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                                {((tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
-                                    <PokemonDetailCard
-                                        key={idx}
-                                        pokemon={pokemon}
-                                        revealed={true}
-                                    />
-                                ))}
+                            {/* Modal Content - Team Grid */}
+                            <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar bg-gradient-to-b from-[#0a0a0a] to-[#120507]">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Active Roster</h3>
+                                    <div className="h-px bg-white/10 flex-1"></div>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                                    {((tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
+                                        <PokemonDetailCard
+                                            key={idx}
+                                            pokemon={pokemon}
+                                            revealed={true}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
