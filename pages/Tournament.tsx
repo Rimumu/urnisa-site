@@ -300,6 +300,7 @@ const Tournament: React.FC = () => {
     };
 
     const winners = useMemo(() => {
+        console.log("Calculating Winners. API:", apiWinners, "Matches:", matches.length);
         if (apiWinners.length > 0) {
             const sorted = [...apiWinners].sort((a, b) => a.rank - b.rank);
             const w = [null, null, null] as (string | null)[];
@@ -311,6 +312,8 @@ const Tournament: React.FC = () => {
 
         if (matches.length === 0) return [];
         const finals = matches.filter(m => m.bracketGroup === 'finals' && m.status === 'COMPLETED');
+        console.log("Finals:", finals);
+
         // ... (rest of logic handles empty finals for single elim fallbacks effectively handled by auto-calc in Admin)
         if (finals.length === 0) {
             // Fallback for Single Elim if no finals group (grab max round)
