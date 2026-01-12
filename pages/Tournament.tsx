@@ -898,11 +898,15 @@ const Tournament: React.FC = () => {
                                     </div>
                                 ) : loadingTeam ? (<div className="text-center py-20">Retrieving...</div>) : !hasStartedRegistration && !isLocked ? (
                                     <div className="flex flex-col items-center justify-center py-10 text-center space-y-8">
-                                        {tournamentStatus === 'ONGOING' ? (
+                                        {tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED' ? (
                                             <div className="bg-red-900/20 border-2 border-red-500/30 p-12 rounded-[2.5rem] flex flex-col items-center gap-4">
                                                 <span className="text-6xl">⛔</span>
                                                 <h2 className="text-4xl font-black text-white uppercase italic">Registration Closed</h2>
-                                                <p className="text-gray-400">The tournament has already begun. Signups are no longer available for this season.</p>
+                                                <p className="text-gray-400">
+                                                    {tournamentStatus === 'ENDED'
+                                                        ? "The tournament has concluded. Signups are closed for this season."
+                                                        : "The tournament has already begun. Signups are no longer available for this season."}
+                                                </p>
                                             </div>
                                         ) : (
                                             <>
