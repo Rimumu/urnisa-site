@@ -740,8 +740,8 @@ const Tournament: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`w-2 h-2 rounded-full ${tournamentStatus === 'ENDED' ? 'bg-yellow-500' : 'bg-red-500 animate-pulse'}`}></span>
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Powered by Challonge</span>
+                                        <span className={`w-2 h-2 rounded-full ${tournamentStatus === 'ENDED' ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`}></span>
+                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{tournamentStatus === 'ENDED' ? 'Season Concluded' : 'Live Updates'}</span>
                                     </div>
                                 </div>
 
