@@ -652,7 +652,7 @@ const Tournament: React.FC = () => {
                             </div>
                             <button
                                 onClick={() => {
-                                    if (tournamentStatus === 'ONGOING') {
+                                    if (tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') {
                                         setActiveTab('brackets');
                                     } else {
                                         setActiveTab('signup');
@@ -877,7 +877,7 @@ const Tournament: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-6 gap-2 w-full">
-                                                    {tournamentStatus === 'ONGOING' && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
+                                                    {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
                                                 </div>
                                             </button>
                                         ))}
