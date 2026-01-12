@@ -268,21 +268,6 @@ const Tournament: React.FC = () => {
         }
     }, [tournamentStatus]);
 
-
-
-
-    useEffect(() => {
-        if (tournamentStatus === 'ENDED') {
-            setBracketView('winners');
-            fetch(`${API_BASE_URL}/api/tournament/winners`)
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data)) setApiWinners(data);
-                })
-                .catch(err => console.error("Failed to fetch winners", err));
-        }
-    }, [tournamentStatus]);
-
     const getPlayerStats = (username: string) => {
         // Prefer API Score
         const apiWinner = apiWinners.find(w => w.username === username);
@@ -314,27 +299,22 @@ const Tournament: React.FC = () => {
         const finals = matches.filter(m => m.bracketGroup === 'finals' && m.status === 'COMPLETED');
         console.log("Finals:", finals);
 
-        // ... (rest of logic handles empty finals for single elim fallbacks effectively handled by auto-calc in Admin)
         if (finals.length === 0) {
-            // Fallback for Single Elim if no finals group (grab max round)
             const completed = matches.filter(m => m.status === 'COMPLETED');
             if (completed.length === 0) return [];
             const maxRound = Math.max(...completed.map(m => m.round));
             const final = completed.find(m => m.round === maxRound);
             if (final && final.winner) {
                 const second = final.winner === final.player1 ? final.player2 : final.player1;
-                // 3rd is undefined in single elim without 3rd place match, so leave null
                 return [final.winner, second, null];
             }
             return [];
         }
 
-        // Assuming last final is the grand final
         const grandFinal = finals[finals.length - 1];
         const first = grandFinal.winner;
         const second = grandFinal.winner === grandFinal.player1 ? grandFinal.player2 : grandFinal.player1;
 
-        // 3rd place: Loser of Losers Finals
         const losersMatches = matches.filter(m => m.bracketGroup === 'losers' && m.status === 'COMPLETED');
         let third = null;
         if (losersMatches.length > 0) {
@@ -347,6 +327,7 @@ const Tournament: React.FC = () => {
 
         return [first, second, third];
     }, [matches, apiWinners]);
+
 
     useEffect(() => {
         const fetchPokemon = async () => {
@@ -388,6 +369,8 @@ const Tournament: React.FC = () => {
                 .then(res => res.json())
                 .then(data => setMatches(data.matches || []))
                 .catch(console.error);
+        } else if (activeTab === 'players') {
+            fetchPlayers();
         }
     }, [activeTab]);
 
