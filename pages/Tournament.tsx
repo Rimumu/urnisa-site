@@ -759,6 +759,15 @@ const Tournament: React.FC = () => {
                                     </div>
                                 ) : (
                                     <div className="flex-1 flex flex-col items-center justify-center py-10 relative">
+                                        {/* DEBUG OVERLAY - REMOVE AFTER FIX */}
+                                        <div className="absolute top-4 left-4 bg-black/80 text-green-400 p-2 text-xs font-mono z-50 border border-green-500 rounded">
+                                            DEBUG: Status={tournamentStatus}<br />
+                                            API Winners={apiWinners.length}<br />
+                                            Matches={matches.length}<br />
+                                            ActiveTab={activeTab}<br />
+                                            WinnersCalc={JSON.stringify(winners)}
+                                        </div>
+
                                         <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/5 to-transparent pointer-events-none rounded-3xl"></div>
 
                                         <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-5xl mx-auto px-4 justify-center">
