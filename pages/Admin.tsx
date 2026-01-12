@@ -251,14 +251,8 @@ interface Code {
     createdAt: string;
 }
 
-// Interface for Tournament Player
-interface TournamentPlayer {
-    discordId: string;
-    minecraftUsername: string;
-    team: ({ id: number; name: string } | null)[];
-    isLocked: boolean;
-    updatedAt: string;
-}
+// TournamentPlayer interface removed - now in AdminTournament.tsx
+
 
 interface BingoWinner {
     _id: string;
@@ -368,10 +362,8 @@ const Admin: React.FC = () => {
     const [mergedOutput, setMergedOutput] = useState('');
     const [mergerStats, setMergerStats] = useState({ files: 0, spawns: 0 });
 
-    // --- TOURNAMENT STATE ---
-    const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayer[]>([]);
-    const [tournamentSearch, setTournamentSearch] = useState('');
-    const [tournamentStatus, setTournamentStatus] = useState<'DRAFTING' | 'LOCK_IN' | 'ONGOING' | 'ENDED'>('DRAFTING');
+    // TOURNAMENT STATE REMOVED - Now managed in /admin/tournament
+
 
     // --- CONFIRMATION STATES ---
     const [confirmReset, setConfirmReset] = useState(false);
@@ -513,23 +505,7 @@ const Admin: React.FC = () => {
         } catch (e) { }
     }, []);
 
-    const fetchTournamentData = useCallback(async () => {
-        try {
-            const resPlayers = await fetch(`${API_BASE_URL}/api/admin/tournament/all-players`, {
-                headers: { Authorization: password }
-            });
-            if (resPlayers.ok) {
-                setTournamentPlayers(await resPlayers.json());
-            }
-
-            // Config
-            const resConfig = await fetch(`${API_BASE_URL}/api/tournament/config`);
-            if (resConfig.ok) {
-                const conf = await resConfig.json();
-                setTournamentStatus(conf.status || 'DRAFTING');
-            }
-        } catch (e) { }
-    }, [password]);
+    // Tournament data fetching removed - now in /admin/tournament
 
     const fetchSnakesTiles = useCallback(async () => {
         try {
@@ -559,15 +535,12 @@ const Admin: React.FC = () => {
                 }, 10000);
             } else if (activeTab === 'codes') {
                 fetchCodes();
-            } else if (activeTab === 'tournament') {
-                fetchTournamentData();
-                interval = window.setInterval(fetchTournamentData, 15000);
             } else if (activeTab === 'snakes') {
                 fetchSnakesTiles();
             }
         }
         return () => { if (interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchBingoWinners, fetchTournamentData, fetchSnakesTiles]);
+    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchBingoWinners, fetchSnakesTiles]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -888,85 +861,7 @@ const Admin: React.FC = () => {
         } finally { setLoading(false); }
     };
 
-    // --- TOURNAMENT HANDLERS ---
-    const handleSetTournamentStatus = async (status: 'DRAFTING' | 'LOCK_IN' | 'ONGOING' | 'ENDED') => {
-        setLoading(true);
-        try {
-            // Mapping for legacy backend fields if needed, but we now use status primarily
-            const lockVal = status === 'LOCK_IN';
-
-            await fetch(`${API_BASE_URL}/api/admin/tournament/config`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({
-                    status,
-                    lockEnabled: lockVal
-                })
-            });
-            setTournamentStatus(status);
-            setManagerStatus({ type: 'success', message: `Tournament Status set to ${status}` });
-            setTimeout(() => setManagerStatus(null), 3000);
-        } catch (e) {
-            setManagerStatus({ type: 'error', message: "Failed to update status" });
-            setTimeout(() => setManagerStatus(null), 3000);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleUnlockTeam = async (discordId: string, username: string) => {
-        if (!window.confirm(`Are you sure you want to UNLOCK and RESET the team for "${username}"? They will lose their current selection but can select again.`)) return;
-
-        setLoading(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/unlock-team`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ discordId })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentData();
-                setTimeout(() => setManagerStatus(null), 3000);
-            } else {
-                setManagerStatus({ type: 'error', message: data.error || "Failed to unlock team." });
-                setTimeout(() => setManagerStatus(null), 3000);
-            }
-        } catch (e) {
-            setManagerStatus({ type: 'error', message: "Network error." });
-            setTimeout(() => setManagerStatus(null), 3000);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleRevokeRegistration = async (discordId: string, username: string) => {
-        if (!window.confirm(`Are you sure you want to completely REVOKE registration for "${username}"? This removes them from the tournament list.`)) return;
-
-        setLoading(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/revoke-registration`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify({ discordId })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setManagerStatus({ type: 'success', message: data.message });
-                fetchTournamentData();
-                setTimeout(() => setManagerStatus(null), 3000);
-            } else {
-                setManagerStatus({ type: 'error', message: data.error || "Failed to revoke." });
-                setTimeout(() => setManagerStatus(null), 3000);
-            }
-        } catch (e) {
-            setManagerStatus({ type: 'error', message: "Network error." });
-            setTimeout(() => setManagerStatus(null), 3000);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // TOURNAMENT HANDLERS REMOVED - Now in /admin/tournament
 
     // --- JSON MERGER HANDLER ---
     const handleJsonUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1200,14 +1095,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
         return (
             (app.discordUsername && app.discordUsername.toLowerCase().includes(term)) ||
             (app.minecraftUsername && app.minecraftUsername.toLowerCase().includes(term))
-        );
-    });
-
-    const filteredTournamentPlayers = tournamentPlayers.filter(p => {
-        const term = tournamentSearch.toLowerCase();
-        return (
-            (p.minecraftUsername && p.minecraftUsername.toLowerCase().includes(term)) ||
-            (p.discordId && p.discordId.includes(term))
         );
     });
 
@@ -1856,78 +1743,16 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'tournament' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Tournament Management</h2>
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col h-[700px]">
-                                <div className="flex flex-col gap-6 border-b border-white/10 pb-6 mb-6">
-                                    <div>
-                                        <h3 className="font-bold text-white text-lg mb-2">Tournament Phase</h3>
-                                        <p className="text-xs text-gray-400 mb-4">Control the tournament flow: Signups, Locking, and Active gameplay.</p>
-                                        <div className="flex flex-wrap gap-3">
-                                            {[
-                                                { id: 'DRAFTING', label: 'Drafting', icon: '📝', color: 'bg-blue-600', desc: 'Signups Open' },
-                                                { id: 'LOCK_IN', label: 'Lock-In', icon: '🔒', color: 'bg-green-600', desc: 'Allowing Locks' },
-                                                { id: 'ONGOING', label: 'Ongoing', icon: '⚔️', color: 'bg-red-600', desc: 'Signups Closed' },
-                                                { id: 'ENDED', label: 'Ended', icon: '🏆', color: 'bg-yellow-600', desc: 'Season Complete' }
-                                            ].map(s => (
-                                                <button
-                                                    key={s.id}
-                                                    onClick={() => handleSetTournamentStatus(s.id as any)}
-                                                    className={`
-                                                        flex-1 flex flex-col items-center justify-center p-4 rounded-xl border transition-all
-                                                        ${tournamentStatus === s.id
-                                                            ? `${s.color} border-white/40 shadow-lg scale-105 z-10`
-                                                            : 'bg-black/40 border-white/5 opacity-60 hover:opacity-100'}
-                                                    `}
-                                                >
-                                                    <span className="text-2xl mb-1">{s.icon}</span>
-                                                    <span className="text-xs font-black uppercase tracking-widest">{s.label}</span>
-                                                    <span className="text-[8px] font-bold opacity-70 mt-1">{s.desc}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Link to Live Bracket Manager */}
-                                    <Link to="/admin/tournament" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 border border-purple-400/50">
-                                        <span className="text-xl">🎮</span>
-                                        <span>Manage Live Bracket Visuals</span>
-                                    </Link>
-
-                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                        <h3 className="font-bold text-white flex items-center gap-2">
-                                            <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                                            Player Teams ({tournamentPlayers.length})
-                                        </h3>
-                                        <input type="text" placeholder="Search..." value={tournamentSearch} onChange={e => setTournamentSearch(e.target.value)} className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full sm:w-64" />
-                                    </div>
+                            <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col items-center justify-center min-h-[400px] text-center">
+                                <div className="w-24 h-24 bg-purple-500/20 rounded-full flex items-center justify-center mb-6">
+                                    <span className="text-5xl">🎮</span>
                                 </div>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
-                                    {filteredTournamentPlayers.length === 0 ? (
-                                        <div className="text-center py-20 text-gray-500">No players found.</div>
-                                    ) : (
-                                        filteredTournamentPlayers.map(p => (
-                                            <div key={p.discordId} className="bg-white/5 p-5 rounded-2xl border border-white/5 flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-                                                <div className="flex items-center gap-4 shrink-0 min-w-0 w-full lg:w-48">
-                                                    <img src={`https://mc-heads.net/avatar/${p.minecraftUsername}/48`} className="w-12 h-12 rounded-xl border border-white/20" alt={p.minecraftUsername} />
-                                                    <div className="truncate">
-                                                        <div className="font-bold text-white truncate">{p.minecraftUsername}</div>
-                                                        <div className={`text-[10px] font-black uppercase tracking-widest ${p.isLocked ? 'text-green-500' : 'text-gray-500'}`}>{p.isLocked ? 'Locked' : 'Drafting'}</div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 grid grid-cols-6 gap-2 w-full">
-                                                    {p.team.map((poke, idx) => (
-                                                        <div key={idx} className="aspect-square bg-black/40 rounded-lg border border-white/5 flex items-center justify-center p-1" title={poke?.name || "Empty"}>
-                                                            {poke ? <PokemonAdminImage pokemon={poke} /> : <span className="text-[8px] text-gray-700">•</span>}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="shrink-0 flex gap-2 w-full lg:w-auto flex-col">
-                                                    <button onClick={() => handleUnlockTeam(p.discordId, p.minecraftUsername)} className="bg-yellow-900/20 hover:bg-yellow-600 text-yellow-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase transition-all border border-yellow-500/30 w-full">Unlock Team</button>
-                                                    <button onClick={() => handleRevokeRegistration(p.discordId, p.minecraftUsername)} className="bg-red-900/20 hover:bg-red-600 text-red-400 hover:text-white py-2 px-4 rounded-xl text-xs font-black uppercase transition-all border border-red-500/30 w-full">Revoke Reg</button>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                                <h3 className="text-2xl font-black text-white mb-2">Tournament Admin Moved</h3>
+                                <p className="text-gray-400 mb-6 max-w-md">All tournament management features have been consolidated to a dedicated page for better organization.</p>
+                                <Link to="/admin/tournament" className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-8 rounded-xl flex items-center gap-3 shadow-lg transition-transform hover:scale-105 border border-purple-400/50 text-lg">
+                                    <span>Go to Tournament Admin</span>
+                                    <span>→</span>
+                                </Link>
                             </div>
                         </div>
                     )}
