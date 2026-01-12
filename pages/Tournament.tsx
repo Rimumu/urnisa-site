@@ -760,7 +760,7 @@ const Tournament: React.FC = () => {
                                 </div>
 
                                 {bracketView === 'bracket' ? (
-                                    <div className="flex-1 w-full bg-white/90 rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507]">
+                                    <div className="flex-1 w-full bg-white rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507] min-h-[800px]">
                                         <iframe
                                             src="https://challonge.com/nisamon1/module"
                                             width="100%"
@@ -768,7 +768,7 @@ const Tournament: React.FC = () => {
                                             frameBorder="0"
                                             scrolling="auto"
                                             allowTransparency={true}
-                                            className="w-full h-full"
+                                            className="w-full h-full min-h-[800px]"
                                         ></iframe>
                                     </div>
                                 ) : (
