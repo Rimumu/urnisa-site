@@ -247,6 +247,10 @@ const Tournament: React.FC = () => {
     const [tournamentStatus, setTournamentStatus] = useState<TournamentStatus>('DRAFTING');
     const [bracketView, setBracketView] = useState<'winners' | 'bracket'>('winners');
 
+    // Season State
+    const [allSeasons, setAllSeasons] = useState<{ seasonId: number; name: string; format: string; status: string; challongeUrl?: string; isArchived?: boolean }[]>([]);
+    const [activeSeason, setActiveSeason] = useState<{ seasonId: number; name: string; format: string; status: string; challongeUrl?: string }>({ seasonId: 1, name: 'Season 1', format: 'Singles 4v4', status: 'ENDED' });
+
     // Players List State
     const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
     const [loadingPlayers, setLoadingPlayers] = useState(false);
@@ -256,17 +260,18 @@ const Tournament: React.FC = () => {
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
     const [apiWinners, setApiWinners] = useState<{ rank: number, username: string, score: string }[]>([]);
 
+    // Fetch winners when season changes or status is ENDED
     useEffect(() => {
-        if (tournamentStatus === 'ENDED') {
+        if (activeSeason.status === 'ENDED' || tournamentStatus === 'ENDED') {
             setBracketView('winners');
-            fetch(`${API_BASE_URL}/api/tournament/winners`)
+            fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) setApiWinners(data);
                 })
                 .catch(err => console.error("Failed to fetch winners", err));
         }
-    }, [tournamentStatus]);
+    }, [activeSeason, tournamentStatus]);
 
     const getPlayerStats = (username: string) => {
         // Prefer API Score
@@ -349,15 +354,35 @@ const Tournament: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/api/tournament/config`)
+        // Fetch all seasons
+        fetch(`${API_BASE_URL}/api/tournament/seasons`)
             .then(res => res.json())
-            .then(data => {
-                setTournamentStatus(data.status || 'DRAFTING');
+            .then(seasons => {
+                if (Array.isArray(seasons) && seasons.length > 0) {
+                    setAllSeasons(seasons);
+                    // Find active (non-archived) season, or fall back to latest
+                    const active = seasons.find((s: any) => !s.isArchived) || seasons[0];
+                    setActiveSeason(active);
+                    setTournamentStatus(active.status || 'DRAFTING');
+                }
             })
-            .catch(e => console.error("Config fetch error", e));
+            .catch(e => console.error("Seasons fetch error", e));
 
         fetchPlayers(); // Load players immediately
     }, []);
+
+    // Refetch data when season changes
+    useEffect(() => {
+        if (activeSeason.seasonId) {
+            setTournamentStatus(activeSeason.status as TournamentStatus);
+            fetchPlayersForSeason(activeSeason.seasonId);
+            // Fetch bracket for this season
+            fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`)
+                .then(res => res.json())
+                .then(data => setMatches(data.matches || []))
+                .catch(console.error);
+        }
+    }, [activeSeason.seasonId]);
 
     useEffect(() => {
         if (user?.id) {
@@ -367,20 +392,20 @@ const Tournament: React.FC = () => {
 
     useEffect(() => {
         if (activeTab === 'brackets') {
-            fetch(`${API_BASE_URL}/api/tournament/bracket`)
+            fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`)
                 .then(res => res.json())
                 .then(data => setMatches(data.matches || []))
                 .catch(console.error);
         } else if (activeTab === 'players') {
-            fetchPlayers();
+            fetchPlayersForSeason(activeSeason.seasonId);
         }
-    }, [activeTab]);
+    }, [activeTab, activeSeason.seasonId]);
 
     const fetchMyTeam = async () => {
         if (!user?.id) return;
         setLoadingTeam(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${user.id}`);
+            const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${user.id}&seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data && data.registered) {
@@ -389,6 +414,11 @@ const Tournament: React.FC = () => {
                     setSelectedTeam(filledTeam);
                     setIsLocked(data.isLocked || false);
                     setHasStartedRegistration(true);
+                } else {
+                    // Reset for new season
+                    setSelectedTeam(new Array(6).fill(null));
+                    setIsLocked(false);
+                    setHasStartedRegistration(false);
                 }
             }
         } catch (e) {
@@ -399,10 +429,13 @@ const Tournament: React.FC = () => {
     };
 
     const fetchPlayers = async () => {
+        fetchPlayersForSeason(activeSeason.seasonId);
+    };
+
+    const fetchPlayersForSeason = async (seasonId: number) => {
         if (playersList.length === 0) setLoadingPlayers(true);
         try {
-            // Dev page fetches dev players too
-            const res = await fetch(`${API_BASE_URL}/api/tournament/players?dev=true`);
+            const res = await fetch(`${API_BASE_URL}/api/tournament/players?dev=true&seasonId=${seasonId}`);
             if (res.ok) {
                 setPlayersList(await res.json());
             }
@@ -631,8 +664,23 @@ const Tournament: React.FC = () => {
                                 <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1 text-white">
                                     NISAMON <span className="text-brand-primary">TOURNAMENT</span>
                                 </h1>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">Season 1</span>
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    {/* Season Selector Dropdown */}
+                                    <select
+                                        value={activeSeason.seasonId}
+                                        onChange={(e) => {
+                                            const selected = allSeasons.find(s => s.seasonId === parseInt(e.target.value));
+                                            if (selected) setActiveSeason(selected);
+                                        }}
+                                        className="bg-brand-primary/20 text-brand-primary border border-brand-primary/40 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-brand-primary/30 transition-all outline-none"
+                                    >
+                                        {allSeasons.map(s => (
+                                            <option key={s.seasonId} value={s.seasonId} className="bg-[#120507] text-white">
+                                                {s.name} {s.isArchived ? '(Archived)' : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">{activeSeason.format}</span>
                                 </div>
                             </div>
                         </div>

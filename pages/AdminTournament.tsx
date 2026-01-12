@@ -165,6 +165,13 @@ const AdminTournament: React.FC = () => {
         rank3: { user: '', score: 'W-L' }
     });
 
+    // Season State
+    const [allSeasons, setAllSeasons] = useState<{ seasonId: number; name: string; format: string; status: string; isArchived?: boolean; challongeUrl?: string }[]>([]);
+    const [activeSeason, setActiveSeason] = useState<{ seasonId: number; name: string; format: string; status: string; challongeUrl?: string }>({ seasonId: 1, name: 'Season 1', format: 'Singles 4v4', status: 'DRAFTING' });
+    const [newSeasonName, setNewSeasonName] = useState('');
+    const [newSeasonFormat, setNewSeasonFormat] = useState('');
+    const [newSeasonChallongeUrl, setNewSeasonChallongeUrl] = useState('');
+
     // --- ZOOM & PAN STATE ---
     const [zoomScale, setZoomScale] = useState(1);
     const [panPos, setPanPos] = useState({ x: 50, y: 50 }); // Initial padding
@@ -220,16 +227,29 @@ const AdminTournament: React.FC = () => {
             });
             if (res.ok && (await res.json()).success) {
                 setIsAuthenticated(true);
+                fetchSeasons();
                 fetchPlayers();
             }
             else alert("Invalid password");
         } catch (e) { alert("Error connecting"); }
     };
 
+    const fetchSeasons = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/tournament/seasons`);
+            if (res.ok) {
+                const seasons = await res.json();
+                setAllSeasons(seasons);
+                // Set active season to first non-archived or latest
+                const active = seasons.find((s: any) => !s.isArchived) || seasons[0];
+                if (active) setActiveSeason(active);
+            }
+        } catch (e) { console.error(e); }
+    };
+
     const fetchBracket = async () => {
         try {
-            // Production Route
-            const res = await fetch(`${API_BASE_URL}/api/tournament/bracket`);
+            const res = await fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
                 setMatches(data.matches || []);
@@ -255,20 +275,20 @@ const AdminTournament: React.FC = () => {
             const interval = setInterval(fetchBracket, 5000);
             return () => clearInterval(interval);
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, activeSeason.seasonId]);
 
     const apiCall = async (endpoint: string, body: any) => {
         try {
-            // Production Admin Routes
             const res = await fetch(`${API_BASE_URL}/api/admin/tournament/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: password },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ ...body, seasonId: activeSeason.seasonId })
             });
             const data = await res.json();
             if (res.ok) {
                 setStatusMsg(data.message || "Success");
                 fetchBracket();
+                fetchSeasons();
             } else {
                 setStatusMsg("Error: " + data.error);
             }
@@ -276,6 +296,45 @@ const AdminTournament: React.FC = () => {
             setStatusMsg("Network Error");
         }
         setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    const handleCreateSeason = async () => {
+        if (!newSeasonName.trim()) {
+            alert("Please enter a season name");
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/tournament/season/create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({
+                    name: newSeasonName,
+                    format: newSeasonFormat || 'Singles 4v4',
+                    challongeUrl: newSeasonChallongeUrl
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setStatusMsg(`Created ${data.season.name}`);
+                setNewSeasonName('');
+                setNewSeasonFormat('');
+                setNewSeasonChallongeUrl('');
+                fetchSeasons();
+                if (data.season) setActiveSeason(data.season);
+            }
+        } catch (e) { setStatusMsg("Failed to create season"); }
+    };
+
+    const handleArchiveSeason = async () => {
+        if (!window.confirm(`Archive ${activeSeason.name}? This will set it as ENDED.`)) return;
+        try {
+            await fetch(`${API_BASE_URL}/api/admin/tournament/season/${activeSeason.seasonId}/archive`, {
+                method: 'POST',
+                headers: { Authorization: password }
+            });
+            setStatusMsg(`Archived ${activeSeason.name}`);
+            fetchSeasons();
+        } catch (e) { setStatusMsg("Archive failed"); }
     };
 
     const handleGenerate = () => {
@@ -576,90 +635,162 @@ const AdminTournament: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
-                {/* 1. PLAYER POOL SELECTION (Left Sidebar) */}
-                <div className="lg:col-span-1 bg-black/40 p-6 rounded-2xl border border-white/10 flex flex-col h-[800px]">
-                    <h3 className="font-bold text-xl border-b border-white/10 pb-2 mb-4">Player Selection</h3>
+                {/* 1. LEFT SIDEBAR - SEASON MANAGEMENT & PLAYER POOL */}
+                <div className="lg:col-span-1 space-y-6">
+                    {/* SEASON MANAGEMENT PANEL */}
+                    <div className="bg-gradient-to-b from-brand-primary/10 to-black/40 p-6 rounded-2xl border border-brand-primary/30">
+                        <h3 className="font-bold text-lg border-b border-white/10 pb-2 mb-4 text-brand-primary uppercase tracking-wide">🗓️ Season Management</h3>
 
-                    {/* Available Players */}
-                    <div className="flex-1 overflow-hidden flex flex-col mb-4 min-h-0">
-                        <div className="flex justify-between items-center mb-2">
-                            <h4 className="text-sm font-bold text-gray-400 uppercase">Available Players ({allPlayers.length})</h4>
-                            <button onClick={fetchPlayers} className="text-xs bg-white/10 px-2 py-1 rounded hover:bg-white/20">Refresh</button>
+                        {/* Season Selector */}
+                        <div className="mb-4">
+                            <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Active Season</label>
+                            <select
+                                value={activeSeason.seasonId}
+                                onChange={(e) => {
+                                    const s = allSeasons.find(s => s.seasonId === parseInt(e.target.value));
+                                    if (s) setActiveSeason(s);
+                                }}
+                                className="w-full bg-black/60 border border-white/10 rounded-lg p-2 text-white text-sm font-bold"
+                            >
+                                {allSeasons.map(s => (
+                                    <option key={s.seasonId} value={s.seasonId}>
+                                        {s.name} ({s.format}) {s.isArchived ? '📦' : '🟢'}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="text-xs text-gray-500 mt-1">Status: <span className={`font-bold ${activeSeason.status === 'ENDED' ? 'text-yellow-400' : 'text-green-400'}`}>{activeSeason.status}</span></div>
                         </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar border border-white/5 rounded bg-black/20 p-2 space-y-1">
-                            {allPlayers.map(p => {
-                                const isSelected = selectedParticipants.includes(p.minecraftUsername);
-                                return (
-                                    <div key={p.discordId} className={`flex justify-between items-center p-2 rounded ${isSelected ? 'bg-green-900/30 opacity-50' : 'bg-white/5 hover:bg-white/10'}`}>
-                                        <div className="flex flex-col overflow-hidden">
-                                            <span className="font-bold text-sm truncate">{p.minecraftUsername}</span>
-                                            <span className="text-[10px] text-gray-500">
-                                                {p.isDev ? 'DEV' : 'USER'} • {p.isLocked ? 'LOCKED' : 'DRAFT'}
-                                            </span>
-                                        </div>
-                                        {!isSelected && (
-                                            <button onClick={() => addToPool(p.minecraftUsername)} className="text-green-400 hover:text-green-300 font-bold px-2 text-lg">+</button>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
 
-                    {/* Selected Participants */}
-                    <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-                        <div className="flex justify-between items-center mb-2">
-                            <h4 className="text-sm font-bold text-brand-primary uppercase">Participants ({selectedParticipants.length})</h4>
-                            <button onClick={shufflePool} className="text-xs bg-brand-primary/20 text-brand-primary px-2 py-1 rounded hover:bg-brand-primary/40 font-bold">Shuffle</button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar border border-brand-primary/30 rounded bg-black/20 p-2 space-y-1">
-                            {selectedParticipants.map((name, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-2 rounded bg-brand-primary/10 border border-brand-primary/20 group">
-                                    <span className="font-mono text-xs text-gray-400 mr-2 w-4">{idx + 1}.</span>
-                                    <span className="font-bold text-sm flex-1 truncate">{name}</span>
-                                    <button onClick={() => removeFromPool(name)} className="text-red-400 hover:text-red-300 font-bold px-2 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
-                                </div>
-                            ))}
-                            {selectedParticipants.length === 0 && <div className="text-center text-gray-500 text-xs py-4">No participants selected</div>}
-                        </div>
-                    </div>
+                        {/* Archive Button */}
+                        {!activeSeason.isArchived && (
+                            <button
+                                onClick={handleArchiveSeason}
+                                className="w-full bg-amber-600/20 border border-amber-600/50 text-amber-400 font-bold py-2 rounded-lg text-sm hover:bg-amber-600/30 mb-4"
+                            >
+                                📦 Archive This Season
+                            </button>
+                        )}
 
-                    <div className="mt-4 pt-4 border-t border-white/10">
-                        <button onClick={handleGenerate} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded transition-colors uppercase tracking-widest text-sm shadow-lg">
-                            GENERATE BRACKET
-                        </button>
-                    </div>
+                        <hr className="border-white/10 my-4" />
 
-                    {/* MANUAL WINNER FALLBACK */}
-                    <div className="mt-8 pt-8 border-t-2 border-white/10 flex flex-col gap-4">
-                        <h3 className="font-bold text-lg text-yellow-500 uppercase">🏆 Manual End Season</h3>
+                        {/* Create New Season */}
                         <div className="space-y-2">
-                            {[1, 2, 3].map((rank) => {
-                                const key = `rank${rank}` as keyof typeof finalWinners;
-                                return (
-                                    <div key={rank} className="flex gap-2">
-                                        <div className="w-6 h-8 flex items-center justify-center font-bold text-gray-500">#{rank}</div>
-                                        <input
-                                            type="text"
-                                            value={finalWinners[key].user}
-                                            onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], user: e.target.value } }))}
-                                            className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white"
-                                            placeholder="Username"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={finalWinners[key].score}
-                                            onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], score: e.target.value } }))}
-                                            className="w-16 bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-right text-gray-400"
-                                            placeholder="Score"
-                                        />
-                                    </div>
-                                );
-                            })}
+                            <h4 className="text-xs font-bold text-gray-400 uppercase">Create New Season</h4>
+                            <input
+                                type="text"
+                                placeholder="Season Name (e.g. Season 2)"
+                                value={newSeasonName}
+                                onChange={(e) => setNewSeasonName(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Format (e.g. Duos 2v2)"
+                                value={newSeasonFormat}
+                                onChange={(e) => setNewSeasonFormat(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Challonge URL (optional)"
+                                value={newSeasonChallongeUrl}
+                                onChange={(e) => setNewSeasonChallongeUrl(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-sm"
+                            />
+                            <button
+                                onClick={handleCreateSeason}
+                                className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-sm"
+                            >
+                                + Create Season
+                            </button>
                         </div>
-                        <button onClick={submitEndTournament} className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded transition-colors uppercase tracking-widest text-sm shadow-lg">
-                            CONFIRM WINNERS
-                        </button>
+                    </div>
+
+                    {/* PLAYER POOL SELECTION */}
+                    <div className="bg-black/40 p-6 rounded-2xl border border-white/10 flex flex-col h-[500px]">
+                        <h3 className="font-bold text-xl border-b border-white/10 pb-2 mb-4">Player Selection</h3>
+
+                        {/* Available Players */}
+                        <div className="flex-1 overflow-hidden flex flex-col mb-4 min-h-0">
+                            <div className="flex justify-between items-center mb-2">
+                                <h4 className="text-sm font-bold text-gray-400 uppercase">Available Players ({allPlayers.length})</h4>
+                                <button onClick={fetchPlayers} className="text-xs bg-white/10 px-2 py-1 rounded hover:bg-white/20">Refresh</button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar border border-white/5 rounded bg-black/20 p-2 space-y-1">
+                                {allPlayers.map(p => {
+                                    const isSelected = selectedParticipants.includes(p.minecraftUsername);
+                                    return (
+                                        <div key={p.discordId} className={`flex justify-between items-center p-2 rounded ${isSelected ? 'bg-green-900/30 opacity-50' : 'bg-white/5 hover:bg-white/10'}`}>
+                                            <div className="flex flex-col overflow-hidden">
+                                                <span className="font-bold text-sm truncate">{p.minecraftUsername}</span>
+                                                <span className="text-[10px] text-gray-500">
+                                                    {p.isDev ? 'DEV' : 'USER'} • {p.isLocked ? 'LOCKED' : 'DRAFT'}
+                                                </span>
+                                            </div>
+                                            {!isSelected && (
+                                                <button onClick={() => addToPool(p.minecraftUsername)} className="text-green-400 hover:text-green-300 font-bold px-2 text-lg">+</button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Selected Participants */}
+                        <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                            <div className="flex justify-between items-center mb-2">
+                                <h4 className="text-sm font-bold text-brand-primary uppercase">Participants ({selectedParticipants.length})</h4>
+                                <button onClick={shufflePool} className="text-xs bg-brand-primary/20 text-brand-primary px-2 py-1 rounded hover:bg-brand-primary/40 font-bold">Shuffle</button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar border border-brand-primary/30 rounded bg-black/20 p-2 space-y-1">
+                                {selectedParticipants.map((name, idx) => (
+                                    <div key={idx} className="flex justify-between items-center p-2 rounded bg-brand-primary/10 border border-brand-primary/20 group">
+                                        <span className="font-mono text-xs text-gray-400 mr-2 w-4">{idx + 1}.</span>
+                                        <span className="font-bold text-sm flex-1 truncate">{name}</span>
+                                        <button onClick={() => removeFromPool(name)} className="text-red-400 hover:text-red-300 font-bold px-2 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                                    </div>
+                                ))}
+                                {selectedParticipants.length === 0 && <div className="text-center text-gray-500 text-xs py-4">No participants selected</div>}
+                            </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                            <button onClick={handleGenerate} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded transition-colors uppercase tracking-widest text-sm shadow-lg">
+                                GENERATE BRACKET
+                            </button>
+                        </div>
+
+                        {/* MANUAL WINNER FALLBACK */}
+                        <div className="mt-8 pt-8 border-t-2 border-white/10 flex flex-col gap-4">
+                            <h3 className="font-bold text-lg text-yellow-500 uppercase">🏆 Manual End Season</h3>
+                            <div className="space-y-2">
+                                {[1, 2, 3].map((rank) => {
+                                    const key = `rank${rank}` as keyof typeof finalWinners;
+                                    return (
+                                        <div key={rank} className="flex gap-2">
+                                            <div className="w-6 h-8 flex items-center justify-center font-bold text-gray-500">#{rank}</div>
+                                            <input
+                                                type="text"
+                                                value={finalWinners[key].user}
+                                                onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], user: e.target.value } }))}
+                                                className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-white"
+                                                placeholder="Username"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={finalWinners[key].score}
+                                                onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], score: e.target.value } }))}
+                                                className="w-16 bg-white/5 border border-white/10 rounded px-2 py-1 text-sm text-right text-gray-400"
+                                                placeholder="Score"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <button onClick={submitEndTournament} className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded transition-colors uppercase tracking-widest text-sm shadow-lg">
+                                CONFIRM WINNERS
+                            </button>
+                        </div>
                     </div>
                 </div>
 
