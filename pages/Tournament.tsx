@@ -1028,19 +1028,22 @@ const Tournament: React.FC = () => {
                                         {playersList.map((entry, idx) => (
                                             <button
                                                 key={idx}
-                                                onClick={() => setSelectedPlayer(entry)}
-                                                className="bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02]"
+                                                onClick={() => !activeSeason.format.includes('Duos') && setSelectedPlayer(entry)}
+                                                className={`bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left transition-all shadow-md ${!activeSeason.format.includes('Duos') ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer hover:shadow-xl hover:scale-[1.02]' : 'cursor-default opacity-80'}`}
                                             >
-                                                <div className="flex items-center gap-4 border-b border-white/5 pb-4 w-full">
+                                                <div className={`flex items-center gap-4 ${!activeSeason.format.includes('Duos') ? 'border-b border-white/5 pb-4' : ''} w-full`}>
                                                     <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-14 h-14 rounded-2xl border-2 border-white/10" alt={entry.minecraftUsername} />
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-black text-white text-xl truncate">{entry.minecraftUsername}</div>
                                                         <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${entry.isLocked ? 'text-green-400' : 'text-amber-400'}`}><span className={`w-2 h-2 rounded-full ${entry.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>{entry.isLocked ? 'Ready' : 'Drafting'}</div>
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-6 gap-2 w-full">
-                                                    {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
-                                                </div>
+                                                {/* Only show team placeholders for Singles */}
+                                                {!activeSeason.format.includes('Duos') && (
+                                                    <div className="grid grid-cols-6 gap-2 w-full">
+                                                        {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
+                                                    </div>
+                                                )}
                                             </button>
                                         ))}
                                     </div>
