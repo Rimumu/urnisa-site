@@ -380,14 +380,15 @@ const AdminTournament: React.FC = () => {
         setShowEndModal(true);
     };
 
-    const submitEndTournament = () => {
+    const submitEndTournament = async () => {
         const winnersPayload = [
             { rank: 1, username: finalWinners.rank1.user, score: finalWinners.rank1.score },
             { rank: 2, username: finalWinners.rank2.user, score: finalWinners.rank2.score },
             { rank: 3, username: finalWinners.rank3.user, score: finalWinners.rank3.score }
         ].filter(w => w.username); // Filter empty
 
-        apiCall('end', { winners: winnersPayload });
+        await apiCall('end', { winners: winnersPayload });
+        await apiCall('publish', {}); // Push bracket changes to production so public sees "Finished"
         setShowEndModal(false);
     };
 
