@@ -507,7 +507,8 @@ const Tournament: React.FC = () => {
                 body: JSON.stringify({
                     discordId: user.id,
                     minecraftUsername: user.minecraftUsername,
-                    team: new Array(6).fill(null)
+                    team: new Array(6).fill(null),
+                    seasonId: activeSeason.seasonId
                 })
             });
 
@@ -534,7 +535,8 @@ const Tournament: React.FC = () => {
                 body: JSON.stringify({
                     discordId: user.id,
                     minecraftUsername: user.minecraftUsername,
-                    team: selectedTeam
+                    team: selectedTeam,
+                    seasonId: activeSeason.seasonId
                 })
             });
 
@@ -566,7 +568,7 @@ const Tournament: React.FC = () => {
             const res = await fetch(`${API_BASE_URL}/api/tournament/lock`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ discordId: user?.id })
+                body: JSON.stringify({ discordId: user?.id, seasonId: activeSeason.seasonId })
             });
             if (res.ok) {
                 setIsLocked(true);
