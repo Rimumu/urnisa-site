@@ -260,18 +260,7 @@ const Tournament: React.FC = () => {
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
     const [apiWinners, setApiWinners] = useState<{ rank: number, username: string, score: string }[]>([]);
 
-    // Fetch winners when season changes or status is ENDED
-    useEffect(() => {
-        if (activeSeason.status === 'ENDED' || tournamentStatus === 'ENDED') {
-            setBracketView('winners');
-            fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data)) setApiWinners(data);
-                })
-                .catch(err => console.error("Failed to fetch winners", err));
-        }
-    }, [activeSeason, tournamentStatus]);
+
 
     const getPlayerStats = (username: string) => {
         // Prefer API Score
@@ -376,6 +365,23 @@ const Tournament: React.FC = () => {
         if (activeSeason.seasonId) {
             setTournamentStatus(activeSeason.status as TournamentStatus);
             fetchPlayersForSeason(activeSeason.seasonId);
+
+            // Clear previous data first
+            setMatches([]);
+            setApiWinners([]);
+
+            // If ended, fetch winners
+            if (activeSeason.status === 'ENDED') {
+                fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) setApiWinners(data);
+                    })
+                    .catch(err => console.error("Failed to fetch winners", err));
+            } else {
+                setBracketView('winners'); // Default view
+            }
+
             // Fetch bracket for this season
             fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`)
                 .then(res => res.json())
