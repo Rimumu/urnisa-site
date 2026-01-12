@@ -249,7 +249,7 @@ const Tournament: React.FC = () => {
 
     // Season State
     const [allSeasons, setAllSeasons] = useState<{ seasonId: number; name: string; format: string; status: string; challongeUrl?: string; isArchived?: boolean }[]>([]);
-    const [activeSeason, setActiveSeason] = useState<{ seasonId: number; name: string; format: string; status: string; challongeUrl?: string }>({ seasonId: 1, name: 'Season 1', format: 'Singles 4v4', status: 'ENDED' });
+    const [activeSeason, setActiveSeason] = useState<{ seasonId: number; name: string; format: string; status: string; challongeUrl?: string } | null>(null);
 
     // Players List State
     const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
@@ -259,7 +259,6 @@ const Tournament: React.FC = () => {
     // Bracket & Winners State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
     const [apiWinners, setApiWinners] = useState<{ rank: number, username: string, score: string }[]>([]);
-
 
 
     const getPlayerStats = (username: string) => {
@@ -279,7 +278,6 @@ const Tournament: React.FC = () => {
     };
 
     const winners = useMemo(() => {
-        console.log("Calculating Winners. API:", apiWinners, "Matches:", matches.length);
         if (apiWinners.length > 0) {
             const sorted = [...apiWinners].sort((a, b) => a.rank - b.rank);
             const w = [null, null, null] as (string | null)[];
@@ -289,39 +287,21 @@ const Tournament: React.FC = () => {
             return w;
         }
 
-        if (matches.length === 0) return [];
-        const finals = matches.filter(m => m.bracketGroup === 'finals' && m.status === 'COMPLETED');
-        console.log("Finals:", finals);
+        const finalists = matches.filter(m => m.bracketGroup === 'finals' && m.status === 'COMPLETED');
+        const lastFinal = finalists.sort((a, b) => b.round - a.round)[0];
 
-        if (finals.length === 0) {
-            const completed = matches.filter(m => m.status === 'COMPLETED');
-            if (completed.length === 0) return [];
-            const maxRound = Math.max(...completed.map(m => m.round));
-            const final = completed.find(m => m.round === maxRound);
-            if (final && final.winner) {
-                const second = final.winner === final.player1 ? final.player2 : final.player1;
-                return [final.winner, second, null];
-            }
-            return [];
-        }
+        if (!lastFinal) return [null, null, null];
 
-        const grandFinal = finals[finals.length - 1];
-        const first = grandFinal.winner;
-        const second = grandFinal.winner === grandFinal.player1 ? grandFinal.player2 : grandFinal.player1;
+        const w1 = lastFinal.winner;
+        const w2 = lastFinal.winner === lastFinal.player1 ? lastFinal.player2 : lastFinal.player1;
 
-        const losersMatches = matches.filter(m => m.bracketGroup === 'losers' && m.status === 'COMPLETED');
-        let third = null;
-        if (losersMatches.length > 0) {
-            const maxRound = Math.max(...losersMatches.map(m => m.round));
-            const losersFinal = losersMatches.find(m => m.round === maxRound);
-            if (losersFinal) {
-                third = losersFinal.winner === losersFinal.player1 ? losersFinal.player2 : losersFinal.player1;
-            }
-        }
+        // Try to find 3rd place from losers final
+        const losersMatches = matches.filter(m => m.bracketGroup === 'losers');
+        const losersFinal = losersMatches.sort((a, b) => b.round - a.round || b.matchIndex - a.matchIndex)[0];
+        const w3 = losersFinal ? losersFinal.winner : null;
 
-        return [first, second, third];
+        return [w1, w2, w3];
     }, [matches, apiWinners]);
-
 
     useEffect(() => {
         const fetchPokemon = async () => {
@@ -357,12 +337,12 @@ const Tournament: React.FC = () => {
             })
             .catch(e => console.error("Seasons fetch error", e));
 
-        fetchPlayers(); // Load players immediately
+        // Initial player fetch deferred until season is known
     }, []);
 
     // Refetch data when season changes
     useEffect(() => {
-        if (activeSeason.seasonId) {
+        if (activeSeason?.seasonId) {
             setTournamentStatus(activeSeason.status as TournamentStatus);
             fetchPlayersForSeason(activeSeason.seasonId);
 
@@ -388,7 +368,7 @@ const Tournament: React.FC = () => {
                 .then(data => setMatches(data.matches || []))
                 .catch(console.error);
         }
-    }, [activeSeason.seasonId]);
+    }, [activeSeason?.seasonId]);
 
     useEffect(() => {
         if (user?.id) {
