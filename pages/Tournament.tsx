@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import UserProfile, { UserData } from '../components/UserProfile';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
-import CustomBracket, { TournamentMatch } from './TournamentBracketComponent';
 
 // --- TYPES ---
 interface Pokemon {
@@ -20,6 +19,19 @@ interface TournamentEntry {
 }
 
 type TournamentStatus = 'DRAFTING' | 'LOCK_IN' | 'ONGOING' | 'ENDED';
+
+interface TournamentMatch {
+    id: string;
+    bracketGroup?: string;
+    round: number;
+    matchIndex: number;
+    player1: string | null;
+    player2: string | null;
+    winner: string | null;
+    score: string;
+    status: string;
+    nextMatchId: string | null;
+}
 
 // --- CONSTANTS ---
 const TYPE_COLORS: Record<string, string> = {
@@ -234,71 +246,6 @@ const Tournament: React.FC = () => {
     // Tournament Config & State
     const [tournamentStatus, setTournamentStatus] = useState<TournamentStatus>('DRAFTING');
     const [bracketView, setBracketView] = useState<'winners' | 'bracket'>('winners');
-    const [bracketType, setBracketType] = useState('SINGLE_ELIMINATION');
-
-    // --- ZOOM & PAN STATE ---
-    const [zoomScale, setZoomScale] = useState(1);
-    const [panPos, setPanPos] = useState({ x: 50, y: 50 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
-    const [hasInteracted, setHasInteracted] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    // Keep track of current state in ref for event listener
-    const stateRef = useRef({ zoomScale, panPos });
-    useEffect(() => {
-        stateRef.current = { zoomScale, panPos };
-    }, [zoomScale, panPos]);
-
-    // Attach native wheel listener to prevent default scrolling
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const onWheel = (e: WheelEvent) => {
-            if (activeTab !== 'brackets' || bracketView !== 'bracket') return;
-            e.preventDefault();
-            setHasInteracted(true);
-
-            const { zoomScale: currentZoom, panPos: currentPan } = stateRef.current;
-            const zoomSensitivity = 0.001;
-            const delta = -e.deltaY * zoomSensitivity;
-            const newScale = Math.min(Math.max(0.2, currentZoom + delta), 3);
-
-            const rect = container.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            const newX = mouseX - (mouseX - currentPan.x) * (newScale / currentZoom);
-            const newY = mouseY - (mouseY - currentPan.y) * (newScale / currentZoom);
-
-            setZoomScale(newScale);
-            setPanPos({ x: newX, y: newY });
-        };
-
-        container.addEventListener('wheel', onWheel, { passive: false });
-        return () => container.removeEventListener('wheel', onWheel);
-    }, [activeTab, bracketView]);
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button !== 0) return;
-        setIsDragging(true);
-        setHasInteracted(true);
-        setLastMousePos({ x: e.clientX, y: e.clientY });
-        e.preventDefault();
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging) return;
-        const dx = e.clientX - lastMousePos.x;
-        const dy = e.clientY - lastMousePos.y;
-        setPanPos(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-        setLastMousePos({ x: e.clientX, y: e.clientY });
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-    };
 
     // Players List State
     const [playersList, setPlayersList] = useState<TournamentEntry[]>([]);
@@ -308,6 +255,21 @@ const Tournament: React.FC = () => {
     // Bracket & Winners State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
     const [apiWinners, setApiWinners] = useState<{ rank: number, username: string, score: string }[]>([]);
+
+    useEffect(() => {
+        if (tournamentStatus === 'ENDED') {
+            setBracketView('winners');
+            fetch(`${API_BASE_URL}/api/tournament/winners`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setApiWinners(data);
+                })
+                .catch(err => console.error("Failed to fetch winners", err));
+        }
+    }, [tournamentStatus]);
+
+
+
 
     useEffect(() => {
         if (tournamentStatus === 'ENDED') {
@@ -418,14 +380,10 @@ const Tournament: React.FC = () => {
     }, [user]);
 
     useEffect(() => {
-        fetchPlayers();
         if (activeTab === 'brackets') {
             fetch(`${API_BASE_URL}/api/tournament/bracket`)
                 .then(res => res.json())
-                .then(data => {
-                    setMatches(data.matches || []);
-                    setBracketType(data.type || 'SINGLE_ELIMINATION');
-                })
+                .then(data => setMatches(data.matches || []))
                 .catch(console.error);
         }
     }, [activeTab]);
@@ -802,35 +760,16 @@ const Tournament: React.FC = () => {
                                 </div>
 
                                 {bracketView === 'bracket' ? (
-                                    <div
-                                        className="flex-1 w-full bg-[#1a0b0e] relative overflow-hidden cursor-move rounded-xl border border-white/5 select-none"
-                                        ref={containerRef}
-                                        onMouseDown={handleMouseDown}
-                                        onMouseMove={handleMouseMove}
-                                        onMouseUp={handleMouseUp}
-                                        onMouseLeave={handleMouseUp}
-                                    >
-                                        {/* Control Indicator */}
-                                        <div className={`absolute top-4 right-4 z-50 bg-black/60 backdrop-blur-md p-2 rounded-lg border border-white/10 text-xs text-gray-300 flex items-center gap-3 pointer-events-none shadow-xl transition-opacity duration-500 ${hasInteracted ? 'opacity-0' : 'opacity-100'}`}>
-                                            <span className="text-xl">🔍</span>
-                                            <div className="flex flex-col gap-0.5">
-                                                <div className="font-bold text-white">Interactive Bracket</div>
-                                                <div className="text-[10px] text-gray-400">Scroll to Zoom • Drag to Pan</div>
-                                            </div>
-                                        </div>
-
-                                        <div
-                                            style={{
-                                                transform: `translate(${panPos.x}px, ${panPos.y}px) scale(${zoomScale})`,
-                                                transformOrigin: '0 0',
-                                                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
-                                            }}
-                                            className="w-full h-full origin-top-left"
-                                        >
-                                            <div className="flex flex-col gap-20 p-10 min-w-max relative h-full">
-                                                <CustomBracket matches={matches} type={bracketType} />
-                                            </div>
-                                        </div>
+                                    <div className="flex-1 w-full bg-white/90 rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507]">
+                                        <iframe
+                                            src="https://challonge.com/nisamon1/module"
+                                            width="100%"
+                                            height="100%"
+                                            frameBorder="0"
+                                            scrolling="auto"
+                                            allowTransparency={true}
+                                            className="w-full h-full"
+                                        ></iframe>
                                     </div>
                                 ) : (
                                     <div className="flex-1 flex flex-col items-center justify-center py-10 relative">
