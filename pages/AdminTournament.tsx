@@ -703,6 +703,25 @@ const AdminTournament: React.FC = () => {
                             >
                                 + Create Season
                             </button>
+
+                            {/* DB MIGRATION TOOL (HIDDEN/ADVANCED) */}
+                            <button
+                                onClick={async () => {
+                                    if (confirm("Fix legacy Season 1 player data?")) {
+                                        try {
+                                            const res = await fetch(`${API_BASE_URL}/api/admin/fix-legacy-players`, {
+                                                method: 'POST',
+                                                headers: { Authorization: password }
+                                            });
+                                            const data = await res.json();
+                                            alert(`Fixed ${data.modified} records.`);
+                                        } catch (e) { alert("Fix failed"); }
+                                    }
+                                }}
+                                className="w-full bg-purple-900/50 hover:bg-purple-900/80 text-purple-200 font-bold py-2 rounded-lg text-[10px] uppercase tracking-widest mt-4"
+                            >
+                                🔧 Fix Legacy Data
+                            </button>
                         </div>
                     </div>
 
