@@ -641,401 +641,412 @@ const Tournament: React.FC = () => {
 
                 <div className="max-w-7xl mx-auto space-y-6">
                     {/* Header Dashboard */}
-                    <div className="flex flex-col md:flex-row justify-between items-center bg-black/40 border border-white/10 rounded-[2.5rem] p-6 md:p-8 gap-6 backdrop-blur-md">
-                        <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-black/40 rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border border-brand-primary/30 p-1">
-                                <img src="https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif" alt="Tournament Logo" className="w-full h-full object-cover rounded-2xl" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1 text-white">
-                                    NISAMON <span className="text-brand-primary">TOURNAMENT</span>
-                                </h1>
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    {/* Season Selector Dropdown */}
-                                    <select
-                                        value={activeSeason.seasonId}
-                                        onChange={(e) => {
-                                            const selected = allSeasons.find(s => s.seasonId === parseInt(e.target.value));
-                                            if (selected) setActiveSeason(selected);
-                                        }}
-                                        className="bg-brand-primary/20 text-brand-primary border border-brand-primary/40 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-brand-primary/30 transition-all outline-none"
-                                    >
-                                        {allSeasons.map(s => (
-                                            <option key={s.seasonId} value={s.seasonId} className="bg-[#120507] text-white">
-                                                {s.name} {s.isArchived ? '(Archived)' : ''}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">{activeSeason.format}</span>
+                    {!activeSeason ? (
+                        <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-6 animate-pulse">
+                            <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center text-4xl">⏳</div>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Loading Season...</h2>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col md:flex-row justify-between items-center bg-black/40 border border-white/10 rounded-[2.5rem] p-6 md:p-8 gap-6 backdrop-blur-md">
+
+                            <div className="flex items-center gap-6">
+                                <div className="w-16 h-16 md:w-20 md:h-20 bg-black/40 rounded-3xl flex items-center justify-center overflow-hidden shadow-inner border border-brand-primary/30 p-1">
+                                    <img src="https://res.cloudinary.com/dsencimjn/image/upload/v1764647946/20251202_105741_k6rykp.gif" alt="Tournament Logo" className="w-full h-full object-cover rounded-2xl" />
+                                </div>
+                                <div>
+                                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none mb-1 text-white">
+                                        NISAMON <span className="text-brand-primary">TOURNAMENT</span>
+                                    </h1>
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        {/* Season Selector Dropdown */}
+                                        <select
+                                            value={activeSeason.seasonId}
+                                            onChange={(e) => {
+                                                const selected = allSeasons.find(s => s.seasonId === parseInt(e.target.value));
+                                                if (selected) setActiveSeason(selected);
+                                            }}
+                                            className="bg-brand-primary/20 text-brand-primary border border-brand-primary/40 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-brand-primary/30 transition-all outline-none"
+                                        >
+                                            {allSeasons.map(s => (
+                                                <option key={s.seasonId} value={s.seasonId} className="bg-[#120507] text-white">
+                                                    {s.name} {s.isArchived ? '(Archived)' : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded uppercase font-bold text-gray-400 tracking-widest">{activeSeason.format}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
-                            <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
-                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Players</span>
-                                <span className="text-xl font-black text-white">{playersList.length}</span>
-                            </div>
-                            <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
-                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Phase</span>
-                                <span className={`text-xl font-black uppercase ${tournamentStatus === 'DRAFTING' ? 'text-red-500' :
-                                    tournamentStatus === 'LOCK_IN' ? 'text-orange-500' :
-                                        tournamentStatus === 'ONGOING' ? 'text-green-500' :
-                                            'text-yellow-400'
-                                    }`}>
-                                    {tournamentStatus === 'DRAFTING' ? 'SIGNUPS' : tournamentStatus.replace('_', '-')}
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    if (tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') {
-                                        setActiveTab('brackets');
-                                    } else {
-                                        setActiveTab('signup');
-                                    }
-                                }}
-                                className={`
+                            <div className="flex flex-wrap gap-3 w-full md:w-auto items-center justify-center">
+                                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
+                                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Players</span>
+                                    <span className="text-xl font-black text-white">{playersList.length}</span>
+                                </div>
+                                <div className="bg-black/40 border border-white/5 px-6 py-3 rounded-2xl flex flex-col items-center justify-center flex-1 md:flex-none min-w-[100px] h-14">
+                                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Phase</span>
+                                    <span className={`text-xl font-black uppercase ${tournamentStatus === 'DRAFTING' ? 'text-red-500' :
+                                        tournamentStatus === 'LOCK_IN' ? 'text-orange-500' :
+                                            tournamentStatus === 'ONGOING' ? 'text-green-500' :
+                                                'text-yellow-400'
+                                        }`}>
+                                        {tournamentStatus === 'DRAFTING' ? 'SIGNUPS' : tournamentStatus.replace('_', '-')}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') {
+                                            setActiveTab('brackets');
+                                        } else {
+                                            setActiveTab('signup');
+                                        }
+                                    }}
+                                    className={`
                         text-white font-black px-8 h-14 rounded-2xl shadow-lg transition-all uppercase tracking-widest text-sm border-b-4 flex items-center justify-center flex-1 md:flex-none min-w-[140px]
                         ${tournamentStatus === 'DRAFTING'
-                                        ? 'bg-red-600 hover:bg-red-500 border-red-800 hover:scale-105'
-                                        : tournamentStatus === 'LOCK_IN'
-                                            ? 'bg-orange-600 hover:bg-orange-500 border-orange-800'
-                                            : 'bg-green-600 hover:bg-green-500 border-green-800'}
+                                            ? 'bg-red-600 hover:bg-red-500 border-red-800 hover:scale-105'
+                                            : tournamentStatus === 'LOCK_IN'
+                                                ? 'bg-orange-600 hover:bg-orange-500 border-orange-800'
+                                                : 'bg-green-600 hover:bg-green-500 border-green-800'}
                     `}
-                            >
-                                {tournamentStatus === 'ONGOING' ? 'Play' : tournamentStatus === 'ENDED' ? 'View Winners' : tournamentStatus === 'LOCK_IN' ? 'Lock-In' : 'Sign Up'}
-                            </button>
+                                >
+                                    {tournamentStatus === 'ONGOING' ? 'Play' : tournamentStatus === 'ENDED' ? 'View Winners' : tournamentStatus === 'LOCK_IN' ? 'Lock-In' : 'Sign Up'}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+
+                    )}
 
                     {/* Content Viewport */}
-                    <div className="min-h-[40vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                        {activeTab === 'rules' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="md:col-span-2 lg:col-span-3">
-                                    <div className="bg-gradient-to-br from-brand-primary/20 to-black border-2 border-brand-primary/40 p-8 rounded-[2rem] relative overflow-hidden shadow-2xl">
-                                        <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl pointer-events-none text-brand-primary">🏆</div>
-                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Official Format</h2>
-                                        <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
-                                            {activeSeason.format.includes('Duos') || activeSeason.name.includes('Season 2') ? (
-                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Duos 2v2</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
-                                            ) : (
-                                                <>Single-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
-                                            )}
-                                        </p>
-                                    </div>
-                                </div>
-                                <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
-                                    <div className="space-y-4">
-                                        <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
-                                        <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Legendary Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li></ul></div>
-                                    </div>
-                                </RuleCard>
-                                <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
-                                    <ul className="space-y-2">
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A player cannot have two Pokémon of the same National Pokédex number.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A player cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
-                                    </ul>
-                                </RuleCard>
-                                <RuleCard title="Move Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
-                                    <div className="space-y-3">
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
-                                    </div>
-                                </RuleCard>
-                                <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
-                                    <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
-                                </RuleCard>
-                                <RuleCard title="General Rules" icon="⚖️">
-                                    <ul className="space-y-3">
-                                        <li className="flex gap-3"><span className="text-red-500 font-bold text-lg leading-none">•</span><span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span></li>
-                                        <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>No intentional stalling or disconnect abuse.</span></li>
-                                        <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Valid disconnect? Restart match <strong className="text-white">WITH SAME TEAM</strong>.</span></li>
-                                        <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Report matches within <strong className="text-white">10 minutes</strong>.</span></li>
-                                        <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span className="italic opacity-80">Admin decisions are final.</span></li>
-                                    </ul>
-                                </RuleCard>
-                                <RuleCard title="Spectator Rules" icon="👀" color="border-green-500/40 bg-green-900/10">
-                                    <ul className="space-y-2">
-                                        <li className="flex gap-2"><span className="text-green-400">•</span> When the matches start mute your mic/ use push to talk.</li>
-                                        <li className="flex gap-2"><span className="text-green-400">•</span> Cheering is allowed but do not distract/disrupt the contestants and matches.</li>
-                                        <li className="flex gap-2"><span className="text-green-400">•</span> Keep your pokemon on your shoulders or in your balls.</li>
-                                    </ul>
-                                </RuleCard>
-                            </div>
-                        )}
-
-                        {activeTab === 'brackets' && (
-                            <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-500 min-h-[850px] flex flex-col">
-                                <div className="flex justify-between items-center mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Tournament Results</h2>
-                                        <div className="flex bg-black/40 rounded-full p-1 border border-white/10">
-                                            <button onClick={() => setBracketView('winners')} className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${bracketView === 'winners' ? 'bg-yellow-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Winners</button>
-                                            <button onClick={() => setBracketView('bracket')} className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${bracketView === 'bracket' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Bracket</button>
+                    {activeSeason && (
+                        <div className="min-h-[40vh] pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                            {activeTab === 'rules' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <div className="md:col-span-2 lg:col-span-3">
+                                        <div className="bg-gradient-to-br from-brand-primary/20 to-black border-2 border-brand-primary/40 p-8 rounded-[2rem] relative overflow-hidden shadow-2xl">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl pointer-events-none text-brand-primary">🏆</div>
+                                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Official Format</h2>
+                                            <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
+                                                {activeSeason.format.includes('Duos') || activeSeason.name.includes('Season 2') ? (
+                                                    <>Double-elimination bracket of a <span className="text-brand-primary font-black">Duos 2v2</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                                ) : (
+                                                    <>Single-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                                )}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className={`w-2 h-2 rounded-full ${tournamentStatus === 'ENDED' ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`}></span>
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{tournamentStatus === 'ENDED' ? 'Season Concluded' : 'Live Updates'}</span>
-                                    </div>
+                                    <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
+                                        <div className="space-y-4">
+                                            <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
+                                            <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Legendary Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li></ul></div>
+                                        </div>
+                                    </RuleCard>
+                                    <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
+                                        <ul className="space-y-2">
+                                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A player cannot have two Pokémon of the same National Pokédex number.</span></li>
+                                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item.</span></li>
+                                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A player cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
+                                            <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
+                                        </ul>
+                                    </RuleCard>
+                                    <RuleCard title="Move Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
+                                        <div className="space-y-3">
+                                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
+                                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
+                                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
+                                            <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
+                                        </div>
+                                    </RuleCard>
+                                    <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
+                                        <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
+                                    </RuleCard>
+                                    <RuleCard title="General Rules" icon="⚖️">
+                                        <ul className="space-y-3">
+                                            <li className="flex gap-3"><span className="text-red-500 font-bold text-lg leading-none">•</span><span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span></li>
+                                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>No intentional stalling or disconnect abuse.</span></li>
+                                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Valid disconnect? Restart match <strong className="text-white">WITH SAME TEAM</strong>.</span></li>
+                                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span>Report matches within <strong className="text-white">10 minutes</strong>.</span></li>
+                                            <li className="flex gap-3"><span className="text-brand-primary font-bold text-lg leading-none">•</span><span className="italic opacity-80">Admin decisions are final.</span></li>
+                                        </ul>
+                                    </RuleCard>
+                                    <RuleCard title="Spectator Rules" icon="👀" color="border-green-500/40 bg-green-900/10">
+                                        <ul className="space-y-2">
+                                            <li className="flex gap-2"><span className="text-green-400">•</span> When the matches start mute your mic/ use push to talk.</li>
+                                            <li className="flex gap-2"><span className="text-green-400">•</span> Cheering is allowed but do not distract/disrupt the contestants and matches.</li>
+                                            <li className="flex gap-2"><span className="text-green-400">•</span> Keep your pokemon on your shoulders or in your balls.</li>
+                                        </ul>
+                                    </RuleCard>
                                 </div>
+                            )}
 
-                                {bracketView === 'bracket' ? (
-                                    // Show "Not Generated" only for DRAFTING/LOCK_IN phases
-                                    (tournamentStatus === 'DRAFTING' || tournamentStatus === 'LOCK_IN') ? (
-                                        <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] text-center space-y-6">
-                                            <div className="w-24 h-24 bg-brand-primary/10 rounded-full flex items-center justify-center text-6xl animate-pulse">🗓️</div>
-                                            <div className="space-y-2">
-                                                <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Brackets Not Generated</h3>
-                                                <p className="text-gray-400 max-w-md mx-auto">The tournament has not started yet. Brackets will be generated once the drafting phase is complete!</p>
+                            {activeTab === 'brackets' && (
+                                <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-500 min-h-[850px] flex flex-col">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Tournament Results</h2>
+                                            <div className="flex bg-black/40 rounded-full p-1 border border-white/10">
+                                                <button onClick={() => setBracketView('winners')} className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${bracketView === 'winners' ? 'bg-yellow-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Winners</button>
+                                                <button onClick={() => setBracketView('bracket')} className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all ${bracketView === 'bracket' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Bracket</button>
                                             </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-2 h-2 rounded-full ${tournamentStatus === 'ENDED' ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`}></span>
+                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{tournamentStatus === 'ENDED' ? 'Season Concluded' : 'Live Updates'}</span>
+                                        </div>
+                                    </div>
+
+                                    {bracketView === 'bracket' ? (
+                                        // Show "Not Generated" only for DRAFTING/LOCK_IN phases
+                                        (tournamentStatus === 'DRAFTING' || tournamentStatus === 'LOCK_IN') ? (
+                                            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] text-center space-y-6">
+                                                <div className="w-24 h-24 bg-brand-primary/10 rounded-full flex items-center justify-center text-6xl animate-pulse">🗓️</div>
+                                                <div className="space-y-2">
+                                                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Brackets Not Generated</h3>
+                                                    <p className="text-gray-400 max-w-md mx-auto">The tournament has not started yet. Brackets will be generated once the drafting phase is complete!</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // Show Challonge iframe for ONGOING/ENDED seasons
+                                            <div className="flex-1 w-full bg-white rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507] min-h-[800px]">
+                                                <iframe
+                                                    src={activeSeason.challongeUrl ? `${activeSeason.challongeUrl}/module` : "https://challonge.com/nisamon1/module"}
+                                                    width="100%"
+                                                    height="100%"
+                                                    frameBorder="0"
+                                                    scrolling="auto"
+                                                    allowTransparency={true}
+                                                    className="w-full h-full min-h-[800px]"
+                                                ></iframe>
+                                            </div>
+                                        )
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center py-10 relative">
+                                            <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/5 to-transparent pointer-events-none rounded-3xl"></div>
+
+                                            {!winners[0] ? (
+                                                <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-6 z-10">
+                                                    <div className="w-24 h-24 bg-yellow-500/10 rounded-full flex items-center justify-center text-6xl opacity-50">🏆</div>
+                                                    <div className="space-y-2">
+                                                        <h3 className="text-3xl font-black text-white uppercase tracking-tighter">No Winners Yet</h3>
+                                                        <p className="text-gray-400 max-w-md mx-auto">The tournament has not ended yet. Check back later to see who takes the crown!</p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-5xl mx-auto px-4 justify-center">
+
+                                                    {/* 2ND PLACE */}
+                                                    {winners[1] && (
+                                                        <div className="order-2 md:order-1 flex flex-col w-full md:w-1/3">
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-slate-300 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-8">
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-slate-300">2</div>
+                                                                <div className="flex items-center gap-4 mb-4 relative z-10">
+                                                                    <div className="relative">
+                                                                        <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
+                                                                            <span className="font-black text-slate-300 text-xl">2ND</span>
+                                                                        </div>
+                                                                        <div className="absolute -bottom-2 -right-2 text-2xl">🥈</div>
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{winners[1]}</h3>
+                                                                        <p className="text-slate-400 font-mono font-bold">{getPlayerStats(winners[1])}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
+                                                            </div>
+                                                            <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
+
+                                                            <div className="mt-4 flex justify-center">
+                                                                <img src={`https://mc-heads.net/body/${winners[1]}/right`} className="h-48 md:h-64 object-contain filter drop-shadow-2xl grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" alt={winners[1]} />
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* 1ST PLACE */}
+                                                    {winners[0] && (
+                                                        <div className="order-1 md:order-2 flex flex-col w-full md:w-1/3 -mt-12 z-10">
+                                                            <div className="relative flex justify-center mb-6">
+                                                                <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
+                                                                <img src={`https://mc-heads.net/body/${winners[0]}`} className="h-64 md:h-80 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)] scale-110" alt={winners[0]} />
+                                                                <div className="absolute -top-16 animate-bounce">
+                                                                    <span className="text-6xl filter drop-shadow-lg">👑</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-yellow-400 rounded-t-2xl p-8 relative group overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)] ring-1 ring-yellow-500/30">
+                                                                <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/10 to-transparent opacity-50"></div>
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl font-black text-yellow-400">1</div>
+
+                                                                <div className="flex items-center gap-5 mb-2 relative z-10">
+                                                                    <div className="w-20 h-20 rounded-full bg-yellow-900/50 flex items-center justify-center border-2 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] shrink-0">
+                                                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 flex items-center justify-center">
+                                                                            <span className="font-black text-yellow-900 text-3xl">1ST</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <h3 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter truncate leading-none mb-1">{winners[0]}</h3>
+                                                                        <p className="text-yellow-400 font-mono font-bold text-xl">{getPlayerStats(winners[0])}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-full h-3 bg-yellow-900/50 rounded-full overflow-hidden mt-4"><div className="w-full h-full bg-gradient-to-r from-yellow-500 to-yellow-200 animate-pulse"></div></div>
+                                                            </div>
+                                                            <div className="h-6 bg-[#1a1a1a] mx-4 rounded-b-xl opacity-50 border-t border-white/5"></div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* 3RD PLACE */}
+                                                    {winners[2] && (
+                                                        <div className="order-3 flex flex-col w-full md:w-1/3">
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-orange-700/80 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-16">
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-orange-700">3</div>
+                                                                <div className="flex items-center gap-4 mb-4 relative z-10">
+                                                                    <div className="relative">
+                                                                        <div className="w-16 h-16 rounded-full bg-orange-900/30 flex items-center justify-center border-2 border-orange-700 shadow-[0_0_15px_rgba(194,65,12,0.3)]">
+                                                                            <span className="font-black text-orange-500 text-xl">3RD</span>
+                                                                        </div>
+                                                                        <div className="absolute -bottom-2 -right-2 text-2xl">🥉</div>
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{winners[2]}</h3>
+
+                                                                        <p className="text-orange-500 font-mono font-bold">{getPlayerStats(winners[2])}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-full h-2 bg-orange-900/30 rounded-full overflow-hidden"><div className="w-1/2 h-full bg-orange-600"></div></div>
+                                                            </div>
+                                                            <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
+
+                                                            <div className="mt-4 flex justify-center">
+                                                                <img src={`https://mc-heads.net/body/${winners[2]}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" alt={winners[2]} />
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'players' && (
+                                <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-left-4 duration-500">
+                                    <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                                        <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Players List</h2>
+                                        <div className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-4 py-1.5 rounded-full font-black uppercase tracking-widest">{playersList.length} Registered</div>
+                                    </div>
+                                    {loadingPlayers ? (<div className="text-center py-20 animate-spin">⌛</div>) : playersList.length === 0 ? (<div className="text-center py-24 text-gray-600 font-bold italic">No players yet!</div>) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {playersList.map((entry, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setSelectedPlayer(entry)}
+                                                    className="bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02]"
+                                                >
+                                                    <div className="flex items-center gap-4 border-b border-white/5 pb-4 w-full">
+                                                        <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-14 h-14 rounded-2xl border-2 border-white/10" alt={entry.minecraftUsername} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-black text-white text-xl truncate">{entry.minecraftUsername}</div>
+                                                            <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${entry.isLocked ? 'text-green-400' : 'text-amber-400'}`}><span className={`w-2 h-2 rounded-full ${entry.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>{entry.isLocked ? 'Ready' : 'Drafting'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-6 gap-2 w-full">
+                                                        {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'signup' && (
+                                <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    {!user ? (
+                                        <div className="flex flex-col items-center justify-center py-16 text-center space-y-8">
+                                            <div className="w-20 h-20 bg-red-900/20 rounded-full flex items-center justify-center text-5xl opacity-40">🔒</div>
+                                            <div className="space-y-2"><h2 className="text-3xl font-black text-white uppercase tracking-tighter">Login Required</h2><p className="text-gray-400 max-w-sm mx-auto text-sm">Discord identification required.</p></div>
+                                            <UserProfile className="scale-110" />
+                                        </div>
+                                    ) : loadingTeam ? (<div className="text-center py-20">Retrieving...</div>) : !hasStartedRegistration && !isLocked ? (
+                                        <div className="flex flex-col items-center justify-center py-10 text-center space-y-8">
+                                            {tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED' ? (
+                                                <div className="bg-red-900/20 border-2 border-red-500/30 p-12 rounded-[2.5rem] flex flex-col items-center gap-4">
+                                                    <span className="text-6xl">⛔</span>
+                                                    <h2 className="text-4xl font-black text-white uppercase italic">Registration Closed</h2>
+                                                    <p className="text-gray-400">
+                                                        {tournamentStatus === 'ENDED'
+                                                            ? "The tournament has concluded. Signups are closed for this season."
+                                                            : "The tournament has already begun. Signups are no longer available for this season."}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
+                                                    <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">Click below to register and begin drafting your team!</p></div>
+                                                    <button onClick={handleInitialRegister} className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-[2rem] shadow-xl transition-all transform hover:scale-105 uppercase tracking-widest border-b-4 border-red-800">JOIN TOURNAMENT</button>
+                                                </>
+                                            )}
                                         </div>
                                     ) : (
-                                        // Show Challonge iframe for ONGOING/ENDED seasons
-                                        <div className="flex-1 w-full bg-white rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507] min-h-[800px]">
-                                            <iframe
-                                                src={activeSeason.challongeUrl ? `${activeSeason.challongeUrl}/module` : "https://challonge.com/nisamon1/module"}
-                                                width="100%"
-                                                height="100%"
-                                                frameBorder="0"
-                                                scrolling="auto"
-                                                allowTransparency={true}
-                                                className="w-full h-full min-h-[800px]"
-                                            ></iframe>
-                                        </div>
-                                    )
-                                ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center py-10 relative">
-                                        <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/5 to-transparent pointer-events-none rounded-3xl"></div>
-
-                                        {!winners[0] ? (
-                                            <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-6 z-10">
-                                                <div className="w-24 h-24 bg-yellow-500/10 rounded-full flex items-center justify-center text-6xl opacity-50">🏆</div>
-                                                <div className="space-y-2">
-                                                    <h3 className="text-3xl font-black text-white uppercase tracking-tighter">No Winners Yet</h3>
-                                                    <p className="text-gray-400 max-w-md mx-auto">The tournament has not ended yet. Check back later to see who takes the crown!</p>
+                                        <div className="space-y-10">
+                                            {(isLocked || tournamentStatus === 'ONGOING') && (
+                                                <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2.5rem] p-6 text-center shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+                                                    <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">{tournamentStatus === 'ONGOING' ? '⚔️ TOURNAMENT ONGOING' : '🛡️ ROSTER SECURED'}</h3>
+                                                    <p className="text-green-200/60 text-xs">Selection locked and synced with database.</p>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
+                                                <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
+                                                <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
+                                            </div>
+                                            <div className="space-y-6">
+                                                <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
+                                                    {selectedTeam.map((p, idx) => {
+                                                        const banned = p !== null && isBanned(p.id);
+                                                        return (
+                                                            <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
+                                                                {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-5xl mx-auto px-4 justify-center">
-
-                                                {/* 2ND PLACE */}
-                                                {winners[1] && (
-                                                    <div className="order-2 md:order-1 flex flex-col w-full md:w-1/3">
-                                                        <div className="bg-[#2a2a2a] border-t-4 border-slate-300 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-8">
-                                                            <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-slate-300">2</div>
-                                                            <div className="flex items-center gap-4 mb-4 relative z-10">
-                                                                <div className="relative">
-                                                                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
-                                                                        <span className="font-black text-slate-300 text-xl">2ND</span>
-                                                                    </div>
-                                                                    <div className="absolute -bottom-2 -right-2 text-2xl">🥈</div>
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{winners[1]}</h3>
-                                                                    <p className="text-slate-400 font-mono font-bold">{getPlayerStats(winners[1])}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
-                                                        </div>
-                                                        <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
-
-                                                        <div className="mt-4 flex justify-center">
-                                                            <img src={`https://mc-heads.net/body/${winners[1]}/right`} className="h-48 md:h-64 object-contain filter drop-shadow-2xl grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" alt={winners[1]} />
-                                                        </div>
+                                            {!isLocked && tournamentStatus !== 'ONGOING' && (
+                                                <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl">
+                                                    <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Pokemon Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
+                                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
+                                                        {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
+                                                            const isSelected = selectedTeam.some(sp => sp?.id === p.id);
+                                                            const isFull = !selectedTeam.includes(null);
+                                                            const banned = isBanned(p.id);
+                                                            return (<button key={p.id} disabled={isSelected || isFull || banned} onClick={() => handleSelectPokemon(p)} className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50' : (isFull || banned) ? 'bg-gray-900 opacity-30 grayscale' : 'bg-white/5 border border-white/10 hover:border-brand-primary/50'}`} title={p.name}><div className="w-full h-full relative"><PokemonTeamImage pokemon={p} />{banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}</div>{banned && <div className="banned-tooltip">BANNED</div>}</button>);
+                                                        })
+                                                        }
                                                     </div>
-                                                )}
-
-                                                {/* 1ST PLACE */}
-                                                {winners[0] && (
-                                                    <div className="order-1 md:order-2 flex flex-col w-full md:w-1/3 -mt-12 z-10">
-                                                        <div className="relative flex justify-center mb-6">
-                                                            <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
-                                                            <img src={`https://mc-heads.net/body/${winners[0]}`} className="h-64 md:h-80 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)] scale-110" alt={winners[0]} />
-                                                            <div className="absolute -top-16 animate-bounce">
-                                                                <span className="text-6xl filter drop-shadow-lg">👑</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="bg-[#2a2a2a] border-t-4 border-yellow-400 rounded-t-2xl p-8 relative group overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)] ring-1 ring-yellow-500/30">
-                                                            <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/10 to-transparent opacity-50"></div>
-                                                            <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl font-black text-yellow-400">1</div>
-
-                                                            <div className="flex items-center gap-5 mb-2 relative z-10">
-                                                                <div className="w-20 h-20 rounded-full bg-yellow-900/50 flex items-center justify-center border-2 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] shrink-0">
-                                                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 flex items-center justify-center">
-                                                                        <span className="font-black text-yellow-900 text-3xl">1ST</span>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <h3 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter truncate leading-none mb-1">{winners[0]}</h3>
-                                                                    <p className="text-yellow-400 font-mono font-bold text-xl">{getPlayerStats(winners[0])}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="w-full h-3 bg-yellow-900/50 rounded-full overflow-hidden mt-4"><div className="w-full h-full bg-gradient-to-r from-yellow-500 to-yellow-200 animate-pulse"></div></div>
-                                                        </div>
-                                                        <div className="h-6 bg-[#1a1a1a] mx-4 rounded-b-xl opacity-50 border-t border-white/5"></div>
-                                                    </div>
-                                                )}
-
-                                                {/* 3RD PLACE */}
-                                                {winners[2] && (
-                                                    <div className="order-3 flex flex-col w-full md:w-1/3">
-                                                        <div className="bg-[#2a2a2a] border-t-4 border-orange-700/80 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-16">
-                                                            <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-orange-700">3</div>
-                                                            <div className="flex items-center gap-4 mb-4 relative z-10">
-                                                                <div className="relative">
-                                                                    <div className="w-16 h-16 rounded-full bg-orange-900/30 flex items-center justify-center border-2 border-orange-700 shadow-[0_0_15px_rgba(194,65,12,0.3)]">
-                                                                        <span className="font-black text-orange-500 text-xl">3RD</span>
-                                                                    </div>
-                                                                    <div className="absolute -bottom-2 -right-2 text-2xl">🥉</div>
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{winners[2]}</h3>
-
-                                                                    <p className="text-orange-500 font-mono font-bold">{getPlayerStats(winners[2])}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div className="w-full h-2 bg-orange-900/30 rounded-full overflow-hidden"><div className="w-1/2 h-full bg-orange-600"></div></div>
-                                                        </div>
-                                                        <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
-
-                                                        <div className="mt-4 flex justify-center">
-                                                            <img src={`https://mc-heads.net/body/${winners[2]}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" alt={winners[2]} />
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'players' && (
-                            <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-left-4 duration-500">
-                                <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-                                    <h2 className="text-4xl font-black text-white uppercase tracking-tighter">Players List</h2>
-                                    <div className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-4 py-1.5 rounded-full font-black uppercase tracking-widest">{playersList.length} Registered</div>
+                                                </div>
+                                            )}
+                                            {!isLocked && tournamentStatus !== 'ONGOING' && (
+                                                <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
+                                                    <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1">{saveStatus === 'success' ? 'SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE DRAFT'}</button>
+                                                    {tournamentStatus === 'LOCK_IN' && (
+                                                        <button onClick={handleLockIn} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon} className="px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] bg-green-600 hover:bg-green-500 text-white border-green-800 border-b-4">🔒 FINALIZE & LOCK TEAM</button>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {tournamentStatus === 'ONGOING' && !isLocked && hasStartedRegistration && (
+                                                <div className="bg-amber-900/20 border-2 border-amber-500/30 p-8 rounded-[2.5rem] text-center">
+                                                    <span className="text-4xl mb-4 block">⌛</span>
+                                                    <h3 className="text-2xl font-black text-white uppercase italic mb-2">Phase Expired</h3>
+                                                    <p className="text-gray-400">The tournament has already begun. Drafting is closed, and unfinalized teams have been disqualified.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-                                {loadingPlayers ? (<div className="text-center py-20 animate-spin">⌛</div>) : playersList.length === 0 ? (<div className="text-center py-24 text-gray-600 font-bold italic">No players yet!</div>) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {playersList.map((entry, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => setSelectedPlayer(entry)}
-                                                className="bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer shadow-md hover:shadow-xl hover:scale-[1.02]"
-                                            >
-                                                <div className="flex items-center gap-4 border-b border-white/5 pb-4 w-full">
-                                                    <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-14 h-14 rounded-2xl border-2 border-white/10" alt={entry.minecraftUsername} />
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="font-black text-white text-xl truncate">{entry.minecraftUsername}</div>
-                                                        <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${entry.isLocked ? 'text-green-400' : 'text-amber-400'}`}><span className={`w-2 h-2 rounded-full ${entry.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>{entry.isLocked ? 'Ready' : 'Drafting'}</div>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-6 gap-2 w-full">
-                                                    {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'signup' && (
-                            <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {!user ? (
-                                    <div className="flex flex-col items-center justify-center py-16 text-center space-y-8">
-                                        <div className="w-20 h-20 bg-red-900/20 rounded-full flex items-center justify-center text-5xl opacity-40">🔒</div>
-                                        <div className="space-y-2"><h2 className="text-3xl font-black text-white uppercase tracking-tighter">Login Required</h2><p className="text-gray-400 max-w-sm mx-auto text-sm">Discord identification required.</p></div>
-                                        <UserProfile className="scale-110" />
-                                    </div>
-                                ) : loadingTeam ? (<div className="text-center py-20">Retrieving...</div>) : !hasStartedRegistration && !isLocked ? (
-                                    <div className="flex flex-col items-center justify-center py-10 text-center space-y-8">
-                                        {tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED' ? (
-                                            <div className="bg-red-900/20 border-2 border-red-500/30 p-12 rounded-[2.5rem] flex flex-col items-center gap-4">
-                                                <span className="text-6xl">⛔</span>
-                                                <h2 className="text-4xl font-black text-white uppercase italic">Registration Closed</h2>
-                                                <p className="text-gray-400">
-                                                    {tournamentStatus === 'ENDED'
-                                                        ? "The tournament has concluded. Signups are closed for this season."
-                                                        : "The tournament has already begun. Signups are no longer available for this season."}
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
-                                                <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">Click below to register and begin drafting your team!</p></div>
-                                                <button onClick={handleInitialRegister} className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-[2rem] shadow-xl transition-all transform hover:scale-105 uppercase tracking-widest border-b-4 border-red-800">JOIN TOURNAMENT</button>
-                                            </>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="space-y-10">
-                                        {(isLocked || tournamentStatus === 'ONGOING') && (
-                                            <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2.5rem] p-6 text-center shadow-[0_0_30px_rgba(34,197,94,0.1)]">
-                                                <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">{tournamentStatus === 'ONGOING' ? '⚔️ TOURNAMENT ONGOING' : '🛡️ ROSTER SECURED'}</h3>
-                                                <p className="text-green-200/60 text-xs">Selection locked and synced with database.</p>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
-                                            <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
-                                            <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
-                                        </div>
-                                        <div className="space-y-6">
-                                            <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
-                                                {selectedTeam.map((p, idx) => {
-                                                    const banned = p !== null && isBanned(p.id);
-                                                    return (
-                                                        <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
-                                                            {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                        {!isLocked && tournamentStatus !== 'ONGOING' && (
-                                            <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl">
-                                                <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Pokemon Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
-                                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
-                                                    {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
-                                                        const isSelected = selectedTeam.some(sp => sp?.id === p.id);
-                                                        const isFull = !selectedTeam.includes(null);
-                                                        const banned = isBanned(p.id);
-                                                        return (<button key={p.id} disabled={isSelected || isFull || banned} onClick={() => handleSelectPokemon(p)} className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50' : (isFull || banned) ? 'bg-gray-900 opacity-30 grayscale' : 'bg-white/5 border border-white/10 hover:border-brand-primary/50'}`} title={p.name}><div className="w-full h-full relative"><PokemonTeamImage pokemon={p} />{banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}</div>{banned && <div className="banned-tooltip">BANNED</div>}</button>);
-                                                    })
-                                                    }
-                                                </div>
-                                            </div>
-                                        )}
-                                        {!isLocked && tournamentStatus !== 'ONGOING' && (
-                                            <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
-                                                <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1">{saveStatus === 'success' ? 'SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE DRAFT'}</button>
-                                                {tournamentStatus === 'LOCK_IN' && (
-                                                    <button onClick={handleLockIn} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon} className="px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] bg-green-600 hover:bg-green-500 text-white border-green-800 border-b-4">🔒 FINALIZE & LOCK TEAM</button>
-                                                )}
-                                            </div>
-                                        )}
-                                        {tournamentStatus === 'ONGOING' && !isLocked && hasStartedRegistration && (
-                                            <div className="bg-amber-900/20 border-2 border-amber-500/30 p-8 rounded-[2.5rem] text-center">
-                                                <span className="text-4xl mb-4 block">⌛</span>
-                                                <h3 className="text-2xl font-black text-white uppercase italic mb-2">Phase Expired</h3>
-                                                <p className="text-gray-400">The tournament has already begun. Drafting is closed, and unfinalized teams have been disqualified.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
