@@ -657,7 +657,7 @@ const Tournament: React.FC = () => {
                         <span>←</span> Back to Dashboard
                     </Link>
                     {/* TABS */}
-                    <div className="flex gap-1 md:gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center">
                         {[
                             { id: 'rules', label: 'Rules' },
                             { id: 'brackets', label: 'Bracket' },
@@ -669,9 +669,9 @@ const Tournament: React.FC = () => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`
-                        px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] md:text-xs transition-all whitespace-nowrap
+                        px-6 h-10 rounded-full font-black uppercase tracking-widest text-[10px] md:text-xs transition-all whitespace-nowrap flex items-center justify-center
                         ${activeTab === tab.id
-                                        ? 'bg-white text-black shadow-lg shadow-white/10 scale-105'
+                                        ? 'bg-white text-black shadow-lg shadow-white/10'
                                         : 'bg-black/40 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5'}
                     `}
                             >
