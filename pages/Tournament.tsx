@@ -402,6 +402,7 @@ const Tournament: React.FC = () => {
                 .catch(console.error);
         } else if (activeTab === 'players') {
             fetchPlayersForSeason(activeSeason.seasonId);
+            if (activeSeason.format.includes('Duos')) fetchDuosForSeason(activeSeason.seasonId);
         } else if (activeTab === 'duos') {
             fetchDuosForSeason(activeSeason.seasonId);
         }
@@ -1035,7 +1036,31 @@ const Tournament: React.FC = () => {
                                                     <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-14 h-14 rounded-2xl border-2 border-white/10" alt={entry.minecraftUsername} />
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-black text-white text-xl truncate">{entry.minecraftUsername}</div>
-                                                        <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${entry.isLocked ? 'text-green-400' : 'text-amber-400'}`}><span className={`w-2 h-2 rounded-full ${entry.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>{entry.isLocked ? 'Ready' : 'Drafting'}</div>
+                                                        {activeSeason.format.includes('Duos') ? (() => {
+                                                            const userDuo = duos.find(d => d.player1DiscordId === entry.discordId || d.player2DiscordId === entry.discordId);
+                                                            let statusLabel = 'Signed Up';
+                                                            let statusColor = 'text-blue-400';
+                                                            let dotColor = 'bg-blue-500';
+
+                                                            if (userDuo) {
+                                                                if (userDuo.isLocked) {
+                                                                    statusLabel = 'Locked';
+                                                                    statusColor = 'text-green-400';
+                                                                    dotColor = 'bg-green-500';
+                                                                } else {
+                                                                    statusLabel = 'In Duo';
+                                                                    statusColor = 'text-amber-400';
+                                                                    dotColor = 'bg-amber-500';
+                                                                }
+                                                            }
+                                                            return (
+                                                                <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${statusColor}`}>
+                                                                    <span className={`w-2 h-2 rounded-full ${dotColor} ${statusLabel === 'In Duo' ? 'animate-pulse' : ''}`}></span>{statusLabel}
+                                                                </div>
+                                                            );
+                                                        })() : (
+                                                            <div className={`text-[10px] font-black uppercase flex items-center gap-2 ${entry.isLocked ? 'text-green-400' : 'text-amber-400'}`}><span className={`w-2 h-2 rounded-full ${entry.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>{entry.isLocked ? 'Ready' : 'Drafting'}</div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 {/* Only show team placeholders for Singles */}
