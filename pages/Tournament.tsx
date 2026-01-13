@@ -272,6 +272,7 @@ const Tournament: React.FC = () => {
     const [duos, setDuos] = useState<Duo[]>([]);
     const [myDuo, setMyDuo] = useState<Duo | null>(null);
     const [viewMode, setViewMode] = useState<'players' | 'duos'>('players');
+    const [selectedDuo, setSelectedDuo] = useState<Duo | null>(null);
 
     // Bracket & Winners State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
@@ -1153,6 +1154,53 @@ const Tournament: React.FC = () => {
                                         ))}
                                     </div>
                                 )}
+
+                                {/* Duos Section - Only for Duos format */}
+                                {activeSeason.format.includes('Duos') && duos.length > 0 && (
+                                    <div className="mt-12 space-y-6">
+                                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                            <h3 className="text-2xl font-black text-purple-400 uppercase tracking-tighter">👥 Duos Teams</h3>
+                                            <div className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-4 py-1.5 rounded-full font-black uppercase tracking-widest">{duos.length} Teams</div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {duos.map(duo => (
+                                                <button
+                                                    key={duo.duoId}
+                                                    onClick={() => setSelectedDuo(duo)}
+                                                    className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-2xl p-5 text-left hover:border-purple-400/50 hover:scale-[1.02] transition-all cursor-pointer group"
+                                                >
+                                                    <div className="flex items-center gap-4 mb-4">
+                                                        <div className="flex -space-x-3">
+                                                            <img src={`https://mc-heads.net/avatar/${duo.player1Username}/40`} className={`w-10 h-10 rounded-xl border-2 ${duo.captainDiscordId === duo.player1DiscordId ? 'border-yellow-500' : 'border-purple-500/50'}`} alt={duo.player1Username} />
+                                                            <img src={`https://mc-heads.net/avatar/${duo.player2Username}/40`} className={`w-10 h-10 rounded-xl border-2 ${duo.captainDiscordId === duo.player2DiscordId ? 'border-yellow-500' : 'border-purple-500/50'}`} alt={duo.player2Username} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-bold text-white text-sm truncate">
+                                                                {duo.player1Username} {duo.captainDiscordId === duo.player1DiscordId && '👑'} & {duo.player2Username} {duo.captainDiscordId === duo.player2DiscordId && '👑'}
+                                                            </div>
+                                                            <div className={`text-[10px] font-black uppercase ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
+                                                                {duo.isLocked ? '✓ Locked' : '⏳ Drafting'}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-white/30 group-hover:text-purple-400 transition-colors text-xl">→</div>
+                                                    </div>
+                                                    {/* Mini Team Preview */}
+                                                    {duo.team && duo.team.length > 0 && (
+                                                        <div className="flex gap-1">
+                                                            {duo.team.slice(0, 6).map((poke, idx) => (
+                                                                <div key={idx} className={`w-8 h-8 rounded-lg border ${idx < 3 ? 'border-yellow-500/30' : 'border-purple-500/30'} bg-black/40 flex items-center justify-center`}>
+                                                                    {poke ? (
+                                                                        <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} className="w-6 h-6 pixelated" />
+                                                                    ) : <div className="w-2 h-2 bg-white/10 rounded-full" />}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -1320,7 +1368,8 @@ const Tournament: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 )}
-                                                {!isLocked && tournamentStatus !== 'ONGOING' && (
+                                                {/* Save/Lock Buttons - Check both solo isLocked and duo isLocked */}
+                                                {!(activeSeason.format.includes('Duos') ? myDuo?.isLocked : isLocked) && tournamentStatus !== 'ONGOING' && (
                                                     <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
                                                         <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1">{saveStatus === 'success' ? 'SYNCED ✓' : saving ? 'SYNCING...' : 'SAVE DRAFT'}</button>
                                                         {tournamentStatus === 'LOCK_IN' && (
@@ -1403,6 +1452,79 @@ const Tournament: React.FC = () => {
                     </div>
                 )
             }
+
+            {/* DUO DETAILS MODAL */}
+            {selectedDuo && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedDuo(null)}>
+                    <div className="bg-[#120507] w-full max-w-4xl max-h-[90vh] rounded-[3rem] border-2 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500" onClick={e => e.stopPropagation()}>
+
+                        {/* Decorative Header Background */}
+                        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-900/30 to-transparent pointer-events-none"></div>
+
+                        {/* Modal Header */}
+                        <div className="p-8 border-b border-white/5 relative z-10">
+                            <div className="flex flex-col md:flex-row items-center gap-6">
+                                {/* Player Avatars */}
+                                <div className="flex -space-x-4">
+                                    <img
+                                        src={`https://mc-heads.net/avatar/${selectedDuo.player1Username}/80`}
+                                        className={`w-20 h-20 rounded-2xl border-4 ${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? 'border-yellow-500' : 'border-purple-500'} shadow-xl`}
+                                        alt={selectedDuo.player1Username}
+                                    />
+                                    <img
+                                        src={`https://mc-heads.net/avatar/${selectedDuo.player2Username}/80`}
+                                        className={`w-20 h-20 rounded-2xl border-4 ${selectedDuo.captainDiscordId === selectedDuo.player2DiscordId ? 'border-yellow-500' : 'border-purple-500'} shadow-xl`}
+                                        alt={selectedDuo.player2Username}
+                                    />
+                                </div>
+                                <div>
+                                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">
+                                        {selectedDuo.player1Username}
+                                        {selectedDuo.captainDiscordId === selectedDuo.player1DiscordId && <span className="ml-2 text-yellow-400 text-2xl">👑</span>}
+                                        <span className="text-purple-400"> & </span>
+                                        {selectedDuo.player2Username}
+                                        {selectedDuo.captainDiscordId === selectedDuo.player2DiscordId && <span className="ml-2 text-yellow-400 text-2xl">👑</span>}
+                                    </h2>
+                                    <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mt-2 ${selectedDuo.isLocked ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
+                                        <span className={`w-2 h-2 rounded-full ${selectedDuo.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
+                                        <span className="text-xs font-black uppercase tracking-widest">{selectedDuo.isLocked ? 'Roster Finalized' : 'Drafting Phase'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={() => setSelectedDuo(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white font-black transition-all">✕</button>
+                        </div>
+
+                        {/* Team Display */}
+                        <div className="p-8 overflow-y-auto flex-1 space-y-8">
+                            {/* Captain's Pokemon */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <img src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player1Username : selectedDuo.player2Username}/32`} className="w-8 h-8 rounded-lg border-2 border-yellow-500" />
+                                    <h3 className="text-lg font-black uppercase tracking-widest text-yellow-400">👑 Captain's Pokemon</h3>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    {(selectedDuo.team?.slice(0, 3) || [null, null, null]).map((pokemon, idx) => (
+                                        <PokemonDetailCard key={idx} pokemon={pokemon} revealed={selectedDuo.isLocked} />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Partner's Pokemon */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <img src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player2Username : selectedDuo.player1Username}/32`} className="w-8 h-8 rounded-lg border-2 border-purple-500" />
+                                    <h3 className="text-lg font-black uppercase tracking-widest text-purple-400">Partner's Pokemon</h3>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    {(selectedDuo.team?.slice(3, 6) || [null, null, null]).map((pokemon, idx) => (
+                                        <PokemonDetailCard key={idx + 3} pokemon={pokemon} revealed={selectedDuo.isLocked} />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };
