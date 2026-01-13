@@ -462,10 +462,19 @@ const Tournament: React.FC = () => {
     const fetchMyDuo = async () => {
         if (!user?.id) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/api/tournament/duo/by-player?discordId=${user.id}&seasonId=${activeSeason.seasonId}`);
+            const res = await fetch(`${API_BASE_URL}/api/tournament/my-duo?discordId=${user.id}&seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
                 setMyDuo(data);
+
+                // If user is captain and duo has a team, populate selectedTeam
+                if (data && data.captainDiscordId === user.id && data.team) {
+                    const filledTeam = [...(data.team || [])];
+                    while (filledTeam.length < 6) filledTeam.push(null);
+                    setSelectedTeam(filledTeam);
+                    setIsLocked(data.isLocked || false);
+                    setHasStartedRegistration(true);
+                }
             }
         } catch (e) { console.error(e); }
     };
@@ -527,7 +536,44 @@ const Tournament: React.FC = () => {
     };
 
     const handleSaveDraft = async () => {
-        if (!user || hasBannedPokemon || tournamentStatus === 'ONGOING' || isLocked) return;
+        if (!user || hasBannedPokemon || tournamentStatus === 'ONGOING') return;
+
+        // For Duos: Check if user is captain and duo exists
+        if (activeSeason.format.includes('Duos') && myDuo) {
+            if (myDuo.captainDiscordId !== user.id) return; // Only captain can save
+            if (myDuo.isLocked) return; // Can't edit locked team
+
+            setSaving(true);
+            setSaveStatus('idle');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/tournament/duo/save-team`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        discordId: user.id,
+                        duoId: myDuo.duoId,
+                        team: selectedTeam
+                    })
+                });
+
+                if (res.ok) {
+                    setSaveStatus('success');
+                    setTimeout(() => setSaveStatus('idle'), 2000);
+                } else {
+                    setSaveStatus('error');
+                    const err = await res.json();
+                    alert(err.error || "Failed to save team");
+                }
+            } catch (e) {
+                setSaveStatus('error');
+            } finally {
+                setSaving(false);
+            }
+            return;
+        }
+
+        // Singles mode (original logic)
+        if (isLocked) return;
         setSaving(true);
         setSaveStatus('idle');
         try {
@@ -557,6 +603,39 @@ const Tournament: React.FC = () => {
 
     const handleLockIn = async () => {
         if (tournamentStatus !== 'LOCK_IN') return;
+
+        // For Duos mode
+        if (activeSeason.format.includes('Duos') && myDuo) {
+            if (myDuo.captainDiscordId !== user?.id) return; // Only captain
+            if (selectedTeam.filter(p => p !== null).length < 6) {
+                alert("Team must have 6 Pokemon to lock!");
+                return;
+            }
+            if (!window.confirm("Are you sure you want to LOCK IN your team? You will NOT be able to edit it afterwards.")) return;
+
+            await handleSaveDraft(); // Save first
+
+            setSaving(true);
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/tournament/duo/lock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ discordId: user?.id, duoId: myDuo.duoId })
+                });
+                if (res.ok) {
+                    setIsLocked(true);
+                    setMyDuo({ ...myDuo, isLocked: true }); // Update local state
+                    setSaveStatus('success');
+                } else {
+                    const err = await res.json();
+                    alert(err.error || "Lock failed.");
+                }
+            } catch (e) { alert("Lock failed."); }
+            finally { setSaving(false); }
+            return;
+        }
+
+        // Singles mode (original logic)
         if (selectedTeam.filter(p => p !== null).length < 1) {
             alert("You cannot lock an empty team!");
             return;
@@ -1172,18 +1251,62 @@ const Tournament: React.FC = () => {
                                                 </div>
                                                 <div className="space-y-6">
                                                     <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
-                                                        {selectedTeam.map((p, idx) => {
-                                                            const banned = p !== null && isBanned(p.id);
-                                                            return (
-                                                                <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
-                                                                    {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
+
+                                                    {/* Duos Mode: 3+3 Split with Owner Labels */}
+                                                    {activeSeason.format.includes('Duos') && myDuo ? (
+                                                        <div className="space-y-8">
+                                                            {/* Captain's Pokemon (Slots 0-2) */}
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center gap-3 px-2">
+                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}/32`} className="w-8 h-8 rounded-lg border-2 border-yellow-500" />
+                                                                    <span className="text-sm font-black uppercase tracking-widest text-yellow-400">👑 Captain's Pokemon</span>
                                                                 </div>
-                                                            );
-                                                        })}
-                                                    </div>
+                                                                <div className="grid grid-cols-3 gap-4 px-2">
+                                                                    {selectedTeam.slice(0, 3).map((p, idx) => {
+                                                                        const banned = p !== null && isBanned(p.id);
+                                                                        return (
+                                                                            <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-yellow-900/20 to-black/80 border-yellow-500 shadow-2xl scale-[1.03]') : 'bg-black/40 border-yellow-500/30 border-dashed opacity-50'}`}>
+                                                                                {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-yellow-900 font-black">+</span>)}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Partner's Pokemon (Slots 3-5) */}
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center gap-3 px-2">
+                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player2Username : myDuo.player1Username}/32`} className="w-8 h-8 rounded-lg border-2 border-purple-500" />
+                                                                    <span className="text-sm font-black uppercase tracking-widest text-purple-400">Partner's Pokemon</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-3 gap-4 px-2">
+                                                                    {selectedTeam.slice(3, 6).map((p, idx) => {
+                                                                        const actualIdx = idx + 3;
+                                                                        const banned = p !== null && isBanned(p.id);
+                                                                        return (
+                                                                            <div key={actualIdx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-purple-900/20 to-black/80 border-purple-500 shadow-2xl scale-[1.03]') : 'bg-black/40 border-purple-500/30 border-dashed opacity-50'}`}>
+                                                                                {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(actualIdx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-purple-900 font-black">+</span>)}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        /* Singles Mode: Original 6-slot grid */
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
+                                                            {selectedTeam.map((p, idx) => {
+                                                                const banned = p !== null && isBanned(p.id);
+                                                                return (
+                                                                    <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
+                                                                        {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                {!isLocked && tournamentStatus !== 'ONGOING' && (
+                                                {!isLocked && !(activeSeason.format.includes('Duos') && myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (
                                                     <div className="bg-black/40 rounded-[2.5rem] border border-white/10 p-6 space-y-6 shadow-2xl">
                                                         <div className="flex flex-col md:flex-row gap-6 justify-between items-center"><h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Pokemon Database</h4><input type="text" placeholder="SEARCH..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full md:w-80 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none" /></div>
                                                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-3 max-h-[400px] overflow-y-auto pokemon-grid pr-2 py-2">
@@ -1220,7 +1343,7 @@ const Tournament: React.FC = () => {
                         )}
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* PLAYER DETAILS MODAL */}
             {

@@ -333,6 +333,18 @@ const AdminTournament: React.FC = () => {
         setTimeout(() => setStatusMsg(''), 3000);
     };
 
+    const handleUnlockDuo = async (duo: Duo) => {
+        if (!window.confirm(`Unlock team for ${duo.player1Username} & ${duo.player2Username}? They will be able to edit again.`)) return;
+        try {
+            await apiCall('/api/admin/tournament/duo/unlock', { duoId: duo.duoId });
+            setStatusMsg('Duo team unlocked!');
+            fetchDuos(activeSeason!.seasonId);
+        } catch (e: any) {
+            setStatusMsg(e.message);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
     // Helper to check if player is already in a duo
     const isPlayerInDuo = (discordId: string) => {
         return duos.some(d => d.player1DiscordId === discordId || d.player2DiscordId === discordId);
@@ -552,8 +564,8 @@ const AdminTournament: React.FC = () => {
                             <button
                                 onClick={() => setPlayerListTab('solo')}
                                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${playerListTab === 'solo'
-                                        ? 'bg-white/20 text-white'
-                                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
                                     }`}
                             >
                                 Solo Players ({unpairedPlayers.length})
@@ -561,8 +573,8 @@ const AdminTournament: React.FC = () => {
                             <button
                                 onClick={() => setPlayerListTab('duos')}
                                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${playerListTab === 'duos'
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
                                     }`}
                             >
                                 Duos ({duos.length})
@@ -705,17 +717,45 @@ const AdminTournament: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Team Preview */}
-                                    {duo.team.length > 0 && (
-                                        <div className="grid grid-cols-6 gap-1 mb-3">
-                                            {duo.team.map((poke, idx) => (
-                                                <PokemonImage key={idx} pokemon={poke} />
-                                            ))}
+                                    {/* Team Preview with Owner Colors */}
+                                    {duo.team && duo.team.length > 0 && (
+                                        <div className="space-y-2 mb-3">
+                                            {/* Captain's Pokemon (first 3) */}
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-[9px] font-black uppercase text-yellow-400 w-12">Captain</div>
+                                                <div className="grid grid-cols-3 gap-1 flex-1">
+                                                    {duo.team.slice(0, 3).map((poke, idx) => (
+                                                        <div key={idx} className="border-2 border-yellow-500/30 rounded-lg">
+                                                            <PokemonImage pokemon={poke} />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {/* Partner's Pokemon (last 3) */}
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-[9px] font-black uppercase text-purple-400 w-12">Partner</div>
+                                                <div className="grid grid-cols-3 gap-1 flex-1">
+                                                    {duo.team.slice(3, 6).map((poke, idx) => (
+                                                        <div key={idx + 3} className="border-2 border-purple-500/30 rounded-lg">
+                                                            <PokemonImage pokemon={poke} />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
 
                                     {/* Actions */}
                                     <div className="flex gap-2">
+                                        {duo.isLocked && (
+                                            <button
+                                                onClick={() => handleUnlockDuo(duo)}
+                                                disabled={loading}
+                                                className="flex-1 bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                            >
+                                                Unlock
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => handleChangeCaptain(duo)}
                                             disabled={loading}
@@ -728,7 +768,7 @@ const AdminTournament: React.FC = () => {
                                             disabled={loading}
                                             className="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold py-1.5 rounded transition-colors"
                                         >
-                                            Remove Duo
+                                            Remove
                                         </button>
                                     </div>
                                 </div>
@@ -779,8 +819,8 @@ const AdminTournament: React.FC = () => {
                                 <button
                                     onClick={() => setPairCaptain('player1')}
                                     className={`flex-1 p-3 rounded-xl border transition-all ${pairCaptain === 'player1'
-                                            ? 'bg-yellow-600 border-yellow-400 text-white'
-                                            : 'bg-black/40 border-white/10 text-gray-400'
+                                        ? 'bg-yellow-600 border-yellow-400 text-white'
+                                        : 'bg-black/40 border-white/10 text-gray-400'
                                         }`}
                                 >
                                     <span className="text-xl">👑</span>
@@ -789,8 +829,8 @@ const AdminTournament: React.FC = () => {
                                 <button
                                     onClick={() => setPairCaptain('player2')}
                                     className={`flex-1 p-3 rounded-xl border transition-all ${pairCaptain === 'player2'
-                                            ? 'bg-yellow-600 border-yellow-400 text-white'
-                                            : 'bg-black/40 border-white/10 text-gray-400'
+                                        ? 'bg-yellow-600 border-yellow-400 text-white'
+                                        : 'bg-black/40 border-white/10 text-gray-400'
                                         }`}
                                 >
                                     <span className="text-xl">👑</span>
