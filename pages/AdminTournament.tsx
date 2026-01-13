@@ -289,11 +289,9 @@ const AdminTournament: React.FC = () => {
         try {
             await apiCall('/api/admin/tournament/duo/create', {
                 seasonId: activeSeason!.seasonId,
-                player1DiscordId: pairPlayer1.discordId,
-                player1Username: pairPlayer1.minecraftUsername,
-                player2DiscordId: pairPlayer2.discordId,
-                player2Username: pairPlayer2.minecraftUsername,
-                captainDiscordId: pairCaptain === 'player1' ? pairPlayer1.discordId : pairPlayer2.discordId
+                player1: { discordId: pairPlayer1.discordId, username: pairPlayer1.minecraftUsername },
+                player2: { discordId: pairPlayer2.discordId, username: pairPlayer2.minecraftUsername },
+                captain: pairCaptain
             });
             setStatusMsg('Duo created!');
             setShowPairModal(false);
@@ -615,8 +613,16 @@ const AdminTournament: React.FC = () => {
                                         />
                                         <div className="flex-1 min-w-0">
                                             <div className="font-bold text-white truncate">{player.minecraftUsername}</div>
-                                            <div className="text-[10px] font-bold uppercase text-blue-400">
-                                                {isPlayerInDuo(player.discordId) ? '✓ In Duo' : '⏳ Awaiting Partner'}
+                                            <div className="text-[10px] font-bold uppercase">
+                                                {activeSeason?.format.includes('Duos') ? (
+                                                    <span className="text-blue-400">
+                                                        {isPlayerInDuo(player.discordId) ? '✓ In Duo' : '⏳ Awaiting Partner'}
+                                                    </span>
+                                                ) : (
+                                                    <span className={player.isLocked ? 'text-green-400' : 'text-amber-400'}>
+                                                        {player.isLocked ? '✓ Team Locked' : '⏳ Drafting'}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
