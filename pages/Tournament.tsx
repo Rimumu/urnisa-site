@@ -242,7 +242,7 @@ const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNod
 
 const Tournament: React.FC = () => {
     const [user, setUser] = useState<UserData | null>(null);
-    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players' | 'duos'>('rules');
+    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('rules');
     const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
     const [loadingPokemon, setLoadingPokemon] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -743,7 +743,6 @@ const Tournament: React.FC = () => {
                             { id: 'rules', label: 'Rules' },
                             { id: 'brackets', label: 'Bracket' },
                             { id: 'players', label: `Players (${playersList?.length || 0})` },
-                            ...(activeSeason.format.includes('Duos') ? [{ id: 'duos' as const, label: `Duos (${duos?.length || 0})` }] : []),
                             { id: 'signup', label: hasStartedRegistration ? 'My Team' : 'Sign Up' }
                         ].map(tab => (
                             <button
@@ -1184,18 +1183,18 @@ const Tournament: React.FC = () => {
                                                         </div>
                                                         <div className="text-white/30 group-hover:text-purple-400 transition-colors text-xl">→</div>
                                                     </div>
-                                                    {/* Mini Team Preview */}
-                                                    {duo.team && duo.team.length > 0 && (
-                                                        <div className="flex gap-1">
-                                                            {duo.team.slice(0, 6).map((poke, idx) => (
-                                                                <div key={idx} className={`w-8 h-8 rounded-lg border ${idx < 3 ? 'border-yellow-500/30' : 'border-purple-500/30'} bg-black/40 flex items-center justify-center`}>
-                                                                    {poke ? (
-                                                                        <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} className="w-6 h-6 pixelated" />
-                                                                    ) : <div className="w-2 h-2 bg-white/10 rounded-full" />}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                    {/* Mini Team Preview - Only show actual Pokemon when locked */}
+                                                    <div className="flex gap-1">
+                                                        {Array(6).fill(null).map((_, idx) => (
+                                                            <div key={idx} className={`w-8 h-8 rounded-lg border ${idx < 3 ? 'border-yellow-500/30' : 'border-purple-500/30'} bg-black/40 flex items-center justify-center`}>
+                                                                {duo.isLocked && duo.team && duo.team[idx] ? (
+                                                                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${duo.team[idx]!.id}.png`} className="w-6 h-6 pixelated" />
+                                                                ) : (
+                                                                    <span className="text-gray-600 text-xs font-black">?</span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </button>
                                             ))}
                                         </div>
