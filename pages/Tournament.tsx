@@ -1311,10 +1311,46 @@ const Tournament: React.FC = () => {
                                                         <p className="text-green-200/60 text-xs">Selection locked and synced with database.</p>
                                                     </div>
                                                 )}
-                                                <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
-                                                    <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
-                                                    <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
-                                                </div>
+                                                {/* Player/Duo Header */}
+                                                {activeSeason.format.includes('Duos') && myDuo ? (
+                                                    /* Duos Mode: Show both players with captain indicator */
+                                                    <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
+                                                        <div className="flex -space-x-4">
+                                                            {/* Captain avatar first */}
+                                                            <img
+                                                                src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}/64`}
+                                                                className="w-16 h-16 rounded-2xl border-4 border-yellow-500 bg-black shadow-lg z-10"
+                                                            />
+                                                            <img
+                                                                src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player2Username : myDuo.player1Username}/64`}
+                                                                className="w-16 h-16 rounded-2xl border-4 border-purple-500 bg-black shadow-lg"
+                                                            />
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <h3 className="text-2xl font-black text-white uppercase tracking-tighter">
+                                                                {myDuo.captainDiscordId === myDuo.player1DiscordId
+                                                                    ? <><span className="text-yellow-400">{myDuo.player1Username}</span> <span className="text-purple-400">&</span> <span className="text-purple-300">{myDuo.player2Username}</span></>
+                                                                    : <><span className="text-yellow-400">{myDuo.player2Username}</span> <span className="text-purple-400">&</span> <span className="text-purple-300">{myDuo.player1Username}</span></>
+                                                                }
+                                                            </h3>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="text-[10px] font-black uppercase text-gray-500">Captain:</span>
+                                                                <span className="text-xs font-bold text-yellow-400">
+                                                                    {myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}
+                                                                </span>
+                                                            </div>
+                                                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${myDuo.isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                                                {myDuo.isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    /* Singles Mode: Show single player */
+                                                    <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
+                                                        <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
+                                                        <div className="text-left"><h3 className="text-2xl font-black text-white uppercase tracking-tighter">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
+                                                    </div>
+                                                )}
                                                 <div className="space-y-6">
                                                     <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
 
