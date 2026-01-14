@@ -32,6 +32,7 @@ interface Duo {
     player2DiscordId: string;
     player2Username: string;
     captainDiscordId: string;
+    teamName?: string;
     team: ({ id: number; name: string } | null)[];
     isLocked: boolean;
 }
@@ -317,13 +318,17 @@ const AdminTournament: React.FC = () => {
     };
 
     const handleChangeCaptain = async (duo: Duo) => {
-        const newCaptain = duo.captainDiscordId === duo.player1DiscordId ? duo.player2DiscordId : duo.player1DiscordId;
+        const newCaptainDiscordId = duo.captainDiscordId === duo.player1DiscordId ? duo.player2DiscordId : duo.player1DiscordId;
+        const newCaptainName = duo.captainDiscordId === duo.player1DiscordId ? duo.player2Username : duo.player1Username;
+
+        if (!window.confirm(`Make ${newCaptainName} the new captain?`)) return;
+
         try {
             await apiCall('/api/admin/tournament/duo/update-captain', {
                 duoId: duo.duoId,
-                captainDiscordId: newCaptain
+                newCaptainDiscordId
             });
-            setStatusMsg('Captain updated!');
+            setStatusMsg(`Captain changed to ${newCaptainName}!`);
             fetchDuos(activeSeason!.seasonId);
         } catch (e: any) {
             setStatusMsg(e.message);
@@ -342,6 +347,8 @@ const AdminTournament: React.FC = () => {
         }
         setTimeout(() => setStatusMsg(''), 3000);
     };
+
+
 
     // Helper to check if player is already in a duo
     const isPlayerInDuo = (discordId: string) => {
@@ -698,25 +705,34 @@ const AdminTournament: React.FC = () => {
                                     {/* Duo Header */}
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="flex -space-x-3">
+                                            {/* Captain avatar first */}
                                             <img
-                                                src={`https://mc-heads.net/avatar/${duo.player1Username}/36`}
-                                                alt={duo.player1Username}
-                                                className={`w-9 h-9 rounded-lg border-2 ${duo.captainDiscordId === duo.player1DiscordId ? 'border-yellow-500' : 'border-white/20'}`}
+                                                src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player1Username : duo.player2Username}/36`}
+                                                className="w-9 h-9 rounded-lg border-2 border-yellow-500 z-10"
                                             />
                                             <img
-                                                src={`https://mc-heads.net/avatar/${duo.player2Username}/36`}
-                                                alt={duo.player2Username}
-                                                className={`w-9 h-9 rounded-lg border-2 ${duo.captainDiscordId === duo.player2DiscordId ? 'border-yellow-500' : 'border-white/20'}`}
+                                                src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player2Username : duo.player1Username}/36`}
+                                                className="w-9 h-9 rounded-lg border-2 border-purple-500/50"
                                             />
                                         </div>
                                         <div className="flex-1">
-                                            <div className="font-bold text-white text-sm">
-                                                {duo.player1Username}
-                                                {duo.captainDiscordId === duo.player1DiscordId && <span className="ml-1 text-yellow-400">👑</span>}
-                                                {' & '}
-                                                {duo.player2Username}
-                                                {duo.captainDiscordId === duo.player2DiscordId && <span className="ml-1 text-yellow-400">👑</span>}
-                                            </div>
+                                            {/* Team Name (if set) */}
+                                            {duo.teamName ? (
+                                                <>
+                                                    <div className="font-black text-purple-400 text-sm">{duo.teamName}</div>
+                                                    <div className="text-[10px] text-gray-400">
+                                                        {duo.captainDiscordId === duo.player1DiscordId
+                                                            ? `${duo.player1Username} & ${duo.player2Username}`
+                                                            : `${duo.player2Username} & ${duo.player1Username}`}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="font-bold text-white text-sm">
+                                                    {duo.captainDiscordId === duo.player1DiscordId
+                                                        ? `${duo.player1Username} & ${duo.player2Username}`
+                                                        : `${duo.player2Username} & ${duo.player1Username}`}
+                                                </div>
+                                            )}
                                             <div className={`text-[10px] font-bold uppercase ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
                                                 {duo.isLocked ? '✓ Team Locked' : '⏳ Drafting Pokemon'}
                                             </div>
