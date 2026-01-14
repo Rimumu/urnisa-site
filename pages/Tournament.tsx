@@ -69,7 +69,9 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 // --- BAN LIST LOGIC ---
-const BANNED_IDS = new Set([
+
+// Season 1: Ban all Legendaries and Mythicals
+const SEASON1_BANNED_IDS = new Set([
     // Gen 1
     144, 145, 146, 150, 151,
     // Gen 2
@@ -92,7 +94,135 @@ const BANNED_IDS = new Set([
     1001, 1002, 1003, 1004, 1007, 1008, 1014, 1015, 1016, 1017, 1024, 1025
 ]);
 
-const isBanned = (id: number) => BANNED_IDS.has(id);
+// Season 2: Categories for selective bans
+// Mythical Pokemon (Completely Banned)
+const MYTHICAL_IDS = new Set([
+    151,  // Mew
+    251,  // Celebi
+    385,  // Jirachi
+    386,  // Deoxys (all forms)
+    489, 490,  // Phione, Manaphy
+    491,  // Darkrai
+    492,  // Shaymin
+    493,  // Arceus
+    494,  // Victini
+    647,  // Keldeo
+    648,  // Meloetta
+    649,  // Genesect
+    719,  // Diancie
+    720,  // Hoopa
+    721,  // Volcanion
+    801,  // Magearna
+    802,  // Marshadow
+    807,  // Zeraora
+    808, 809,  // Meltan, Melmetal
+    893,  // Zarude
+    1001, 1002, 1003, 1004,  // Treasures of Ruin (Chi-Yu, Chien-Pao, Ting-Lu, Wo-Chien)
+    1025  // Pecharunt
+]);
+
+// Ultra Beasts (Completely Banned)
+const ULTRA_BEAST_IDS = new Set([
+    793,  // Nihilego
+    794,  // Buzzwole
+    795,  // Pheromosa
+    796,  // Xurkitree
+    797,  // Celesteela
+    798,  // Kartana
+    799,  // Guzzlord
+    803,  // Poipole
+    804,  // Naganadel
+    805,  // Stakataka
+    806   // Blacephalon
+]);
+
+// Paradox Pokemon (Completely Banned)
+const PARADOX_IDS = new Set([
+    // Past Paradox
+    984,  // Great Tusk
+    985,  // Scream Tail
+    986,  // Brute Bonnet
+    987,  // Flutter Mane
+    988,  // Slither Wing
+    989,  // Sandy Shocks
+    990,  // Roaring Moon
+    // Future Paradox
+    991,  // Iron Treads
+    992,  // Iron Bundle
+    993,  // Iron Hands
+    994,  // Iron Jugulis
+    995,  // Iron Moth
+    996,  // Iron Thorns
+    997,  // Iron Valiant
+    // Box Legends (Paradox forms)
+    1007, 1008,  // Koraidon, Miraidon
+    // DLC Paradox
+    1005, 1006,  // Walking Wake, Iron Leaves
+    1009, 1010   // Gouging Fire, Raging Bolt, Iron Boulder, Iron Crown
+]);
+
+// Legendary Pokemon (Only 1 allowed per team in Season 2)
+const LEGENDARY_IDS = new Set([
+    // Gen 1
+    144, 145, 146,  // Articuno, Zapdos, Moltres
+    150,  // Mewtwo
+    // Gen 2
+    243, 244, 245,  // Raikou, Entei, Suicune
+    249, 250,  // Lugia, Ho-Oh
+    // Gen 3
+    377, 378, 379,  // Regis
+    380, 381,  // Latias, Latios
+    382, 383, 384,  // Kyogre, Groudon, Rayquaza
+    // Gen 4
+    480, 481, 482,  // Lake Trio
+    483, 484,  // Dialga, Palkia
+    485,  // Heatran
+    486,  // Regigigas
+    487, 488,  // Giratina, Cresselia
+    // Gen 5
+    638, 639, 640,  // Swords of Justice
+    641, 642,  // Tornadus, Thundurus
+    643, 644,  // Reshiram, Zekrom
+    645, 646,  // Landorus, Kyurem
+    // Gen 6
+    716, 717, 718,  // Xerneas, Yveltal, Zygarde
+    // Gen 7
+    772, 773,  // Type: Null, Silvally
+    785, 786, 787, 788,  // Tapus
+    789, 790, 791, 792,  // Cosmog line + Legendaries
+    800,  // Necrozma
+    // Gen 8
+    888, 889, 890,  // Zacian, Zamazenta, Eternatus
+    891, 892,  // Kubfu, Urshifu
+    894, 895, 896, 897, 898,  // Regieleki, Regidrago, Glastrier, Spectrier, Calyrex
+    905,  // Enamorus
+    // Gen 9
+    1014, 1015, 1016, 1017,  // Ogerpon, Okidogi, Munkidori, Fezandipiti
+    1024  // Terapagos
+]);
+
+// Combined Season 2 completely banned list (Mythical + Ultra Beasts + Paradox)
+const SEASON2_BANNED_IDS = new Set([
+    ...MYTHICAL_IDS,
+    ...ULTRA_BEAST_IDS,
+    ...PARADOX_IDS
+]);
+
+// Check if Pokemon is banned for the current season
+const isBannedForSeason = (id: number, seasonFormat: string): boolean => {
+    if (seasonFormat.includes('Duos')) {
+        // Season 2 rules
+        return SEASON2_BANNED_IDS.has(id);
+    }
+    // Season 1 rules
+    return SEASON1_BANNED_IDS.has(id);
+};
+
+// Check if Pokemon is a legendary (for the 1-per-team limit)
+const isLegendary = (id: number): boolean => LEGENDARY_IDS.has(id);
+
+// Legacy function for backwards compatibility
+const isBanned = (id: number) => SEASON1_BANNED_IDS.has(id);
 
 // --- CACHE & HELPERS ---
 const clientImageCache = new Map<string, boolean>();
@@ -507,9 +637,21 @@ const Tournament: React.FC = () => {
         setSelectedTeam(newTeam);
     };
 
+    // Check if team has any banned Pokemon (season-specific)
     const hasBannedPokemon = useMemo(() => {
-        return selectedTeam.some(p => p !== null && isBanned(p.id));
+        return selectedTeam.some(p => p !== null && isBannedForSeason(p.id, activeSeason?.format || ''));
+    }, [selectedTeam, activeSeason]);
+
+    // Count legendaries in team (for Season 2 limit)
+    const legendaryCount = useMemo(() => {
+        return selectedTeam.filter(p => p !== null && isLegendary(p.id)).length;
     }, [selectedTeam]);
+
+    // Season 2: Check if team exceeds legendary limit
+    const exceedsLegendaryLimit = useMemo(() => {
+        if (!activeSeason?.format.includes('Duos')) return false; // Only Season 2 has this rule
+        return legendaryCount > 1;
+    }, [legendaryCount, activeSeason]);
 
     const handleInitialRegister = async () => {
         if (!user || tournamentStatus === 'ONGOING') return;
@@ -540,7 +682,7 @@ const Tournament: React.FC = () => {
     };
 
     const handleSaveDraft = async () => {
-        if (!user || hasBannedPokemon || tournamentStatus === 'ONGOING') return;
+        if (!user || hasBannedPokemon || exceedsLegendaryLimit || tournamentStatus === 'ONGOING') return;
 
         // For Duos: Check if user is captain and duo exists
         if (activeSeason.format.includes('Duos') && myDuo) {
@@ -1375,6 +1517,26 @@ const Tournament: React.FC = () => {
                                                         </div>
                                                     )}
 
+                                                    {/* Season 2: Legendary Limit Warning */}
+                                                    {activeSeason.format.includes('Duos') && legendaryCount > 0 && (
+                                                        <div className={`px-4 py-3 rounded-2xl border ${exceedsLegendaryLimit ? 'bg-red-900/30 border-red-500/50' : 'bg-yellow-900/20 border-yellow-500/30'}`}>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-2xl">{exceedsLegendaryLimit ? '⚠️' : '⭐'}</span>
+                                                                <div>
+                                                                    <div className={`text-sm font-black uppercase ${exceedsLegendaryLimit ? 'text-red-400' : 'text-yellow-400'}`}>
+                                                                        {exceedsLegendaryLimit ? 'TOO MANY LEGENDARIES!' : 'Legendary Slot Used'}
+                                                                    </div>
+                                                                    <div className="text-xs text-gray-400">
+                                                                        {exceedsLegendaryLimit
+                                                                            ? `You have ${legendaryCount} legendaries. Only 1 is allowed per team.`
+                                                                            : `${legendaryCount}/1 legendary selected. No Mythical, Paradox, or Ultra Beasts allowed.`
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     {/* Duos Mode: 3+3 Split with Owner Labels */}
                                                     {activeSeason.format.includes('Duos') && myDuo ? (
                                                         <div className="space-y-8">
@@ -1386,7 +1548,8 @@ const Tournament: React.FC = () => {
                                                                 </div>
                                                                 <div className="grid grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(0, 3).map((p, idx) => {
-                                                                        const banned = p !== null && isBanned(p.id);
+                                                                        const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '');
+                                                                        const legendary = p !== null && isLegendary(p.id);
                                                                         return (
                                                                             <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-yellow-900/20 to-black/80 border-yellow-500 shadow-2xl scale-[1.03]') : 'bg-black/40 border-yellow-500/30 border-dashed opacity-50'}`}>
                                                                                 {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-yellow-900 font-black">+</span>)}
@@ -1405,7 +1568,8 @@ const Tournament: React.FC = () => {
                                                                 <div className="grid grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(3, 6).map((p, idx) => {
                                                                         const actualIdx = idx + 3;
-                                                                        const banned = p !== null && isBanned(p.id);
+                                                                        const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '');
+                                                                        const legendary = p !== null && isLegendary(p.id);
                                                                         return (
                                                                             <div key={actualIdx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-purple-900/20 to-black/80 border-purple-500 shadow-2xl scale-[1.03]') : 'bg-black/40 border-purple-500/30 border-dashed opacity-50'}`}>
                                                                                 {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(actualIdx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-purple-900 font-black">+</span>)}
@@ -1419,7 +1583,7 @@ const Tournament: React.FC = () => {
                                                         /* Singles Mode: Original 6-slot grid */
                                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
                                                             {selectedTeam.map((p, idx) => {
-                                                                const banned = p !== null && isBanned(p.id);
+                                                                const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '');
                                                                 return (
                                                                     <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
                                                                         {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
