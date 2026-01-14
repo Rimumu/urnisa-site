@@ -1307,8 +1307,7 @@ const Tournament: React.FC = () => {
                                             <>
                                                 {(isLocked || tournamentStatus === 'ONGOING') && (
                                                     <div className="bg-green-500/10 border-2 border-green-500/30 rounded-[2.5rem] p-6 text-center shadow-[0_0_30px_rgba(34,197,94,0.1)]">
-                                                        <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">{tournamentStatus === 'ONGOING' ? '⚔️ TOURNAMENT ONGOING' : '🛡️ ROSTER SECURED'}</h3>
-                                                        <p className="text-green-200/60 text-xs">Selection locked and synced with database.</p>
+                                                        <h3 className="font-black text-green-400 uppercase tracking-widest text-lg">{tournamentStatus === 'ONGOING' ? '⚔️ TOURNAMENT ONGOING' : '🔒 TEAM ROSTER LOCKED'}</h3>
                                                     </div>
                                                 )}
                                                 {/* Player/Duo Header */}
