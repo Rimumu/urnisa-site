@@ -41,6 +41,7 @@ interface Duo {
     player2DiscordId: string;
     player2Username: string;
     captainDiscordId: string;
+    teamName?: string;
     team: ({ id: number; name: string } | null)[];
     isLocked: boolean;
 }
@@ -273,6 +274,7 @@ const Tournament: React.FC = () => {
     const [myDuo, setMyDuo] = useState<Duo | null>(null);
     const [viewMode, setViewMode] = useState<'players' | 'duos'>('players');
     const [selectedDuo, setSelectedDuo] = useState<Duo | null>(null);
+    const [teamName, setTeamName] = useState('');
 
     // Bracket & Winners State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
@@ -475,6 +477,7 @@ const Tournament: React.FC = () => {
                     setSelectedTeam(filledTeam);
                     setIsLocked(data.isLocked || false);
                     setHasStartedRegistration(true);
+                    setTeamName(data.teamName || '');
                 }
             }
         } catch (e) { console.error(e); }
@@ -553,7 +556,8 @@ const Tournament: React.FC = () => {
                     body: JSON.stringify({
                         discordId: user.id,
                         duoId: myDuo.duoId,
-                        team: selectedTeam
+                        team: selectedTeam,
+                        teamName: teamName
                     })
                 });
 
@@ -1175,12 +1179,23 @@ const Tournament: React.FC = () => {
                                                             <img src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player2Username : duo.player1Username}/40`} className="w-10 h-10 rounded-xl border-2 border-purple-500/50" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="font-bold text-white text-sm truncate">
-                                                                {duo.captainDiscordId === duo.player1DiscordId
-                                                                    ? `${duo.player1Username} & ${duo.player2Username}`
-                                                                    : `${duo.player2Username} & ${duo.player1Username}`
-                                                                }
-                                                            </div>
+                                                            {/* Team Name (if set) */}
+                                                            {duo.teamName ? (
+                                                                <>
+                                                                    <div className="font-black text-purple-400 text-sm truncate">{duo.teamName}</div>
+                                                                    <div className="text-[10px] text-gray-400 truncate">
+                                                                        {duo.captainDiscordId === duo.player1DiscordId
+                                                                            ? `${duo.player1Username} & ${duo.player2Username}`
+                                                                            : `${duo.player2Username} & ${duo.player1Username}`}
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <div className="font-bold text-white text-sm truncate">
+                                                                    {duo.captainDiscordId === duo.player1DiscordId
+                                                                        ? `${duo.player1Username} & ${duo.player2Username}`
+                                                                        : `${duo.player2Username} & ${duo.player1Username}`}
+                                                                </div>
+                                                            )}
                                                             <div className={`text-[10px] font-black uppercase ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
                                                                 {duo.isLocked ? '✓ Locked' : '⏳ Drafting'}
                                                             </div>
@@ -1303,6 +1318,28 @@ const Tournament: React.FC = () => {
                                                 <div className="space-y-6">
                                                     <h3 className="text-2xl font-black uppercase tracking-tighter px-4">Team Selection</h3>
 
+                                                    {/* Team Name Input for Duos */}
+                                                    {activeSeason.format.includes('Duos') && myDuo && myDuo.captainDiscordId === user?.id && !myDuo.isLocked && (
+                                                        <div className="px-4">
+                                                            <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Team Name</label>
+                                                            <input
+                                                                type="text"
+                                                                value={teamName}
+                                                                onChange={(e) => setTeamName(e.target.value)}
+                                                                placeholder="Enter your team name..."
+                                                                maxLength={30}
+                                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    {/* Display locked team name */}
+                                                    {activeSeason.format.includes('Duos') && myDuo && myDuo.teamName && (
+                                                        <div className="px-4 text-center">
+                                                            <span className="text-xs font-black uppercase tracking-widest text-gray-500">Team:</span>
+                                                            <span className="ml-2 text-lg font-black text-purple-400">{myDuo.teamName}</span>
+                                                        </div>
+                                                    )}
+
                                                     {/* Duos Mode: 3+3 Split with Owner Labels */}
                                                     {activeSeason.format.includes('Duos') && myDuo ? (
                                                         <div className="space-y-8">
@@ -1310,7 +1347,7 @@ const Tournament: React.FC = () => {
                                                             <div className="space-y-3">
                                                                 <div className="flex items-center gap-3 px-2">
                                                                     <img src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}/32`} className="w-8 h-8 rounded-lg border-2 border-yellow-500" />
-                                                                    <span className="text-sm font-black uppercase tracking-widest text-yellow-400">👑 Captain's Pokemon</span>
+                                                                    <span className="text-sm font-black uppercase tracking-widest text-yellow-400">Captain's Pokemon</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(0, 3).map((p, idx) => {
@@ -1479,12 +1516,15 @@ const Tournament: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">
+                                    {selectedDuo.teamName && (
+                                        <h2 className="text-3xl md:text-4xl font-black text-purple-400 uppercase tracking-tighter mb-1">{selectedDuo.teamName}</h2>
+                                    )}
+                                    <div className={`${selectedDuo.teamName ? 'text-lg text-gray-400' : 'text-3xl md:text-4xl text-white'} font-black uppercase tracking-tighter`}>
                                         {selectedDuo.captainDiscordId === selectedDuo.player1DiscordId
                                             ? <>{selectedDuo.player1Username}<span className="text-purple-400"> & </span>{selectedDuo.player2Username}</>
                                             : <>{selectedDuo.player2Username}<span className="text-purple-400"> & </span>{selectedDuo.player1Username}</>
                                         }
-                                    </h2>
+                                    </div>
                                     <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mt-2 ${selectedDuo.isLocked ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
                                         <span className={`w-2 h-2 rounded-full ${selectedDuo.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
                                         <span className="text-xs font-black uppercase tracking-widest">{selectedDuo.isLocked ? 'Roster Finalized' : 'Drafting Phase'}</span>
@@ -1500,7 +1540,7 @@ const Tournament: React.FC = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <img src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player1Username : selectedDuo.player2Username}/32`} className="w-8 h-8 rounded-lg border-2 border-yellow-500" />
-                                    <h3 className="text-lg font-black uppercase tracking-widest text-yellow-400">👑 Captain's Pokemon</h3>
+                                    <h3 className="text-lg font-black uppercase tracking-widest text-yellow-400">Captain's Pokemon</h3>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
                                     {(selectedDuo.team?.slice(0, 3) || [null, null, null]).map((pokemon, idx) => (
