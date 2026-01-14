@@ -1170,12 +1170,16 @@ const Tournament: React.FC = () => {
                                                 >
                                                     <div className="flex items-center gap-4 mb-4">
                                                         <div className="flex -space-x-3">
-                                                            <img src={`https://mc-heads.net/avatar/${duo.player1Username}/40`} className={`w-10 h-10 rounded-xl border-2 ${duo.captainDiscordId === duo.player1DiscordId ? 'border-yellow-500' : 'border-purple-500/50'}`} alt={duo.player1Username} />
-                                                            <img src={`https://mc-heads.net/avatar/${duo.player2Username}/40`} className={`w-10 h-10 rounded-xl border-2 ${duo.captainDiscordId === duo.player2DiscordId ? 'border-yellow-500' : 'border-purple-500/50'}`} alt={duo.player2Username} />
+                                                            {/* Captain avatar first */}
+                                                            <img src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player1Username : duo.player2Username}/40`} className="w-10 h-10 rounded-xl border-2 border-yellow-500" />
+                                                            <img src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player2Username : duo.player1Username}/40`} className="w-10 h-10 rounded-xl border-2 border-purple-500/50" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="font-bold text-white text-sm truncate">
-                                                                {duo.player1Username} {duo.captainDiscordId === duo.player1DiscordId && '👑'} & {duo.player2Username} {duo.captainDiscordId === duo.player2DiscordId && '👑'}
+                                                                {duo.captainDiscordId === duo.player1DiscordId
+                                                                    ? `${duo.player1Username} & ${duo.player2Username}`
+                                                                    : `${duo.player2Username} & ${duo.player1Username}`
+                                                                }
                                                             </div>
                                                             <div className={`text-[10px] font-black uppercase ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
                                                                 {duo.isLocked ? '✓ Locked' : '⏳ Drafting'}
@@ -1463,26 +1467,23 @@ const Tournament: React.FC = () => {
                         {/* Modal Header */}
                         <div className="p-8 border-b border-white/5 relative z-10">
                             <div className="flex flex-col md:flex-row items-center gap-6">
-                                {/* Player Avatars */}
+                                {/* Player Avatars - Captain first */}
                                 <div className="flex -space-x-4">
                                     <img
-                                        src={`https://mc-heads.net/avatar/${selectedDuo.player1Username}/80`}
-                                        className={`w-20 h-20 rounded-2xl border-4 ${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? 'border-yellow-500' : 'border-purple-500'} shadow-xl`}
-                                        alt={selectedDuo.player1Username}
+                                        src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player1Username : selectedDuo.player2Username}/80`}
+                                        className="w-20 h-20 rounded-2xl border-4 border-yellow-500 shadow-xl"
                                     />
                                     <img
-                                        src={`https://mc-heads.net/avatar/${selectedDuo.player2Username}/80`}
-                                        className={`w-20 h-20 rounded-2xl border-4 ${selectedDuo.captainDiscordId === selectedDuo.player2DiscordId ? 'border-yellow-500' : 'border-purple-500'} shadow-xl`}
-                                        alt={selectedDuo.player2Username}
+                                        src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player2Username : selectedDuo.player1Username}/80`}
+                                        className="w-20 h-20 rounded-2xl border-4 border-purple-500 shadow-xl"
                                     />
                                 </div>
                                 <div>
                                     <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">
-                                        {selectedDuo.player1Username}
-                                        {selectedDuo.captainDiscordId === selectedDuo.player1DiscordId && <span className="ml-2 text-yellow-400 text-2xl">👑</span>}
-                                        <span className="text-purple-400"> & </span>
-                                        {selectedDuo.player2Username}
-                                        {selectedDuo.captainDiscordId === selectedDuo.player2DiscordId && <span className="ml-2 text-yellow-400 text-2xl">👑</span>}
+                                        {selectedDuo.captainDiscordId === selectedDuo.player1DiscordId
+                                            ? <>{selectedDuo.player1Username}<span className="text-purple-400"> & </span>{selectedDuo.player2Username}</>
+                                            : <>{selectedDuo.player2Username}<span className="text-purple-400"> & </span>{selectedDuo.player1Username}</>
+                                        }
                                     </h2>
                                     <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mt-2 ${selectedDuo.isLocked ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
                                         <span className={`w-2 h-2 rounded-full ${selectedDuo.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
