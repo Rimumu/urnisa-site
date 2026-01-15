@@ -167,6 +167,18 @@ const AdminTournament: React.FC = () => {
         }
     }, [activeSeason?.seasonId]);
 
+    // Auto-refresh polling for real-time updates (every 15 seconds)
+    useEffect(() => {
+        const pollInterval = setInterval(() => {
+            if (activeSeason?.seasonId) {
+                fetchPlayers(activeSeason.seasonId);
+                fetchDuos(activeSeason.seasonId);
+            }
+        }, 15000); // 15 seconds
+
+        return () => clearInterval(pollInterval);
+    }, [activeSeason?.seasonId]);
+
     // --- API HELPER ---
     const apiCall = async (endpoint: string, body: any) => {
         setLoading(true);

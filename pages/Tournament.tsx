@@ -541,6 +541,25 @@ const Tournament: React.FC = () => {
         }
     }, [activeTab, activeSeason.seasonId]);
 
+    // Auto-refresh polling for real-time updates (every 15 seconds)
+    useEffect(() => {
+        const pollInterval = setInterval(() => {
+            // Always refresh players and duos when on Players tab
+            if (activeTab === 'players' && activeSeason.seasonId) {
+                fetchPlayersForSeason(activeSeason.seasonId);
+                if (activeSeason.format.includes('Duos')) {
+                    fetchDuosForSeason(activeSeason.seasonId);
+                }
+            }
+            // Refresh myDuo for captains waiting for pairing or drafting
+            if (user?.id && activeSeason.format.includes('Duos')) {
+                fetchMyDuo();
+            }
+        }, 15000); // 15 seconds
+
+        return () => clearInterval(pollInterval);
+    }, [activeTab, activeSeason.seasonId, activeSeason.format, user?.id]);
+
     const fetchMyTeam = async () => {
         if (!user?.id) return;
         setLoadingTeam(true);
