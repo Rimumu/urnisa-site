@@ -161,6 +161,11 @@ const PARADOX_IDS = new Set([
     1009, 1010   // Gouging Fire, Raging Bolt, Iron Boulder, Iron Crown
 ]);
 
+// Specific restricted Pokemon (Banned even if their category is allowed)
+const RESTRICTED_IDS = new Set([
+    890 // Eternatus
+]);
+
 // Legendary Pokemon (Only 1 allowed per team in Season 2)
 const LEGENDARY_IDS = new Set([
     // Gen 1
@@ -192,7 +197,7 @@ const LEGENDARY_IDS = new Set([
     789, 790, 791, 792,  // Cosmog line + Legendaries
     800,  // Necrozma
     // Gen 8
-    888, 889, 890,  // Zacian, Zamazenta, Eternatus
+    888, 889,  // Zacian, Zamazenta
     891, 892,  // Kubfu, Urshifu
     894, 895, 896, 897, 898,  // Regieleki, Regidrago, Glastrier, Spectrier, Calyrex
     905,  // Enamorus
@@ -205,7 +210,8 @@ const LEGENDARY_IDS = new Set([
 const SEASON2_BANNED_IDS = new Set([
     ...MYTHICAL_IDS,
     ...ULTRA_BEAST_IDS,
-    ...PARADOX_IDS
+    ...PARADOX_IDS,
+    ...RESTRICTED_IDS
 ]);
 
 // Check if Pokemon is banned for the current season
@@ -1016,14 +1022,14 @@ const Tournament: React.FC = () => {
                                 <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
                                     <div className="space-y-4">
                                         <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
-                                        <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Paradox Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li><li className="flex items-center gap-2"><span className="text-yellow-500">⭐</span> Only 1 Legendary per team</li></ul></div>
+                                        <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Paradox Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Eternatus</li><li className="flex items-center gap-2"><span className="text-yellow-500">⭐</span> Only 1 Legendary per team</li></ul></div>
                                     </div>
                                 </RuleCard>
                                 <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
                                     <ul className="space-y-2">
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A player cannot have two Pokémon of the same National Pokédex number.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A player cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
+                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
+                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item on the same team.</span></li>
+                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
                                         <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
                                     </ul>
                                 </RuleCard>
