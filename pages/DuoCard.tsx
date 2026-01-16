@@ -1,6 +1,7 @@
 
 import React, { FC, SyntheticEvent, useEffect, useState } from 'react';
 import html2canvas from 'html2canvas';
+import { API_BASE_URL } from '../constants';
 
 interface Duo {
     duoId: string;
@@ -17,7 +18,7 @@ const DuoCard: FC = () => {
         const fetchDuos = async () => {
             try {
                 // Try to fetch Season 2 first, fallback to all if needed logic could be added
-                const res = await fetch('http://localhost:3001/api/tournament/duos?seasonId=2');
+                const res = await fetch(`${API_BASE_URL}/api/tournament/duos?seasonId=2`);
                 if (res.ok) {
                     const data = await res.json();
                     setDuos(data);
