@@ -132,8 +132,13 @@ const DuoCard: FC = () => {
                     {duos.map((duo) => (
                         <div key={duo.duoId} className="flex flex-col items-center gap-4">
                             {/* Wrapper to control capture area precisely */}
+                            {/* Wrapper to control capture area precisely */}
                             <div className="relative group">
+                                {/* Preview Background for the website view (so transparency is visible as dark) */}
+                                <div className="absolute inset-0 bg-[#1a1c23] rounded-3xl -z-10 transform scale-[0.4] origin-top md:scale-[0.5] lg:scale-[0.6] xl:scale-[0.65] 2xl:scale-[0.75] origin-center -mb-[200px] md:-mb-[150px] lg:-mb-[100px] border-[6px] border-[#7289da]" style={{ backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)' }}></div>
+
                                 <SingleCard duo={duo} />
+
                                 {/* Overlay for hover effect / easy download */}
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl pointer-events-none">
                                     <span className="text-white font-bold text-xl">Preview</span>
@@ -173,45 +178,14 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     return (
         <div
             id={`card-${duo.duoId}`}
-            className="relative w-[1200px] h-[600px] bg-[#1a1c23] border-[6px] border-[#7289da] rounded-3xl flex flex-col items-center justify-center shadow-2xl overflow-hidden scale-[0.4] origin-top md:scale-[0.5] lg:scale-[0.6] xl:scale-[0.65] 2xl:scale-[0.75] origin-center -mb-[200px] md:-mb-[150px] lg:-mb-[100px]"
-            // Scaling to fit in grid view, but html2canvas captures full size of element if configured right, 
-            // actually html2canvas captures rendered size. We might need a hidden container for full res? 
-            // Wait, scaling via CSS transform usually affects html2canvas capture size unless we trick it.
-            // Better strategy: We render it full size, but use `zoom` or `transform` on a container for PREVIEW, 
-            // but for html2canvas we might need to clone it or ensure it sees full size.
-            // HTML2Canvas `scale` option helps upscaling, but if the element is rendered small, it captures small.
-            // Let's try rendering it full size but putting it in a container that scales it down visually using styling that html2canvas ignores?
-            // Actually, simplest is: Render full size, but use CSS zoom/scale that html2canvas reads?
-
-            // Correction: For this 'dashboard' view, we want to see them. 
-            // If I scale them down with CSS `transform: scale(0.5)`, html2canvas will likely capture the scaled version if I screenshot that element.
-            // HOWEVER, I can use `onclone` in html2canvas to reset transform, OR I can just supply a higher scale factor to html2canvas to compensate?
-            // Let's try a transform-free approach for the "source" if possible, or accept that we need to handle the scaling.
-
-            // Alternative: The element we screenshot is `w-[1200px] h-[600px]`. 
-            // To make it fit the screen, we wrap it in a `div` that has `transform: scale(x)` and `overflow: hidden`.
-            // When we pass the element to html2canvas, we pass the INNER element (the 1200x600 one).
-            // Html2Canvas usually respects the computed styles. If it's scaled 0.5 onscreen, it might be 600x300.
-            // Check `ignoreElements` or clone.
-
-            // Safe bet: Render it normally. The user can scroll. 1200px is wide but manageable on desktop.
-            // OR use the transform strategy.
+            className="relative w-[1200px] h-[600px] rounded-3xl flex flex-col items-center justify-center overflow-visible scale-[0.4] origin-top md:scale-[0.5] lg:scale-[0.6] xl:scale-[0.65] 2xl:scale-[0.75] origin-center -mb-[200px] md:-mb-[150px] lg:-mb-[100px]"
             style={{
-                // Force full size for layout, scale for display
-                // We will rely on html2canvas `scale` option and capturing the element. 
-                // If we use CSS transform, we might need `window.devicePixelRatio` logic.
-                backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)',
-                boxShadow: '0 0 60px rgba(114, 137, 218, 0.3)',
-                // We'll keep the scale in the className above for visual fit.
+                // Transparent background!
+                backgroundColor: 'transparent',
             }}
         >
-            {/* Decorative Background Elements */}
-            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
-                style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #7289da 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
-            </div>
-
             {/* Team Name Header */}
-            <div className="z-10 w-full text-center px-12 mb-12">
+            <div className="z-10 w-full text-center px-12 mb-8">
                 <h1 className="text-8xl font-black text-white uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]"
                     style={{ textShadow: '0 0 20px rgba(114, 137, 218, 0.5)' }}>
                     {teamName}
@@ -222,7 +196,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             <div className="z-10 w-full flex items-center justify-center gap-24 px-12">
 
                 {/* Player 1 */}
-                <div className="flex flex-col items-center gap-6">
+                <div className="flex flex-col items-center gap-4">
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-75"></div>
                         <img
@@ -234,9 +208,12 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                             onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p1Name}&background=random&size=300`}
                         />
                     </div>
-                    <span className="text-4xl font-bold text-white tracking-wide bg-[#202225] px-6 py-2 rounded-full border border-gray-700 shadow-lg">
-                        {p1Name}
-                    </span>
+                    {/* Centered Name Pill */}
+                    <div className="flex items-center justify-center bg-[#202225] px-6 py-2 rounded-full border border-gray-700 shadow-lg min-w-[200px]">
+                        <span className="text-4xl font-bold text-white tracking-wide text-center leading-none pb-1">
+                            {p1Name}
+                        </span>
+                    </div>
                 </div>
 
                 {/* VS / Ampersand Graphic */}
@@ -248,7 +225,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex flex-col items-center gap-6">
+                <div className="flex flex-col items-center gap-4">
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur opacity-75"></div>
                         <img
@@ -259,9 +236,12 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                             onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p2Name}&background=random&size=300`}
                         />
                     </div>
-                    <span className="text-4xl font-bold text-white tracking-wide bg-[#202225] px-6 py-2 rounded-full border border-gray-700 shadow-lg">
-                        {p2Name}
-                    </span>
+                    {/* Centered Name Pill */}
+                    <div className="flex items-center justify-center bg-[#202225] px-6 py-2 rounded-full border border-gray-700 shadow-lg min-w-[200px]">
+                        <span className="text-4xl font-bold text-white tracking-wide text-center leading-none pb-1">
+                            {p2Name}
+                        </span>
+                    </div>
                 </div>
 
             </div>
