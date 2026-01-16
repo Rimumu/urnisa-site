@@ -10,43 +10,43 @@ export const DEFAULT_SCHEDULE_URL = 'https://cdn.discordapp.com/attachments/1338
 // --------------------------------------------------------------------------
 
 const hostname = window.location.hostname;
-const isLocal = 
-    hostname === 'localhost' || 
-    hostname === '127.0.0.1' || 
+const isLocal =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
     hostname.startsWith('192.168.');
 
 // 1. General Website Backend (Database, Nisathon, Admin)
-const BACKEND_PROD_URL = 'https://urnisa-backend-21ls.onrender.com';
+const BACKEND_PROD_URL = 'https://urnisa-backend-3b3m.onrender.com';
 export const API_BASE_URL = isLocal ? `http://${hostname}:3001` : BACKEND_PROD_URL;
 
 // 2. Discord Bot Service (Chat Preview + Auth)
-const BOT_PROD_URL = 'https://urnisa-dbot-r1lm.onrender.com';
+const BOT_PROD_URL = 'https://urnisa-dbot.onrender.com';
 export const DISCORD_API_URL = isLocal ? `http://${hostname}:3002` : BOT_PROD_URL;
 
 // 3. Discord OAuth Configuration
 // Replace with your actual Client ID from Discord Developer Portal
 export const DISCORD_CLIENT_ID = "1381873499173421056"; // Using Server ID as placeholder, REPLACE WITH REAL CLIENT ID
-export const DISCORD_REDIRECT_URI = isLocal 
+export const DISCORD_REDIRECT_URI = isLocal
     ? `http://${hostname}:5173/minecraft`
     : `https://www.urnisa.live/minecraft`;
 
 
 // Configuration for grouping online members from the Discord Widget API.
 export const DISCORD_ROLES_CONFIG = [
-    { 
+    {
         id: 'owner',
-        name: 'Owner', 
+        name: 'Owner',
         color: 'text-pink-300',
-        userIds: ['433262414759198720'], 
+        userIds: ['433262414759198720'],
         usernames: ['Urnisa', 'urnisa', 'urnisa_', 'nisa'],
         avatarUrl: 'https://i.ibb.co/j9W0ZQhn/nisa-nomnom.png'
     },
-    { 
+    {
         id: 'guard_dogs',
-        name: 'Guard Dogs', 
+        name: 'Guard Dogs',
         color: 'text-green-400',
-        userIds: ['938038904072855562'], 
-        usernames: ['MegaBooster', 'SuperFan'] 
+        userIds: ['938038904072855562'],
+        usernames: ['MegaBooster', 'SuperFan']
     },
 ];
 
@@ -64,7 +64,7 @@ export const DEFAULT_CREDITS_CONTENT = [
         id: '1',
         name: 'Rimu',
         role: 'Website Developer',
-        image: '', 
+        image: '',
         color: '#e5383b', // brand-primary
         initial: 'R',
         link: 'https://github.com/Rimumu'
