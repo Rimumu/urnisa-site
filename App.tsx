@@ -27,6 +27,7 @@ import GoalWidget from './pages/overlays/GoalWidget';
 import ActivityWidget from './pages/overlays/ActivityWidget';
 import SpinWidget from './pages/overlays/SpinWidget';
 import CountdownWidget from './pages/overlays/CountdownWidget';
+import DuoCard from './pages/DuoCard';
 import InteractiveBackground from './components/InteractiveBackground';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -71,6 +72,7 @@ const App: React.FC = () => {
         <Route path="/overlay/activity" element={<ActivityWidget />} />
         <Route path="/overlay/spin" element={<SpinWidget />} />
         <Route path="/overlay/countdown" element={<CountdownWidget />} />
+        <Route path="/duo-card" element={<DuoCard />} />
 
         {/* 2. MAIN WEBSITE ROUTES (Wrapped in Layout) */}
         <Route element={<MainLayout />}>
