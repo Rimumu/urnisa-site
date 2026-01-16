@@ -170,85 +170,158 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     const p1Avatar = `https://minotar.net/helm/${p1Name}/300.png`;
     const p2Avatar = `https://minotar.net/helm/${p2Name}/300.png`;
 
+    // Common text styles that html2canvas can render properly
+    const teamNameStyle: React.CSSProperties = {
+        fontSize: '72px',
+        fontWeight: 900,
+        color: '#ffffff',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        textShadow: '0 5px 10px rgba(0,0,0,0.8), 0 0 20px rgba(114, 137, 218, 0.5)',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+    };
+
+    const playerNameStyle: React.CSSProperties = {
+        fontSize: '28px',
+        fontWeight: 700,
+        color: '#ffffff',
+        letterSpacing: '0.025em',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+    };
+
+    const ampersandStyle: React.CSSProperties = {
+        fontSize: '56px',
+        fontWeight: 900,
+        fontStyle: 'italic',
+        color: '#7289da',
+        opacity: 0.8,
+        textShadow: '0 0 15px rgba(114, 137, 218, 0.8)',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+    };
+
     return (
         <div
             id={`card-${duo.duoId}`}
-            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border-[6px] border-[#7289da]"
             style={{
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
                 width: '1200px',
                 height: '600px',
-                // Transparent background for export
-                backgroundColor: 'transparent',
+                overflow: 'hidden',
+                borderRadius: '24px',
+                border: '6px solid #7289da',
+                backgroundColor: '#1a1c23',
+                backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)',
+                boxShadow: '0 0 60px rgba(114, 137, 218, 0.3)',
             }}
         >
-            {/* Background layer - will be captured but can be hidden in final if needed */}
-            <div
-                className="absolute inset-0 rounded-3xl"
-                style={{
-                    backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)',
-                    boxShadow: '0 0 60px rgba(114, 137, 218, 0.3)',
-                }}
-            />
-
             {/* Decorative dots */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #7289da 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
-            </div>
+            <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                opacity: 0.1,
+                pointerEvents: 'none',
+                backgroundImage: 'radial-gradient(circle at 50% 50%, #7289da 1px, transparent 1px)',
+                backgroundSize: '30px 30px',
+            }} />
 
             {/* Team Name Header */}
-            <div className="z-10 w-full text-center px-12 mb-8">
-                <h1 className="text-7xl font-black text-white uppercase tracking-wider"
-                    style={{ textShadow: '0 5px 10px rgba(0,0,0,0.8), 0 0 20px rgba(114, 137, 218, 0.5)' }}>
+            <div style={{ width: '100%', textAlign: 'center', padding: '0 48px', marginBottom: '32px', zIndex: 10 }}>
+                <h1 style={teamNameStyle}>
                     {teamName}
                 </h1>
             </div>
 
             {/* Players Section */}
-            <div className="z-10 flex items-center justify-center gap-16">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '64px', zIndex: 10 }}>
 
                 {/* Player 1 */}
-                <div className="flex flex-col items-center">
-                    <div className="relative mb-4">
-                        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-md opacity-75"></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', marginBottom: '16px' }}>
+                        <div style={{
+                            position: 'absolute',
+                            inset: '-8px',
+                            background: 'linear-gradient(to right, #2563eb, #4f46e5)',
+                            borderRadius: '16px',
+                            filter: 'blur(12px)',
+                            opacity: 0.75,
+                        }} />
                         <img
                             src={p1Avatar}
                             alt={p1Name}
                             crossOrigin="anonymous"
-                            className="relative rounded-2xl border-4 border-[#2f3136] shadow-xl bg-[#202225]"
-                            style={{ width: '200px', height: '200px', objectFit: 'contain' }}
+                            style={{
+                                position: 'relative',
+                                width: '200px',
+                                height: '200px',
+                                objectFit: 'contain',
+                                borderRadius: '16px',
+                                border: '4px solid #2f3136',
+                                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
+                                backgroundColor: '#202225',
+                            }}
                             onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p1Name}&background=random&size=300`}
                         />
                     </div>
-                    <div className="bg-[#202225] px-6 py-3 rounded-full border border-gray-700 shadow-lg">
-                        <span className="text-3xl font-bold text-white tracking-wide">
+                    <div style={{
+                        backgroundColor: '#202225',
+                        padding: '12px 24px',
+                        borderRadius: '9999px',
+                        border: '1px solid #374151',
+                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
+                    }}>
+                        <span style={playerNameStyle}>
                             {p1Name}
                         </span>
                     </div>
                 </div>
 
                 {/* Ampersand */}
-                <div className="flex items-center justify-center">
-                    <span className="text-[#7289da] text-6xl font-black italic opacity-80"
-                        style={{ textShadow: '0 0 15px rgba(114, 137, 218, 0.8)' }}>
-                        &
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={ampersandStyle}>
+                        &amp;
                     </span>
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex flex-col items-center">
-                    <div className="relative mb-4">
-                        <div className="absolute -inset-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur-md opacity-75"></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', marginBottom: '16px' }}>
+                        <div style={{
+                            position: 'absolute',
+                            inset: '-8px',
+                            background: 'linear-gradient(to right, #4f46e5, #9333ea)',
+                            borderRadius: '16px',
+                            filter: 'blur(12px)',
+                            opacity: 0.75,
+                        }} />
                         <img
                             src={p2Avatar}
                             alt={p2Name}
                             crossOrigin="anonymous"
-                            className="relative rounded-2xl border-4 border-[#2f3136] shadow-xl bg-[#202225]"
-                            style={{ width: '200px', height: '200px', objectFit: 'contain' }}
+                            style={{
+                                position: 'relative',
+                                width: '200px',
+                                height: '200px',
+                                objectFit: 'contain',
+                                borderRadius: '16px',
+                                border: '4px solid #2f3136',
+                                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
+                                backgroundColor: '#202225',
+                            }}
                             onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p2Name}&background=random&size=300`}
                         />
                     </div>
-                    <div className="bg-[#202225] px-6 py-3 rounded-full border border-gray-700 shadow-lg">
-                        <span className="text-3xl font-bold text-white tracking-wide">
+                    <div style={{
+                        backgroundColor: '#202225',
+                        padding: '12px 24px',
+                        borderRadius: '9999px',
+                        border: '1px solid #374151',
+                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
+                    }}>
+                        <span style={playerNameStyle}>
                             {p2Name}
                         </span>
                     </div>
@@ -257,8 +330,20 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             </div>
 
             {/* Footer / Branding */}
-            <div className="absolute bottom-4 right-6 opacity-40">
-                <span className="text-lg font-bold text-gray-400">URNISA TOURNAMENT</span>
+            <div style={{
+                position: 'absolute',
+                bottom: '16px',
+                right: '24px',
+                opacity: 0.4,
+            }}>
+                <span style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#9ca3af',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}>
+                    URNISA TOURNAMENT
+                </span>
             </div>
         </div>
     );
