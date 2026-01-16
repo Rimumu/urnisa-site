@@ -1625,7 +1625,7 @@ const Tournament: React.FC = () => {
                                                             {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
                                                                 const isSelected = selectedTeam.some(sp => sp?.id === p.id);
                                                                 const isFull = !selectedTeam.includes(null);
-                                                                const banned = isBanned(p.id);
+                                                                const banned = isBannedForSeason(p.id, activeSeason?.format || '');
                                                                 return (<button key={p.id} disabled={isSelected || isFull || banned} onClick={() => handleSelectPokemon(p)} className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50' : (isFull || banned) ? 'bg-gray-900 opacity-30 grayscale' : 'bg-white/5 border border-white/10 hover:border-brand-primary/50'}`} title={p.name}><div className="w-full h-full relative"><PokemonTeamImage pokemon={p} />{banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}</div>{banned && <div className="banned-tooltip">BANNED</div>}</button>);
                                                             })
                                                             }
