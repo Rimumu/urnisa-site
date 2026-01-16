@@ -132,13 +132,8 @@ const DuoCard: FC = () => {
                     {duos.map((duo) => (
                         <div key={duo.duoId} className="flex flex-col items-center gap-4">
                             {/* Wrapper to control capture area precisely */}
-                            {/* Wrapper to control capture area precisely */}
                             <div className="relative group">
-                                {/* Preview Background for the website view (so transparency is visible as dark) */}
-                                <div className="absolute inset-0 bg-[#1a1c23] rounded-3xl -z-10 transform scale-[0.4] origin-top md:scale-[0.5] lg:scale-[0.6] xl:scale-[0.65] 2xl:scale-[0.75] origin-center -mb-[200px] md:-mb-[150px] lg:-mb-[100px] border-[6px] border-[#7289da]" style={{ backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)' }}></div>
-
                                 <SingleCard duo={duo} />
-
                                 {/* Overlay for hover effect / easy download */}
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-3xl pointer-events-none">
                                     <span className="text-white font-bold text-xl">Preview</span>
@@ -178,67 +173,82 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     return (
         <div
             id={`card-${duo.duoId}`}
-            className="relative w-[1200px] h-[600px] rounded-3xl flex flex-col items-center justify-center overflow-visible scale-[0.4] origin-top md:scale-[0.5] lg:scale-[0.6] xl:scale-[0.65] 2xl:scale-[0.75] origin-center -mb-[200px] md:-mb-[150px] lg:-mb-[100px]"
+            className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border-[6px] border-[#7289da]"
             style={{
-                // Transparent background!
+                width: '1200px',
+                height: '600px',
+                // Transparent background for export
                 backgroundColor: 'transparent',
             }}
         >
+            {/* Background layer - will be captured but can be hidden in final if needed */}
+            <div
+                className="absolute inset-0 rounded-3xl"
+                style={{
+                    backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)',
+                    boxShadow: '0 0 60px rgba(114, 137, 218, 0.3)',
+                }}
+            />
+
+            {/* Decorative dots */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{ backgroundImage: 'radial-gradient(circle at 50% 50%, #7289da 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
+            </div>
+
             {/* Team Name Header */}
             <div className="z-10 w-full text-center px-12 mb-8">
-                <h1 className="text-8xl font-black text-white uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]"
-                    style={{ textShadow: '0 0 20px rgba(114, 137, 218, 0.5)' }}>
+                <h1 className="text-7xl font-black text-white uppercase tracking-wider"
+                    style={{ textShadow: '0 5px 10px rgba(0,0,0,0.8), 0 0 20px rgba(114, 137, 218, 0.5)' }}>
                     {teamName}
                 </h1>
             </div>
 
             {/* Players Section */}
-            <div className="z-10 w-full flex items-center justify-center gap-24 px-12">
+            <div className="z-10 flex items-center justify-center gap-16">
 
                 {/* Player 1 */}
-                <div className="flex flex-col items-center gap-4">
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-75"></div>
+                <div className="flex flex-col items-center">
+                    <div className="relative mb-4">
+                        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-md opacity-75"></div>
                         <img
                             src={p1Avatar}
                             alt={p1Name}
-                            /* CrossOrigin needed for canvas contamination */
                             crossOrigin="anonymous"
-                            className="relative w-64 h-64 rounded-2xl border-4 border-[#2f3136] shadow-xl object-contain bg-[#202225]"
+                            className="relative rounded-2xl border-4 border-[#2f3136] shadow-xl bg-[#202225]"
+                            style={{ width: '200px', height: '200px', objectFit: 'contain' }}
                             onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p1Name}&background=random&size=300`}
                         />
                     </div>
-                    {/* Centered Name Pill */}
-                    <div className="flex items-center justify-center bg-[#202225] px-6 py-2 rounded-full border border-gray-700 shadow-lg min-w-[200px]">
-                        <span className="text-4xl font-bold text-white tracking-wide text-center leading-none pb-1">
+                    <div className="bg-[#202225] px-6 py-3 rounded-full border border-gray-700 shadow-lg">
+                        <span className="text-3xl font-bold text-white tracking-wide">
                             {p1Name}
                         </span>
                     </div>
                 </div>
 
-                {/* VS / Ampersand Graphic */}
-                <div className="flex flex-col items-center justify-center">
-                    <span className="text-[#7289da] text-7xl font-black italic opacity-80"
+                {/* Ampersand */}
+                <div className="flex items-center justify-center">
+                    <span className="text-[#7289da] text-6xl font-black italic opacity-80"
                         style={{ textShadow: '0 0 15px rgba(114, 137, 218, 0.8)' }}>
                         &
                     </span>
                 </div>
 
                 {/* Player 2 */}
-                <div className="flex flex-col items-center gap-4">
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur opacity-75"></div>
+                <div className="flex flex-col items-center">
+                    <div className="relative mb-4">
+                        <div className="absolute -inset-2 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur-md opacity-75"></div>
                         <img
                             src={p2Avatar}
                             alt={p2Name}
                             crossOrigin="anonymous"
-                            className="relative w-64 h-64 rounded-2xl border-4 border-[#2f3136] shadow-xl object-contain bg-[#202225]"
+                            className="relative rounded-2xl border-4 border-[#2f3136] shadow-xl bg-[#202225]"
+                            style={{ width: '200px', height: '200px', objectFit: 'contain' }}
                             onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p2Name}&background=random&size=300`}
                         />
                     </div>
-                    {/* Centered Name Pill */}
-                    <div className="flex items-center justify-center bg-[#202225] px-6 py-2 rounded-full border border-gray-700 shadow-lg min-w-[200px]">
-                        <span className="text-4xl font-bold text-white tracking-wide text-center leading-none pb-1">
+                    <div className="bg-[#202225] px-6 py-3 rounded-full border border-gray-700 shadow-lg">
+                        <span className="text-3xl font-bold text-white tracking-wide">
                             {p2Name}
                         </span>
                     </div>
@@ -247,8 +257,8 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             </div>
 
             {/* Footer / Branding */}
-            <div className="absolute bottom-6 right-8 opacity-40">
-                <span className="text-xl font-bold text-gray-400">URNISA TOURNAMENT</span>
+            <div className="absolute bottom-4 right-6 opacity-40">
+                <span className="text-lg font-bold text-gray-400">URNISA TOURNAMENT</span>
             </div>
         </div>
     );
