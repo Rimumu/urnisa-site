@@ -60,6 +60,49 @@ const DuoCard: FC = () => {
         }
     };
 
+    const hostCard = async (duo: Duo) => {
+        const element = document.getElementById(`card-${duo.duoId}`);
+        if (!element) return;
+
+        // Visual feedback
+        const originalText = document.getElementById(`btn-host-${duo.duoId}`)?.innerText;
+        const btn = document.getElementById(`btn-host-${duo.duoId}`);
+        if (btn) btn.innerText = "Uploading...";
+
+        try {
+            const canvas = await html2canvas(element, {
+                useCORS: true,
+                scale: 2,
+                backgroundColor: null,
+                logging: false,
+            });
+
+            const base64 = canvas.toDataURL('image/png');
+            const filename = (duo.teamName || `Team_${duo.player1Username}_${duo.player2Username}`)
+                .replace(/[^a-z0-9]/gi, '_')
+                .toLowerCase();
+
+            // Upload
+            const res = await fetch(`${API_BASE_URL}/api/public/upload-card`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64, filename })
+            });
+
+            const data = await res.json();
+            if (data.success && data.url) {
+                window.open(data.url, '_blank');
+            } else {
+                alert('Upload failed.');
+            }
+        } catch (err) {
+            console.error('Failed to host card:', err);
+            alert('Failed to upload image.');
+        } finally {
+            if (btn) btn.innerText = "Open Link";
+        }
+    };
+
     const downloadAll = async () => {
         if (!confirm(`This will download ${duos.length} images. Continue?`)) return;
 
@@ -96,12 +139,21 @@ const DuoCard: FC = () => {
                                     <span className="text-white font-bold text-xl">Preview</span>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => downloadCard(duo)}
-                                className="text-gray-400 hover:text-white underline text-sm"
-                            >
-                                Download {duo.teamName || 'Team'}
-                            </button>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => downloadCard(duo)}
+                                    className="text-gray-400 hover:text-white underline text-sm"
+                                >
+                                    Download
+                                </button>
+                                <button
+                                    id={`btn-host-${duo.duoId}`}
+                                    onClick={() => hostCard(duo)}
+                                    className="text-brand-primary hover:text-pink-300 font-bold underline text-sm"
+                                >
+                                    Get Link
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
