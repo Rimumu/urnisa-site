@@ -711,7 +711,7 @@ const Tournament: React.FC = () => {
 
         // For Duos: Check if user is captain and duo exists
         if (activeSeason.format.includes('Duos') && myDuo) {
-            if (myDuo.captainDiscordId !== user.id) return; // Only captain can save
+            if (myDuo.captainDiscordId !== user.id && user.minecraftUsername !== 'GreatRimu') return; // Only captain can save (unless admin)
             if (myDuo.isLocked) return; // Can't edit locked team
 
             setSaving(true);
@@ -1420,7 +1420,7 @@ const Tournament: React.FC = () => {
                                 ) : (
                                     <div className="space-y-10">
                                         {/* Duos Logic Check */}
-                                        {activeSeason.format.includes('Duos') && (!myDuo || (myDuo.captainDiscordId !== user?.id)) ? (
+                                        {activeSeason.format.includes('Duos') && (!myDuo || (myDuo.captainDiscordId !== user?.id)) && user?.minecraftUsername !== 'GreatRimu' ? (
                                             <div className="bg-black/40 p-12 rounded-[2.5rem] border border-white/5 mb-8 text-center flex flex-col items-center justify-center min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
                                                 {myDuo ? (
                                                     <div className="space-y-6">
