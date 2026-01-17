@@ -445,9 +445,10 @@ const Tournament: React.FC = () => {
         if (apiWinners.length > 0) {
             const sorted = [...apiWinners].sort((a, b) => a.rank - b.rank);
             const w = [null, null, null] as (string | null)[];
-            if (sorted[0]) w[0] = sorted[0].username;
-            if (sorted[1]) w[1] = sorted[1].username;
-            if (sorted[2]) w[2] = sorted[2].username;
+            // Handle both Singles (username) and fallback for display
+            if (sorted[0]) w[0] = sorted[0].username || sorted[0].player1 || null;
+            if (sorted[1]) w[1] = sorted[1].username || sorted[1].player1 || null;
+            if (sorted[2]) w[2] = sorted[2].username || sorted[2].player1 || null;
             return w;
         }
 
