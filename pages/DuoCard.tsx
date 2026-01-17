@@ -272,13 +272,20 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#202225',
-                        height: '56px',
-                        padding: '0 24px',
+                        height: '48px',
+                        paddingLeft: '24px',
+                        paddingRight: '24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
                     }}>
-                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block', paddingTop: '2px' }}>
+                        <span style={{
+                            fontSize: '28px',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            lineHeight: 1,
+                        }}>
                             {p1Name}
                         </span>
                     </div>
@@ -324,13 +331,20 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#202225',
-                        height: '56px',
-                        padding: '0 24px',
+                        height: '48px',
+                        paddingLeft: '24px',
+                        paddingRight: '24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
                     }}>
-                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block', paddingTop: '2px' }}>
+                        <span style={{
+                            fontSize: '28px',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            lineHeight: 1,
+                        }}>
                             {p2Name}
                         </span>
                     </div>
