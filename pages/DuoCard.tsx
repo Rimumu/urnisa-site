@@ -195,7 +195,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             {/* Overlapping Avatars - centered horizontally */}
             <div style={{
                 position: 'absolute',
-                left: '120px',
+                left: '80px',
                 top: '35px',
                 width: '160px',
                 height: '110px',
@@ -243,7 +243,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             {/* Team Info - absolute positioned */}
             <div style={{
                 position: 'absolute',
-                left: '304px',
+                left: '264px',
                 top: textTop,
                 right: '24px',
             }}>
