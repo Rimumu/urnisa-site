@@ -188,51 +188,24 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 height: '180px',
                 padding: '24px 32px',
                 borderRadius: '20px',
-                backgroundColor: '#1a1c23',
-                backgroundImage: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
+                backgroundColor: '#312e81',
                 border: '3px solid #6366f1',
-                boxShadow: '0 0 30px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
                 overflow: 'hidden',
             }}
         >
-            {/* Decorative gradient overlay */}
+            {/* Simple gradient overlay */}
             <div style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundImage: 'radial-gradient(ellipse at top left, rgba(168, 85, 247, 0.2) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(59, 130, 246, 0.2) 0%, transparent 50%)',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, transparent 100%)',
                 pointerEvents: 'none',
-            }} />
-
-            {/* Sparkle dots */}
-            <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
-                backgroundSize: '20px 20px',
-                pointerEvents: 'none',
-                opacity: 0.5,
             }} />
 
             {/* Overlapping Avatars - Captain (left, purple) & Partner (right, blue) */}
             <div style={{ position: 'relative', width: '160px', height: '110px', flexShrink: 0, zIndex: 10 }}>
-                {/* Captain glow */}
-                <div style={{
-                    position: 'absolute',
-                    top: '5px',
-                    left: '0',
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '12px',
-                    background: 'rgba(168, 85, 247, 0.4)',
-                    filter: 'blur(15px)',
-                    zIndex: 0,
-                }} />
                 {/* Captain (purple border, left, in front) */}
                 <img
                     src={captainAvatar}
@@ -249,22 +222,9 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         border: '4px solid #a855f7',
                         backgroundColor: '#202225',
                         zIndex: 2,
-                        boxShadow: '0 4px 15px rgba(168, 85, 247, 0.5)',
                     }}
                     onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${captainName}&background=random&size=300`}
                 />
-                {/* Partner glow */}
-                <div style={{
-                    position: 'absolute',
-                    top: '5px',
-                    left: '60px',
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '12px',
-                    background: 'rgba(59, 130, 246, 0.4)',
-                    filter: 'blur(15px)',
-                    zIndex: 0,
-                }} />
                 {/* Partner (blue border, right, behind) */}
                 <img
                     src={partnerAvatar}
@@ -281,7 +241,6 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         border: '4px solid #3b82f6',
                         backgroundColor: '#202225',
                         zIndex: 1,
-                        boxShadow: '0 4px 15px rgba(59, 130, 246, 0.5)',
                     }}
                     onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${partnerName}&background=random&size=300`}
                 />
@@ -296,45 +255,30 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 zIndex: 10,
             }}>
                 {/* Team Name */}
-                <h1 style={{
+                <div style={{
                     fontSize: '38px',
                     fontWeight: 900,
                     color: '#ffffff',
                     textTransform: 'uppercase',
                     fontFamily: 'Arial, sans-serif',
-                    margin: '0 0 6px 0',
-                    lineHeight: 1.1,
-                    textShadow: '0 2px 10px rgba(168, 85, 247, 0.5), 0 0 30px rgba(99, 102, 241, 0.3)',
+                    marginBottom: '6px',
+                    lineHeight: '1.1',
                     letterSpacing: '0.02em',
                 }}>
                     {teamName}
-                </h1>
+                </div>
                 {/* Player Names - Captain first */}
-                <p style={{
+                <div style={{
                     fontSize: '20px',
                     fontWeight: 600,
                     color: '#c4b5fd',
                     fontFamily: 'Arial, sans-serif',
-                    margin: 0,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em',
                 }}>
                     {captainName} & {partnerName}
-                </p>
+                </div>
             </div>
-
-            {/* Corner accent */}
-            <div style={{
-                position: 'absolute',
-                bottom: '-20px',
-                right: '-20px',
-                width: '80px',
-                height: '80px',
-                background: 'linear-gradient(135deg, #a855f7 0%, #3b82f6 100%)',
-                borderRadius: '50%',
-                opacity: 0.3,
-                filter: 'blur(20px)',
-            }} />
         </div>
     );
 };
