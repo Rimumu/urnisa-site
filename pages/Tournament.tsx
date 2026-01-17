@@ -544,15 +544,22 @@ const Tournament: React.FC = () => {
 
     useEffect(() => {
         if (activeTab === 'brackets') {
+            // Clear old data immediately when switching
+            setApiWinners([]);
+            setMatches([]);
+
             fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`)
                 .then(res => res.json())
                 .then(data => setMatches(data.matches || []))
                 .catch(console.error);
             // Fetch winners data
             fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) return []; // Return empty on error
+                    return res.json();
+                })
                 .then(data => setApiWinners(Array.isArray(data) ? data : []))
-                .catch(console.error);
+                .catch(() => setApiWinners([])); // Clear on error
         } else if (activeTab === 'players') {
             fetchPlayersForSeason(activeSeason.seasonId);
             if (activeSeason.format.includes('Duos')) fetchDuosForSeason(activeSeason.seasonId);
