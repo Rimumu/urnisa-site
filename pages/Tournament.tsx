@@ -154,8 +154,8 @@ const PARADOX_IDS = new Set([
     995,  // Iron Moth
     996,  // Iron Thorns
     997,  // Iron Valiant
-    // Box Legends (Paradox forms)
-    1007, 1008,  // Koraidon, Miraidon
+    // Box Legends (Moved to Legendary list)
+    // 1007, 1008,  // Koraidon, Miraidon
     // DLC Paradox
     1005, 1006,  // Walking Wake, Iron Leaves
     1009, 1010   // Gouging Fire, Raging Bolt, Iron Boulder, Iron Crown
@@ -203,7 +203,8 @@ const LEGENDARY_IDS = new Set([
     905,  // Enamorus
     // Gen 9
     1014, 1015, 1016, 1017,  // Ogerpon, Okidogi, Munkidori, Fezandipiti
-    1024  // Terapagos
+    1024,  // Terapagos
+    1007, 1008  // Koraidon, Miraidon (Moved from Paradox ban)
 ]);
 
 // Combined Season 2 completely banned list (Mythical + Ultra Beasts + Paradox)
@@ -379,7 +380,7 @@ const RuleCard: React.FC<{ title: string; icon: string; children: React.ReactNod
 
 const Tournament: React.FC = () => {
     const [user, setUser] = useState<UserData | null>(null);
-    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players'>('rules');
+    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players' | 'duos'>('rules');
     const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
     const [loadingPokemon, setLoadingPokemon] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
