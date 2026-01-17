@@ -220,7 +220,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         height: '100px',
                         objectFit: 'contain',
                         borderRadius: '12px',
-                        border: '4px solid #a855f7',
+                        border: '4px solid #fbbf24',
                         backgroundColor: '#202225',
                         zIndex: 2,
                     }}
@@ -239,7 +239,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         height: '100px',
                         objectFit: 'contain',
                         borderRadius: '12px',
-                        border: '4px solid #3b82f6',
+                        border: '4px solid #a855f7',
                         backgroundColor: '#202225',
                         zIndex: 1,
                     }}
