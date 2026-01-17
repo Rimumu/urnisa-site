@@ -8,6 +8,9 @@ interface Duo {
     teamName: string;
     player1Username: string;
     player2Username: string;
+    player1DiscordId: string;
+    player2DiscordId: string;
+    captainDiscordId: string;
 }
 
 const DuoCard: FC = () => {
@@ -164,12 +167,15 @@ const DuoCard: FC = () => {
 };
 
 const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
-    const p1Name = duo.player1Username;
-    const p2Name = duo.player2Username;
+    // Determine who is captain based on captainDiscordId
+    const isPlayer1Captain = duo.captainDiscordId === duo.player1DiscordId;
+
+    const captainName = isPlayer1Captain ? duo.player1Username : duo.player2Username;
+    const partnerName = isPlayer1Captain ? duo.player2Username : duo.player1Username;
     const teamName = duo.teamName || 'Unknown Team';
 
-    const p1Avatar = `https://minotar.net/helm/${p1Name}/300.png`;
-    const p2Avatar = `https://minotar.net/helm/${p2Name}/300.png`;
+    const captainAvatar = `https://minotar.net/helm/${captainName}/300.png`;
+    const partnerAvatar = `https://minotar.net/helm/${partnerName}/300.png`;
 
     return (
         <div
@@ -187,10 +193,10 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
         >
             {/* Overlapping Avatars - Captain (left, purple) & Partner (right, blue) */}
             <div style={{ position: 'relative', width: '160px', height: '110px', flexShrink: 0 }}>
-                {/* Player 1 - Captain (purple border, left) */}
+                {/* Captain (purple border, left, in front) */}
                 <img
-                    src={p1Avatar}
-                    alt={p1Name}
+                    src={captainAvatar}
+                    alt={captainName}
                     crossOrigin="anonymous"
                     style={{
                         position: 'absolute',
@@ -204,12 +210,12 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         backgroundColor: '#202225',
                         zIndex: 2,
                     }}
-                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p1Name}&background=random&size=300`}
+                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${captainName}&background=random&size=300`}
                 />
-                {/* Player 2 - Partner (blue border, right, slightly behind) */}
+                {/* Partner (blue border, right, behind) */}
                 <img
-                    src={p2Avatar}
-                    alt={p2Name}
+                    src={partnerAvatar}
+                    alt={partnerName}
                     crossOrigin="anonymous"
                     style={{
                         position: 'absolute',
@@ -223,7 +229,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         backgroundColor: '#202225',
                         zIndex: 1,
                     }}
-                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p2Name}&background=random&size=300`}
+                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${partnerName}&background=random&size=300`}
                 />
             </div>
 
@@ -241,7 +247,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 }}>
                     {teamName}
                 </h1>
-                {/* Player Names */}
+                {/* Player Names - Captain first */}
                 <p style={{
                     fontSize: '22px',
                     fontWeight: 600,
@@ -250,7 +256,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                     margin: 0,
                     textTransform: 'uppercase',
                 }}>
-                    {p1Name} & {p2Name}
+                    {captainName} & {partnerName}
                 </p>
             </div>
         </div>
