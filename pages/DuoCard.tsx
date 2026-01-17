@@ -171,7 +171,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
 
     const captainName = isPlayer1Captain ? duo.player1Username : duo.player2Username;
     const partnerName = isPlayer1Captain ? duo.player2Username : duo.player1Username;
-    const teamName = duo.teamName || 'Unknown Team';
+    const teamName = duo.teamName || `${captainName} & ${partnerName}`;
 
     // Detect name length categories for positioning
     const isVeryShortName = teamName.length <= 10;
