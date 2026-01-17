@@ -632,7 +632,15 @@ const AdminTournament: React.FC = () => {
                         <h3 className="font-bold text-lg text-red-400 border-b border-red-500/20 pb-2 mb-4">Danger Zone</h3>
                         <div className="space-y-2">
                             <button
-                                onClick={() => setShowEndModal(true)}
+                                onClick={() => {
+                                    // Reset form data when opening modal
+                                    setFinalWinners({
+                                        rank1: { teamName: '', player1: '', player2: '', score: '' },
+                                        rank2: { teamName: '', player1: '', player2: '', score: '' },
+                                        rank3: { teamName: '', player1: '', player2: '', score: '' }
+                                    });
+                                    setShowEndModal(true);
+                                }}
                                 className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 rounded text-sm"
                             >
                                 🏆 End Tournament
