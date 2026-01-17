@@ -173,13 +173,16 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     const partnerName = isPlayer1Captain ? duo.player2Username : duo.player1Username;
     const teamName = duo.teamName || 'Unknown Team';
 
-    // Detect if name is long (will likely wrap to 2 lines)
+    // Detect name length categories for positioning
+    const isVeryShortName = teamName.length <= 10;
     const isLongName = teamName.length > 14;
+
     // Dynamic vertical positioning based on name length
     const textTop = isLongName ? '35px' : '50px';
-    // Left-aligned positioning that works consistently for all name lengths
-    const avatarLeft = '40px';
-    const textLeft = '224px';
+
+    // Horizontal positioning: very short names move right, others stay at 100px
+    const avatarLeft = isVeryShortName ? '140px' : '100px';
+    const textLeft = isVeryShortName ? '324px' : '284px';
 
     const captainAvatar = `https://minotar.net/helm/${captainName}/300.png`;
     const partnerAvatar = `https://minotar.net/helm/${partnerName}/300.png`;
