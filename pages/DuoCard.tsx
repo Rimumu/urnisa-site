@@ -193,19 +193,10 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 overflow: 'hidden',
             }}
         >
-            {/* Simple gradient overlay */}
-            <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, transparent 100%)',
-                pointerEvents: 'none',
-            }} />
+
 
             {/* Overlapping Avatars - Captain (left, purple) & Partner (right, blue) */}
-            <div style={{ position: 'relative', width: '160px', height: '110px', flexShrink: 0, zIndex: 10 }}>
+            <div style={{ position: 'relative', width: '160px', height: '110px', flexShrink: 0 }}>
                 {/* Captain (purple border, left, in front) */}
                 <img
                     src={captainAvatar}
@@ -252,7 +243,6 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
-                zIndex: 10,
             }}>
                 {/* Team Name */}
                 <div style={{
