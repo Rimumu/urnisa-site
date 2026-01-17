@@ -181,7 +181,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             id={`card-${duo.duoId}`}
             style={{
                 position: 'relative',
-                width: '600px',
+                width: '700px',
                 height: '180px',
                 borderRadius: '20px',
                 backgroundColor: '#312e81',
@@ -240,29 +240,31 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             <div style={{
                 position: 'absolute',
                 left: '216px',
-                top: '40px',
+                top: '30px',
+                right: '24px',
             }}>
                 {/* Team Name */}
                 <div style={{
-                    fontSize: '38px',
+                    fontSize: '32px',
                     fontWeight: 900,
                     color: '#ffffff',
                     textTransform: 'uppercase',
                     fontFamily: 'Arial, sans-serif',
-                    marginBottom: '6px',
-                    lineHeight: '1.1',
+                    marginBottom: '8px',
+                    lineHeight: '1.15',
                     letterSpacing: '0.02em',
+                    wordWrap: 'break-word',
                 }}>
                     {teamName}
                 </div>
                 {/* Player Names - Captain first */}
                 <div style={{
-                    fontSize: '20px',
+                    fontSize: '18px',
                     fontWeight: 600,
                     color: '#c4b5fd',
                     fontFamily: 'Arial, sans-serif',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
+                    letterSpacing: '0.03em',
                 }}>
                     {captainName} & {partnerName}
                 </div>
