@@ -268,21 +268,26 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         />
                     </div>
                     <div style={{
+                        position: 'relative',
                         backgroundColor: '#202225',
                         height: '48px',
+                        minWidth: '120px',
                         paddingLeft: '24px',
                         paddingRight: '24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
-                        textAlign: 'center',
                     }}>
                         <span style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
                             fontSize: '28px',
                             fontWeight: 700,
                             color: '#ffffff',
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            lineHeight: '48px',
+                            fontFamily: 'Arial, sans-serif',
+                            whiteSpace: 'nowrap',
                         }}>
                             {p1Name}
                         </span>
@@ -325,21 +330,26 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         />
                     </div>
                     <div style={{
+                        position: 'relative',
                         backgroundColor: '#202225',
                         height: '48px',
+                        minWidth: '120px',
                         paddingLeft: '24px',
                         paddingRight: '24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
-                        textAlign: 'center',
                     }}>
                         <span style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
                             fontSize: '28px',
                             fontWeight: 700,
                             color: '#ffffff',
-                            fontFamily: 'system-ui, -apple-system, sans-serif',
-                            lineHeight: '48px',
+                            fontFamily: 'Arial, sans-serif',
+                            whiteSpace: 'nowrap',
                         }}>
                             {p2Name}
                         </span>
