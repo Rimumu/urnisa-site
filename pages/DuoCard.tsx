@@ -240,7 +240,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             <div style={{
                 position: 'absolute',
                 left: '216px',
-                top: '30px',
+                top: '45px',
                 right: '24px',
             }}>
                 {/* Team Name */}
