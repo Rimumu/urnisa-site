@@ -182,21 +182,23 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             id={`card-${duo.duoId}`}
             style={{
                 position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
                 width: '600px',
                 height: '180px',
-                padding: '24px 32px',
                 borderRadius: '20px',
                 backgroundColor: '#312e81',
                 border: '3px solid #6366f1',
                 overflow: 'hidden',
             }}
         >
-
-
             {/* Overlapping Avatars - Captain (left, purple) & Partner (right, blue) */}
-            <div style={{ position: 'relative', width: '160px', height: '110px', flexShrink: 0 }}>
+            <div style={{
+                position: 'absolute',
+                left: '32px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '160px',
+                height: '110px',
+            }}>
                 {/* Captain (purple border, left, in front) */}
                 <img
                     src={captainAvatar}
@@ -237,12 +239,12 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 />
             </div>
 
-            {/* Team Info */}
+            {/* Team Info - Absolutely positioned */}
             <div style={{
-                marginLeft: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
+                position: 'absolute',
+                left: '216px',
+                top: '50%',
+                transform: 'translateY(-50%)',
             }}>
                 {/* Team Name */}
                 <div style={{
