@@ -37,6 +37,15 @@ interface Duo {
     isLocked: boolean;
 }
 
+interface DuoPartyData {
+    duoId: string;
+    player1Username: string;
+    player2Username: string;
+    player1Picks: { name: string; level: number }[];
+    player2Picks: { name: string; level: number }[];
+    lastUpdated: string;
+}
+
 // --- POKEMON IMAGE COMPONENT ---
 const PokemonImage: React.FC<{ pokemon: { id: number; name: string } | null }> = ({ pokemon }) => {
     if (!pokemon) return (
@@ -79,11 +88,17 @@ const AdminTournament: React.FC = () => {
 
     // Duo State (Season 2)
     const [duos, setDuos] = useState<Duo[]>([]);
-    const [playerListTab, setPlayerListTab] = useState<'solo' | 'duos'>('solo');
+    const [playerListTab, setPlayerListTab] = useState<'solo' | 'duos' | 'parties'>('solo');
     const [showPairModal, setShowPairModal] = useState(false);
     const [pairPlayer1, setPairPlayer1] = useState<TournamentPlayer | null>(null);
     const [pairPlayer2, setPairPlayer2] = useState<TournamentPlayer | null>(null);
     const [pairCaptain, setPairCaptain] = useState<'player1' | 'player2'>('player1');
+
+    // Live Party Data State
+    const [duoParties, setDuoParties] = useState<DuoPartyData[]>([]);
+    const [showLogModal, setShowLogModal] = useState(false);
+    const [logText, setLogText] = useState('');
+    const [selectedDuoForParty, setSelectedDuoForParty] = useState<Duo | null>(null);
 
     // UI State
     const [statusMsg, setStatusMsg] = useState('');
@@ -159,10 +174,21 @@ const AdminTournament: React.FC = () => {
         }
     };
 
+    const fetchDuoParties = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/tournament/duo-parties`);
+            const data = await res.json();
+            setDuoParties(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error('Failed to fetch duo parties', e);
+        }
+    };
+
     useEffect(() => {
         if (activeSeason?.seasonId) {
             fetchPlayers(activeSeason.seasonId);
             fetchDuos(activeSeason.seasonId);
+            fetchDuoParties();
             setEditingChallongeUrl(activeSeason.challongeUrl || '');
         }
     }, [activeSeason?.seasonId]);
@@ -173,6 +199,7 @@ const AdminTournament: React.FC = () => {
             if (activeSeason?.seasonId) {
                 fetchPlayers(activeSeason.seasonId);
                 fetchDuos(activeSeason.seasonId);
+                fetchDuoParties();
             }
         }, 15000); // 15 seconds
 
@@ -360,6 +387,46 @@ const AdminTournament: React.FC = () => {
         setTimeout(() => setStatusMsg(''), 3000);
     };
 
+    // --- PARSE LOG HANDLERS ---
+    const handleParseLog = async () => {
+        if (!logText.trim()) {
+            setStatusMsg('Please paste log text first');
+            return;
+        }
+        try {
+            await apiCall('/api/admin/tournament/parse-duo-logs', {
+                logText,
+                duoId: selectedDuoForParty?.duoId,
+                player1Username: selectedDuoForParty?.player1Username,
+                player2Username: selectedDuoForParty?.player2Username
+            });
+            setStatusMsg('Log parsed successfully!');
+            setShowLogModal(false);
+            setLogText('');
+            setSelectedDuoForParty(null);
+            fetchDuoParties();
+        } catch (e: any) {
+            setStatusMsg(e.message);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    const handleClearParty = async (duoId: string) => {
+        if (!window.confirm('Clear party data for this duo?')) return;
+        try {
+            await apiCall('/api/admin/tournament/duo-party/clear', { duoId });
+            setStatusMsg('Party data cleared!');
+            fetchDuoParties();
+        } catch (e: any) {
+            setStatusMsg(e.message);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    // Helper function to get party data for a duo
+    const getPartyForDuo = (duoId: string) => {
+        return duoParties.find(p => p.duoId === duoId);
+    };
 
 
     // Helper to check if player is already in a duo
@@ -596,6 +663,15 @@ const AdminTournament: React.FC = () => {
                             >
                                 Duos ({duos.length})
                             </button>
+                            <button
+                                onClick={() => setPlayerListTab('parties')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${playerListTab === 'parties'
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    }`}
+                            >
+                                🎮 Live Parties ({duoParties.length})
+                            </button>
                         </div>
                         <div className="flex gap-2">
                             <input
@@ -809,6 +885,128 @@ const AdminTournament: React.FC = () => {
                             ))}
                         </div>
                     )}
+
+                    {/* Live Parties Tab */}
+                    {playerListTab === 'parties' && (
+                        <div className="space-y-4">
+                            {/* Parse Logs Button */}
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="text-sm text-gray-400">
+                                    Paste server logs to parse Pokemon picks from in-game duo party building.
+                                </div>
+                                <button
+                                    onClick={() => setShowLogModal(true)}
+                                    className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl text-sm"
+                                >
+                                    📋 Parse from Logs
+                                </button>
+                            </div>
+
+                            {/* Party Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
+                                {duos.length === 0 ? (
+                                    <div className="col-span-full text-center py-12 text-gray-500">
+                                        <span className="text-4xl block mb-2">🎮</span>
+                                        No duos to show party data for yet.
+                                    </div>
+                                ) : duos.map(duo => {
+                                    const party = getPartyForDuo(duo.duoId);
+                                    return (
+                                        <div
+                                            key={duo.duoId}
+                                            className="bg-gradient-to-br from-green-900/30 to-black border border-green-500/30 rounded-xl p-4"
+                                        >
+                                            {/* Header */}
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="flex -space-x-3">
+                                                    <img
+                                                        src={`https://mc-heads.net/avatar/${duo.player1Username}/36`}
+                                                        className="w-9 h-9 rounded-lg border-2 border-green-500/50"
+                                                    />
+                                                    <img
+                                                        src={`https://mc-heads.net/avatar/${duo.player2Username}/36`}
+                                                        className="w-9 h-9 rounded-lg border-2 border-green-500/30"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-bold text-white text-sm">
+                                                        {duo.player1Username} & {duo.player2Username}
+                                                    </div>
+                                                    <div className={`text-[10px] font-bold uppercase ${party ? 'text-green-400' : 'text-gray-500'}`}>
+                                                        {party ? `Updated ${new Date(party.lastUpdated).toLocaleString()}` : 'No party data yet'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Party Display */}
+                                            {party ? (
+                                                <div className="space-y-3 mb-3">
+                                                    {/* Player 1 Picks */}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="text-[9px] font-black uppercase text-green-400 w-16 truncate">
+                                                            {duo.player1Username}
+                                                        </div>
+                                                        <div className="flex gap-1 flex-1">
+                                                            {party.player1Picks.map((poke, idx) => (
+                                                                <div key={idx} className="bg-black/40 border border-green-500/30 rounded px-2 py-1 text-[10px] font-bold text-white">
+                                                                    {poke.name} <span className="text-green-400">Lv{poke.level}</span>
+                                                                </div>
+                                                            ))}
+                                                            {party.player1Picks.length === 0 && (
+                                                                <span className="text-gray-500 text-[10px]">No picks</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {/* Player 2 Picks */}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="text-[9px] font-black uppercase text-green-400 w-16 truncate">
+                                                            {duo.player2Username}
+                                                        </div>
+                                                        <div className="flex gap-1 flex-1">
+                                                            {party.player2Picks.map((poke, idx) => (
+                                                                <div key={idx} className="bg-black/40 border border-green-500/30 rounded px-2 py-1 text-[10px] font-bold text-white">
+                                                                    {poke.name} <span className="text-green-400">Lv{poke.level}</span>
+                                                                </div>
+                                                            ))}
+                                                            {party.player2Picks.length === 0 && (
+                                                                <span className="text-gray-500 text-[10px]">No picks</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-4 text-gray-500 text-sm">
+                                                    No party data. Parse logs to add.
+                                                </div>
+                                            )}
+
+                                            {/* Actions */}
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedDuoForParty(duo);
+                                                        setShowLogModal(true);
+                                                    }}
+                                                    className="flex-1 bg-green-600/20 hover:bg-green-600/40 text-green-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                                >
+                                                    {party ? 'Update Picks' : 'Add Picks'}
+                                                </button>
+                                                {party && (
+                                                    <button
+                                                        onClick={() => handleClearParty(duo.duoId)}
+                                                        disabled={loading}
+                                                        className="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                                    >
+                                                        Clear
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1008,6 +1206,71 @@ const AdminTournament: React.FC = () => {
                                 className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded"
                             >
                                 Revoke Registration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* LOG PARSE MODAL */}
+            {showLogModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
+                    <div className="bg-[#0a1a0f] p-8 rounded-2xl border border-green-500/30 w-full max-w-2xl space-y-6">
+                        <h3 className="text-2xl font-black text-green-400 text-center uppercase">
+                            📋 Parse Server Logs
+                        </h3>
+
+                        {selectedDuoForParty && (
+                            <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4 flex items-center gap-3">
+                                <div className="flex -space-x-2">
+                                    <img
+                                        src={`https://mc-heads.net/avatar/${selectedDuoForParty.player1Username}/32`}
+                                        className="w-8 h-8 rounded-lg border border-green-500/50"
+                                    />
+                                    <img
+                                        src={`https://mc-heads.net/avatar/${selectedDuoForParty.player2Username}/32`}
+                                        className="w-8 h-8 rounded-lg border border-green-500/30"
+                                    />
+                                </div>
+                                <div className="text-white font-bold">
+                                    {selectedDuoForParty.player1Username} & {selectedDuoForParty.player2Username}
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="text-xs text-gray-400 font-bold uppercase block mb-2">
+                                Paste Log Text
+                            </label>
+                            <textarea
+                                value={logText}
+                                onChange={e => setLogText(e.target.value)}
+                                placeholder={'Paste server log lines here...\n\nExpected format:\nPikachu (Lv.50)\nCharizard (Lv.50)\netc.'}
+                                rows={8}
+                                className="w-full bg-black/50 border border-green-500/30 p-4 rounded-xl text-white text-sm font-mono resize-none"
+                            />
+                            <div className="text-[10px] text-gray-500 mt-2">
+                                The parser will extract Pokemon names and levels. First 3 go to Player 1, next 3 go to Player 2.
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowLogModal(false);
+                                    setLogText('');
+                                    setSelectedDuoForParty(null);
+                                }}
+                                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleParseLog}
+                                disabled={loading || !logText.trim()}
+                                className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded disabled:opacity-50"
+                            >
+                                Parse & Save
                             </button>
                         </div>
                     </div>
