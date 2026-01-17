@@ -180,100 +180,109 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
         <div
             id={`card-${duo.duoId}`}
             style={{
-                position: 'relative',
+                display: 'table',
                 width: '700px',
                 height: '180px',
                 borderRadius: '20px',
                 backgroundColor: '#312e81',
                 border: '3px solid #6366f1',
-                textAlign: 'center',
             }}
         >
-            {/* Centered content wrapper */}
+            {/* Table cell for vertical centering */}
             <div style={{
-                display: 'inline-block',
-                textAlign: 'left',
-                marginTop: '35px',
+                display: 'table-cell',
+                verticalAlign: 'middle',
+                textAlign: 'center',
             }}>
-                {/* Overlapping Avatars - Captain (left, purple) & Partner (right, blue) */}
+                {/* Inner content wrapper */}
                 <div style={{
                     display: 'inline-block',
-                    position: 'relative',
-                    width: '160px',
-                    height: '110px',
-                    verticalAlign: 'middle',
+                    textAlign: 'left',
                 }}>
-                    {/* Captain (purple border, left, in front) */}
-                    <img
-                        src={captainAvatar}
-                        alt={captainName}
-                        crossOrigin="anonymous"
-                        style={{
-                            position: 'absolute',
-                            top: '5px',
-                            left: '0',
-                            width: '100px',
-                            height: '100px',
-                            objectFit: 'contain',
-                            borderRadius: '12px',
-                            border: '4px solid #a855f7',
-                            backgroundColor: '#202225',
-                            zIndex: 2,
-                        }}
-                        onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${captainName}&background=random&size=300`}
-                    />
-                    {/* Partner (blue border, right, behind) */}
-                    <img
-                        src={partnerAvatar}
-                        alt={partnerName}
-                        crossOrigin="anonymous"
-                        style={{
-                            position: 'absolute',
-                            top: '5px',
-                            left: '60px',
-                            width: '100px',
-                            height: '100px',
-                            objectFit: 'contain',
-                            borderRadius: '12px',
-                            border: '4px solid #3b82f6',
-                            backgroundColor: '#202225',
-                            zIndex: 1,
-                        }}
-                        onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${partnerName}&background=random&size=300`}
-                    />
-                </div>
-
-                {/* Team Info */}
-                <div style={{
-                    display: 'inline-block',
-                    marginLeft: '24px',
-                    verticalAlign: 'middle',
-                    maxWidth: '400px',
-                }}>
-                    {/* Team Name */}
-                    <div style={{
-                        fontSize: '32px',
-                        fontWeight: 900,
-                        color: '#ffffff',
-                        textTransform: 'uppercase',
-                        fontFamily: 'Arial, sans-serif',
-                        marginBottom: '8px',
-                        lineHeight: '1.15',
-                        letterSpacing: '0.02em',
-                        wordWrap: 'break-word',
-                    }}>
-                        {teamName}
-                    </div>
-                    {/* Player Names - Captain first */}
-                    <div style={{
-                        fontSize: '18px',
-                        fontWeight: 600,
-                        color: '#c4b5fd',
-                        fontFamily: 'Arial, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.03em',
-                    }}>
-                        {captainName} & {partnerName}
+                    {/* Avatar and Text side by side using table */}
+                    <div style={{ display: 'table' }}>
+                        <div style={{ display: 'table-row' }}>
+                            {/* Avatar cell */}
+                            <div style={{
+                                display: 'table-cell',
+                                verticalAlign: 'middle',
+                                position: 'relative',
+                                width: '160px',
+                                height: '110px',
+                            }}>
+                                {/* Captain (purple border, left, in front) */}
+                                <img
+                                    src={captainAvatar}
+                                    alt={captainName}
+                                    crossOrigin="anonymous"
+                                    style={{
+                                        position: 'absolute',
+                                        top: '5px',
+                                        left: '0',
+                                        width: '100px',
+                                        height: '100px',
+                                        objectFit: 'contain',
+                                        borderRadius: '12px',
+                                        border: '4px solid #a855f7',
+                                        backgroundColor: '#202225',
+                                        zIndex: 2,
+                                    }}
+                                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${captainName}&background=random&size=300`}
+                                />
+                                {/* Partner (blue border, right, behind) */}
+                                <img
+                                    src={partnerAvatar}
+                                    alt={partnerName}
+                                    crossOrigin="anonymous"
+                                    style={{
+                                        position: 'absolute',
+                                        top: '5px',
+                                        left: '60px',
+                                        width: '100px',
+                                        height: '100px',
+                                        objectFit: 'contain',
+                                        borderRadius: '12px',
+                                        border: '4px solid #3b82f6',
+                                        backgroundColor: '#202225',
+                                        zIndex: 1,
+                                    }}
+                                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${partnerName}&background=random&size=300`}
+                                />
+                            </div>
+                            {/* Text cell */}
+                            <div style={{
+                                display: 'table-cell',
+                                verticalAlign: 'middle',
+                                paddingLeft: '24px',
+                                maxWidth: '400px',
+                            }}>
+                                {/* Team Name */}
+                                <div style={{
+                                    fontSize: '32px',
+                                    fontWeight: 900,
+                                    color: '#ffffff',
+                                    textTransform: 'uppercase',
+                                    fontFamily: 'Arial, sans-serif',
+                                    marginBottom: '8px',
+                                    lineHeight: '1.15',
+                                    letterSpacing: '0.02em',
+                                    wordWrap: 'break-word',
+                                }}>
+                                    {teamName}
+                                </div>
+                                {/* Player Names - Captain first */}
+                                <div style={{
+                                    fontSize: '18px',
+                                    fontWeight: 600,
+                                    color: '#c4b5fd',
+                                    fontFamily: 'Arial, sans-serif',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.03em',
+                                }}>
+                                    {captainName} & {partnerName}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
