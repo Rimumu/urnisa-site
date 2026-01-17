@@ -438,6 +438,21 @@ const AdminTournament: React.FC = () => {
     const unpairedPlayers = players.filter(p => !isPlayerInDuo(p.discordId));
 
     // --- END TOURNAMENT ---
+    const handleClearWinners = async () => {
+        if (!window.confirm(`Are you sure you want to CLEAR winners for ${activeSeason?.name}? This cannot be undone.`)) return;
+
+        try {
+            await apiCall('/api/admin/tournament/clear-winners', {
+                seasonId: activeSeason?.seasonId
+            });
+            setStatusMsg('Winners cleared successfully!');
+            fetchSeasons();
+        } catch (e: any) {
+            setStatusMsg(e.message);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
     const handleEndTournament = async () => {
         const isDuos = activeSeason?.format.includes('Duos');
         const winners = isDuos
@@ -658,6 +673,13 @@ const AdminTournament: React.FC = () => {
                                 className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50"
                             >
                                 📦 Archive Season
+                            </button>
+                            <button
+                                onClick={handleClearWinners}
+                                disabled={loading}
+                                className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded text-sm"
+                            >
+                                🗑️ Clear Winners (Reset)
                             </button>
                         </div>
                     </div>
