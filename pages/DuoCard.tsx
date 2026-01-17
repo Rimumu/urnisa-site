@@ -272,12 +272,13 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#202225',
-                        padding: '8px 24px 12px 24px',
+                        height: '56px',
+                        padding: '0 24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
                     }}>
-                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block' }}>
+                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block', paddingTop: '2px' }}>
                             {p1Name}
                         </span>
                     </div>
@@ -323,12 +324,13 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#202225',
-                        padding: '8px 24px 12px 24px',
+                        height: '56px',
+                        padding: '0 24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
                     }}>
-                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block' }}>
+                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block', paddingTop: '2px' }}>
                             {p2Name}
                         </span>
                     </div>
