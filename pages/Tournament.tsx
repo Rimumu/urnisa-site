@@ -508,6 +508,7 @@ const Tournament: React.FC = () => {
     // Refetch data when season changes
     useEffect(() => {
         if (activeSeason.seasonId) {
+            console.log(`🔄 Season changed to ${activeSeason.seasonId}, fetching winners...`);
             setTournamentStatus(activeSeason.status as TournamentStatus);
             fetchPlayersForSeason(activeSeason.seasonId);
 
@@ -515,17 +516,21 @@ const Tournament: React.FC = () => {
             setMatches([]);
             setApiWinners([]);
 
-            // If ended, fetch winners
-            if (activeSeason.status === 'ENDED') {
-                fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (Array.isArray(data)) setApiWinners(data);
-                    })
-                    .catch(err => console.error("Failed to fetch winners", err));
-            } else {
-                setBracketView('winners'); // Default view
-            }
+            // Always fetch winners for this specific season
+            fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
+                .then(res => {
+                    console.log(`📥 Winners API response for season ${activeSeason.seasonId}:`, res.status);
+                    if (!res.ok) return [];
+                    return res.json();
+                })
+                .then(data => {
+                    console.log(`📦 Winners data for season ${activeSeason.seasonId}:`, data);
+                    if (Array.isArray(data)) setApiWinners(data);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch winners", err);
+                    setApiWinners([]);
+                });
 
             // Fetch bracket for this season
             fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`)
@@ -544,29 +549,22 @@ const Tournament: React.FC = () => {
 
     useEffect(() => {
         if (activeTab === 'brackets') {
-            // Clear old data immediately when switching
-            setApiWinners([]);
-            setMatches([]);
-
-            fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`)
-                .then(res => res.json())
-                .then(data => setMatches(data.matches || []))
-                .catch(console.error);
-            // Fetch winners data
-            fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
-                .then(res => {
-                    if (!res.ok) return []; // Return empty on error
-                    return res.json();
-                })
-                .then(data => setApiWinners(Array.isArray(data) ? data : []))
-                .catch(() => setApiWinners([])); // Clear on error
+            // Winners are already fetched by the season change useEffect above
+            // Only refetch if needed when switching TO brackets tab
+            if (apiWinners.length === 0 && activeSeason.seasonId) {
+                console.log(`🔁 Brackets tab opened, refetching winners for season ${activeSeason.seasonId}`);
+                fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
+                    .then(res => res.ok ? res.json() : [])
+                    .then(data => setApiWinners(Array.isArray(data) ? data : []))
+                    .catch(() => setApiWinners([]));
+            }
         } else if (activeTab === 'players') {
             fetchPlayersForSeason(activeSeason.seasonId);
             if (activeSeason.format.includes('Duos')) fetchDuosForSeason(activeSeason.seasonId);
         } else if (activeTab === 'duos') {
             fetchDuosForSeason(activeSeason.seasonId);
         }
-    }, [activeTab, activeSeason.seasonId]);
+    }, [activeTab]);
 
     // Auto-refresh polling for real-time updates (every 15 seconds)
     useEffect(() => {
