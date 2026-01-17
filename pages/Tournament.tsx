@@ -1215,8 +1215,8 @@ const Tournament: React.FC = () => {
                                                                 <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
                                                             </div>
                                                             <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
-                                                            <div className="mt-4 flex justify-center -space-x-8">
-                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3] z-10" alt={winner.player1} />
+                                                            <div className="mt-4 flex justify-center gap-2">
+                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={winner.player1} />
                                                                 <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={winner.player2} />
                                                             </div>
                                                         </div>
@@ -1230,9 +1230,9 @@ const Tournament: React.FC = () => {
                                                         <div className="order-1 md:order-2 flex flex-col w-full md:w-1/3 -mt-12 z-10">
                                                             <div className="relative flex justify-center mb-6">
                                                                 <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
-                                                                <div className="flex -space-x-12 relative">
-                                                                    <img src={`https://mc-heads.net/body/${winner.player1}`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)] scale-110 z-10" alt={winner.player1} />
-                                                                    <img src={`https://mc-heads.net/body/${winner.player2}`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(168,85,247,0.4)] scale-105" alt={winner.player2} />
+                                                                <div className="flex gap-2 relative">
+                                                                    <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)]" alt={winner.player1} />
+                                                                    <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(168,85,247,0.4)]" alt={winner.player2} />
                                                                 </div>
                                                                 <div className="absolute -top-16 animate-bounce">
                                                                     <span className="text-6xl filter drop-shadow-lg">👑</span>
@@ -1293,8 +1293,8 @@ const Tournament: React.FC = () => {
                                                                 <div className="w-full h-2 bg-orange-900/30 rounded-full overflow-hidden"><div className="w-1/2 h-full bg-orange-600"></div></div>
                                                             </div>
                                                             <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
-                                                            <div className="mt-4 flex justify-center -space-x-8">
-                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5] z-10" alt={winner.player1} />
+                                                            <div className="mt-4 flex justify-center gap-2">
+                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5]" alt={winner.player1} />
                                                                 <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5]" alt={winner.player2} />
                                                             </div>
                                                         </div>
