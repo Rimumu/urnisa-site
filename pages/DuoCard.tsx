@@ -268,7 +268,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                     </div>
                     <div style={{
                         backgroundColor: '#202225',
-                        padding: '12px 24px',
+                        padding: '8px 24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
@@ -316,7 +316,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                     </div>
                     <div style={{
                         backgroundColor: '#202225',
-                        padding: '12px 24px',
+                        padding: '8px 24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
