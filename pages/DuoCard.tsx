@@ -91,7 +91,8 @@ const DuoCard: FC = () => {
 
             const data = await res.json();
             if (data.success && data.url) {
-                window.open(data.url, '_blank');
+                // Append timestamp to force browser to fetch fresh image (bypass cache)
+                window.open(`${data.url}?t=${Date.now()}`, '_blank');
             } else {
                 alert('Upload failed.');
             }
@@ -271,12 +272,12 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#202225',
-                        padding: '10px 24px',
+                        padding: '8px 24px 12px 24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
                     }}>
-                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block', paddingBottom: '2px' }}>
+                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block' }}>
                             {p1Name}
                         </span>
                     </div>
@@ -322,12 +323,12 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: '#202225',
-                        padding: '10px 24px',
+                        padding: '8px 24px 12px 24px',
                         borderRadius: '9999px',
                         border: '1px solid #374151',
                         boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
                     }}>
-                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block', paddingBottom: '2px' }}>
+                        <span style={{ ...playerNameStyle, lineHeight: '1', display: 'block' }}>
                             {p2Name}
                         </span>
                     </div>
