@@ -194,8 +194,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             <div style={{
                 position: 'absolute',
                 left: '32px',
-                top: '50%',
-                transform: 'translateY(-50%)',
+                top: '35px',
                 width: '160px',
                 height: '110px',
             }}>
@@ -243,8 +242,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             <div style={{
                 position: 'absolute',
                 left: '216px',
-                top: '50%',
-                transform: 'translateY(-50%)',
+                top: '50px',
             }}>
                 {/* Team Name */}
                 <div style={{
