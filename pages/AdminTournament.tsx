@@ -107,9 +107,9 @@ const AdminTournament: React.FC = () => {
     // End Tournament Modal
     const [showEndModal, setShowEndModal] = useState(false);
     const [finalWinners, setFinalWinners] = useState({
-        rank1: { user: '', score: '' },
-        rank2: { user: '', score: '' },
-        rank3: { user: '', score: '' }
+        rank1: { teamName: '', player1: '', player2: '', score: '' },
+        rank2: { teamName: '', player1: '', player2: '', score: '' },
+        rank3: { teamName: '', player1: '', player2: '', score: '' }
     });
 
     // --- AUTH ---
@@ -439,16 +439,24 @@ const AdminTournament: React.FC = () => {
 
     // --- END TOURNAMENT ---
     const handleEndTournament = async () => {
-        const winners = [
-            { rank: 1, username: finalWinners.rank1.user, score: finalWinners.rank1.score },
-            { rank: 2, username: finalWinners.rank2.user, score: finalWinners.rank2.score },
-            { rank: 3, username: finalWinners.rank3.user, score: finalWinners.rank3.score }
-        ].filter(w => w.username);
+        const isDuos = activeSeason?.format.includes('Duos');
+        const winners = isDuos
+            ? [
+                { rank: 1, teamName: finalWinners.rank1.teamName, player1: finalWinners.rank1.player1, player2: finalWinners.rank1.player2, score: finalWinners.rank1.score },
+                { rank: 2, teamName: finalWinners.rank2.teamName, player1: finalWinners.rank2.player1, player2: finalWinners.rank2.player2, score: finalWinners.rank2.score },
+                { rank: 3, teamName: finalWinners.rank3.teamName, player1: finalWinners.rank3.player1, player2: finalWinners.rank3.player2, score: finalWinners.rank3.score }
+            ].filter(w => w.player1 || w.teamName)
+            : [
+                { rank: 1, username: finalWinners.rank1.player1, score: finalWinners.rank1.score },
+                { rank: 2, username: finalWinners.rank2.player1, score: finalWinners.rank2.score },
+                { rank: 3, username: finalWinners.rank3.player1, score: finalWinners.rank3.score }
+            ].filter(w => w.username);
 
         try {
             await apiCall('/api/admin/tournament/end', {
                 seasonId: activeSeason?.seasonId,
-                winners
+                winners,
+                isDuos
             });
             setStatusMsg('Tournament ended!');
             setShowEndModal(false);
@@ -1101,29 +1109,72 @@ const AdminTournament: React.FC = () => {
                         <h3 className="text-2xl font-black text-yellow-400 text-center uppercase">🏆 End Tournament</h3>
                         <p className="text-gray-400 text-center text-sm">Enter the final placements to end {activeSeason?.name}</p>
 
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {[1, 2, 3].map(rank => {
                                 const key = `rank${rank}` as keyof typeof finalWinners;
+                                const isDuos = activeSeason?.format.includes('Duos');
                                 return (
-                                    <div key={rank} className="flex gap-2 items-center">
-                                        <span className={`w-8 h-8 flex items-center justify-center rounded-full font-black ${rank === 1 ? 'bg-yellow-500 text-yellow-900' :
-                                            rank === 2 ? 'bg-gray-400 text-gray-900' :
-                                                'bg-orange-700 text-orange-200'
-                                            }`}>{rank}</span>
-                                        <input
-                                            type="text"
-                                            value={finalWinners[key].user}
-                                            onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], user: e.target.value } }))}
-                                            placeholder="Username"
-                                            className="flex-1 bg-black/40 border border-white/10 p-2 rounded text-white"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={finalWinners[key].score}
-                                            onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], score: e.target.value } }))}
-                                            placeholder="W-L"
-                                            className="w-20 bg-black/40 border border-white/10 p-2 rounded text-white text-center"
-                                        />
+                                    <div key={rank} className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`w-8 h-8 flex items-center justify-center rounded-full font-black shrink-0 ${rank === 1 ? 'bg-yellow-500 text-yellow-900' :
+                                                rank === 2 ? 'bg-gray-400 text-gray-900' :
+                                                    'bg-orange-700 text-orange-200'
+                                                }`}>{rank}</span>
+                                            <span className="text-white font-bold text-sm">
+                                                {rank === 1 ? '🥇 1st Place' : rank === 2 ? '🥈 2nd Place' : '🥉 3rd Place'}
+                                            </span>
+                                        </div>
+                                        {isDuos ? (
+                                            <div className="pl-10 space-y-2">
+                                                <input
+                                                    type="text"
+                                                    value={finalWinners[key].teamName}
+                                                    onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], teamName: e.target.value } }))}
+                                                    placeholder="Team Name"
+                                                    className="w-full bg-black/40 border border-purple-500/30 p-2 rounded text-white text-sm"
+                                                />
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={finalWinners[key].player1}
+                                                        onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], player1: e.target.value } }))}
+                                                        placeholder="Player 1"
+                                                        className="flex-1 bg-black/40 border border-yellow-500/30 p-2 rounded text-white text-sm"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={finalWinners[key].player2}
+                                                        onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], player2: e.target.value } }))}
+                                                        placeholder="Player 2"
+                                                        className="flex-1 bg-black/40 border border-purple-500/30 p-2 rounded text-white text-sm"
+                                                    />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={finalWinners[key].score}
+                                                    onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], score: e.target.value } }))}
+                                                    placeholder="Score (e.g. 3-1)"
+                                                    className="w-24 bg-black/40 border border-white/10 p-2 rounded text-white text-sm text-center"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="pl-10 flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={finalWinners[key].player1}
+                                                    onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], player1: e.target.value } }))}
+                                                    placeholder="Username"
+                                                    className="flex-1 bg-black/40 border border-white/10 p-2 rounded text-white"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={finalWinners[key].score}
+                                                    onChange={e => setFinalWinners(prev => ({ ...prev, [key]: { ...prev[key], score: e.target.value } }))}
+                                                    placeholder="W-L"
+                                                    className="w-20 bg-black/40 border border-white/10 p-2 rounded text-white text-center"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}

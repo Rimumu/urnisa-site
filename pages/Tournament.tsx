@@ -415,7 +415,14 @@ const Tournament: React.FC = () => {
 
     // Bracket & Winners State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
-    const [apiWinners, setApiWinners] = useState<{ rank: number, username: string, score: string }[]>([]);
+    const [apiWinners, setApiWinners] = useState<{
+        rank: number;
+        username?: string;
+        teamName?: string;
+        player1?: string;
+        player2?: string;
+        score: string
+    }[]>([]);
 
 
     const getPlayerStats = (username: string) => {
@@ -539,6 +546,11 @@ const Tournament: React.FC = () => {
             fetch(`${API_BASE_URL}/api/tournament/bracket?seasonId=${activeSeason.seasonId}`)
                 .then(res => res.json())
                 .then(data => setMatches(data.matches || []))
+                .catch(console.error);
+            // Fetch winners data
+            fetch(`${API_BASE_URL}/api/tournament/winners?seasonId=${activeSeason.seasonId}`)
+                .then(res => res.json())
+                .then(data => setApiWinners(Array.isArray(data) ? data : []))
                 .catch(console.error);
         } else if (activeTab === 'players') {
             fetchPlayersForSeason(activeSeason.seasonId);
@@ -1165,7 +1177,7 @@ const Tournament: React.FC = () => {
                                     <div className="flex-1 flex flex-col items-center justify-center py-10 relative">
                                         <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/5 to-transparent pointer-events-none rounded-3xl"></div>
 
-                                        {!winners[0] ? (
+                                        {apiWinners.length === 0 ? (
                                             <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-6 z-10">
                                                 <div className="w-24 h-24 bg-yellow-500/10 rounded-full flex items-center justify-center text-6xl opacity-50">🏆</div>
                                                 <div className="space-y-2">
@@ -1173,7 +1185,124 @@ const Tournament: React.FC = () => {
                                                     <p className="text-gray-400 max-w-md mx-auto">The tournament has not ended yet. Check back later to see who takes the crown!</p>
                                                 </div>
                                             </div>
+                                        ) : activeSeason.format.includes('Duos') ? (
+                                            /* DUOS WINNERS DISPLAY */
+                                            <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-6xl mx-auto px-4 justify-center">
+                                                {/* 2ND PLACE - DUOS */}
+                                                {apiWinners.find(w => w.rank === 2) && (() => {
+                                                    const winner = apiWinners.find(w => w.rank === 2)!;
+                                                    return (
+                                                        <div className="order-2 md:order-1 flex flex-col w-full md:w-1/3">
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-slate-300 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-8">
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-slate-300">2</div>
+                                                                <div className="flex flex-col gap-3 mb-4 relative z-10">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="relative">
+                                                                            <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
+                                                                                <span className="font-black text-slate-300 text-lg">2ND</span>
+                                                                            </div>
+                                                                            <div className="absolute -bottom-1 -right-1 text-xl">🥈</div>
+                                                                        </div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${winner.player1} & ${winner.player2}`}</h3>
+                                                                            <p className="text-slate-400 font-mono font-bold text-sm">{winner.score}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-xs text-slate-400 font-bold">
+                                                                        <span className="text-yellow-400">{winner.player1}</span> & <span className="text-purple-400">{winner.player2}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
+                                                            </div>
+                                                            <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
+                                                            <div className="mt-4 flex justify-center -space-x-8">
+                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3] z-10" alt={winner.player1} />
+                                                                <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={winner.player2} />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                                {/* 1ST PLACE - DUOS */}
+                                                {apiWinners.find(w => w.rank === 1) && (() => {
+                                                    const winner = apiWinners.find(w => w.rank === 1)!;
+                                                    return (
+                                                        <div className="order-1 md:order-2 flex flex-col w-full md:w-1/3 -mt-12 z-10">
+                                                            <div className="relative flex justify-center mb-6">
+                                                                <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
+                                                                <div className="flex -space-x-12 relative">
+                                                                    <img src={`https://mc-heads.net/body/${winner.player1}`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)] scale-110 z-10" alt={winner.player1} />
+                                                                    <img src={`https://mc-heads.net/body/${winner.player2}`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(168,85,247,0.4)] scale-105" alt={winner.player2} />
+                                                                </div>
+                                                                <div className="absolute -top-16 animate-bounce">
+                                                                    <span className="text-6xl filter drop-shadow-lg">👑</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-yellow-400 rounded-t-2xl p-6 relative group overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)] ring-1 ring-yellow-500/30">
+                                                                <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/10 to-transparent opacity-50"></div>
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl font-black text-yellow-400">1</div>
+
+                                                                <div className="flex flex-col gap-2 relative z-10">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-16 h-16 rounded-full bg-yellow-900/50 flex items-center justify-center border-2 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] shrink-0">
+                                                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 flex items-center justify-center">
+                                                                                <span className="font-black text-yellow-900 text-xl">1ST</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter truncate leading-none">{winner.teamName || `${winner.player1} & ${winner.player2}`}</h3>
+                                                                            <p className="text-yellow-400 font-mono font-bold text-lg">{winner.score}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-sm font-bold mt-2">
+                                                                        <span className="text-yellow-400">{winner.player1}</span> <span className="text-white/50">&</span> <span className="text-purple-400">{winner.player2}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-full h-3 bg-yellow-900/50 rounded-full overflow-hidden mt-4"><div className="w-full h-full bg-gradient-to-r from-yellow-500 to-yellow-200 animate-pulse"></div></div>
+                                                            </div>
+                                                            <div className="h-6 bg-[#1a1a1a] mx-4 rounded-b-xl opacity-50 border-t border-white/5"></div>
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                                {/* 3RD PLACE - DUOS */}
+                                                {apiWinners.find(w => w.rank === 3) && (() => {
+                                                    const winner = apiWinners.find(w => w.rank === 3)!;
+                                                    return (
+                                                        <div className="order-3 flex flex-col w-full md:w-1/3">
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-orange-700/80 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-16">
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-orange-700">3</div>
+                                                                <div className="flex flex-col gap-3 mb-4 relative z-10">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="relative">
+                                                                            <div className="w-14 h-14 rounded-full bg-orange-900/30 flex items-center justify-center border-2 border-orange-700 shadow-[0_0_15px_rgba(194,65,12,0.3)]">
+                                                                                <span className="font-black text-orange-500 text-lg">3RD</span>
+                                                                            </div>
+                                                                            <div className="absolute -bottom-1 -right-1 text-xl">🥉</div>
+                                                                        </div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${winner.player1} & ${winner.player2}`}</h3>
+                                                                            <p className="text-orange-500 font-mono font-bold text-sm">{winner.score}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-xs text-orange-300/70 font-bold">
+                                                                        <span className="text-yellow-400">{winner.player1}</span> & <span className="text-purple-400">{winner.player2}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-full h-2 bg-orange-900/30 rounded-full overflow-hidden"><div className="w-1/2 h-full bg-orange-600"></div></div>
+                                                            </div>
+                                                            <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
+                                                            <div className="mt-4 flex justify-center -space-x-8">
+                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5] z-10" alt={winner.player1} />
+                                                                <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5]" alt={winner.player2} />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
                                         ) : (
+                                            /* SINGLES WINNERS DISPLAY (Original) */
                                             <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-5xl mx-auto px-4 justify-center">
 
                                                 {/* 2ND PLACE */}
