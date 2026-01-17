@@ -185,43 +185,43 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)',
             }}
         >
-            {/* Overlapping Avatars */}
-            <div style={{ position: 'relative', width: '140px', height: '120px', flexShrink: 0 }}>
-                {/* Player 1 Avatar (back) */}
+            {/* Overlapping Avatars - Captain (left, purple) & Partner (right, blue) */}
+            <div style={{ position: 'relative', width: '160px', height: '110px', flexShrink: 0 }}>
+                {/* Player 1 - Captain (purple border, left) */}
                 <img
                     src={p1Avatar}
                     alt={p1Name}
                     crossOrigin="anonymous"
                     style={{
                         position: 'absolute',
-                        top: '0',
+                        top: '5px',
                         left: '0',
                         width: '100px',
                         height: '100px',
                         objectFit: 'contain',
                         borderRadius: '12px',
-                        border: '4px solid #7c3aed',
+                        border: '4px solid #a855f7',
                         backgroundColor: '#202225',
-                        zIndex: 1,
+                        zIndex: 2,
                     }}
                     onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p1Name}&background=random&size=300`}
                 />
-                {/* Player 2 Avatar (front, overlapping) */}
+                {/* Player 2 - Partner (blue border, right, slightly behind) */}
                 <img
                     src={p2Avatar}
                     alt={p2Name}
                     crossOrigin="anonymous"
                     style={{
                         position: 'absolute',
-                        top: '20px',
-                        left: '40px',
+                        top: '5px',
+                        left: '60px',
                         width: '100px',
                         height: '100px',
                         objectFit: 'contain',
                         borderRadius: '12px',
-                        border: '4px solid #22c55e',
+                        border: '4px solid #3b82f6',
                         backgroundColor: '#202225',
-                        zIndex: 2,
+                        zIndex: 1,
                     }}
                     onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p2Name}&background=random&size=300`}
                 />
