@@ -452,6 +452,13 @@ const AdminTournament: React.FC = () => {
                 { rank: 3, username: finalWinners.rank3.player1, score: finalWinners.rank3.score }
             ].filter(w => w.username);
 
+        console.log('🏆 Ending tournament with:', {
+            seasonId: activeSeason?.seasonId,
+            format: activeSeason?.format,
+            isDuos,
+            winners
+        });
+
         try {
             await apiCall('/api/admin/tournament/end', {
                 seasonId: activeSeason?.seasonId,
