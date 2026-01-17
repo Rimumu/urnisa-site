@@ -171,208 +171,87 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     const p1Avatar = `https://minotar.net/helm/${p1Name}/300.png`;
     const p2Avatar = `https://minotar.net/helm/${p2Name}/300.png`;
 
-    // Common text styles that html2canvas can render properly
-    const teamNameStyle: React.CSSProperties = {
-        fontSize: '72px',
-        fontWeight: 900,
-        color: '#ffffff',
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        textShadow: '0 5px 10px rgba(0,0,0,0.8), 0 0 20px rgba(114, 137, 218, 0.5)',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-    };
-
-    const playerNameStyle: React.CSSProperties = {
-        fontSize: '28px',
-        fontWeight: 700,
-        color: '#ffffff',
-        letterSpacing: '0.025em',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-    };
-
-    const ampersandStyle: React.CSSProperties = {
-        fontSize: '56px',
-        fontWeight: 900,
-        fontStyle: 'italic',
-        color: '#7289da',
-        opacity: 0.8,
-        textShadow: '0 0 15px rgba(114, 137, 218, 0.8)',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-    };
-
     return (
         <div
             id={`card-${duo.duoId}`}
             style={{
-                position: 'relative',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                width: '1200px',
-                height: '600px',
-                overflow: 'hidden',
-                borderRadius: '24px',
-                border: '6px solid #7289da',
+                width: '600px',
+                height: '180px',
+                padding: '24px 32px',
+                borderRadius: '16px',
                 backgroundColor: '#1a1c23',
                 backgroundImage: 'linear-gradient(135deg, #1a1c23 0%, #2b2e3b 100%)',
-                boxShadow: '0 0 60px rgba(114, 137, 218, 0.3)',
             }}
         >
-            {/* Decorative dots */}
-            <div style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                opacity: 0.1,
-                pointerEvents: 'none',
-                backgroundImage: 'radial-gradient(circle at 50% 50%, #7289da 1px, transparent 1px)',
-                backgroundSize: '30px 30px',
-            }} />
+            {/* Overlapping Avatars */}
+            <div style={{ position: 'relative', width: '140px', height: '120px', flexShrink: 0 }}>
+                {/* Player 1 Avatar (back) */}
+                <img
+                    src={p1Avatar}
+                    alt={p1Name}
+                    crossOrigin="anonymous"
+                    style={{
+                        position: 'absolute',
+                        top: '0',
+                        left: '0',
+                        width: '100px',
+                        height: '100px',
+                        objectFit: 'contain',
+                        borderRadius: '12px',
+                        border: '4px solid #7c3aed',
+                        backgroundColor: '#202225',
+                        zIndex: 1,
+                    }}
+                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p1Name}&background=random&size=300`}
+                />
+                {/* Player 2 Avatar (front, overlapping) */}
+                <img
+                    src={p2Avatar}
+                    alt={p2Name}
+                    crossOrigin="anonymous"
+                    style={{
+                        position: 'absolute',
+                        top: '20px',
+                        left: '40px',
+                        width: '100px',
+                        height: '100px',
+                        objectFit: 'contain',
+                        borderRadius: '12px',
+                        border: '4px solid #22c55e',
+                        backgroundColor: '#202225',
+                        zIndex: 2,
+                    }}
+                    onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p2Name}&background=random&size=300`}
+                />
+            </div>
 
-            {/* Team Name Header */}
-            <div style={{ width: '100%', textAlign: 'center', padding: '0 48px', marginBottom: '32px', zIndex: 10 }}>
-                <h1 style={teamNameStyle}>
+            {/* Team Info */}
+            <div style={{ marginLeft: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                {/* Team Name */}
+                <h1 style={{
+                    fontSize: '42px',
+                    fontWeight: 900,
+                    color: '#ffffff',
+                    textTransform: 'uppercase',
+                    fontFamily: 'Arial, sans-serif',
+                    margin: '0 0 8px 0',
+                    lineHeight: 1.1,
+                }}>
                     {teamName}
                 </h1>
-            </div>
-
-            {/* Players Section */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '64px', zIndex: 10 }}>
-
-                {/* Player 1 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', marginBottom: '16px' }}>
-                        <div style={{
-                            position: 'absolute',
-                            inset: '-8px',
-                            background: 'linear-gradient(to right, #2563eb, #4f46e5)',
-                            borderRadius: '16px',
-                            filter: 'blur(12px)',
-                            opacity: 0.75,
-                        }} />
-                        <img
-                            src={p1Avatar}
-                            alt={p1Name}
-                            crossOrigin="anonymous"
-                            style={{
-                                position: 'relative',
-                                width: '200px',
-                                height: '200px',
-                                objectFit: 'contain',
-                                borderRadius: '16px',
-                                border: '4px solid #2f3136',
-                                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
-                                backgroundColor: '#202225',
-                            }}
-                            onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p1Name}&background=random&size=300`}
-                        />
-                    </div>
-                    <div style={{
-                        position: 'relative',
-                        backgroundColor: '#202225',
-                        height: '48px',
-                        minWidth: '120px',
-                        paddingLeft: '24px',
-                        paddingRight: '24px',
-                        borderRadius: '9999px',
-                        border: '1px solid #374151',
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
-                    }}>
-                        <span style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            fontSize: '28px',
-                            fontWeight: 700,
-                            color: '#ffffff',
-                            fontFamily: 'Arial, sans-serif',
-                            whiteSpace: 'nowrap',
-                        }}>
-                            {p1Name}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Ampersand */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={ampersandStyle}>
-                        &amp;
-                    </span>
-                </div>
-
-                {/* Player 2 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', marginBottom: '16px' }}>
-                        <div style={{
-                            position: 'absolute',
-                            inset: '-8px',
-                            background: 'linear-gradient(to right, #4f46e5, #9333ea)',
-                            borderRadius: '16px',
-                            filter: 'blur(12px)',
-                            opacity: 0.75,
-                        }} />
-                        <img
-                            src={p2Avatar}
-                            alt={p2Name}
-                            crossOrigin="anonymous"
-                            style={{
-                                position: 'relative',
-                                width: '200px',
-                                height: '200px',
-                                objectFit: 'contain',
-                                borderRadius: '16px',
-                                border: '4px solid #2f3136',
-                                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
-                                backgroundColor: '#202225',
-                            }}
-                            onError={(e: SyntheticEvent<HTMLImageElement, Event>) => e.currentTarget.src = `https://ui-avatars.com/api/?name=${p2Name}&background=random&size=300`}
-                        />
-                    </div>
-                    <div style={{
-                        position: 'relative',
-                        backgroundColor: '#202225',
-                        height: '48px',
-                        minWidth: '120px',
-                        paddingLeft: '24px',
-                        paddingRight: '24px',
-                        borderRadius: '9999px',
-                        border: '1px solid #374151',
-                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)',
-                    }}>
-                        <span style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            fontSize: '28px',
-                            fontWeight: 700,
-                            color: '#ffffff',
-                            fontFamily: 'Arial, sans-serif',
-                            whiteSpace: 'nowrap',
-                        }}>
-                            {p2Name}
-                        </span>
-                    </div>
-                </div>
-
-            </div>
-
-            {/* Footer / Branding */}
-            <div style={{
-                position: 'absolute',
-                bottom: '16px',
-                right: '24px',
-                opacity: 0.4,
-            }}>
-                <span style={{
-                    fontSize: '18px',
-                    fontWeight: 700,
+                {/* Player Names */}
+                <p style={{
+                    fontSize: '22px',
+                    fontWeight: 600,
                     color: '#9ca3af',
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    fontFamily: 'Arial, sans-serif',
+                    margin: 0,
+                    textTransform: 'uppercase',
                 }}>
-                    URNISA TOURNAMENT
-                </span>
+                    {p1Name} & {p2Name}
+                </p>
             </div>
         </div>
     );
