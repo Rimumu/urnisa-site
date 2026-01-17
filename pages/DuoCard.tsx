@@ -174,7 +174,8 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     const teamName = duo.teamName || 'Unknown Team';
 
     // Detect if name is long (will likely wrap to 2 lines)
-    const isLongName = teamName.length > 15;
+    // Threshold of 18+ characters typically causes wrapping at 32px font size
+    const isLongName = teamName.length > 18;
     // Dynamic positioning based on name length
     const textTop = isLongName ? '35px' : '50px';
     const avatarLeft = isLongName ? '80px' : '120px';
