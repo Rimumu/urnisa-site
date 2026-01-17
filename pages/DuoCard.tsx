@@ -174,13 +174,12 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     const teamName = duo.teamName || 'Unknown Team';
 
     // Detect if name is long (will likely wrap to 2 lines)
-    // Threshold of 14+ characters typically causes wrapping at 32px font size
     const isLongName = teamName.length > 14;
     // Dynamic vertical positioning based on name length
     const textTop = isLongName ? '35px' : '50px';
-    // Fixed horizontal positioning that works for all cases
-    const avatarLeft = '100px';
-    const textLeft = '284px';
+    // Left-aligned positioning that works consistently for all name lengths
+    const avatarLeft = '40px';
+    const textLeft = '224px';
 
     const captainAvatar = `https://minotar.net/helm/${captainName}/300.png`;
     const partnerAvatar = `https://minotar.net/helm/${partnerName}/300.png`;
