@@ -75,7 +75,6 @@ const DuoCard: FC = () => {
         try {
             const canvas = await html2canvas(element, {
                 useCORS: true,
-                scale: 2,
                 backgroundColor: null,
                 logging: false,
             });
@@ -187,7 +186,6 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
                 borderRadius: '20px',
                 backgroundColor: '#312e81',
                 border: '3px solid #6366f1',
-                overflow: 'hidden',
             }}
         >
             {/* Overlapping Avatars - Captain (left, purple) & Partner (right, blue) */}
@@ -242,7 +240,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             <div style={{
                 position: 'absolute',
                 left: '216px',
-                top: '50px',
+                top: '40px',
             }}>
                 {/* Team Name */}
                 <div style={{
