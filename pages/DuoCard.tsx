@@ -175,7 +175,10 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
 
     // Detect if name is long (will likely wrap to 2 lines)
     const isLongName = teamName.length > 15;
+    // Dynamic positioning based on name length
     const textTop = isLongName ? '35px' : '50px';
+    const avatarLeft = isLongName ? '80px' : '120px';
+    const textLeft = isLongName ? '264px' : '304px';
 
     const captainAvatar = `https://minotar.net/helm/${captainName}/300.png`;
     const partnerAvatar = `https://minotar.net/helm/${partnerName}/300.png`;
@@ -195,7 +198,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             {/* Overlapping Avatars - centered horizontally */}
             <div style={{
                 position: 'absolute',
-                left: '80px',
+                left: avatarLeft,
                 top: '35px',
                 width: '160px',
                 height: '110px',
@@ -243,7 +246,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             {/* Team Info - absolute positioned */}
             <div style={{
                 position: 'absolute',
-                left: '264px',
+                left: textLeft,
                 top: textTop,
                 right: '24px',
             }}>
