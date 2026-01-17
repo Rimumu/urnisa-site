@@ -173,6 +173,10 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
     const partnerName = isPlayer1Captain ? duo.player2Username : duo.player1Username;
     const teamName = duo.teamName || 'Unknown Team';
 
+    // Detect if name is long (will likely wrap to 2 lines)
+    const isLongName = teamName.length > 15;
+    const textTop = isLongName ? '35px' : '50px';
+
     const captainAvatar = `https://minotar.net/helm/${captainName}/300.png`;
     const partnerAvatar = `https://minotar.net/helm/${partnerName}/300.png`;
 
@@ -240,7 +244,7 @@ const SingleCard: FC<{ duo: Duo }> = ({ duo }) => {
             <div style={{
                 position: 'absolute',
                 left: '304px',
-                top: '35px',
+                top: textTop,
                 right: '24px',
             }}>
                 {/* Team Name */}
