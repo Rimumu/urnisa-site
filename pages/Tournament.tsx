@@ -1193,8 +1193,8 @@ const Tournament: React.FC = () => {
                                                     <p className="text-gray-400 max-w-md mx-auto">The tournament has not ended yet. Check back later to see who takes the crown!</p>
                                                 </div>
                                             </div>
-                                        ) : activeSeason.format.includes('Duos') ? (
-                                            /* DUOS WINNERS DISPLAY */
+                                        ) : apiWinners[0]?.player2 ? (
+                                            /* DUOS WINNERS DISPLAY - only if data has player2 field */
                                             <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-6xl mx-auto px-4 justify-center">
                                                 {/* 2ND PLACE - DUOS */}
                                                 {apiWinners.find(w => w.rank === 2) && (() => {
