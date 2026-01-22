@@ -376,9 +376,11 @@ const Admin: React.FC = () => {
     const [newSnakeTile, setNewSnakeTile] = useState('');
     const [newSnakeText, setNewSnakeText] = useState('');
     const [snakesStatus, setSnakesStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-    const [snakesActive, setSnakesActive] = useState(false);
+    const [snakesSubsActive, setSnakesSubsActive] = useState(false);
+    const [snakesDonosActive, setSnakesDonosActive] = useState(false);
     const [snakesSimUser, setSnakesSimUser] = useState('');
     const [snakesSimAmount, setSnakesSimAmount] = useState(1);
+    const [snakesSimDonoAmount, setSnakesSimDonoAmount] = useState(5);
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -516,7 +518,8 @@ const Admin: React.FC = () => {
             const settingsRes = await fetch(`${API_BASE_URL}/api/snakes/settings`);
             if (settingsRes.ok) {
                 const data = await settingsRes.json();
-                setSnakesActive(data.isActive);
+                setSnakesSubsActive(data.subsActive);
+                setSnakesDonosActive(data.donationsActive);
             }
         } catch (error) { console.error(error); }
     }, []);
@@ -1815,27 +1818,53 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl flex flex-col justify-between">
                                     <div>
                                         <h3 className="font-bold text-white mb-2">Listener Status</h3>
-                                        <p className="text-sm text-gray-400 mb-4">Controls whether new Subs/Gifts are accepted.</p>
+                                        <p className="text-sm text-gray-400 mb-4">Controls whether new Subs/Gifts/Donations are accepted.</p>
                                     </div>
-                                    <button
-                                        onClick={async () => {
-                                            try {
-                                                const res = await fetch(`${API_BASE_URL}/api/snakes/toggle-listener`, {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json', Authorization: password }
-                                                });
-                                                const data = await res.json();
-                                                if (data.success) {
-                                                    setSnakesActive(data.isActive);
-                                                    setSnakesStatus({ type: 'success', message: `Listener ${data.isActive ? 'STARTED' : 'STOPPED'}` });
-                                                    setTimeout(() => setSnakesStatus(null), 3000);
-                                                }
-                                            } catch (e) { }
-                                        }}
-                                        className={`w-full py-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all ${snakesActive ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/20'}`}
-                                    >
-                                        {snakesActive ? 'LISTENER ACTIVE' : 'LISTENER STOPPED'}
-                                    </button>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/snakes/toggle-listener`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ target: 'subs' })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) {
+                                                        setSnakesSubsActive(data.settings.subsActive);
+                                                        setSnakesStatus({ type: 'success', message: `Subs/Gifts ${data.settings.subsActive ? 'ENABLED' : 'DISABLED'}` });
+                                                        setTimeout(() => setSnakesStatus(null), 3000);
+                                                    }
+                                                } catch (e) { }
+                                            }}
+                                            className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-1 ${snakesSubsActive ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/20'}`}
+                                        >
+                                            <span className="text-lg">SUBS</span>
+                                            <span className="text-xs opacity-75">{snakesSubsActive ? 'ACTIVE' : 'STOPPED'}</span>
+                                        </button>
+
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/snakes/toggle-listener`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ target: 'donations' })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) {
+                                                        setSnakesDonosActive(data.settings.donationsActive);
+                                                        setSnakesStatus({ type: 'success', message: `Donations ${data.settings.donationsActive ? 'ENABLED' : 'DISABLED'}` });
+                                                        setTimeout(() => setSnakesStatus(null), 3000);
+                                                    }
+                                                } catch (e) { }
+                                            }}
+                                            className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-1 ${snakesDonosActive ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/20'}`}
+                                        >
+                                            <span className="text-lg">DONATIONS</span>
+                                            <span className="text-xs opacity-75">{snakesDonosActive ? 'ACTIVE' : 'STOPPED'}</span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Simulation Controls */}
@@ -1857,6 +1886,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             value={snakesSimAmount}
                                             onChange={(e) => setSnakesSimAmount(Math.max(1, parseInt(e.target.value) || 1))}
                                             className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm text-center"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="$"
+                                            value={snakesSimDonoAmount}
+                                            onChange={(e) => setSnakesSimDonoAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm text-center text-green-400 font-bold"
                                         />
                                     </div>
 
@@ -1928,6 +1964,25 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             className="py-2 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-xs font-bold hover:bg-pink-500/30"
                                         >
                                             GIFT ({snakesSimAmount})
+                                        </button>
+
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/snakes/simulate-event`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ type: 'donation', user: snakesSimUser || 'TestDonation', amount: snakesSimDonoAmount })
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) setSnakesStatus({ type: 'success', message: `Simulated Dono $${snakesSimDonoAmount}` });
+                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                } catch (e) { }
+                                            }}
+                                            className="col-span-2 py-3 mt-2 bg-green-500/20 border border-green-500/30 text-green-400 rounded-lg text-sm font-bold hover:bg-green-500/30 flex items-center justify-center gap-2"
+                                        >
+                                            <span className="text-xl">💰</span>
+                                            DONATE (${snakesSimDonoAmount})
                                         </button>
                                     </div>
                                 </div>
