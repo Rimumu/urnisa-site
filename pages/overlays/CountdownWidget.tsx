@@ -15,9 +15,9 @@ const CountdownWidget: React.FC = () => {
                 const end = new Date(stats.timerEndTime).getTime();
                 ms = end - now;
             }
-            
+
             if (ms < 0) ms = 0;
-            
+
             const hours = Math.floor((ms / (1000 * 60 * 60)));
             const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((ms % (1000 * 60)) / 1000);
@@ -51,10 +51,10 @@ const CountdownWidget: React.FC = () => {
                         </div>
                     )}
                 </div>
-                
+
                 <div className="text-center w-full">
                     <div className="text-xs font-black uppercase tracking-[0.3em] mb-1 text-rose-100">
-                        Countdown
+                        Timer
                     </div>
                     <div className={`text-8xl font-black tabular-nums bubbly-text tracking-tight text-white ${stats.isPaused ? 'animate-pulse' : ''}`}>
                         {timeLeft}
