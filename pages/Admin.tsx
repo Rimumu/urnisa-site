@@ -44,13 +44,170 @@ const LinkWarning: React.FC<{ url: string }> = ({ url }) => {
 
     if (isDiscordLink(url)) {
         return (
-            <div className="text-red-400 text-xs mt-1 flex items-start gap-1 font-bold">
-                <span>⛔</span>
+            <div className="text-red-400 text-xs mt-1 flex items-start gap-1.5 font-bold">
+                <svg className="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
                 <span>Discord links expire after 24h. Please use the upload feature or use Imgur or Google Drive!</span>
             </div>
         );
     }
     return null;
+};
+
+// --- ADMIN PANEL SVG ICONS ---
+const AdminIcons = {
+    // Sidebar Navigation Icons
+    Nisathon: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+        </svg>
+    ),
+    Countdown: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 22h14" />
+            <path d="M5 2h14" />
+            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+        </svg>
+    ),
+    Schedule: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+    ),
+    Settings: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+    ),
+    Profile: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+        </svg>
+    ),
+    Gallery: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+        </svg>
+    ),
+    Minecraft: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 4l.5 .5a2.12 2.12 0 0 1 0 3l-7 7a2.12 2.12 0 0 1 -3 0l-.5 -.5" />
+            <path d="M10 6l-2 2" />
+            <path d="M12 21v-6l-2 -2l-2 2v6" />
+            <path d="M20 15l-4 -4l-2 2l4 4v3h3v-3z" />
+        </svg>
+    ),
+    Tournament: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+        </svg>
+    ),
+    Snakes: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+        </svg>
+    ),
+    Codes: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 12 20 22 4 22 4 12" />
+            <rect x="2" y="7" width="20" height="5" />
+            <line x1="12" y1="22" x2="12" y2="7" />
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+        </svg>
+    ),
+    Users: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+    ),
+    Merger: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+            <line x1="12" y1="2" x2="12" y2="22" />
+        </svg>
+    ),
+    Panel: () => (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+    ),
+    // Event Type Icons
+    EventSub: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+    ),
+    EventGift: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 12 20 22 4 22 4 12" />
+            <rect x="2" y="7" width="20" height="5" />
+            <line x1="12" y1="22" x2="12" y2="7" />
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+        </svg>
+    ),
+    EventBits: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+            <polyline points="2 17 12 22 22 17" />
+            <polyline points="2 12 12 17 22 12" />
+        </svg>
+    ),
+    EventDono: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+    ),
+    // Section Icons
+    EventLog: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+        </svg>
+    ),
+    DoubleFire: () => (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 23c-3.65 0-7.18-2.79-7.18-7.79 0-3.47 2.14-6.64 3.72-8.62a.5.5 0 0 1 .82.4v2.63c0 .41.47.63.78.39l4.45-3.41a.5.5 0 0 1 .8.4c0 2.63.28 5.78 2.18 8.07 1.26 1.52 1.61 2.79 1.61 4.14 0 5-3.53 7.79-7.18 7.79z" />
+        </svg>
+    ),
+    Game: () => (
+        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="3" />
+            <line x1="6" y1="12" x2="10" y2="12" />
+            <line x1="8" y1="10" x2="8" y2="14" />
+            <circle cx="17" cy="10" r="1" />
+            <circle cx="15" cy="13" r="1" />
+        </svg>
+    ),
 };
 
 // --- RICH TEXT EDITOR COMPONENT ---
@@ -1124,46 +1281,46 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
         <div className="flex flex-col md:flex-row min-h-screen bg-black/20">
             {/* --- SIDEBAR --- */}
             <div className="w-full md:w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex-shrink-0 md:h-screen md:sticky md:top-0">
-                <div className="p-6 border-b border-white/10 flex items-center justify-center md:justify-start gap-2">
-                    <span className="text-2xl">⚡</span>
+                <div className="p-6 border-b border-white/10 flex items-center justify-center md:justify-start gap-3">
+                    <span className="text-brand-primary"><AdminIcons.Panel /></span>
                     <h1 className="text-xl font-extrabold text-white">Admin <span className="text-brand-primary">Panel</span></h1>
                 </div>
                 <nav className="p-4 space-y-2 flex md:block overflow-x-auto md:overflow-visible custom-scrollbar">
                     <button onClick={() => setActiveTab('nisathon_mgr')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'nisathon_mgr' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>⏲️</span> Nisathon
+                        <AdminIcons.Nisathon /> Nisathon
                     </button>
                     <button onClick={() => setActiveTab('countdown')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'countdown' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>⏳</span> Countdown
+                        <AdminIcons.Countdown /> Countdown
                     </button>
                     <button onClick={() => setActiveTab('schedule')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'schedule' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>📅</span> Schedule
+                        <AdminIcons.Schedule /> Schedule
                     </button>
                     <button onClick={() => setActiveTab('event')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'event' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>🎉</span> Settings
+                        <AdminIcons.Settings /> Settings
                     </button>
                     <button onClick={() => setActiveTab('profile')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'profile' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>👤</span> Profile
+                        <AdminIcons.Profile /> Profile
                     </button>
                     <button onClick={() => setActiveTab('gallery')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'gallery' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>🎨</span> Gallery
+                        <AdminIcons.Gallery /> Gallery
                     </button>
                     <button onClick={() => setActiveTab('minecraft')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'minecraft' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>⛏️</span> Minecraft
+                        <AdminIcons.Minecraft /> Minecraft
                     </button>
                     <button onClick={() => setActiveTab('tournament')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'tournament' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>🏆</span> Tournament
+                        <AdminIcons.Tournament /> Tournament
                     </button>
                     <button onClick={() => setActiveTab('snakes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'snakes' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>🐍</span> Snakes Game
+                        <AdminIcons.Snakes /> Snakes Game
                     </button>
                     <button onClick={() => setActiveTab('codes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'codes' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>🎁</span> Gacha Codes
+                        <AdminIcons.Codes /> Gacha Codes
                     </button>
                     <button onClick={() => setActiveTab('users')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'users' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>👥</span> Users
+                        <AdminIcons.Users /> Users
                     </button>
                     <button onClick={() => setActiveTab('merger')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm md:text-base ${activeTab === 'merger' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <span>🧩</span> JSON Merger
+                        <AdminIcons.Merger /> JSON Merger
                     </button>
                 </nav>
             </div>
@@ -1189,7 +1346,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1 flex justify-between items-center">
                                         Time Remaining
                                         {stats.isPaused && <span className="bg-amber-500 text-black px-2 rounded text-[10px] animate-pulse">PAUSED</span>}
-                                        {isDoubleTimer && <span className="text-yellow-400 animate-pulse">🔥 2x</span>}
+                                        {isDoubleTimer && <span className="text-yellow-400 animate-pulse"><AdminIcons.DoubleFire /> 2x</span>}
                                         {stats.isEnded && <span className="bg-red-500 text-white px-2 rounded text-[10px] font-bold">ENDED</span>}
                                     </div>
                                     <div className={`text-3xl font-black font-mono tracking-tight ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300`}>
@@ -1223,7 +1380,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <div className="lg:col-span-2 bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="font-bold text-white text-lg">Timer Management</h3>
-                                        <button onClick={handleToggleDoubleTimer} className={`text-xs px-4 py-2 rounded-full font-bold border transition-all ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>{stats.activeEvent === 'DOUBLE_TIMER' ? '🔥 2x Active' : 'Enable 2x Event'}</button>
+                                        <button onClick={handleToggleDoubleTimer} className={`text-xs px-4 py-2 rounded-full font-bold border transition-all flex items-center gap-1.5 ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>{stats.activeEvent === 'DOUBLE_TIMER' ? <><AdminIcons.DoubleFire /> 2x Active</> : 'Enable 2x Event'}</button>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-4">
@@ -1271,7 +1428,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             {/* Revamped Event Log */}
                             <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl h-[600px] flex flex-col">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                                    <h3 className="font-bold text-white text-lg flex items-center gap-2"><span>📜</span> Event Log ({filteredEvents.length})</h3>
+                                    <h3 className="font-bold text-white text-lg flex items-center gap-2"><span className="text-brand-primary"><AdminIcons.EventLog /></span> Event Log ({filteredEvents.length})</h3>
 
                                     <div className="flex flex-wrap gap-2 w-full md:w-auto">
                                         <input
@@ -1303,19 +1460,19 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
                                     {filteredEvents.map(evt => {
-                                        let icon = '✨';
+                                        let IconComponent = AdminIcons.EventSub;
                                         let colorClass = 'text-gray-400 bg-gray-500/10 border-gray-500/20';
 
-                                        if (evt.type === 'sub' || evt.type === 'subscriber') { icon = '⭐'; colorClass = 'text-purple-400 bg-purple-500/10 border-purple-500/20'; }
-                                        else if (evt.type === 'gift') { icon = '🎁'; colorClass = 'text-pink-400 bg-pink-500/10 border-pink-500/20'; }
-                                        else if (evt.type === 'bits' || evt.type === 'cheer') { icon = '💎'; colorClass = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'; }
-                                        else if (evt.type === 'donation' || evt.type === 'tip') { icon = '💸'; colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'; }
+                                        if (evt.type === 'sub' || evt.type === 'subscriber') { IconComponent = AdminIcons.EventSub; colorClass = 'text-purple-400 bg-purple-500/10 border-purple-500/20'; }
+                                        else if (evt.type === 'gift') { IconComponent = AdminIcons.EventGift; colorClass = 'text-pink-400 bg-pink-500/10 border-pink-500/20'; }
+                                        else if (evt.type === 'bits' || evt.type === 'cheer') { IconComponent = AdminIcons.EventBits; colorClass = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'; }
+                                        else if (evt.type === 'donation' || evt.type === 'tip') { IconComponent = AdminIcons.EventDono; colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'; }
 
                                         return (
                                             <div key={evt._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all gap-4 group">
                                                 <div className="flex items-center gap-3 overflow-hidden">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg border ${colorClass}`}>
-                                                        {icon}
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${colorClass}`}>
+                                                        <IconComponent />
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <div className="font-bold text-white text-sm truncate">{evt.user}</div>
@@ -1747,8 +1904,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <h2 className="text-3xl font-black text-white">Tournament Management</h2>
                             <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col items-center justify-center min-h-[400px] text-center">
-                                <div className="w-24 h-24 bg-purple-500/20 rounded-full flex items-center justify-center mb-6">
-                                    <span className="text-5xl">🎮</span>
+                                <div className="w-24 h-24 bg-purple-500/20 rounded-full flex items-center justify-center mb-6 text-purple-400">
+                                    <AdminIcons.Game />
                                 </div>
                                 <h3 className="text-2xl font-black text-white mb-2">Tournament Admin Moved</h3>
                                 <p className="text-gray-400 mb-6 max-w-md">All tournament management features have been consolidated to a dedicated page for better organization.</p>
@@ -1796,8 +1953,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'snakes' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center">
-                                    <span className="text-2xl">🐍</span>
+                                <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center text-purple-400">
+                                    <AdminIcons.Snakes />
                                 </div>
                                 <div>
                                     <h2 className="text-3xl font-black text-white">Snakes & Ladders</h2>
@@ -1981,7 +2138,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             }}
                                             className="col-span-2 py-3 mt-2 bg-green-500/20 border border-green-500/30 text-green-400 rounded-lg text-sm font-bold hover:bg-green-500/30 flex items-center justify-center gap-2"
                                         >
-                                            <span className="text-xl">💰</span>
+                                            <AdminIcons.EventDono />
                                             DONATE (${snakesSimDonoAmount})
                                         </button>
                                     </div>
