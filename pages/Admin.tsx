@@ -199,8 +199,8 @@ const AdminIcons = {
             <path d="M12 23c-3.65 0-7.18-2.79-7.18-7.79 0-3.47 2.14-6.64 3.72-8.62a.5.5 0 0 1 .82.4v2.63c0 .41.47.63.78.39l4.45-3.41a.5.5 0 0 1 .8.4c0 2.63.28 5.78 2.18 8.07 1.26 1.52 1.61 2.79 1.61 4.14 0 5-3.53 7.79-7.18 7.79z" />
         </svg>
     ),
-    Game: () => (
-        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    Game: ({ className = "w-5 h-5" }: { className?: string }) => (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="2" y="6" width="20" height="12" rx="3" />
             <line x1="6" y1="12" x2="10" y2="12" />
             <line x1="8" y1="10" x2="8" y2="14" />
@@ -1305,12 +1305,12 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     <button onClick={() => setActiveTab('schedule')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'schedule' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <AdminIcons.Schedule /> Schedule
                     </button>
+
+                    {/* Content Section */}
+                    <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-6 pb-2">Website Content</div>
                     <button onClick={() => setActiveTab('event')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'event' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <AdminIcons.Settings /> Settings
                     </button>
-
-                    {/* Content Section */}
-                    <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-6 pb-2">Content</div>
                     <button onClick={() => setActiveTab('profile')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'profile' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <AdminIcons.Profile /> Profile
                     </button>
@@ -1927,7 +1927,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             <h2 className="text-3xl font-black text-white">Tournament Management</h2>
                             <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col items-center justify-center min-h-[400px] text-center">
                                 <div className="w-24 h-24 bg-purple-500/20 rounded-full flex items-center justify-center mb-6 text-purple-400">
-                                    <AdminIcons.Game />
+                                    <AdminIcons.Game className="w-12 h-12" />
                                 </div>
                                 <h3 className="text-2xl font-black text-white mb-2">Tournament Admin Moved</h3>
                                 <p className="text-gray-400 mb-6 max-w-md">All tournament management features have been consolidated to a dedicated page for better organization.</p>
