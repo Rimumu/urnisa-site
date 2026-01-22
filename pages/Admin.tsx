@@ -538,6 +538,8 @@ const Admin: React.FC = () => {
     const [snakesSimUser, setSnakesSimUser] = useState('');
     const [snakesSimAmount, setSnakesSimAmount] = useState(1);
     const [snakesSimDonoAmount, setSnakesSimDonoAmount] = useState(5);
+    const [snakesQueue, setSnakesQueue] = useState<{ _id: string; user: string; avatarUrl?: string; type: string; createdAt: string }[]>([]);
+    const [snakesQueueFilter, setSnakesQueueFilter] = useState('');
 
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
@@ -677,6 +679,12 @@ const Admin: React.FC = () => {
                 const data = await settingsRes.json();
                 setSnakesSubsActive(data.subsActive);
                 setSnakesDonosActive(data.donationsActive);
+            }
+            // Fetch queue for event log
+            const stateRes = await fetch(`${API_BASE_URL}/api/snakes/state`);
+            if (stateRes.ok) {
+                const stateData = await stateRes.json();
+                setSnakesQueue(stateData.queue || []);
             }
         } catch (error) { console.error(error); }
     }, []);
@@ -1313,7 +1321,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {/* Gaming Section */}
                     <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-6 pb-2">Gaming</div>
                     <button onClick={() => setActiveTab('minecraft')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'minecraft' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Minecraft /> Minecraft
+                        <AdminIcons.Game /> Minecraft
                     </button>
                     <button onClick={() => setActiveTab('tournament')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'tournament' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
                         <AdminIcons.Tournament /> Tournament
@@ -2156,6 +2164,69 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             DONATE (${snakesSimDonoAmount})
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Event Queue Log */}
+                            <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl h-[400px] flex flex-col">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                                    <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                                        <span className="text-purple-400"><AdminIcons.EventLog /></span>
+                                        Roll Queue ({snakesQueue.length})
+                                    </h3>
+                                    <input
+                                        type="text"
+                                        placeholder="Search User..."
+                                        value={snakesQueueFilter}
+                                        onChange={(e) => setSnakesQueueFilter(e.target.value)}
+                                        className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 outline-none w-full md:w-48"
+                                    />
+                                </div>
+                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+                                    {snakesQueue
+                                        .filter(q => snakesQueueFilter.trim() === '' || q.user.toLowerCase().includes(snakesQueueFilter.toLowerCase().trim()))
+                                        .map((queueItem, idx) => (
+                                            <div key={queueItem._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all gap-4 group">
+                                                <div className="flex items-center gap-3 overflow-hidden">
+                                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-xs">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <img
+                                                        src={queueItem.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(queueItem.user)}&background=random`}
+                                                        alt=""
+                                                        className="w-8 h-8 rounded-full object-cover"
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <div className="font-bold text-white text-sm truncate">{queueItem.user}</div>
+                                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
+                                                            {queueItem.type} • {new Date(queueItem.createdAt).toLocaleTimeString()}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={async () => {
+                                                        try {
+                                                            await fetch(`${API_BASE_URL}/api/snakes/queue/${queueItem._id}`, {
+                                                                method: 'DELETE',
+                                                                headers: { Authorization: password }
+                                                            });
+                                                            fetchSnakesTiles();
+                                                            setSnakesStatus({ type: 'success', message: `Removed roll from ${queueItem.user}` });
+                                                            setTimeout(() => setSnakesStatus(null), 3000);
+                                                        } catch (e) {
+                                                            setSnakesStatus({ type: 'error', message: 'Failed to remove' });
+                                                            setTimeout(() => setSnakesStatus(null), 3000);
+                                                        }
+                                                    }}
+                                                    className="bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded text-xs font-bold transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    REMOVE
+                                                </button>
+                                            </div>
+                                        ))}
+                                    {snakesQueue.length === 0 && (
+                                        <div className="text-center text-gray-500 py-8 italic">No rolls in queue</div>
+                                    )}
                                 </div>
                             </div>
 
