@@ -16,6 +16,8 @@ interface TournamentEntry {
     minecraftUsername: string;
     team: (Pokemon | null)[];
     isLocked: boolean;
+    gimmickType?: 'tera' | 'dynamax' | 'mega' | 'zmove' | null;
+    gimmickPokemonId?: number | null;
 }
 
 type TournamentStatus = 'DRAFTING' | 'LOCK_IN' | 'ONGOING' | 'ENDED';
@@ -1562,10 +1564,19 @@ const Tournament: React.FC = () => {
                                                         )}
                                                     </div>
                                                 </div>
+                                                {/* Season 3 Gimmick Indicator */}
+                                                {activeSeason.name.includes('Season 3') && entry.gimmickType && entry.gimmickPokemonId && (
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-900/40 to-black rounded-xl border border-purple-500/30">
+                                                        <span className="text-xs">{entry.gimmickType === 'tera' ? '💎' : entry.gimmickType === 'dynamax' ? '🔴' : entry.gimmickType === 'mega' ? '🌀' : '⚡'}</span>
+                                                        <span className="text-[10px] font-black uppercase text-purple-400">{entry.gimmickType}</span>
+                                                        <span className="text-gray-500">on</span>
+                                                        <span className="text-xs font-bold text-white">{entry.team.find(p => p?.id === entry.gimmickPokemonId)?.name || `#${entry.gimmickPokemonId}`}</span>
+                                                    </div>
+                                                )}
                                                 {/* Only show team placeholders for Singles */}
                                                 {!activeSeason.format.includes('Duos') && (
                                                     <div className="grid grid-cols-6 gap-2 w-full">
-                                                        {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 p-1"><PokemonTeamImage pokemon={p!} /></div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
+                                                        {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className={`aspect-square bg-black/40 rounded-2xl border p-1 relative ${entry.gimmickPokemonId === p?.id ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-white/5'}`}><PokemonTeamImage pokemon={p!} />{entry.gimmickPokemonId === p?.id && <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full border border-black flex items-center justify-center text-[8px]">{entry.gimmickType === 'tera' ? '💎' : entry.gimmickType === 'dynamax' ? '🔴' : entry.gimmickType === 'mega' ? '🌀' : '⚡'}</div>}</div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
                                                     </div>
                                                 )}
                                             </button>

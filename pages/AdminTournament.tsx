@@ -13,6 +13,8 @@ interface TournamentPlayer {
     isLocked: boolean;
     isDev?: boolean;
     updatedAt: string;
+    gimmickType?: 'tera' | 'dynamax' | 'mega' | 'zmove' | null;
+    gimmickPokemonId?: number | null;
 }
 
 interface Season {
@@ -767,11 +769,28 @@ const AdminTournament: React.FC = () => {
                                         </div>
                                     </div>
 
+                                    {/* Season 3 Gimmick Indicator */}
+                                    {activeSeason?.name.includes('Season 3') && player.gimmickType && player.gimmickPokemonId && (
+                                        <div className="flex items-center gap-2 px-2 py-1 mb-2 bg-purple-900/30 rounded-lg border border-purple-500/30">
+                                            <span className="text-xs">{player.gimmickType === 'tera' ? '💎' : player.gimmickType === 'dynamax' ? '🔴' : player.gimmickType === 'mega' ? '🌀' : '⚡'}</span>
+                                            <span className="text-[10px] font-black uppercase text-purple-400">{player.gimmickType}</span>
+                                            <span className="text-gray-500 text-[10px]">on</span>
+                                            <span className="text-[10px] font-bold text-white">{player.team.find(p => p?.id === player.gimmickPokemonId)?.name || `#${player.gimmickPokemonId}`}</span>
+                                        </div>
+                                    )}
+
                                     {/* Show Pokemon grid only for Singles format */}
                                     {!activeSeason?.format.includes('Duos') && (
                                         <div className="grid grid-cols-6 gap-1 mb-3">
                                             {player.team.map((poke, idx) => (
-                                                <PokemonImage key={idx} pokemon={poke} />
+                                                <div key={idx} className={`relative ${player.gimmickPokemonId === poke?.id ? 'ring-2 ring-purple-500 rounded-lg' : ''}`}>
+                                                    <PokemonImage pokemon={poke} />
+                                                    {player.gimmickPokemonId === poke?.id && (
+                                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border border-black flex items-center justify-center text-[6px]">
+                                                            {player.gimmickType === 'tera' ? '💎' : player.gimmickType === 'dynamax' ? '🔴' : player.gimmickType === 'mega' ? '🌀' : '⚡'}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
                                         </div>
                                     )}
