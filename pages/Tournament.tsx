@@ -724,7 +724,7 @@ const Tournament: React.FC = () => {
 
     // Check if team has any banned Pokemon (season-specific)
     const hasBannedPokemon = useMemo(() => {
-        return selectedTeam.some(p => p !== null && isBannedForSeason(p.id, activeSeason?.format || ''));
+        return selectedTeam.some(p => p !== null && isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name));
     }, [selectedTeam, activeSeason]);
 
     const handleInitialRegister = async () => {
