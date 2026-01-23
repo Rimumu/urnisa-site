@@ -4,14 +4,14 @@ import { NavLink } from 'react-router-dom';
 import { useTwitchStatus } from '../hooks/useTwitchStatus';
 
 // Helper for Dropdown Logic
-const NisathonDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => (
+const EventsDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => (
   <div className="relative group">
     <NavLink
       to="/nisathon"
       className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
       onClick={(e) => { if (window.innerWidth < 768) { e.preventDefault(); } }} // Prevent nav on click on mobile to allow dropdown to open if logic requires
     >
-      <span>Nisathon</span>
+      <span>Events</span>
       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
       </svg>
@@ -26,7 +26,7 @@ const NisathonDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) =
           onClick={closeMenu}
           className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
-          Dashboard
+          Nisathon
         </NavLink>
         <NavLink
           to="/nisathon/wheel"
@@ -34,6 +34,13 @@ const NisathonDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) =
           className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
           Wheel
+        </NavLink>
+        <NavLink
+          to="/snakesladder"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          S & L
         </NavLink>
       </div>
     </div>
@@ -90,7 +97,7 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
           onClick={closeMenu}
           className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
-          Rankings
+          🏆 Rankings
         </NavLink>
       </div>
     </div>
@@ -101,7 +108,7 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
 const NavLinks: React.FC = () => (
   <>
     <NavLink to="/" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
-    <NisathonDropdown />
+    <EventsDropdown />
     <MinecraftDropdown />
     <NavLink to="/about" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>About Me</NavLink>
   </>
@@ -233,11 +240,12 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
         <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
           <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Home</NavLink>
 
-          {/* Mobile Sub-menu for Nisathon */}
+          {/* Mobile Sub-menu for Events */}
           <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
-            <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Nisathon Event</span>
-            <NavLink to="/nisathon" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
+            <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Events</span>
+            <NavLink to="/nisathon" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Nisathon</NavLink>
             <NavLink to="/nisathon/wheel" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Wheel</NavLink>
+            <NavLink to="/snakesladder" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>S & L</NavLink>
           </div>
 
           {/* Mobile Sub-menu for Minecraft */}
@@ -247,7 +255,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
             <NavLink to="/minecraft/bingo" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Bingo Card</NavLink>
             <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Gacha Pack</NavLink>
             <NavLink to="/minecraft/tournament" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Tournament Hub</NavLink>
-            <NavLink to="/minecraft/rankings" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Rankings</NavLink>
+            <NavLink to="/minecraft/rankings" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>🏆 Rankings</NavLink>
           </div>
 
           <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>About Me</NavLink>

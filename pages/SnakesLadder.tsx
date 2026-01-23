@@ -535,7 +535,7 @@ const SnakesLadder: React.FC = () => {
                     <div className="inline-flex items-center gap-2 bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
                         <h2 className="text-lg md:text-xl font-bold text-brand-accent tracking-widest uppercase">Interactive Chat Game</h2>
                     </div>
-                    <p className="text-gray-400 text-sm">1 Sub / 1 Gifted Sub = 1 Dice Roll</p>
+                    <p className="text-gray-400 text-sm">1 Sub / 1 Gifted Sub / $3 Donation = 1 Dice Roll</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
