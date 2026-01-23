@@ -2072,13 +2072,29 @@ const Tournament: React.FC = () => {
                                     <div className="h-px bg-white/10 flex-1"></div>
                                 </div>
 
+                                {/* Gimmick Indicator for Season 3 */}
+                                {activeSeason.name.includes('Season 3') && selectedPlayer.gimmickType && selectedPlayer.gimmickPokemonId && (
+                                    <div className="flex items-center justify-center gap-3 mb-6 px-4 py-3 bg-gradient-to-r from-purple-900/40 to-black rounded-2xl border border-purple-500/30">
+                                        <span className="text-2xl">{selectedPlayer.gimmickType === 'tera' ? '💎' : selectedPlayer.gimmickType === 'dynamax' ? '🔴' : selectedPlayer.gimmickType === 'mega' ? '🌀' : '⚡'}</span>
+                                        <span className="text-sm font-black uppercase text-purple-400">{selectedPlayer.gimmickType}</span>
+                                        <span className="text-gray-500">on</span>
+                                        <span className="text-sm font-bold text-white">{selectedPlayer.team.find(p => p?.id === selectedPlayer.gimmickPokemonId)?.name || `#${selectedPlayer.gimmickPokemonId}`}</span>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                                    {((tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
-                                        <PokemonDetailCard
-                                            key={idx}
-                                            pokemon={pokemon}
-                                            revealed={true}
-                                        />
+                                    {(selectedPlayer.isLocked ? selectedPlayer.team : new Array(6).fill(null)).map((pokemon, idx) => (
+                                        <div key={idx} className={`relative ${selectedPlayer.gimmickPokemonId === pokemon?.id ? 'ring-4 ring-purple-500/50 rounded-[2rem]' : ''}`}>
+                                            <PokemonDetailCard
+                                                pokemon={pokemon}
+                                                revealed={true}
+                                            />
+                                            {selectedPlayer.gimmickPokemonId === pokemon?.id && (
+                                                <div className="absolute top-2 right-2 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-lg z-30 border-2 border-black shadow-lg">
+                                                    {selectedPlayer.gimmickType === 'tera' ? '💎' : selectedPlayer.gimmickType === 'dynamax' ? '🔴' : selectedPlayer.gimmickType === 'mega' ? '🌀' : '⚡'}
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
                             </div>
