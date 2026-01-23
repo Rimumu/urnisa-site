@@ -1576,7 +1576,7 @@ const Tournament: React.FC = () => {
                                                 {/* Only show team placeholders for Singles */}
                                                 {!activeSeason.format.includes('Duos') && (
                                                     <div className="grid grid-cols-6 gap-2 w-full">
-                                                        {(tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') && entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className={`aspect-square bg-black/40 rounded-2xl border p-1 relative ${entry.gimmickPokemonId === p?.id ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-white/5'}`}><PokemonTeamImage pokemon={p!} />{entry.gimmickPokemonId === p?.id && <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full border border-black flex items-center justify-center text-[8px]">{entry.gimmickType === 'tera' ? '💎' : entry.gimmickType === 'dynamax' ? '🔴' : entry.gimmickType === 'mega' ? '🌀' : '⚡'}</div>}</div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
+                                                        {entry.isLocked ? entry.team.map((p, pIdx) => (<div key={pIdx} className={`aspect-square bg-black/40 rounded-2xl border p-1 relative ${entry.gimmickPokemonId === p?.id ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-white/5'}`}><PokemonTeamImage pokemon={p!} />{entry.gimmickPokemonId === p?.id && <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full border border-black flex items-center justify-center text-[8px]">{entry.gimmickType === 'tera' ? '💎' : entry.gimmickType === 'dynamax' ? '🔴' : entry.gimmickType === 'mega' ? '🌀' : '⚡'}</div>}</div>)) : Array(6).fill(null).map((_, i) => (<div key={i} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>))}
                                                     </div>
                                                 )}
                                             </button>
@@ -1858,10 +1858,11 @@ const Tournament: React.FC = () => {
                                                                             <button
                                                                                 key={g.id}
                                                                                 onClick={() => setSelectedGimmick(g.id as any)}
+                                                                                disabled={isLocked || tournamentStatus === 'ONGOING'}
                                                                                 className={`py-3 px-2 rounded-xl text-xs font-black uppercase tracking-wider border-2 transition-all ${selectedGimmick === g.id
                                                                                     ? `${g.color} bg-white/10 shadow-lg scale-105`
                                                                                     : 'border-white/5 text-gray-500 hover:bg-white/5 hover:text-white'
-                                                                                    }`}
+                                                                                    } ${isLocked || tournamentStatus === 'ONGOING' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                                             >
                                                                                 {g.label}
                                                                             </button>
@@ -1889,10 +1890,11 @@ const Tournament: React.FC = () => {
                                                                                             }
                                                                                             setGimmickPokemonId(p.id);
                                                                                         }}
+                                                                                        disabled={isLocked || tournamentStatus === 'ONGOING'}
                                                                                         className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center relative transition-all ${gimmickPokemonId === p.id
                                                                                             ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] scale-110 z-10'
                                                                                             : 'border-white/10 hover:border-white/30 grayscale hover:grayscale-0'
-                                                                                            }`}
+                                                                                            } ${isLocked || tournamentStatus === 'ONGOING' ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                                                     >
                                                                                         <div className="w-10 h-10 relative">
                                                                                             <PokemonTeamImage pokemon={p} />
