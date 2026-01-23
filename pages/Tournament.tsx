@@ -216,7 +216,16 @@ const SEASON2_BANNED_IDS = new Set([
 ]);
 
 // Check if Pokemon is banned for the current season
-const isBannedForSeason = (id: number, seasonFormat: string): boolean => {
+const isBannedForSeason = (id: number, seasonFormat: string, seasonName?: string): boolean => {
+    // Season 3 specific bans (Mega Rayquaza, Zacian Crowned, Ultra Necrozma, Eternatus)
+    // Note: Mega Rayquaza is id 384 (Rayquaza) with mega form - handled by form
+    // Zacian Crowned is id 888 with crowned form
+    // Ultra Necrozma is id 800 with ultra form  
+    // Eternatus is always banned (id 890)
+    if (seasonName?.includes('Season 3')) {
+        const SEASON3_BANNED = new Set([890]); // Eternatus only as form-specific ones need different handling
+        return SEASON3_BANNED.has(id);
+    }
     if (seasonFormat.includes('Duos')) {
         // Season 2 rules
         return SEASON2_BANNED_IDS.has(id);
@@ -227,6 +236,11 @@ const isBannedForSeason = (id: number, seasonFormat: string): boolean => {
 
 // Check if Pokemon is a legendary (for the 1-per-team limit)
 const isLegendary = (id: number): boolean => LEGENDARY_IDS.has(id);
+
+// Season 3 category checks
+const isMythical = (id: number): boolean => MYTHICAL_IDS.has(id);
+const isParadox = (id: number): boolean => PARADOX_IDS.has(id);
+const isUltraBeast = (id: number): boolean => ULTRA_BEAST_IDS.has(id);
 
 // Legacy function for backwards compatibility
 const isBanned = (id: number) => SEASON1_BANNED_IDS.has(id);
@@ -385,6 +399,10 @@ const Tournament: React.FC = () => {
     const [loadingPokemon, setLoadingPokemon] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // State for Gimmick Selection (Season 3)
+    const [selectedGimmick, setSelectedGimmick] = useState<'tera' | 'dynamax' | 'mega' | 'zmove' | null>(null);
+    const [gimmickPokemonId, setGimmickPokemonId] = useState<number | null>(null);
+
     // Team Management State
     const [selectedTeam, setSelectedTeam] = useState<(Pokemon | null)[]>(new Array(6).fill(null));
     const [isLocked, setIsLocked] = useState(false);
@@ -425,6 +443,10 @@ const Tournament: React.FC = () => {
     }[]>([]);
 
 
+    const myEntry = useMemo(() => {
+        return playersList.find(p => p.discordId === user?.id);
+    }, [playersList, user?.id]);
+
     const getPlayerStats = (username: string) => {
         // Prefer API Score
         const apiWinner = apiWinners.find(w => w.username === username);
@@ -459,25 +481,37 @@ const Tournament: React.FC = () => {
 
         const w1 = lastFinal.winner;
         const w2 = lastFinal.winner === lastFinal.player1 ? lastFinal.player2 : lastFinal.player1;
+        return [w1, w2, null] as (string | null)[];
+    }, [apiWinners, matches]);
 
-        // Try to find 3rd place from losers final
-        const losersMatches = matches.filter(m => m.bracketGroup === 'losers');
-        const losersFinal = losersMatches.sort((a, b) => b.round - a.round || b.matchIndex - a.matchIndex)[0];
-        const w3 = losersFinal ? losersFinal.winner : null;
+    // Team Validation Counts
+    const legendaryCount = selectedTeam.filter(p => p && isLegendary(p.id)).length;
+    const mythicalCount = selectedTeam.filter(p => p && isMythical(p.id)).length;
+    const paradoxCount = selectedTeam.filter(p => p && isParadox(p.id)).length;
+    const ultraBeastCount = selectedTeam.filter(p => p && isUltraBeast(p.id)).length;
 
-        return [w1, w2, w3];
-    }, [matches, apiWinners]);
+    const exceedsLegendaryLimit = legendaryCount > 1;
+    const exceedsMythicalLimit = mythicalCount > 1;
+    const exceedsParadoxLimit = paradoxCount > 1;
+    const exceedsUltraBeastLimit = ultraBeastCount > 1;
+
+    // Validation for Season 3
+    const isSeason3 = activeSeason.name.includes('Season 3');
+    const isGimmickValid = !isSeason3 || (selectedGimmick !== null && gimmickPokemonId !== null);
+    const hasCategoryViolations = isSeason3 && (exceedsLegendaryLimit || exceedsMythicalLimit || exceedsParadoxLimit || exceedsUltraBeastLimit);
+    const hasBannedMons = selectedTeam.some(p => p && isBannedForSeason(p.id, activeSeason.format, activeSeason.name));
+
+    const isEntryLocked = activeSeason.format.includes('Duos') ? myDuo?.isLocked : (myEntry?.isLocked || false);
+    const canLockIn = selectedTeam.filter(Boolean).length === 6 && !isEntryLocked && !exceedsLegendaryLimit && !hasCategoryViolations && !hasBannedMons && isGimmickValid;
 
     useEffect(() => {
         const fetchPokemon = async () => {
+            setLoadingPokemon(true);
             try {
-                const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1025');
-                const data = await response.json();
-                const formatted = data.results.map((p: any, idx: number) => ({
-                    id: idx + 1,
-                    name: p.name.charAt(0).toUpperCase() + p.name.slice(1).replace(/-/g, ' ')
-                }));
-                setPokemonList(formatted);
+                const res = await fetch(`${API_BASE_URL}/api/pokemon`);
+                if (res.ok) {
+                    setPokemonList(await res.json());
+                }
             } catch (e) {
                 console.error("Failed to fetch pokemon list", e);
             } finally {
@@ -596,6 +630,11 @@ const Tournament: React.FC = () => {
                     const filledTeam = [...(data.team || [])];
                     while (filledTeam.length < 6) filledTeam.push(null);
                     setSelectedTeam(filledTeam);
+
+                    // Season 3: Load gimmick choice
+                    if (data.gimmickType) setSelectedGimmick(data.gimmickType);
+                    if (data.gimmickPokemonId) setGimmickPokemonId(data.gimmickPokemonId);
+
                     setIsLocked(data.isLocked || false);
                     setHasStartedRegistration(true);
                 } else {
@@ -686,17 +725,6 @@ const Tournament: React.FC = () => {
         return selectedTeam.some(p => p !== null && isBannedForSeason(p.id, activeSeason?.format || ''));
     }, [selectedTeam, activeSeason]);
 
-    // Count legendaries in team (for Season 2 limit)
-    const legendaryCount = useMemo(() => {
-        return selectedTeam.filter(p => p !== null && isLegendary(p.id)).length;
-    }, [selectedTeam]);
-
-    // Season 2: Check if team exceeds legendary limit
-    const exceedsLegendaryLimit = useMemo(() => {
-        if (!activeSeason?.format.includes('Duos')) return false; // Only Season 2 has this rule
-        return legendaryCount > 1;
-    }, [legendaryCount, activeSeason]);
-
     const handleInitialRegister = async () => {
         if (!user || tournamentStatus === 'ONGOING') return;
         setLoadingTeam(true);
@@ -775,7 +803,9 @@ const Tournament: React.FC = () => {
                     discordId: user.id,
                     minecraftUsername: user.minecraftUsername,
                     team: selectedTeam,
-                    seasonId: activeSeason.seasonId
+                    seasonId: activeSeason.seasonId,
+                    gimmickType: activeSeason.name.includes('Season 3') ? selectedGimmick : null,
+                    gimmickPokemonId: activeSeason.name.includes('Season 3') ? gimmickPokemonId : null
                 })
             });
 
@@ -1760,8 +1790,117 @@ const Tournament: React.FC = () => {
                                                         </div>
                                                     )}
 
-                                                    {/* Season 2: Legendary Limit Warning */}
-                                                    {activeSeason.format.includes('Duos') && legendaryCount > 0 && (
+                                                    {/* Season 3: Party Limits & Gimmick Selection */}
+                                                    {activeSeason.name.includes('Season 3') && (
+                                                        <div className="space-y-6 px-4">
+                                                            {/* Party Limits Grid */}
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <div className={`p-3 rounded-xl border flex items-center gap-3 ${exceedsLegendaryLimit ? 'bg-red-900/40 border-red-500' : 'bg-yellow-900/10 border-yellow-500/20'}`}>
+                                                                    <span className="text-2xl">⭐</span>
+                                                                    <div>
+                                                                        <div className={`text-[10px] font-black uppercase tracking-wider ${exceedsLegendaryLimit ? 'text-red-400' : 'text-yellow-400'}`}>Legendary</div>
+                                                                        <div className="text-xl font-bold text-white">{legendaryCount}/1</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className={`p-3 rounded-xl border flex items-center gap-3 ${exceedsMythicalLimit ? 'bg-red-900/40 border-red-500' : 'bg-pink-900/10 border-pink-500/20'}`}>
+                                                                    <span className="text-2xl">✨</span>
+                                                                    <div>
+                                                                        <div className={`text-[10px] font-black uppercase tracking-wider ${exceedsMythicalLimit ? 'text-red-400' : 'text-pink-400'}`}>Mythical</div>
+                                                                        <div className="text-xl font-bold text-white">{mythicalCount}/1</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className={`p-3 rounded-xl border flex items-center gap-3 ${exceedsParadoxLimit ? 'bg-red-900/40 border-red-500' : 'bg-purple-900/10 border-purple-500/20'}`}>
+                                                                    <span className="text-2xl">🌀</span>
+                                                                    <div>
+                                                                        <div className={`text-[10px] font-black uppercase tracking-wider ${exceedsParadoxLimit ? 'text-red-400' : 'text-purple-400'}`}>Paradox</div>
+                                                                        <div className="text-xl font-bold text-white">{paradoxCount}/1</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className={`p-3 rounded-xl border flex items-center gap-3 ${exceedsUltraBeastLimit ? 'bg-red-900/40 border-red-500' : 'bg-blue-900/10 border-blue-500/20'}`}>
+                                                                    <span className="text-2xl">👾</span>
+                                                                    <div>
+                                                                        <div className={`text-[10px] font-black uppercase tracking-wider ${exceedsUltraBeastLimit ? 'text-red-400' : 'text-blue-400'}`}>Ultra Beast</div>
+                                                                        <div className="text-xl font-bold text-white">{ultraBeastCount}/1</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Gimmick Selection */}
+                                                            <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-2xl border border-white/10">
+                                                                <div className="flex items-center gap-3 mb-6">
+                                                                    <span className="text-2xl">💥</span>
+                                                                    <div>
+                                                                        <h4 className="text-sm font-black uppercase tracking-widest text-white">Gimmick Selection</h4>
+                                                                        <p className="text-xs text-gray-400">Choose ONE gimmick and which Pokemon will use it.</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="space-y-4">
+                                                                    {/* 1. Select Gimmick Type */}
+                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                                        {[
+                                                                            { id: 'tera', label: 'Tera', color: 'border-blue-500 text-blue-400' },
+                                                                            { id: 'dynamax', label: 'Dynamax', color: 'border-red-500 text-red-500' },
+                                                                            { id: 'mega', label: 'Mega', color: 'border-pink-500 text-pink-400' },
+                                                                            { id: 'zmove', label: 'Z-Move', color: 'border-yellow-400 text-yellow-400' }
+                                                                        ].map(g => (
+                                                                            <button
+                                                                                key={g.id}
+                                                                                onClick={() => setSelectedGimmick(g.id as any)}
+                                                                                className={`py-3 px-2 rounded-xl text-xs font-black uppercase tracking-wider border-2 transition-all ${selectedGimmick === g.id
+                                                                                    ? `${g.color} bg-white/10 shadow-lg scale-105`
+                                                                                    : 'border-white/5 text-gray-500 hover:bg-white/5 hover:text-white'
+                                                                                    }`}
+                                                                            >
+                                                                                {g.label}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    {/* 2. Select Pokemon for Gimmick */}
+                                                                    {selectedGimmick && (
+                                                                        <div className="pt-4 border-t border-white/10">
+                                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 block">Who uses {selectedGimmick}?</label>
+                                                                            <div className="flex gap-2 justify-center flex-wrap">
+                                                                                {selectedTeam.map((p, idx) => p && (
+                                                                                    <button
+                                                                                        key={idx}
+                                                                                        onClick={() => {
+                                                                                            // Validation: Dynamax restriction
+                                                                                            if (selectedGimmick === 'dynamax' && (isLegendary(p.id) || isMythical(p.id) || isParadox(p.id) || isUltraBeast(p.id))) {
+                                                                                                alert("🚫 Restricted Pokemon cannot Dynamax!");
+                                                                                                return;
+                                                                                            }
+                                                                                            // Validation: Shedinja Tera
+                                                                                            if (selectedGimmick === 'tera' && p.name.includes('Shedinja')) {
+                                                                                                alert("🚫 Shedinja cannot use Tera!");
+                                                                                                return;
+                                                                                            }
+                                                                                            setGimmickPokemonId(p.id);
+                                                                                        }}
+                                                                                        className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center relative transition-all ${gimmickPokemonId === p.id
+                                                                                            ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] scale-110 z-10'
+                                                                                            : 'border-white/10 hover:border-white/30 grayscale hover:grayscale-0'
+                                                                                            }`}
+                                                                                    >
+                                                                                        <div className="w-10 h-10 relative">
+                                                                                            <PokemonTeamImage pokemon={p} />
+                                                                                        </div>
+                                                                                        {gimmickPokemonId === p.id && (
+                                                                                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-black font-bold">✓</div>
+                                                                                        )}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Season 2: Legendary Limit Warning (Legacy) */}
+                                                    {!activeSeason.name.includes('Season 3') && activeSeason.format.includes('Duos') && legendaryCount > 0 && (
                                                         <div className={`px-4 py-3 rounded-2xl border ${exceedsLegendaryLimit ? 'bg-red-900/30 border-red-500/50' : 'bg-yellow-900/20 border-yellow-500/30'}`}>
                                                             <div className="flex items-center gap-3">
                                                                 <span className="text-2xl">{exceedsLegendaryLimit ? '⚠️' : '⭐'}</span>
