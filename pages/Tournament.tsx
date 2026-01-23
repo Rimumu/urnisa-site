@@ -1930,7 +1930,7 @@ const Tournament: React.FC = () => {
                                                                 </div>
                                                                 <div className="grid grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(0, 3).map((p, idx) => {
-                                                                        const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '');
+                                                                        const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name);
                                                                         const legendary = p !== null && isLegendary(p.id);
                                                                         return (
                                                                             <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-yellow-900/20 to-black/80 border-yellow-500 shadow-2xl scale-[1.03]') : 'bg-black/40 border-yellow-500/30 border-dashed opacity-50'}`}>
@@ -1950,7 +1950,7 @@ const Tournament: React.FC = () => {
                                                                 <div className="grid grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(3, 6).map((p, idx) => {
                                                                         const actualIdx = idx + 3;
-                                                                        const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '');
+                                                                        const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name);
                                                                         const legendary = p !== null && isLegendary(p.id);
                                                                         return (
                                                                             <div key={actualIdx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-purple-900/20 to-black/80 border-purple-500 shadow-2xl scale-[1.03]') : 'bg-black/40 border-purple-500/30 border-dashed opacity-50'}`}>
@@ -1965,7 +1965,7 @@ const Tournament: React.FC = () => {
                                                         /* Singles Mode: Original 6-slot grid */
                                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 px-2">
                                                             {selectedTeam.map((p, idx) => {
-                                                                const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '');
+                                                                const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name);
                                                                 return (
                                                                     <div key={idx} className={`aspect-square rounded-[2rem] border-[3px] flex flex-col items-center justify-center relative group transition-all duration-500 ${p ? (banned ? 'bg-red-900/20 border-red-500' : 'bg-gradient-to-br from-brand-primary/10 to-black/80 border-brand-primary shadow-2xl scale-[1.03]') : 'bg-black/40 border-white/5 border-dashed opacity-50'}`}>
                                                                         {p ? (<><div className="w-4/5 h-4/5 relative z-10"><PokemonTeamImage pokemon={p} />{banned && (<div className="absolute inset-0 bg-red-600/30 rounded-full flex items-center justify-center"><span className="text-white text-3xl font-black drop-shadow-lg">✕</span></div>)}</div><div className="absolute bottom-3 left-0 right-0 px-2 z-20"><div className={`text-[8px] font-black uppercase text-center truncate py-1 rounded-full backdrop-blur-md border ${banned ? 'bg-red-600 text-white' : 'bg-black/60 text-white border-white/10'}`}>{p.name}</div></div>{banned && <div className="banned-tooltip">RESTRICTED</div>}{!isLocked && tournamentStatus !== 'ONGOING' && (<button onClick={() => handleRemovePokemon(idx)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-[10px] font-black shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white">✕</button>)}</>) : (<span className="text-3xl text-gray-800 font-black">+</span>)}
@@ -1982,7 +1982,7 @@ const Tournament: React.FC = () => {
                                                             {loadingPokemon ? (<div>...</div>) : filteredPokemon.map(p => {
                                                                 const isSelected = selectedTeam.some(sp => sp?.id === p.id);
                                                                 const isFull = !selectedTeam.includes(null);
-                                                                const banned = isBannedForSeason(p.id, activeSeason?.format || '');
+                                                                const banned = isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name);
                                                                 return (<button key={p.id} disabled={isSelected || isFull || banned} onClick={() => handleSelectPokemon(p)} className={`aspect-square rounded-2xl flex items-center justify-center p-2 transition-all relative group ${isSelected ? 'bg-brand-primary/20 border-brand-primary border-2 opacity-50' : (isFull || banned) ? 'bg-gray-900 opacity-30 grayscale' : 'bg-white/5 border border-white/10 hover:border-brand-primary/50'}`} title={p.name}><div className="w-full h-full relative"><PokemonTeamImage pokemon={p} />{banned && <div className="absolute top-0 right-0 bg-red-600 rounded-full w-3 h-3 border border-black shadow-md flex items-center justify-center text-[8px] font-black">!</div>}</div>{banned && <div className="banned-tooltip">BANNED</div>}</button>);
                                                             })
                                                             }
