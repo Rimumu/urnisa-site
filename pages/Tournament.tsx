@@ -1032,37 +1032,119 @@ const Tournament: React.FC = () => {
                                         <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
                                             {activeSeason.format.includes('Duos') || activeSeason.name.includes('Season 2') ? (
                                                 <>Double-elimination bracket of a <span className="text-brand-primary font-black">Duos 2v2</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                            ) : activeSeason.name.includes('Season 3') ? (
+                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> ALL-OUT showdown! Pick a roster of 6 Pokemon, choose 4 each battle. <span className="text-brand-accent font-black">Level 50 cap</span>. <span className="text-yellow-400 font-black">All Gimmicks Allowed!</span></>
                                             ) : (
                                                 <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
                                             )}
                                         </p>
                                     </div>
                                 </div>
-                                <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
-                                    <div className="space-y-4">
-                                        <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
-                                        <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Paradox Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Eternatus</li><li className="flex items-center gap-2"><span className="text-yellow-500">⭐</span> Only 1 Legendary per team</li></ul></div>
-                                    </div>
-                                </RuleCard>
-                                <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
-                                    <ul className="space-y-2">
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item on the same team.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
-                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
-                                    </ul>
-                                </RuleCard>
-                                <RuleCard title="Move Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
-                                    <div className="space-y-3">
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
-                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
-                                    </div>
-                                </RuleCard>
-                                <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
-                                    <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
-                                </RuleCard>
+
+                                {/* SEASON 3 SPECIFIC RULES */}
+                                {activeSeason.name.includes('Season 3') ? (
+                                    <>
+                                        <RuleCard title="Party Limits" icon="⚡" color="border-yellow-500/40 bg-yellow-900/10">
+                                            <div className="space-y-3">
+                                                <div className="text-center py-2 bg-yellow-500/20 rounded-xl border border-yellow-500/30 mb-3">
+                                                    <span className="text-yellow-400 font-black text-sm uppercase tracking-wider">All-Out Rules</span>
+                                                </div>
+                                                <ul className="space-y-2 font-bold">
+                                                    <li className="flex items-center gap-2"><span className="text-yellow-400">⭐</span> <span className="text-yellow-200">1 Legendary</span> allowed per party</li>
+                                                    <li className="flex items-center gap-2"><span className="text-pink-400">✨</span> <span className="text-pink-200">1 Mythical</span> allowed per party</li>
+                                                    <li className="flex items-center gap-2"><span className="text-purple-400">🌀</span> <span className="text-purple-200">1 Paradox</span> allowed per party</li>
+                                                    <li className="flex items-center gap-2"><span className="text-blue-400">👾</span> <span className="text-blue-200">1 Ultra Beast</span> allowed per party</li>
+                                                </ul>
+                                            </div>
+                                        </RuleCard>
+                                        <RuleCard title="Gimmick Rules" icon="💥" color="border-orange-500/40 bg-orange-900/10">
+                                            <div className="space-y-3">
+                                                <div className="text-center py-2 bg-green-500/20 rounded-xl border border-green-500/30 mb-3">
+                                                    <span className="text-green-400 font-black text-sm uppercase tracking-wider">All Gimmicks Allowed!</span>
+                                                </div>
+                                                <ul className="space-y-2">
+                                                    <li><strong className="text-orange-400 block mb-0.5 text-sm uppercase tracking-wide">One Gimmick Per Roster</strong><span className="text-gray-400 text-xs">You can only use ONE type of gimmick in your entire party. Cannot mix Mega + Dynamax, etc.</span></li>
+                                                    <li><strong className="text-orange-400 block mb-0.5 text-sm uppercase tracking-wide">Dynamax Restriction</strong><span className="text-gray-400 text-xs">Only <span className="text-white font-bold">Standard Pokémon</span> can Dynamax. Legendaries, Mythicals, Paradox, and Ultra Beasts are <span className="text-red-400 font-bold">BANNED</span> from Dynamaxing.</span></li>
+                                                    <li><strong className="text-orange-400 block mb-0.5 text-sm uppercase tracking-wide">Shedinja Tera Ban</strong><span className="text-gray-400 text-xs">Shedinja is <span className="text-red-400 font-bold">BANNED</span> from using Tera.</span></li>
+                                                </ul>
+                                            </div>
+                                        </RuleCard>
+                                        <RuleCard title="Banned Pokémon" icon="🚫" color="border-red-500/40 bg-red-900/10">
+                                            <ul className="space-y-2 font-bold text-red-200">
+                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Mega Rayquaza</li>
+                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Zacian Crowned</li>
+                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Ultra Necrozma</li>
+                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternatus</li>
+                                            </ul>
+                                        </RuleCard>
+                                        <RuleCard title="Match Banning System" icon="🎯" color="border-cyan-500/40 bg-cyan-900/10">
+                                            <div className="space-y-3">
+                                                <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-3">
+                                                    <span className="text-cyan-400 font-black text-sm uppercase tracking-wider">Pre-Match Ban Phase</span>
+                                                </div>
+                                                <ul className="space-y-2 text-sm">
+                                                    <li className="flex gap-2"><span className="text-cyan-400">1.</span><span>Players call <strong className="text-white">heads or tails</strong> (coin flip)</span></li>
+                                                    <li className="flex gap-2"><span className="text-cyan-400">2.</span><span>Winner picks <strong className="text-white">ban order</strong> (first/second)</span></li>
+                                                    <li className="flex gap-2"><span className="text-cyan-400">3.</span><span>Each player gets <strong className="text-yellow-400">1 ban</strong> per match</span></li>
+                                                    <li className="flex gap-2"><span className="text-cyan-400">4.</span><span>Bans are made from opponent's visible roster</span></li>
+                                                </ul>
+                                                <p className="text-gray-400 text-xs mt-2 border-t border-white/10 pt-2">📋 Rosters visible 5-10 minutes before tournament starts after lock-ins!</p>
+                                            </div>
+                                        </RuleCard>
+                                        <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
+                                            <ul className="space-y-2">
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item on the same team.</span></li>
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
+                                            </ul>
+                                        </RuleCard>
+                                        <RuleCard title="Move & Ability Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
+                                            <div className="space-y-3">
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (Double Team, Minimize) are banned.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">One-Hit KO moves (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Bans</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
+                                            </div>
+                                        </RuleCard>
+                                    </>
+                                ) : (
+                                    /* SEASON 1 & 2 ORIGINAL RULES */
+                                    <>
+                                        <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
+                                            <div className="space-y-4">
+                                                <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
+                                                <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Paradox Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Eternatus</li><li className="flex items-center gap-2"><span className="text-yellow-500">⭐</span> Only 1 Legendary per team</li></ul></div>
+                                            </div>
+                                        </RuleCard>
+                                        <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
+                                            <ul className="space-y-2">
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item on the same team.</span></li>
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
+                                                <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
+                                            </ul>
+                                        </RuleCard>
+                                        <RuleCard title="Move Bans" icon="⛔" color="border-purple-500/40 bg-purple-900/10">
+                                            <div className="space-y-3">
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
+                                            </div>
+                                        </RuleCard>
+                                        <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
+                                            <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
+                                        </RuleCard>
+                                    </>
+                                )}
+
+                                {/* COMMON RULES FOR ALL SEASONS */}
+                                {activeSeason.name.includes('Season 3') && (
+                                    <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
+                                        <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
+                                    </RuleCard>
+                                )}
                                 <RuleCard title="General Rules" icon="⚖️">
                                     <ul className="space-y-3">
                                         <li className="flex gap-3"><span className="text-red-500 font-bold text-lg leading-none">•</span><span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span></li>
