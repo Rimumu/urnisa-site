@@ -1166,6 +1166,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     // COUNTDOWN HANDLERS
     const handleCountdownSet = () => apiCall('countdown/set', { hours: cdH, minutes: cdM, seconds: cdS });
     const handleCountdownAdd = () => apiCall('countdown/add', { minutes: cdAddM });
+    const handleCountdownRemove = () => apiCall('countdown/add', { minutes: -Math.abs(cdAddM) });
     const handleCountdownPause = () => apiCall('countdown/pause', {});
     const handleCountdownReset = () => apiCall('countdown/reset', {});
 
@@ -1559,11 +1560,14 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     </div>
                                     <div className="space-y-4">
                                         <label className="text-gray-400 text-xs uppercase font-bold">Quick Actions</label>
-                                        <input type="number" placeholder="Minutes to Add" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdAddM} onChange={e => setCdAddM(parseInt(e.target.value) || 0)} />
+                                        <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdAddM} onChange={e => setCdAddM(parseInt(e.target.value) || 0)} />
                                         <div className="flex gap-2">
-                                            <button onClick={handleCountdownAdd} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold">Add</button>
+                                            <button onClick={handleCountdownRemove} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold text-lg">−</button>
+                                            <button onClick={handleCountdownAdd} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-lg">+</button>
+                                        </div>
+                                        <div className="flex gap-2">
                                             <button onClick={handleCountdownPause} className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-3 rounded-lg font-bold">Pause/Resume</button>
-                                            <button onClick={handleCountdownReset} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold">Reset</button>
+                                            <button onClick={handleCountdownReset} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-lg font-bold">Reset</button>
                                         </div>
                                     </div>
                                 </div>
