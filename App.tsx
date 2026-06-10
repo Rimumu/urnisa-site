@@ -21,6 +21,7 @@ import Inventory from './pages/Inventory';
 import Redeem from './pages/Redeem';
 import About from './pages/About';
 import Admin from './pages/Admin';
+import Archive from './pages/Archive';
 import Overlay from './pages/Overlay';
 import TimerWidget from './pages/overlays/TimerWidget';
 import GoalWidget from './pages/overlays/GoalWidget';
@@ -97,6 +98,7 @@ const App: React.FC = () => {
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/redeem" element={<Redeem />} />
           <Route path="/about" element={<About />} />
+          <Route path="/archive" element={<Archive />} />
           <Route path="/admin" element={<Admin />} />
 
           {/* 404 Fallback - Redirects unknown paths to Home */}
