@@ -1,20 +1,34 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Urnisa Site
 
-# Run and deploy your AI Studio app
+A single‑page web experience for **Urnisa**, a Twitch streamer. The site showcases live streams, chat overlays, merchandise, a bingo dashboard, a Minecraft‑based game and more.
 
-This contains everything you need to run your app locally.
+## Quick links
 
-View your app in AI Studio: https://ai.studio/apps/drive/1Yl5k8zZBqXeo79aPNAV97dMkxBpLFerV
+- **Live stream**: <https://www.twitch.tv/urnisa_>
 
-## Run Locally
+## Project structure
 
-**Prerequisites:**  Node.js
+```
+urnisa-site/
+├─ public/                     # Static assets
+├─ src/
+│  ├─ components/              # UI components
+│  ├─ data/                    # Static data files
+│  ├─ hooks/                   # Custom hooks
+│  ├─ pages/                   # Routes
+│  ├─ constants.ts             # API and other constants
+│  ├─ App.tsx                  # App entry point
+│  └─ index.tsx                # TypeScript entry
+├─ vite.config.ts              # Vite configuration
+├─ vite-env.d.ts               # Vite env types
+├─ tsconfig.json               # TypeScript config
+├─ package.json                # Dependencies
+└─ README.md                   # Current file
+```
 
+## Tech stack
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- **React** with **Vite**
+- **Tailwind CSS** for styling, with dark‑theme and glass‑morphism design patterns
+- **Framer Motion** for smooth UI transitions
+- **TypeScript** for type safety
