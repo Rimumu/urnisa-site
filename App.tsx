@@ -8,6 +8,11 @@ import Subathon from './pages/Subathon';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
 import Rankings from './pages/Rankings';
+import Archive from './pages/Archive';
+import ArchiveNisathon from './pages/ArchiveNisathon';
+import ArchiveWheel from './pages/ArchiveWheel';
+import ArchiveTournament from './pages/ArchiveTournament';
+import ArchiveRankings from './pages/ArchiveRankings';
 import Gacha from './pages/Gacha';
 import GachaDev from './pages/GachaDev'; // Import Dev Page
 import TournamentDev from './pages/TournamentDev'; // New Import
@@ -21,7 +26,6 @@ import Inventory from './pages/Inventory';
 import Redeem from './pages/Redeem';
 import About from './pages/About';
 import Admin from './pages/Admin';
-import Archive from './pages/Archive';
 import Overlay from './pages/Overlay';
 import TimerWidget from './pages/overlays/TimerWidget';
 import GoalWidget from './pages/overlays/GoalWidget';
@@ -99,6 +103,10 @@ const App: React.FC = () => {
           <Route path="/redeem" element={<Redeem />} />
           <Route path="/about" element={<About />} />
           <Route path="/archive" element={<Archive />} />
+          <Route path="/archive/nisathon" element={<ArchiveNisathon />} />
+          <Route path="/archive/wheel" element={<ArchiveWheel />} />
+          <Route path="/archive/tournament" element={<ArchiveTournament />} />
+          <Route path="/archive/rankings" element={<ArchiveRankings />} />
           <Route path="/admin" element={<Admin />} />
 
           {/* 404 Fallback - Redirects unknown paths to Home */}

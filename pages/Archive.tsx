@@ -12,42 +12,42 @@ interface ArchiveItem {
     status: 'available' | 'coming-soon';
 }
 
-// Archive pages - links to existing live pages
+// Archive pages - links to archived versions of past events
 const ARCHIVE_PAGES: ArchiveItem[] = [
     {
         id: '1',
         title: 'Nisathon Events',
-        description: 'Live uncapped birthday Nisathon dashboard with timer, goals, and contribution tracking.',
-        path: '/nisathon',
+        description: 'Archived uncapped birthday Nisathon dashboard with final stats, goals achieved, and contribution history.',
+        path: '/archive/nisathon',
         icon: '🎂',
-        date: 'Live Event',
+        date: 'Past Event',
         status: 'available'
     },
     {
         id: '2',
         title: 'Spin The Wheel',
-        description: 'Nisathon wheel spin page with live queue and reward history.',
-        path: '/nisathon/wheel',
+        description: 'Archived wheel spin page with all historical spin results and reward history.',
+        path: '/archive/wheel',
         icon: '🎡',
-        date: 'Live Event',
+        date: 'Past Event',
         status: 'available'
     },
     {
         id: '3',
         title: 'Tournament Hub',
-        description: 'Minecraft Cobblemon tournament hub with brackets and leaderboards.',
-        path: '/minecraft/tournament',
+        description: 'Archived Minecraft Cobblemon tournament hub with brackets and past winners.',
+        path: '/archive/tournament',
         icon: '⚔️',
-        date: 'Live Tournament',
+        date: 'Past Tournament',
         status: 'available'
     },
     {
         id: '4',
         title: 'Rankings',
-        description: 'Minecraft Cobblemon server player rankings and statistics.',
-        path: '/minecraft/rankings',
+        description: 'Archived Cobblemon server player rankings and end-of-season statistics.',
+        path: '/archive/rankings',
         icon: '🏆',
-        date: 'Live Stats',
+        date: 'Past Season',
         status: 'available'
     }
 ];
