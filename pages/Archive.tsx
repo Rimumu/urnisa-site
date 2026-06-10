@@ -12,43 +12,43 @@ interface ArchiveItem {
     status: 'available' | 'coming-soon';
 }
 
-// Placeholder archived pages - populate this as needed
+// Archive pages - links to existing live pages
 const ARCHIVE_PAGES: ArchiveItem[] = [
     {
         id: '1',
-        title: 'Past Nisathon Events',
-        description: 'Historical records of previous Nisathon celebrations and milestones.',
-        path: '/archive/nisathon',
+        title: 'Nisathon Events',
+        description: 'Live uncapped birthday Nisathon dashboard with timer, goals, and contribution tracking.',
+        path: '/nisathon',
         icon: '🎂',
-        date: 'Various Dates',
-        status: 'coming-soon'
+        date: 'Live Event',
+        status: 'available'
     },
     {
         id: '2',
-        title: 'Old Tournament Archives',
-        description: 'Records of past Minecraft tournament winners and brackets.',
-        path: '/archive/tournaments',
-        icon: '🏆',
-        date: 'Tournament History',
-        status: 'coming-soon'
+        title: 'Spin The Wheel',
+        description: 'Nisathon wheel spin page with live queue and reward history.',
+        path: '/nisathon/wheel',
+        icon: '🎡',
+        date: 'Live Event',
+        status: 'available'
     },
     {
         id: '3',
-        title: 'Previous Stream Highlights',
-        description: 'Best moments and memorable streams from the archive.',
-        path: '/archive/highlights',
-        icon: '⭐',
-        date: 'Stream Archive',
-        status: 'coming-soon'
+        title: 'Tournament Hub',
+        description: 'Minecraft Cobblemon tournament hub with brackets and leaderboards.',
+        path: '/minecraft/tournament',
+        icon: '⚔️',
+        date: 'Live Tournament',
+        status: 'available'
     },
     {
         id: '4',
-        title: 'Historical Bingo Events',
-        description: 'Past community bingo challenges and winners.',
-        path: '/archive/bingo',
-        icon: '🎫',
-        date: 'Bingo Archive',
-        status: 'coming-soon'
+        title: 'Rankings',
+        description: 'Minecraft Cobblemon server player rankings and statistics.',
+        path: '/minecraft/rankings',
+        icon: '🏆',
+        date: 'Live Stats',
+        status: 'available'
     }
 ];
 
