@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SpinWheel from '../components/SpinWheel';
-import { API_BASE_URL } from '../constants';
+import archiveData from '../data/wheel-archive.json';
 
 // Types for archived wheel data
 interface ArchivedSpin {
@@ -11,40 +11,26 @@ interface ArchivedSpin {
 }
 
 const ArchiveWheel: React.FC = () => {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [history, setHistory] = useState<ArchivedSpin[]>([]);
-    const [archiveInfo, setArchiveInfo] = useState<{
-        eventName: string;
-        archivedAt: string;
-        totalSpins: number;
-    } | null>(null);
-
+    const history = archiveData.history as ArchivedSpin[];
+    const archiveInfo = archiveData.info;
+    const items = archiveData.items as any;
+    
+    // Pagination and Filter states
+    const [filterText, setFilterText] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+    
+    // Derived state
+    const filteredHistory = history.filter(h => h.user.toLowerCase().includes(filterText.toLowerCase()));
+    const totalPages = Math.max(1, Math.ceil(filteredHistory.length / itemsPerPage));
+    const currentHistory = filteredHistory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    
+    // Reset page when filter changes
     useEffect(() => {
-        // Load archived wheel history - no polling, just once
-        fetch(`${API_BASE_URL}/api/archive/wheel/history`)
-            .then(res => {
-                if (res.ok) return res.json();
-                return null;
-            })
-            .then(data => {
-                if (data) {
-                    setHistory(data.spins || []);
-                    setArchiveInfo(data.info || null);
-                }
-            })
-            .catch(() => {
-                setError('Failed to load archived wheel data');
-            })
-            .finally(() => setLoading(false));
-    }, []);
+        setCurrentPage(1);
+    }, [filterText]);
 
     const totalSpins = history.length;
-    const archiveDate = archiveInfo?.archivedAt ? new Date(archiveInfo.archivedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    }) : 'Unknown Date';
 
     return (
         <div className="min-h-screen py-12 relative font-sans">
@@ -68,10 +54,8 @@ const ArchiveWheel: React.FC = () => {
                     <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-2xl">
                         SPIN THE <span className="text-brand-primary bg-clip-text text-transparent bg-gradient-to-br from-brand-primary to-red-400">WHEEL</span>
                     </h1>
-                    <div className="inline-block bg-black/40 px-4 py-2 rounded-full border border-white/10">
-                        <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">
-                            Archived {archiveDate}
-                        </span>
+                    <div className="inline-block bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
+                        <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Event</h2>
                     </div>
                 </div>
 
@@ -86,7 +70,7 @@ const ArchiveWheel: React.FC = () => {
                         </div>
 
                         <div className="mt-8 opacity-60">
-                            <SpinWheel disabled={true} />
+                            <SpinWheel disabled={true} overrideItems={items} />
                         </div>
                     </div>
 
@@ -103,19 +87,24 @@ const ArchiveWheel: React.FC = () => {
                         </div>
 
                         {/* History Card */}
-                        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex-1 min-h-[300px] flex flex-col">
+                        <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex-1 flex flex-col">
                             <h3 className="text-brand-accent font-bold uppercase tracking-widest text-xs mb-4 text-center border-b border-white/5 pb-4">
                                 Spin History
                             </h3>
-                            <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar max-h-[300px]">
-                                {loading ? (
-                                    <div className="text-center text-gray-500 text-sm py-8">Loading...</div>
-                                ) : error ? (
-                                    <div className="text-center text-red-400 text-sm py-8">Failed to load history</div>
-                                ) : history.length === 0 ? (
+                            
+                            <input
+                                type="text"
+                                placeholder="Filter by username..."
+                                value={filterText}
+                                onChange={(e) => setFilterText(e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-white mb-4 placeholder:text-gray-600 focus:outline-none focus:border-brand-primary transition-colors"
+                            />
+                            
+                            <div className="space-y-3 flex-1">
+                                {currentHistory.length === 0 ? (
                                     <div className="text-center text-gray-500 text-sm py-8 italic">No archived spins found</div>
                                 ) : (
-                                    history.map((h) => (
+                                    currentHistory.map((h) => (
                                         <div key={h._id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5">
                                             <div>
                                                 <div className="font-bold text-white">{h.user}</div>
@@ -130,6 +119,28 @@ const ArchiveWheel: React.FC = () => {
                                     ))
                                 )}
                             </div>
+                            
+                            {totalPages > 1 && (
+                                <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/5">
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1 bg-white/5 rounded-lg disabled:opacity-30 hover:bg-white/10 transition-colors text-sm font-bold"
+                                    >
+                                        Prev
+                                    </button>
+                                    <span className="text-xs text-gray-400 font-bold">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-1 bg-white/5 rounded-lg disabled:opacity-30 hover:bg-white/10 transition-colors text-sm font-bold"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

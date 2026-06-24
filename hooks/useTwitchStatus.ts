@@ -45,7 +45,7 @@ export const useTwitchStatus = (): boolean => {
         setIsLive(!cleanText.includes('offline') && cleanText.length > 0);
       }
     } catch (error) {
-      console.error('Error fetching Twitch status:', error);
+      // Silently fail if fetch is blocked (e.g., by an ad-blocker) or network is down.
     }
   }, []);
 

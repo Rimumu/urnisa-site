@@ -63,6 +63,8 @@ const About: React.FC = () => {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
+    const rightPanelRef = React.useRef<HTMLDivElement>(null);
+
     // Lightbox State
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
@@ -115,6 +117,12 @@ const About: React.FC = () => {
             setActiveTab(null);
         } else {
             setActiveTab(tab);
+            // On mobile, scroll to the content when a tab is opened
+            if (window.innerWidth < 768) {
+                setTimeout(() => {
+                    rightPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
         }
     };
 
@@ -298,12 +306,12 @@ const About: React.FC = () => {
                         </button>
 
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out ${showSpecs ? 'max-h-96 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
-                            <div className="bg-black/20 rounded-xl p-4 border border-white/5 text-xs space-y-2 font-mono text-gray-400">
-                                <div className="flex justify-between"><span className="text-white">CPU</span> <span>AMD Ryzen 7 7700x</span></div>
-                                <div className="flex justify-between"><span className="text-white">GPU</span> <span>NVIDIA Zotac RTX 3070 8GB White</span></div>
-                                <div className="flex justify-between"><span className="text-white">RAM</span> <span>Corsair Vengeance RGB DDR5 5200mhz DDR5 64GB</span></div>
-                                <div className="flex justify-between"><span className="text-white">Motherboard</span> <span>MSI Gaming Plus X670e AM5</span></div>
-                                <div className="flex justify-between"><span className="text-white">Case</span> <span>Armageddon Ruby B V Pink ATX</span></div>
+                            <div className="bg-black/20 rounded-xl p-4 border border-white/5 text-xs space-y-3 font-mono text-gray-400">
+                                <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-4"><span className="text-white font-bold">CPU</span> <span className="sm:text-right">AMD Ryzen 7 7700x</span></div>
+                                <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-4"><span className="text-white font-bold">GPU</span> <span className="sm:text-right">NVIDIA Zotac RTX 3070 8GB White</span></div>
+                                <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-4"><span className="text-white font-bold">RAM</span> <span className="sm:text-right">Corsair Vengeance RGB DDR5 5200mhz DDR5 64GB</span></div>
+                                <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-4"><span className="text-white font-bold">Motherboard</span> <span className="sm:text-right">MSI Gaming Plus X670e AM5</span></div>
+                                <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-4"><span className="text-white font-bold">Case</span> <span className="sm:text-right">Armageddon Ruby B V Pink ATX</span></div>
                             </div>
                         </div>
 
@@ -350,12 +358,13 @@ const About: React.FC = () => {
 
                 {/* RIGHT PANEL: Content Area */}
                 <div 
+                    ref={rightPanelRef}
                     className={`
-                        relative overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] bg-black/40 md:border-l border-white/10
-                        ${activeTab ? 'opacity-100 max-h-[800px] md:max-h-none flex-1' : 'opacity-0 max-h-0 md:max-h-full md:w-0'}
+                        relative overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] bg-black/40 md:border-l border-white/10 flex flex-col
+                        ${activeTab ? 'opacity-100 max-h-[1200px] md:max-h-none flex-1' : 'opacity-0 max-h-0 md:max-h-full md:w-0'}
                     `}
                 >
-                    <div className="h-full w-full absolute inset-0 overflow-y-auto custom-scrollbar">
+                    <div className="h-full w-full md:absolute md:inset-0 overflow-y-auto custom-scrollbar">
                         {/* Header */}
                         <div className="flex justify-between items-center bg-brand-secondary/60 backdrop-blur-2xl border-b border-white/10 px-6 py-4 md:px-8 md:py-5 shadow-sm">
                             <h2 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight drop-shadow-md truncate pr-4">

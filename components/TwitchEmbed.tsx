@@ -71,7 +71,7 @@ const TwitchEmbed: React.FC<TwitchEmbedProps> = ({ channel }) => {
     <div 
         id="twitch-embed" 
         ref={embedRef} 
-        className="w-full aspect-video rounded-lg overflow-hidden"
+        className="w-full aspect-video min-h-[220px] md:min-h-[400px] rounded-lg overflow-hidden"
     />
   );
 };

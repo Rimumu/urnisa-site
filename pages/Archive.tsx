@@ -7,7 +7,6 @@ interface ArchiveItem {
     title: string;
     description: string;
     path: string;
-    icon: string;
     date: string;
     status: 'available' | 'coming-soon';
 }
@@ -16,10 +15,9 @@ interface ArchiveItem {
 const ARCHIVE_PAGES: ArchiveItem[] = [
     {
         id: '1',
-        title: 'Nisathon Events',
+        title: 'Nisathon Dashboard',
         description: 'Archived uncapped birthday Nisathon dashboard with final stats, goals achieved, and contribution history.',
         path: '/archive/nisathon',
-        icon: '🎂',
         date: 'Past Event',
         status: 'available'
     },
@@ -28,26 +26,15 @@ const ARCHIVE_PAGES: ArchiveItem[] = [
         title: 'Spin The Wheel',
         description: 'Archived wheel spin page with all historical spin results and reward history.',
         path: '/archive/wheel',
-        icon: '🎡',
         date: 'Past Event',
         status: 'available'
     },
     {
         id: '3',
         title: 'Tournament Hub',
-        description: 'Archived Minecraft Cobblemon tournament hub with brackets and past winners.',
+        description: 'Archived Nisamon tournament hub with brackets and past winners.',
         path: '/archive/tournament',
-        icon: '⚔️',
         date: 'Past Tournament',
-        status: 'available'
-    },
-    {
-        id: '4',
-        title: 'Rankings',
-        description: 'Archived Cobblemon server player rankings and end-of-season statistics.',
-        path: '/archive/rankings',
-        icon: '🏆',
-        date: 'Past Season',
         status: 'available'
     }
 ];
@@ -87,14 +74,14 @@ const Archive: React.FC = () => {
                 <div className="flex flex-col items-center justify-center space-y-6 mb-12">
                     <div className="text-center space-y-3">
                         <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-2xl">
-                            <span className="text-brand-primary bg-clip-text text-transparent bg-gradient-to-br from-brand-primary to-red-400">ARCHIVE</span> VAULT
+                            <span className="text-brand-primary bg-clip-text text-transparent bg-gradient-to-br from-brand-primary to-red-400">ARCHIVE</span> DUNGEON
                         </h1>
                         <div className="inline-block bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
                             <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Archived Content</h2>
                         </div>
                     </div>
                     <p className="text-gray-300 max-w-2xl text-center text-lg">
-                        Explore the historical vault of past events, tournaments, and memorable moments.
+                        View past events such as Nisathon and Nisamon!
                     </p>
                 </div>
 
@@ -112,9 +99,6 @@ const Archive: React.FC = () => {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-brand-primary/10 transition-colors"></div>
 
                             <div className="flex items-center gap-4 mb-4">
-                                <div className="w-14 h-14 rounded-2xl bg-brand-primary/20 flex items-center justify-center text-3xl shadow-inner text-brand-primary">
-                                    {item.icon}
-                                </div>
                                 <div>
                                     <h3 className={`text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-primary transition-colors ${item.status !== 'available' ? 'text-gray-400' : ''}`}>
                                         {item.title}

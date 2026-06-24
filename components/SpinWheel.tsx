@@ -14,6 +14,7 @@ interface SpinWheelProps {
     disabled?: boolean;
     onSpinEnd?: (winnerLabel: string) => void;
     onUnlockRequest?: () => void;
+    overrideItems?: WheelItem[];
 }
 
 const LockIcon = () => (
@@ -22,8 +23,9 @@ const LockIcon = () => (
     </svg>
 );
 
-const SpinWheel: React.FC<SpinWheelProps> = ({ disabled = false, onSpinEnd, onUnlockRequest }) => {
-    const { items, loading } = useWheelSettings();
+const SpinWheel: React.FC<SpinWheelProps> = ({ disabled = false, onSpinEnd, onUnlockRequest, overrideItems }) => {
+    const { items: fetchedItems, loading } = useWheelSettings();
+    const items = overrideItems || fetchedItems;
     const [isSpinning, setIsSpinning] = useState(false);
     const [winner, setWinner] = useState<string | null>(null);
     const wheelRef = useRef<SVGGElement>(null); // Ref attached to the rotating SVG group

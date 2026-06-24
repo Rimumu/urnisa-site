@@ -1,0 +1,1848 @@
+{
+  "seasons": [
+    {
+      "archivedAt": null,
+      "_id": "69738b7f40b4031f7fe3fce2",
+      "seasonId": 3,
+      "name": "Season 3",
+      "format": "Singles 4v4",
+      "status": "ENDED",
+      "isArchived": false,
+      "challongeUrl": "https://challonge.com/nisamon3",
+      "winners": [],
+      "createdAt": "2026-01-23T14:53:51.646Z",
+      "__v": 0
+    },
+    {
+      "archivedAt": null,
+      "_id": "69651310bf9d6af24451fc7e",
+      "seasonId": 2,
+      "name": "Season 2",
+      "format": "Duos 2v2",
+      "status": "ENDED",
+      "isArchived": true,
+      "challongeUrl": "https://challonge.com/nisamon2",
+      "winners": [],
+      "createdAt": "2026-01-12T15:28:16.534Z",
+      "__v": 0
+    },
+    {
+      "archivedAt": null,
+      "_id": "6965126abf9d6af24451fc0a",
+      "seasonId": 1,
+      "name": "Season 1",
+      "format": "Singles 4v4",
+      "status": "ENDED",
+      "isArchived": true,
+      "challongeUrl": "https://challonge.com/nisamon1",
+      "winners": [],
+      "createdAt": "2026-01-12T15:25:30.972Z",
+      "__v": 0
+    }
+  ],
+  "data": {
+    "1": {
+      "winners": [
+        {
+          "rank": 1,
+          "username": "itskoyi",
+          "score": "5 - 1"
+        },
+        {
+          "rank": 2,
+          "username": "HooDinney_",
+          "score": "4 - 2"
+        },
+        {
+          "rank": 3,
+          "username": "KidTheKhai",
+          "score": "3 - 2"
+        }
+      ],
+      "bracket": {
+        "type": "SINGLE_ELIMINATION",
+        "matches": [],
+        "seasonId": 1
+      },
+      "players": [
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "694616ed18b7e5e65ce82aa9",
+          "discordId": "786290603671420970",
+          "__v": 0,
+          "isLocked": true,
+          "minecraftUsername": "PandaZ_zo",
+          "team": [
+            {
+              "id": 635,
+              "name": "Hydreigon",
+              "_id": "694675cdc094e171c18c2acf"
+            },
+            {
+              "id": 818,
+              "name": "Inteleon",
+              "_id": "694675cdc094e171c18c2ad0"
+            },
+            {
+              "id": 130,
+              "name": "Gyarados",
+              "_id": "694675cdc094e171c18c2ad1"
+            },
+            {
+              "id": 359,
+              "name": "Absol",
+              "_id": "694675cdc094e171c18c2ad2"
+            },
+            {
+              "id": 376,
+              "name": "Metagross",
+              "_id": "694675cdc094e171c18c2ad3"
+            },
+            {
+              "id": 658,
+              "name": "Greninja",
+              "_id": "694675cdc094e171c18c2ad4"
+            }
+          ],
+          "updatedAt": "2025-12-20T13:13:39.580Z",
+          "isDev": false,
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "69460cea18b7e5e65ce82aa7",
+          "discordId": "576331930027687936",
+          "__v": 0,
+          "isLocked": true,
+          "minecraftUsername": "VeniiRi",
+          "team": [
+            {
+              "id": 745,
+              "name": "Lycanroc midday",
+              "_id": "69460d7f067e82876d27e540"
+            },
+            {
+              "id": 708,
+              "name": "Phantump",
+              "_id": "69460d7f067e82876d27e541"
+            },
+            {
+              "id": 899,
+              "name": "Wyrdeer",
+              "_id": "69460d7f067e82876d27e542"
+            },
+            {
+              "id": 992,
+              "name": "Iron hands",
+              "_id": "69460d7f067e82876d27e543"
+            },
+            {
+              "id": 227,
+              "name": "Skarmory",
+              "_id": "69460d7f067e82876d27e544"
+            },
+            {
+              "id": 700,
+              "name": "Sylveon",
+              "_id": "69460d7f067e82876d27e545"
+            }
+          ],
+          "updatedAt": "2025-12-20T13:03:25.246Z",
+          "isDev": false,
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "6946694918b7e5e65ce82ab7",
+          "discordId": "626440402215501874",
+          "__v": 0,
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "Only_meep",
+          "team": [
+            {
+              "id": 429,
+              "name": "Mismagius",
+              "_id": "69466a7ac094e171c18bc5ad"
+            },
+            {
+              "id": 596,
+              "name": "Galvantula",
+              "_id": "69466a7ac094e171c18bc5ae"
+            },
+            {
+              "id": 59,
+              "name": "Arcanine",
+              "_id": "69466a7ac094e171c18bc5af"
+            },
+            {
+              "id": 778,
+              "name": "Mimikyu disguised",
+              "_id": "69466a7ac094e171c18bc5b0"
+            },
+            {
+              "id": 202,
+              "name": "Wobbuffet",
+              "_id": "69466a7ac094e171c18bc5b1"
+            },
+            {
+              "id": 18,
+              "name": "Pidgeot",
+              "_id": "69466a7ac094e171c18bc5b2"
+            }
+          ],
+          "updatedAt": "2025-12-20T13:02:36.970Z",
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "6946169618b7e5e65ce82aa8",
+          "discordId": "582929940266221610",
+          "__v": 0,
+          "isLocked": true,
+          "minecraftUsername": "BurnsVA",
+          "team": [
+            {
+              "id": 987,
+              "name": "Flutter mane",
+              "_id": "694666e6c094e171c18babde"
+            },
+            {
+              "id": 658,
+              "name": "Greninja",
+              "_id": "694666e6c094e171c18babdf"
+            },
+            {
+              "id": 700,
+              "name": "Sylveon",
+              "_id": "694666e6c094e171c18babe0"
+            },
+            {
+              "id": 135,
+              "name": "Jolteon",
+              "_id": "694666e6c094e171c18babe1"
+            },
+            {
+              "id": 143,
+              "name": "Snorlax",
+              "_id": "694666e6c094e171c18babe2"
+            },
+            {
+              "id": 197,
+              "name": "Umbreon",
+              "_id": "694666e6c094e171c18babe3"
+            }
+          ],
+          "updatedAt": "2025-12-20T13:02:25.632Z",
+          "isDev": false,
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "69464b8618b7e5e65ce82aad",
+          "discordId": "287453246652547082",
+          "__v": 0,
+          "isLocked": true,
+          "minecraftUsername": "itskoyi",
+          "team": [
+            {
+              "id": 233,
+              "name": "Porygon2",
+              "_id": "69464c26067e82876d293f5a"
+            },
+            {
+              "id": 901,
+              "name": "Ursaluna",
+              "_id": "69464c26067e82876d293f5b"
+            },
+            {
+              "id": 324,
+              "name": "Torkoal",
+              "_id": "69464c26067e82876d293f5c"
+            },
+            {
+              "id": 987,
+              "name": "Flutter mane",
+              "_id": "69464c26067e82876d293f5d"
+            },
+            {
+              "id": 743,
+              "name": "Ribombee",
+              "_id": "69464c26067e82876d293f5e"
+            },
+            {
+              "id": 882,
+              "name": "Dracovish",
+              "_id": "69464c26067e82876d293f5f"
+            }
+          ],
+          "updatedAt": "2025-12-20T13:02:13.241Z",
+          "isDev": false,
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "69466f3518b7e5e65ce82ab9",
+          "discordId": "641463741942071307",
+          "__v": 0,
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "Hyusez",
+          "team": [
+            {
+              "id": 445,
+              "name": "Garchomp",
+              "_id": "69466f7cc094e171c18beddf"
+            },
+            {
+              "id": 812,
+              "name": "Rillaboom",
+              "_id": "69466f7cc094e171c18bede0"
+            },
+            {
+              "id": 248,
+              "name": "Tyranitar",
+              "_id": "69466f7cc094e171c18bede1"
+            },
+            {
+              "id": 902,
+              "name": "Basculegion male",
+              "_id": "69466f7cc094e171c18bede2"
+            },
+            {
+              "id": 730,
+              "name": "Primarina",
+              "_id": "69466f7cc094e171c18bede3"
+            },
+            {
+              "id": 591,
+              "name": "Amoonguss",
+              "_id": "69466f7cc094e171c18bede4"
+            }
+          ],
+          "updatedAt": "2025-12-20T13:00:36.847Z",
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "6946212b18b7e5e65ce82aaa",
+          "discordId": "187166302656397312",
+          "__v": 0,
+          "isLocked": true,
+          "minecraftUsername": "Kaneiara",
+          "team": [
+            {
+              "id": 614,
+              "name": "Beartic",
+              "_id": "69462166067e82876d284fde"
+            },
+            {
+              "id": 473,
+              "name": "Mamoswine",
+              "_id": "69462166067e82876d284fdf"
+            },
+            {
+              "id": 460,
+              "name": "Abomasnow",
+              "_id": "69462166067e82876d284fe0"
+            },
+            {
+              "id": 478,
+              "name": "Froslass",
+              "_id": "69462166067e82876d284fe1"
+            },
+            {
+              "id": 365,
+              "name": "Walrein",
+              "_id": "69462166067e82876d284fe2"
+            },
+            {
+              "id": 351,
+              "name": "Castform",
+              "_id": "69462166067e82876d284fe3"
+            }
+          ],
+          "updatedAt": "2025-12-20T12:59:16.781Z",
+          "isDev": false,
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "69464ebe18b7e5e65ce82ab0",
+          "discordId": "744264370019762207",
+          "__v": 0,
+          "isLocked": true,
+          "minecraftUsername": "NBH123321",
+          "team": [
+            {
+              "id": 448,
+              "name": "Lucario",
+              "_id": "69466412c094e171c18b9681"
+            },
+            {
+              "id": 94,
+              "name": "Gengar",
+              "_id": "69465039067e82876d295d96"
+            },
+            {
+              "id": 6,
+              "name": "Charizard",
+              "_id": "69466412c094e171c18b9683"
+            },
+            {
+              "id": 197,
+              "name": "Umbreon",
+              "_id": "69464f4e067e82876d295724"
+            },
+            {
+              "id": 342,
+              "name": "Crawdaunt",
+              "_id": "69464f4e067e82876d295725"
+            },
+            {
+              "id": 282,
+              "name": "Gardevoir",
+              "_id": "69464f4e067e82876d295726"
+            }
+          ],
+          "updatedAt": "2025-12-20T12:59:09.910Z",
+          "isDev": false,
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "6946727418b7e5e65ce82abc",
+          "discordId": "262529190690160640",
+          "__v": 0,
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "HooDinney_",
+          "team": [
+            {
+              "id": 389,
+              "name": "Torterra",
+              "_id": "694672c4c094e171c18c107e"
+            },
+            {
+              "id": 149,
+              "name": "Dragonite",
+              "_id": "694672c4c094e171c18c107f"
+            },
+            {
+              "id": 887,
+              "name": "Dragapult",
+              "_id": "694672c4c094e171c18c1080"
+            },
+            {
+              "id": 992,
+              "name": "Iron hands",
+              "_id": "694672c4c094e171c18c1081"
+            },
+            {
+              "id": 230,
+              "name": "Kingdra",
+              "_id": "694672c4c094e171c18c1082"
+            },
+            {
+              "id": 445,
+              "name": "Garchomp",
+              "_id": "694672c4c094e171c18c1083"
+            }
+          ],
+          "updatedAt": "2025-12-20T12:58:57.104Z",
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "69460b0918b7e5e65ce82aa6",
+          "discordId": "283806261508833282",
+          "__v": 0,
+          "isLocked": true,
+          "minecraftUsername": "HyphenDot",
+          "team": [
+            {
+              "id": 658,
+              "name": "Greninja",
+              "_id": "69469d54d06ed903ba2da749"
+            },
+            {
+              "id": 715,
+              "name": "Noivern",
+              "_id": "69469d54d06ed903ba2da74a"
+            },
+            {
+              "id": 445,
+              "name": "Garchomp",
+              "_id": "69469d54d06ed903ba2da74b"
+            },
+            {
+              "id": 376,
+              "name": "Metagross",
+              "_id": "69469d54d06ed903ba2da74c"
+            },
+            {
+              "id": 448,
+              "name": "Lucario",
+              "_id": "69469d54d06ed903ba2da74d"
+            },
+            {
+              "id": 748,
+              "name": "Toxapex",
+              "_id": "69469d54d06ed903ba2da74e"
+            }
+          ],
+          "updatedAt": "2025-12-20T12:58:22.240Z",
+          "isDev": false,
+          "seasonId": 1
+        },
+        {
+          "gimmickType": null,
+          "gimmickPokemonId": null,
+          "_id": "6946860618b7e5e65ce82abf",
+          "discordId": "268340667900493834",
+          "__v": 0,
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "KidTheKhai",
+          "team": [
+            {
+              "id": 437,
+              "name": "Bronzong",
+              "_id": "69468651ea303311e4098c51"
+            },
+            {
+              "id": 430,
+              "name": "Honchkrow",
+              "_id": "69468651ea303311e4098c52"
+            },
+            {
+              "id": 964,
+              "name": "Palafin zero",
+              "_id": "69468651ea303311e4098c53"
+            },
+            {
+              "id": 861,
+              "name": "Grimmsnarl",
+              "_id": "69468651ea303311e4098c54"
+            },
+            {
+              "id": 91,
+              "name": "Cloyster",
+              "_id": "69468651ea303311e4098c55"
+            },
+            {
+              "id": 205,
+              "name": "Forretress",
+              "_id": "69468651ea303311e4098c56"
+            }
+          ],
+          "updatedAt": "2025-12-20T12:57:42.417Z",
+          "seasonId": 1
+        }
+      ],
+      "duos": []
+    },
+    "2": {
+      "winners": [
+        {
+          "rank": 1,
+          "teamName": "Noob & Master",
+          "player1": "fourzeschaeffer",
+          "player2": "itskoyi",
+          "score": "4 - 0"
+        },
+        {
+          "rank": 2,
+          "teamName": "Szubaabi",
+          "player1": "SZAMI_",
+          "player2": "Wubaab",
+          "score": "5 - 2"
+        },
+        {
+          "rank": 3,
+          "teamName": "Xerantos8676 & Hyusez",
+          "player1": "Xerantos8676",
+          "player2": "Hyusez",
+          "score": "2 - 2"
+        }
+      ],
+      "bracket": {
+        "type": "SINGLE_ELIMINATION",
+        "matches": [],
+        "seasonId": 2
+      },
+      "players": [
+        {
+          "_id": "696a8774c5e6a905b8e12dcf",
+          "discordId": "839452659416563713",
+          "minecraftUsername": "JikanFox",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-16T18:46:12.399Z"
+        },
+        {
+          "_id": "696a4a5bc5e6a905b8e12dc7",
+          "discordId": "1054984288967331860",
+          "minecraftUsername": "nau_rahera",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-16T14:25:30.991Z"
+        },
+        {
+          "_id": "696a328bc5e6a905b8e12dc1",
+          "discordId": "433636895575113731",
+          "minecraftUsername": "Anyaa_joy",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-16T12:43:55.368Z"
+        },
+        {
+          "_id": "6968c62989656bfa3455a227",
+          "discordId": "703558341166628885",
+          "minecraftUsername": "Wubaab",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-16T08:40:05.135Z"
+        },
+        {
+          "_id": "6968ee1589656bfa3455a231",
+          "discordId": "258962303213502464",
+          "minecraftUsername": "Xerantos8676",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-15T13:39:33.914Z"
+        },
+        {
+          "_id": "6968b01289656bfa3455a218",
+          "discordId": "301168184311152640",
+          "minecraftUsername": "SZAMI_",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-15T09:14:58.336Z"
+        },
+        {
+          "_id": "6968a0a489656bfa3455a202",
+          "discordId": "501312715860738048",
+          "minecraftUsername": "Imankrynx",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-15T08:09:08.336Z"
+        },
+        {
+          "_id": "6967bbbc89656bfa3455a1d6",
+          "discordId": "506757111997399040",
+          "minecraftUsername": "GrimSteads",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-14T15:52:28.733Z"
+        },
+        {
+          "_id": "6967b80d89656bfa3455a1d5",
+          "discordId": "270753217774616576",
+          "minecraftUsername": "Elmo_Buzz",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-14T15:36:45.460Z"
+        },
+        {
+          "_id": "6966641589656bfa3455a178",
+          "discordId": "187166302656397312",
+          "minecraftUsername": "Kaneiara",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-13T15:26:13.385Z"
+        },
+        {
+          "_id": "69653d1b89656bfa3455a147",
+          "discordId": "473049739189944322",
+          "minecraftUsername": "fourzeschaeffer",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-12T19:32:26.936Z"
+        },
+        {
+          "_id": "69653cf089656bfa3455a146",
+          "discordId": "576331930027687936",
+          "minecraftUsername": "VeniiRi",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-12T18:26:56.313Z"
+        },
+        {
+          "_id": "6965365389656bfa3455a145",
+          "discordId": "262529190690160640",
+          "minecraftUsername": "HooDinney_",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-12T17:58:42.969Z"
+        },
+        {
+          "_id": "6965352c89656bfa3455a144",
+          "discordId": "582929940266221610",
+          "minecraftUsername": "BurnsVA",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-12T17:53:48.663Z"
+        },
+        {
+          "_id": "6965351a89656bfa3455a143",
+          "discordId": "641463741942071307",
+          "minecraftUsername": "Hyusez",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-12T17:53:30.461Z"
+        },
+        {
+          "_id": "696534de89656bfa3455a142",
+          "discordId": "287453246652547082",
+          "minecraftUsername": "itskoyi",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-12T17:52:30.726Z"
+        },
+        {
+          "_id": "6965338e89656bfa3455a13b",
+          "discordId": "284677919819956224",
+          "minecraftUsername": "RushingRussian_",
+          "seasonId": 2,
+          "team": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "isLocked": false,
+          "isDev": false,
+          "updatedAt": "2026-01-12T17:46:54.679Z"
+        }
+      ],
+      "duos": [
+        {
+          "_id": "696b5da1346be254497eba16",
+          "duoId": "duo-1768644001148-mlaii4b2g",
+          "seasonId": 2,
+          "player1DiscordId": "582929940266221610",
+          "player1Username": "BurnsVA",
+          "player2DiscordId": "839452659416563713",
+          "player2Username": "JikanFox",
+          "captainDiscordId": "582929940266221610",
+          "teamName": "",
+          "team": [
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "696b7e7c346be254497f7cce"
+            },
+            {
+              "id": 981,
+              "name": "Farigiraf",
+              "_id": "696b7ef3346be254497f815a"
+            },
+            {
+              "id": 861,
+              "name": "Grimmsnarl",
+              "_id": "696b7efe346be254497f8224"
+            },
+            {
+              "id": 979,
+              "name": "Annihilape",
+              "_id": "696b7f99346be254497f87ea"
+            },
+            {
+              "id": 530,
+              "name": "Excadrill",
+              "_id": "696b7fc9346be254497f89c0"
+            },
+            {
+              "id": 1008,
+              "name": "Miraidon",
+              "_id": "696b838137a1c874e3f6b653"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-17T10:00:01.148Z",
+          "__v": 8
+        },
+        {
+          "_id": "696a5565af1a4db53426abfe",
+          "duoId": "duo-1768576357322-jg8pjtj39",
+          "seasonId": 2,
+          "player1DiscordId": "1054984288967331860",
+          "player1Username": "nau_rahera",
+          "player2DiscordId": "433636895575113731",
+          "player2Username": "Anyaa_joy",
+          "captainDiscordId": "1054984288967331860",
+          "teamName": "Ayam gepuk lover ",
+          "team": [
+            {
+              "id": 1017,
+              "name": "Ogerpon",
+              "_id": "696b885d37a1c874e3f7037f"
+            },
+            {
+              "id": 6,
+              "name": "Charizard",
+              "_id": "696b885d37a1c874e3f70380"
+            },
+            {
+              "id": 248,
+              "name": "Tyranitar",
+              "_id": "696b887237a1c874e3f7054a"
+            },
+            {
+              "id": 812,
+              "name": "Rillaboom",
+              "_id": "696b888237a1c874e3f70650"
+            },
+            {
+              "id": 547,
+              "name": "Whimsicott",
+              "_id": "696b888c37a1c874e3f706af"
+            },
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "696b88d137a1c874e3f70e1c"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-16T15:12:37.325Z",
+          "__v": 7
+        },
+        {
+          "_id": "6968fae5264984ad88e28d20",
+          "duoId": "duo-1768487653904-8k6o58yze",
+          "seasonId": 2,
+          "player1DiscordId": "270753217774616576",
+          "player1Username": "Elmo_Buzz",
+          "player2DiscordId": "284677919819956224",
+          "player2Username": "RushingRussian_",
+          "captainDiscordId": "270753217774616576",
+          "teamName": "Rushing for the Buzz",
+          "team": [
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "696a7b8faf1a4db53426d66d"
+            },
+            {
+              "id": 812,
+              "name": "Rillaboom",
+              "_id": "696a7bc8af1a4db53426d75b"
+            },
+            {
+              "id": 383,
+              "name": "Groudon",
+              "_id": "696a8351af1a4db53426e96c"
+            },
+            {
+              "id": 468,
+              "name": "Togekiss",
+              "_id": "696a8364af1a4db53426e9cf"
+            },
+            {
+              "id": 445,
+              "name": "Garchomp",
+              "_id": "696a7bebaf1a4db53426d7b8"
+            },
+            {
+              "id": 591,
+              "name": "Amoonguss",
+              "_id": "696a8364af1a4db53426e9d1"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-15T14:34:13.904Z",
+          "__v": 9
+        },
+        {
+          "_id": "6968fade264984ad88e28d17",
+          "duoId": "duo-1768487646181-wfkdiysj4",
+          "seasonId": 2,
+          "player1DiscordId": "506757111997399040",
+          "player1Username": "GrimSteads",
+          "player2DiscordId": "187166302656397312",
+          "player2Username": "Kaneiara",
+          "captainDiscordId": "187166302656397312",
+          "teamName": "Battle Subway Duo",
+          "team": [
+            {
+              "id": 423,
+              "name": "Gastrodon",
+              "_id": "696ab83baf1a4db53427421f"
+            },
+            {
+              "id": 561,
+              "name": "Sigilyph",
+              "_id": "696ab83baf1a4db534274220"
+            },
+            {
+              "id": 417,
+              "name": "Pachirisu",
+              "_id": "696ab843af1a4db53427422a"
+            },
+            {
+              "id": 485,
+              "name": "Heatran",
+              "_id": "696ab859af1a4db534274254"
+            },
+            {
+              "id": 260,
+              "name": "Swampert",
+              "_id": "696ab860af1a4db534274278"
+            },
+            {
+              "id": 937,
+              "name": "Ceruledge",
+              "_id": "696ab88caf1a4db5342742b0"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-15T14:34:06.182Z",
+          "__v": 6
+        },
+        {
+          "_id": "6968f9b4264984ad88e289f5",
+          "duoId": "duo-1768487348683-4yeot8zax",
+          "seasonId": 2,
+          "player1DiscordId": "301168184311152640",
+          "player1Username": "SZAMI_",
+          "player2DiscordId": "703558341166628885",
+          "player2Username": "Wubaab",
+          "captainDiscordId": "301168184311152640",
+          "teamName": "Szubaabi",
+          "team": [
+            {
+              "id": 743,
+              "name": "Ribombee",
+              "_id": "6969fe10264984ad88e2eea4"
+            },
+            {
+              "id": 289,
+              "name": "Slaking",
+              "_id": "6969fe18264984ad88e2eeaf"
+            },
+            {
+              "id": 382,
+              "name": "Kyogre",
+              "_id": "6969fe2d264984ad88e2eebd"
+            },
+            {
+              "id": 900,
+              "name": "Kleavor",
+              "_id": "6969fe39264984ad88e2eecd"
+            },
+            {
+              "id": 308,
+              "name": "Medicham",
+              "_id": "6969fe48264984ad88e2eedf"
+            },
+            {
+              "id": 706,
+              "name": "Goodra",
+              "_id": "6969fe70264984ad88e2ef08"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-15T14:29:08.683Z",
+          "__v": 10
+        },
+        {
+          "_id": "6968f99a264984ad88e289d5",
+          "duoId": "duo-1768487322421-4aqxny4di",
+          "seasonId": 2,
+          "player1DiscordId": "262529190690160640",
+          "player1Username": "HooDinney_",
+          "player2DiscordId": "501312715860738048",
+          "player2Username": "Imankrynx",
+          "captainDiscordId": "501312715860738048",
+          "teamName": "Beginners",
+          "team": [
+            {
+              "id": 3,
+              "name": "Venusaur",
+              "_id": "696b49d5346be254497e9069"
+            },
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "696b4a50346be254497e9197"
+            },
+            {
+              "id": 547,
+              "name": "Whimsicott",
+              "_id": "696b4a50346be254497e9198"
+            },
+            {
+              "id": 383,
+              "name": "Groudon",
+              "_id": "696b4abe346be254497e92a8"
+            },
+            {
+              "id": 1018,
+              "name": "Archaludon",
+              "_id": "696b4ac7346be254497e92bc"
+            },
+            {
+              "id": 998,
+              "name": "Baxcalibur",
+              "_id": "696b4ae1346be254497e92d3"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-15T14:28:42.421Z",
+          "__v": 5
+        },
+        {
+          "_id": "6968f866264984ad88e28600",
+          "duoId": "duo-1768487014990-3ne8xfmm8",
+          "seasonId": 2,
+          "player1DiscordId": "433262414759198720",
+          "player1Username": "urnisa",
+          "player2DiscordId": "576331930027687936",
+          "player2Username": "VeniiRi",
+          "captainDiscordId": "576331930027687936",
+          "teamName": "Pussy Power",
+          "team": [
+            {
+              "id": 700,
+              "name": "Sylveon",
+              "_id": "696b2116346be254497e7155"
+            },
+            {
+              "id": 142,
+              "name": "Aerodactyl",
+              "_id": "696b2124346be254497e715d"
+            },
+            {
+              "id": 94,
+              "name": "Gengar",
+              "_id": "696b2124346be254497e715e"
+            },
+            {
+              "id": 889,
+              "name": "Zamazenta",
+              "_id": "696b2159346be254497e717c"
+            },
+            {
+              "id": 959,
+              "name": "Tinkaton",
+              "_id": "696b21d3346be254497e71bb"
+            },
+            {
+              "id": 130,
+              "name": "Gyarados",
+              "_id": "696b21ee346be254497e71d7"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-15T14:23:34.991Z",
+          "__v": 6
+        },
+        {
+          "_id": "6968f85b264984ad88e285f0",
+          "duoId": "duo-1768487003442-bxgsawvtp",
+          "seasonId": 2,
+          "player1DiscordId": "258962303213502464",
+          "player1Username": "Xerantos8676",
+          "player2DiscordId": "641463741942071307",
+          "player2Username": "Hyusez",
+          "captainDiscordId": "258962303213502464",
+          "teamName": "",
+          "team": [
+            {
+              "id": 445,
+              "name": "Garchomp",
+              "_id": "696b835737a1c874e3f6b444"
+            },
+            {
+              "id": 901,
+              "name": "Ursaluna",
+              "_id": "696b836537a1c874e3f6b4d1"
+            },
+            {
+              "id": 1008,
+              "name": "Miraidon",
+              "_id": "696b87c737a1c874e3f6f8cb"
+            },
+            {
+              "id": 812,
+              "name": "Rillaboom",
+              "_id": "696b88ec37a1c874e3f710a4"
+            },
+            {
+              "id": 591,
+              "name": "Amoonguss",
+              "_id": "696b89f437a1c874e3f72933"
+            },
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "696b8a3037a1c874e3f72e89"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-15T14:23:23.443Z",
+          "__v": 7
+        },
+        {
+          "_id": "6968f71c264984ad88e284c7",
+          "duoId": "duo-1768486684643-40d7ijxtl",
+          "seasonId": 2,
+          "player1DiscordId": "473049739189944322",
+          "player1Username": "fourzeschaeffer",
+          "player2DiscordId": "287453246652547082",
+          "player2Username": "itskoyi",
+          "captainDiscordId": "473049739189944322",
+          "teamName": "Noob & Master",
+          "team": [
+            {
+              "id": 235,
+              "name": "Smeargle",
+              "_id": "696b894437a1c874e3f71a47"
+            },
+            {
+              "id": 716,
+              "name": "Xerneas",
+              "_id": "696b88d937a1c874e3f70edf"
+            },
+            {
+              "id": 901,
+              "name": "Ursaluna",
+              "_id": "696b88d937a1c874e3f70ee0"
+            },
+            {
+              "id": 547,
+              "name": "Whimsicott",
+              "_id": "696b88e937a1c874e3f7108f"
+            },
+            {
+              "id": 981,
+              "name": "Farigiraf",
+              "_id": "696b88f537a1c874e3f7125c"
+            },
+            {
+              "id": 861,
+              "name": "Grimmsnarl",
+              "_id": "696b894a37a1c874e3f71a79"
+            }
+          ],
+          "isLocked": true,
+          "createdAt": "2026-01-15T14:18:04.644Z",
+          "__v": 10
+        }
+      ]
+    },
+    "3": {
+      "winners": [
+        {
+          "rank": 1,
+          "username": "wubaab_",
+          "score": "5 - 0"
+        },
+        {
+          "rank": 2,
+          "username": "GrimSteads",
+          "score": "4 - 2"
+        },
+        {
+          "rank": 3,
+          "username": "Elmo_Buzz",
+          "score": "3 - 2"
+        }
+      ],
+      "bracket": {
+        "type": "SINGLE_ELIMINATION",
+        "matches": [],
+        "seasonId": 3
+      },
+      "players": [
+        {
+          "_id": "6974a11af03a404e8dfd5b40",
+          "discordId": "187166302656397312",
+          "seasonId": 3,
+          "__v": 0,
+          "gimmickPokemonId": 303,
+          "gimmickType": "mega",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "Kaneiara",
+          "team": [
+            {
+              "id": 248,
+              "name": "Tyranitar",
+              "_id": "6974ae41fe7ad754837d0ce0"
+            },
+            {
+              "id": 639,
+              "name": "Terrakion",
+              "_id": "6974ae41fe7ad754837d0ce1"
+            },
+            {
+              "id": 423,
+              "name": "Gastrodon",
+              "_id": "6974ae41fe7ad754837d0ce2"
+            },
+            {
+              "id": 303,
+              "name": "Mawile",
+              "_id": "6974ae41fe7ad754837d0ce3"
+            },
+            {
+              "id": 793,
+              "name": "Nihilego",
+              "_id": "6974ae41fe7ad754837d0ce4"
+            },
+            {
+              "id": 445,
+              "name": "Garchomp",
+              "_id": "6974ae41fe7ad754837d0ce5"
+            }
+          ],
+          "updatedAt": "2026-01-24T13:04:05.465Z"
+        },
+        {
+          "_id": "6974b652f03a404e8dfd5b49",
+          "seasonId": 3,
+          "discordId": "703558341166628885",
+          "__v": 0,
+          "gimmickPokemonId": 887,
+          "gimmickType": "dynamax",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "wubaab_",
+          "team": [
+            {
+              "id": 968,
+              "name": "Orthworm",
+              "_id": "6974b77afe7ad754837d55d3"
+            },
+            {
+              "id": 1008,
+              "name": "Miraidon",
+              "_id": "6974b77afe7ad754837d55d4"
+            },
+            {
+              "id": 887,
+              "name": "Dragapult",
+              "_id": "6974b77afe7ad754837d55d5"
+            },
+            {
+              "id": 798,
+              "name": "Kartana",
+              "_id": "6974b77afe7ad754837d55d6"
+            },
+            {
+              "id": 801,
+              "name": "Magearna",
+              "_id": "6974b77afe7ad754837d55d7"
+            },
+            {
+              "id": 980,
+              "name": "Clodsire",
+              "_id": "6974b77afe7ad754837d55d8"
+            }
+          ],
+          "updatedAt": "2026-01-24T13:01:57.548Z"
+        },
+        {
+          "_id": "6973fe26f03a404e8dfd5b1a",
+          "discordId": "501312715860738048",
+          "seasonId": 3,
+          "__v": 0,
+          "gimmickPokemonId": null,
+          "gimmickType": null,
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "Imankrynx",
+          "team": [
+            {
+              "id": 1008,
+              "name": "Miraidon",
+              "_id": "6974bab4fe7ad754837d79cf"
+            },
+            {
+              "id": 987,
+              "name": "Flutter-mane",
+              "_id": "6974bab4fe7ad754837d79d0"
+            },
+            {
+              "id": 547,
+              "name": "Whimsicott",
+              "_id": "6974bab4fe7ad754837d79d1"
+            },
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "6974bab4fe7ad754837d79d2"
+            },
+            {
+              "id": 260,
+              "name": "Swampert",
+              "_id": "6974c0f7fe7ad754837dd595"
+            },
+            {
+              "id": 903,
+              "name": "Sneasler",
+              "_id": "6974bab4fe7ad754837d79d4"
+            }
+          ],
+          "updatedAt": "2026-01-24T13:01:57.383Z"
+        },
+        {
+          "_id": "69743011f03a404e8dfd5b1c",
+          "seasonId": 3,
+          "discordId": "754322196629028929",
+          "__v": 0,
+          "gimmickPokemonId": 6,
+          "gimmickType": "mega",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "LiloElvinloaf",
+          "team": [
+            {
+              "id": 6,
+              "name": "Charizard",
+              "_id": "6974c27ffe7ad754837e05ca"
+            },
+            {
+              "id": 25,
+              "name": "Pikachu",
+              "_id": "6974c27ffe7ad754837e05cb"
+            },
+            {
+              "id": 700,
+              "name": "Sylveon",
+              "_id": "6974c27ffe7ad754837e05cc"
+            },
+            {
+              "id": 720,
+              "name": "Hoopa",
+              "_id": "6974c27ffe7ad754837e05cd"
+            },
+            {
+              "id": 445,
+              "name": "Garchomp",
+              "_id": "6974c27ffe7ad754837e05ce"
+            },
+            {
+              "id": 658,
+              "name": "Greninja",
+              "_id": "6974c27ffe7ad754837e05cf"
+            }
+          ],
+          "updatedAt": "2026-01-24T13:00:47.314Z"
+        },
+        {
+          "_id": "6974b2b9f03a404e8dfd5b48",
+          "seasonId": 3,
+          "discordId": "287453246652547082",
+          "__v": 0,
+          "gimmickPokemonId": 987,
+          "gimmickType": "tera",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "itskoyi",
+          "team": [
+            {
+              "id": 233,
+              "name": "Porygon2",
+              "_id": "6974c23efe7ad754837dff19"
+            },
+            {
+              "id": 901,
+              "name": "Ursaluna",
+              "_id": "6974c23efe7ad754837dff1a"
+            },
+            {
+              "id": 987,
+              "name": "Flutter-mane",
+              "_id": "6974c23efe7ad754837dff1b"
+            },
+            {
+              "id": 1007,
+              "name": "Koraidon",
+              "_id": "6974c23efe7ad754837dff1c"
+            },
+            {
+              "id": 279,
+              "name": "Pelipper",
+              "_id": "6974c23efe7ad754837dff1d"
+            },
+            {
+              "id": 882,
+              "name": "Dracovish",
+              "_id": "6974c23efe7ad754837dff1e"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:59:42.808Z"
+        },
+        {
+          "_id": "6974c14df03a404e8dfd5b4b",
+          "seasonId": 3,
+          "discordId": "433262414759198720",
+          "__v": 0,
+          "gimmickPokemonId": 1008,
+          "gimmickType": "tera",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "urnisa",
+          "team": [
+            {
+              "id": 151,
+              "name": "Mew",
+              "_id": "6974c188fe7ad754837de9af"
+            },
+            {
+              "id": 130,
+              "name": "Gyarados",
+              "_id": "6974c188fe7ad754837de9b0"
+            },
+            {
+              "id": 1008,
+              "name": "Miraidon",
+              "_id": "6974c188fe7ad754837de9b1"
+            },
+            {
+              "id": 51,
+              "name": "Dugtrio",
+              "_id": "6974c188fe7ad754837de9b2"
+            },
+            {
+              "id": 308,
+              "name": "Medicham",
+              "_id": "6974c188fe7ad754837de9b3"
+            },
+            {
+              "id": 73,
+              "name": "Tentacruel",
+              "_id": "6974c188fe7ad754837de9b4"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:57:14.100Z"
+        },
+        {
+          "_id": "69749703f03a404e8dfd5b3e",
+          "seasonId": 3,
+          "discordId": "506757111997399040",
+          "__v": 0,
+          "gimmickPokemonId": 937,
+          "gimmickType": "tera",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "GrimSteads",
+          "team": [
+            {
+              "id": 716,
+              "name": "Xerneas",
+              "_id": "69749c4efe7ad754837cb77c"
+            },
+            {
+              "id": 260,
+              "name": "Swampert",
+              "_id": "69749c4efe7ad754837cb77d"
+            },
+            {
+              "id": 937,
+              "name": "Ceruledge",
+              "_id": "69749c4efe7ad754837cb77e"
+            },
+            {
+              "id": 6,
+              "name": "Charizard",
+              "_id": "69749c4efe7ad754837cb77f"
+            },
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "69749c4efe7ad754837cb780"
+            },
+            {
+              "id": 591,
+              "name": "Amoonguss",
+              "_id": "6974bdc4fe7ad754837d991a"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:53:59.160Z"
+        },
+        {
+          "_id": "6973a271f03a404e8dfd5b16",
+          "discordId": "270753217774616576",
+          "seasonId": 3,
+          "__v": 0,
+          "gimmickPokemonId": 149,
+          "gimmickType": "dynamax",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "Elmo_Buzz",
+          "team": [
+            {
+              "id": 149,
+              "name": "Dragonite",
+              "_id": "6973a2a8941faf948d3fa404"
+            },
+            {
+              "id": 991,
+              "name": "Iron bundle",
+              "_id": "6973a2a8941faf948d3fa405"
+            },
+            {
+              "id": 934,
+              "name": "Garganacl",
+              "_id": "6973a2a8941faf948d3fa406"
+            },
+            {
+              "id": 802,
+              "name": "Marshadow",
+              "_id": "6973ad2f642b05a5947c422e"
+            },
+            {
+              "id": 898,
+              "name": "Calyrex",
+              "_id": "6973ad2f642b05a5947c422f"
+            },
+            {
+              "id": 798,
+              "name": "Kartana",
+              "_id": "6973ad2f642b05a5947c4230"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:51:36.319Z"
+        },
+        {
+          "_id": "6974bb2af03a404e8dfd5b4a",
+          "seasonId": 3,
+          "discordId": "626440402215501874",
+          "__v": 0,
+          "gimmickPokemonId": null,
+          "gimmickType": "dynamax",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "Only_meep",
+          "team": [
+            {
+              "id": 778,
+              "name": "Mimikyu-disguised",
+              "_id": "6974bc3bfe7ad754837d87fb"
+            },
+            {
+              "id": 591,
+              "name": "Amoonguss",
+              "_id": "6974bc3bfe7ad754837d87fc"
+            },
+            {
+              "id": 383,
+              "name": "Groudon",
+              "_id": "6974bc3bfe7ad754837d87fd"
+            },
+            {
+              "id": 764,
+              "name": "Comfey",
+              "_id": "6974bc3bfe7ad754837d87fe"
+            },
+            {
+              "id": 40,
+              "name": "Wigglytuff",
+              "_id": "6974bc3bfe7ad754837d87ff"
+            },
+            {
+              "id": 793,
+              "name": "Nihilego",
+              "_id": "6974bc3bfe7ad754837d8800"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:49:44.163Z"
+        },
+        {
+          "_id": "697498bff03a404e8dfd5b3f",
+          "seasonId": 3,
+          "discordId": "284677919819956224",
+          "__v": 0,
+          "gimmickPokemonId": 384,
+          "gimmickType": "tera",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "RushingRussian_",
+          "team": [
+            {
+              "id": 384,
+              "name": "Rayquaza",
+              "_id": "6974bf8efe7ad754837db0e4"
+            },
+            {
+              "id": 799,
+              "name": "Guzzlord",
+              "_id": "6974bf8efe7ad754837db0e5"
+            },
+            {
+              "id": 468,
+              "name": "Togekiss",
+              "_id": "6974bf8efe7ad754837db0e6"
+            },
+            {
+              "id": 1000,
+              "name": "Gholdengo",
+              "_id": "6974bf8efe7ad754837db0e7"
+            },
+            {
+              "id": 130,
+              "name": "Gyarados",
+              "_id": "6974bf8efe7ad754837db0e8"
+            },
+            {
+              "id": 1018,
+              "name": "Archaludon",
+              "_id": "6974bf8efe7ad754837db0e9"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:49:34.554Z"
+        },
+        {
+          "_id": "6973ad5df03a404e8dfd5b17",
+          "discordId": "641463741942071307",
+          "seasonId": 3,
+          "__v": 0,
+          "gimmickPokemonId": 493,
+          "gimmickType": "tera",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "Hyusez",
+          "team": [
+            {
+              "id": 493,
+              "name": "Arceus",
+              "_id": "6973ae2d642b05a5947c4579"
+            },
+            {
+              "id": 646,
+              "name": "Kyurem",
+              "_id": "6973ae2d642b05a5947c457a"
+            },
+            {
+              "id": 987,
+              "name": "Flutter-mane",
+              "_id": "6973ae2d642b05a5947c457b"
+            },
+            {
+              "id": 1018,
+              "name": "Archaludon",
+              "_id": "6973ae2d642b05a5947c457c"
+            },
+            {
+              "id": 279,
+              "name": "Pelipper",
+              "_id": "6973ae2d642b05a5947c457d"
+            },
+            {
+              "id": 727,
+              "name": "Incineroar",
+              "_id": "697441a6642b05a5947d0976"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:49:21.314Z"
+        },
+        {
+          "_id": "6973bb01f03a404e8dfd5b18",
+          "seasonId": 3,
+          "discordId": "576331930027687936",
+          "__v": 0,
+          "gimmickPokemonId": 1008,
+          "gimmickType": "tera",
+          "isDev": false,
+          "isLocked": true,
+          "minecraftUsername": "VeniiRi",
+          "team": [
+            {
+              "id": 1010,
+              "name": "Iron-leaves",
+              "_id": "6974307c642b05a5947ce839"
+            },
+            {
+              "id": 493,
+              "name": "Arceus",
+              "_id": "6974307c642b05a5947ce83a"
+            },
+            {
+              "id": 1008,
+              "name": "Miraidon",
+              "_id": "6974307c642b05a5947ce83b"
+            },
+            {
+              "id": 797,
+              "name": "Celesteela",
+              "_id": "6974307c642b05a5947ce83c"
+            },
+            {
+              "id": 297,
+              "name": "Hariyama",
+              "_id": "6974307c642b05a5947ce83d"
+            },
+            {
+              "id": 143,
+              "name": "Snorlax",
+              "_id": "6974307c642b05a5947ce83e"
+            }
+          ],
+          "updatedAt": "2026-01-24T12:48:45.960Z"
+        }
+      ],
+      "duos": []
+    }
+  }
+}

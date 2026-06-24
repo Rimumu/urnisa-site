@@ -21,21 +21,6 @@ const EventsDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => 
     <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
       <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10">
         <NavLink
-          to="/nisathon"
-          end
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Nisathon
-        </NavLink>
-        <NavLink
-          to="/nisathon/wheel"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Wheel
-        </NavLink>
-        <NavLink
           to="/snakesladder"
           onClick={closeMenu}
           className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
@@ -70,34 +55,6 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
           className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
           Dashboard
-        </NavLink>
-        <NavLink
-          to="/minecraft/bingo"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Bingo Card
-        </NavLink>
-        <NavLink
-          to="/minecraft/gacha"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Gacha Pack
-        </NavLink>
-        <NavLink
-          to="/minecraft/tournament"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Tournament Hub
-        </NavLink>
-        <NavLink
-          to="/minecraft/rankings"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          🏆 Rankings
         </NavLink>
       </div>
     </div>
@@ -232,35 +189,33 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
       <div
         id="mobile-menu"
         className={`
-          md:hidden fixed inset-0 z-[90] bg-brand-bg/95 backdrop-blur-sm
-          transition-opacity duration-300 ease-in-out
-          ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+          md:hidden fixed inset-0 z-[90] bg-brand-bg/98 backdrop-blur-2xl
+          transition-all duration-400 ease-[cubic-bezier(0.23,1,0.32,1)] pt-16
+          ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8 pointer-events-none'}
         `}
         aria-hidden={!isOpen}
       >
-        <div className="flex flex-col items-center justify-center h-full text-center space-y-8">
-          <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Home</NavLink>
+        <div className="flex flex-col px-8 py-8 h-full overflow-y-auto space-y-8 custom-scrollbar">
+          <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Home</NavLink>
 
           {/* Mobile Sub-menu for Events */}
-          <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
-            <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Events</span>
-            <NavLink to="/nisathon" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Nisathon</NavLink>
-            <NavLink to="/nisathon/wheel" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Wheel</NavLink>
-            <NavLink to="/snakesladder" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>S & L</NavLink>
+          <div className="flex flex-col space-y-3">
+            <span className="text-gray-500 uppercase text-xs font-bold tracking-widest">Events</span>
+            <div className="flex flex-col space-y-4 pl-4 border-l-2 border-white/10">
+              <NavLink to="/snakesladder" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>S & L</NavLink>
+            </div>
           </div>
 
           {/* Mobile Sub-menu for Minecraft */}
-          <div className="flex flex-col space-y-4 bg-black/20 p-6 rounded-2xl w-3/4 max-w-sm border border-white/5">
-            <span className="text-gray-400 uppercase text-xs font-bold tracking-widest mb-2">Minecraft</span>
-            <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Dashboard</NavLink>
-            <NavLink to="/minecraft/bingo" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Bingo Card</NavLink>
-            <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Gacha Pack</NavLink>
-            <NavLink to="/minecraft/tournament" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Tournament Hub</NavLink>
-            <NavLink to="/minecraft/rankings" onClick={closeMenu} className={({ isActive }) => `text-2xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>🏆 Rankings</NavLink>
+          <div className="flex flex-col space-y-3">
+            <span className="text-gray-500 uppercase text-xs font-bold tracking-widest">Minecraft</span>
+            <div className="flex flex-col space-y-4 pl-4 border-l-2 border-white/10">
+              <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Dashboard</NavLink>
+            </div>
           </div>
 
-          <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>About Me</NavLink>
-          <NavLink to="/archive" onClick={closeMenu} className={({ isActive }) => `text-3xl font-bold transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-gray-300 hover:text-brand-primary'}`}>Archive</NavLink>
+          <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>About Me</NavLink>
+          <NavLink to="/archive" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Archive</NavLink>
         </div>
       </div>
     </>

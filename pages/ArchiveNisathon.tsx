@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
 import { DEFAULT_NISATHON_GOALS } from '../constants';
+import archiveData from '../data/nisathon-archive.json';
 
 // --- DATA CONSTANTS ---
 const NISABALL_ICON = "https://res.cloudinary.com/dsencimjn/image/upload/v1764173339/1341377045602766868_fbuvnf.webp";
@@ -41,6 +42,36 @@ interface ArchiveStats {
 }
 
 // --- ICONS & HELPERS ---
+const getEventIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+        case 'sub':
+        case 'subscriber': return <span className="text-lg">⭐</span>;
+        case 'gift': return <span className="text-lg">🎁</span>;
+        case 'bits': 
+        case 'cheer': return <span className="text-lg">💎</span>;
+        case 'donation': 
+        case 'tip': return <span className="text-lg">💸</span>;
+        case 'follower': 
+        case 'follow': return <span className="text-lg">💙</span>;
+        default: return <span className="text-lg">✨</span>;
+    }
+};
+
+const getEventColor = (type: string) => {
+    switch (type.toLowerCase()) {
+        case 'sub':
+        case 'subscriber': return 'text-purple-400 bg-purple-500/10 border-purple-500/20';
+        case 'gift': return 'text-pink-400 bg-pink-500/10 border-pink-500/20';
+        case 'bits':
+        case 'cheer': return 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20';
+        case 'donation':
+        case 'tip': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+        case 'follower': 
+        case 'follow': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+        default: return 'text-gray-400 bg-gray-500/10 border-gray-500/20';
+    }
+};
+
 const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -229,11 +260,7 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
                     </div>
                 </div>
 
-                {eventName && (
-                    <div className="text-center text-sm text-gray-400 bg-black/30 py-2 px-4 rounded-lg inline-block mx-auto">
-                        {eventName} • Archived {formatTimeAgo(new Date().toISOString())}
-                    </div>
-                )}
+
 
                 <ProgressBar
                     label={nextGoalLabel}
@@ -343,6 +370,187 @@ const MilestoneItem: React.FC<MilestoneProps> = ({ item }) => {
     );
 };
 
+const InfoCard: React.FC<{ title: string; children: React.ReactNode; className?: string; onClick?: () => void }> = ({ title, children, className = "", onClick }) => (
+    <div 
+        onClick={onClick}
+        className={`bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-lg ${onClick ? 'cursor-pointer hover:border-brand-primary/30 hover:shadow-brand-primary/10 transition-all duration-300' : ''} ${className}`}
+    >
+        <div className="bg-white/5 border-b border-white/5 p-4 text-center">
+            <h3 className="text-brand-accent font-sans font-extrabold tracking-widest text-xs uppercase">{title}</h3>
+        </div>
+        <div className="p-6">
+            {children}
+        </div>
+    </div>
+);
+
+// --- MODALS ---
+
+const ContributionHistorySection: React.FC<{ events: any[] }> = ({ events }) => {
+    const [page, setPage] = useState(1);
+    const [filter, setFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const itemsPerPage = 20;
+
+    const filteredEvents = events.filter(e => {
+        let textMatched = true;
+        if (searchQuery) {
+            textMatched = e.user?.toLowerCase().includes(searchQuery.toLowerCase());
+        }
+
+        if (!textMatched) return false;
+
+        if (filter === 'all') return true;
+        if (filter === 'sub' && (e.type.toLowerCase() === 'sub' || e.type.toLowerCase() === 'subscriber')) return true;
+        if (filter === 'gift' && e.type.toLowerCase() === 'gift') return true;
+        if (filter === 'bits' && (e.type.toLowerCase() === 'bits' || e.type.toLowerCase() === 'cheer')) return true;
+        if (filter === 'donation' && (e.type.toLowerCase() === 'donation' || e.type.toLowerCase() === 'tip')) return true;
+        if (filter === 'follow' && (e.type.toLowerCase() === 'follower' || e.type.toLowerCase() === 'follow')) return true;
+        return false;
+    });
+
+    const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
+    const currentEvents = filteredEvents.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+    const filterOptions = [
+        { id: 'all', label: 'All Events' },
+        { id: 'sub', label: 'Subs' },
+        { id: 'gift', label: 'Gifts' },
+        { id: 'bits', label: 'Bits' },
+        { id: 'donation', label: 'Donations' },
+        { id: 'follow', label: 'Follows' }
+    ];
+
+    return (
+        <div className="w-full bg-[#1a0b0e]/80 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative mt-16 backdrop-blur-md">
+            <div className="p-6 border-b border-white/10 flex flex-col gap-4 bg-black/20 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 className="text-2xl font-black text-white tracking-tight">Contribution History</h2>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <input
+                            type="text"
+                            placeholder="Filter by name..."
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+                            className="bg-black/50 text-white text-sm px-4 py-2 rounded-xl border border-white/10 outline-none focus:border-brand-primary w-full sm:w-64 placeholder:text-gray-500"
+                        />
+                    </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {filterOptions.map(opt => (
+                        <button
+                            key={opt.id}
+                            onClick={() => { setFilter(opt.id); setPage(1); }}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${filter === opt.id ? 'bg-brand-primary text-white shadow-[0_0_15px_rgba(229,56,59,0.3)] border border-brand-primary/50' : 'bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10 hover:text-white'}`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar min-h-[400px]">
+                {currentEvents.length === 0 ? (
+                    <div className="text-center text-gray-500 py-10">No events found matching your filter.</div>
+                ) : (
+                    currentEvents.map((event) => (
+                        <div key={event._id || Math.random().toString()} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${getEventColor(event.type)}`}>
+                                {getEventIcon(event.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-baseline mb-1">
+                                    <span className="font-bold text-white truncate text-lg">{event.user}</span>
+                                    <span className="text-xs text-gray-500 font-mono">{formatTimeAgo(event.createdAt || new Date().toISOString())}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${getEventColor(event.type).split(' ')[0]} bg-black/30`}>
+                                        {event.type}
+                                    </span>
+                                    <span className="text-sm font-bold text-gray-300">
+                                        {event.amountDisplay}
+                                    </span>
+                                </div>
+                                {event.message && (
+                                    <p className="text-xs text-gray-400 mt-2 italic border-l-2 border-white/10 pl-2">"{event.message}"</p>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+            
+            {totalPages > 1 && (
+                <div className="p-4 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4 shrink-0">
+                    <button 
+                        disabled={page === 1} 
+                        onClick={() => setPage(p => p - 1)}
+                        className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold text-white transition-colors"
+                    >
+                        Previous
+                    </button>
+                    <span className="text-sm text-gray-400 font-medium">Page {page} of {totalPages}</span>
+                    <button 
+                        disabled={page === totalPages} 
+                        onClick={() => setPage(p => p + 1)}
+                        className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold text-white transition-colors"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const TopContributorsModal: React.FC<{ onClose: () => void; contributors: any[] }> = ({ onClose, contributors }) => {
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-[#1a0b0e] w-full max-w-lg max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
+                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
+                    <div>
+                        <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                             <span className="text-brand-accent">🏆</span> Top Contributors
+                        </h2>
+                        <p className="text-sm text-gray-400">The legends of the Nisathon!</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 hover:text-brand-primary transition-colors">
+                        <CloseIcon />
+                    </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                    {contributors.length === 0 ? (
+                        <div className="text-center text-gray-500 py-10">No data available.</div>
+                    ) : (
+                        contributors.map((contributor) => {
+                            let rankColor = "text-gray-400 border-gray-600/30";
+                            if (contributor.rank === 1) rankColor = "text-brand-accent border-brand-accent/50 bg-brand-accent/10";
+                            if (contributor.rank === 2) rankColor = "text-gray-300 border-gray-400/50 bg-gray-400/10";
+                            if (contributor.rank === 3) rankColor = "text-amber-700 border-amber-700/50 bg-amber-700/10";
+
+                            return (
+                                <div key={contributor.rank} className={`flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors ${contributor.rank <= 3 ? 'border-l-4' : ''}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg border ${rankColor}`}>
+                                        {contributor.rank}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-bold text-white text-lg">{contributor.user}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-mono font-bold text-brand-primary text-xl">{contributor.totalNisaballs}</div>
+                                        <div className="text-[10px] uppercase font-bold text-gray-500">Nisaballs</div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ArchiveNisathon: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -353,12 +561,14 @@ const ArchiveNisathon: React.FC = () => {
         currentBits: number;
         currentDonations: number;
         totalNisaballs: number;
-    } | null>(null);
+    } | null>(archiveData.stats as any);
 
-    const [eventName, setEventName] = useState('Nisathon Archive');
+    const [eventName, setEventName] = useState('Nisathon Dashboard');
+
+    const [showTopContributorsModal, setShowTopContributorsModal] = useState(false);
 
     // Leaderboard for archived event
-    const [leaderboard, setLeaderboard] = useState<{rank: number; user: string; totalNisaballs: number}[]>([]);
+    const [leaderboard, setLeaderboard] = useState<{rank: number; user: string; totalNisaballs: number}[]>(archiveData.leaderboard as any);
 
     // Recent events for archived event
     const [events, setEvents] = useState<{
@@ -369,24 +579,11 @@ const ArchiveNisathon: React.FC = () => {
         message: string;
         createdAt: string;
         nisaballAmount: number;
-    }[]>([]);
+    }[]>(archiveData.events as any);
 
     useEffect(() => {
-        // Load archived data - no polling since it's historical
-        Promise.all([
-            fetch(`${API_BASE_URL}/api/archive/nisathon/stats`).then(r => r.ok ? r.json() : null).catch(() => null),
-            fetch(`${API_BASE_URL}/api/archive/nisathon/leaderboard`).then(r => r.ok ? r.json() : null).catch(() => null),
-            fetch(`${API_BASE_URL}/api/archive/nisathon/events`).then(r => r.ok ? r.json() : null).catch(() => null),
-        ])
-        .then(([statsData, lbData, eventsData]) => {
-            if (statsData) setArchivedStats(statsData);
-            if (lbData) setLeaderboard(lbData);
-            if (eventsData) setEvents(eventsData);
-        })
-        .catch(() => {
-            setError('Failed to load archived data');
-        })
-        .finally(() => setLoading(false));
+        // Data is now loaded synchronously from local json file
+        setLoading(false);
     }, []);
 
     // Calculations
@@ -436,6 +633,8 @@ const ArchiveNisathon: React.FC = () => {
             <div className="absolute inset-0 bg-rose-pattern opacity-10 pointer-events-none z-0"></div>
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+            {showTopContributorsModal && <TopContributorsModal onClose={() => setShowTopContributorsModal(false)} contributors={leaderboard} />}
 
             <div className="max-w-7xl mx-auto px-4 relative z-10 space-y-12 animate-in fade-in duration-700">
 
@@ -494,13 +693,13 @@ const ArchiveNisathon: React.FC = () => {
 
                         {/* RIGHT: SIDEBAR */}
                         <div className="space-y-6 lg:sticky lg:top-24">
-
-                            {/* Top Contributors */}
-                            <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-lg">
-                                <div className="bg-white/5 border-b border-white/5 p-4 text-center">
-                                    <h3 className="text-brand-accent font-bold uppercase tracking-widest text-xs">Top 3 Contributors</h3>
-                                </div>
-                                <div className="p-6 space-y-3 relative">
+                            
+                            <InfoCard 
+                                title="Top 3 Contributors" 
+                                className="group hover:ring-2 hover:ring-brand-accent/30"
+                                onClick={() => setShowTopContributorsModal(true)}
+                            >
+                                <div className="space-y-3 relative">
                                     {leaderboard.length === 0 ? (
                                         <div className="text-center text-sm text-gray-500 py-2">No contributor data</div>
                                     ) : (
@@ -525,69 +724,60 @@ const ArchiveNisathon: React.FC = () => {
                                             );
                                         })
                                     )}
-                                    {leaderboard.length > 0 && (
-                                        <div className="pt-2 text-center">
-                                            <span className="text-xs font-bold text-gray-400">Archived Results</span>
-                                        </div>
-                                    )}
+                                    <div className="pt-2 text-center">
+                                        <span className="text-xs font-bold text-gray-400 group-hover:text-brand-accent transition-colors flex items-center justify-center gap-1">
+                                            View Top 10 <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
+                            </InfoCard>
 
-                            {/* Nisaballs Currency */}
-                            <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-lg">
-                                <div className="bg-white/5 border-b border-white/5 p-4 text-center">
-                                    <h3 className="text-brand-accent font-bold uppercase tracking-widest text-xs">Nisaballs Currency</h3>
+                            <InfoCard title="Nisaballs Currency">
+                                <ul className="space-y-4 font-sans text-sm flex-1">
+                                    {CURRENCY_RATES.map((rate, idx) => (
+                                        <li key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <span className="text-brand-accent font-bold">{rate.label}</span>
+                                            <span className="text-gray-500 font-bold text-lg">→</span>
+                                            <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">{rate.value}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <div className="mt-6 p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-center">
+                                    <div className="text-brand-primary font-bold text-xs uppercase tracking-wider mb-2">Timer Add</div>
+                                    <div className="text-white font-black text-lg">{TIMER_CONVERSION}</div>
                                 </div>
-                                <div className="p-6">
-                                    <ul className="space-y-4 font-sans text-sm flex-1">
-                                        {CURRENCY_RATES.map((rate, idx) => (
-                                            <li key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <span className="text-brand-accent font-bold">{rate.label}</span>
-                                                <span className="text-gray-500 font-bold text-lg">→</span>
-                                                <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">{rate.value}</span>
+                            </InfoCard>
+
+                            <InfoCard title="Event Rewards">
+                                <div className="mb-6">
+                                    <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Top 3 Supporters</h4>
+                                    <div className="text-center mb-3 text-4xl drop-shadow-lg filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default">🌹</div>
+                                    <ul className="space-y-2 text-gray-200">
+                                        {TOP_REWARDS.map((reward, idx) => (
+                                            <li key={idx} className="bg-black/20 py-2 rounded-xl border border-white/5 font-medium text-sm text-center">{reward}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="h-px bg-white/10 my-6 flex items-center justify-center">
+                                    <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                                </div>
+                                <div>
+                                    <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Personalised Rewards</h4>
+                                    <ul className="space-y-3 text-sm">
+                                        {PERSONALISED_REWARDS.map((item, idx) => (
+                                            <li key={idx} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <span className="text-brand-accent font-bold font-mono bg-black/30 px-2 py-1 rounded-lg text-xs">{item.cost}</span>
+                                                <span className="text-gray-300 font-medium text-xs text-right">{item.reward}</span>
                                             </li>
                                         ))}
                                     </ul>
-                                    <div className="mt-6 p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-center">
-                                        <div className="text-brand-primary font-bold text-xs uppercase tracking-wider mb-2">Timer Add</div>
-                                        <div className="text-white font-black text-lg">{TIMER_CONVERSION}</div>
-                                    </div>
                                 </div>
-                            </div>
+                            </InfoCard>
 
-                            {/* Event Rewards */}
-                            <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-lg">
-                                <div className="bg-white/5 border-b border-white/5 p-4 text-center">
-                                    <h3 className="text-brand-accent font-bold uppercase tracking-widest text-xs">Event Rewards</h3>
-                                </div>
-                                <div className="p-6">
-                                    <div className="mb-6">
-                                        <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Top 3 Supporters</h4>
-                                        <div className="text-center mb-3 text-4xl drop-shadow-lg filter grayscale opacity-80">🌹</div>
-                                        <ul className="space-y-2 text-gray-200">
-                                            {TOP_REWARDS.map((reward, idx) => (
-                                                <li key={idx} className="bg-black/20 py-2 rounded-xl border border-white/5 font-medium text-sm text-center">{reward}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                    <div className="h-px bg-white/10 my-6 flex items-center justify-center">
-                                        <div className="w-2 h-2 rounded-full bg-white/20"></div>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Personalised Rewards</h4>
-                                        <ul className="space-y-3 text-sm">
-                                            {PERSONALISED_REWARDS.map((item, idx) => (
-                                                <li key={idx} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5">
-                                                    <span className="text-brand-accent font-bold font-mono bg-black/30 px-2 py-1 rounded-lg text-xs">{item.cost}</span>
-                                                    <span className="text-gray-300 font-medium text-xs text-right">{item.reward}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
+                    
+                    <ContributionHistorySection events={events} />
                 </div>
             </div>
         </div>

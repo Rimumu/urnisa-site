@@ -1,5 +1,6 @@
 {
   "name": "urnisa site",
   "description": "The official website for Twitch streamer urnisa_",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

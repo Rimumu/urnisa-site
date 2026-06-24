@@ -453,26 +453,32 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
       )}
 
       {/* Header Section */}
-      <div className={`shrink-0 relative h-40 bg-brand-secondary overflow-hidden group select-none ${transitionClass} ${contentState}`}>
+      <div className={`shrink-0 relative h-32 sm:h-40 bg-brand-secondary overflow-hidden group select-none ${transitionClass} ${contentState}`}>
             <img src={BANNER_URL} alt="Server Banner" className="w-full h-full object-cover opacity-80 transition-transform duration-1000 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
             
-            <div className="absolute bottom-0 left-0 p-5 flex items-end gap-4 w-full z-10">
-                 <div className="relative w-20 h-20 shrink-0 rounded-2xl p-[3px] bg-gradient-to-tr from-brand-primary to-brand-accent shadow-xl -mb-4 transform group-hover:-translate-y-1 transition-transform duration-300">
-                     <div className="w-full h-full rounded-[13px] overflow-hidden bg-brand-secondary">
+            <div className="absolute bottom-0 left-0 p-3 sm:p-5 flex items-end gap-3 sm:gap-4 w-full z-10">
+                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-2xl p-[2px] sm:p-[3px] bg-gradient-to-tr from-brand-primary to-brand-accent shadow-xl -mb-2 sm:-mb-4 transform group-hover:-translate-y-1 transition-transform duration-300">
+                     <div className="w-full h-full rounded-[10px] sm:rounded-[13px] overflow-hidden bg-brand-secondary">
                         <img src={ICON_URL} alt="Icon" className="w-full h-full object-cover" />
                      </div>
                  </div>
-                 <div className="mb-1 flex-1 min-w-0 pb-1">
-                     <h2 className="text-white font-extrabold text-2xl leading-tight truncate drop-shadow-lg tracking-wide">{data.name}</h2>
-                     <p className="text-xs text-gray-300 font-medium flex items-center gap-1.5 mt-1 backdrop-blur-sm bg-black/30 w-fit px-2 py-0.5 rounded-full border border-white/5">
-                        <span className="w-2 h-2 rounded-full bg-[#23a559] animate-pulse shadow-[0_0_8px_#23a559]"></span>
-                        <span className="text-white">{data.presence_count.toLocaleString()}</span> Members Online
+                 <div className="mb-0.5 sm:mb-1 flex-1 min-w-0 pb-1">
+                     <h2 className="text-white font-extrabold text-xl sm:text-2xl leading-tight truncate drop-shadow-lg tracking-wide">{data.name}</h2>
+                     <p className="text-[10px] sm:text-xs text-gray-300 font-medium flex items-center gap-1.5 mt-1 backdrop-blur-sm bg-black/30 w-fit px-2 py-0.5 rounded-full border border-white/5">
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#23a559] animate-pulse shadow-[0_0_8px_#23a559]"></span>
+                        <span className="text-white">{data.presence_count.toLocaleString()}</span> Members
                      </p>
                  </div>
                  <a href={DISCORD_INVITE_URL} target="_blank" rel="noopener noreferrer" 
-                    className="shrink-0 bg-brand-primary hover:bg-red-600 text-white text-sm font-bold py-2.5 px-5 rounded-lg transition-all hover:scale-105 mb-2 shadow-lg hover:shadow-brand-primary/40 border border-white/10">
-                    Join Server
+                    className="shrink-0 bg-brand-primary hover:bg-red-600 text-white text-sm font-bold py-2 sm:py-2.5 px-3 sm:px-5 rounded-lg transition-all hover:scale-105 mb-1 sm:mb-2 shadow-lg hover:shadow-brand-primary/40 border border-white/10 hidden sm:block">
+                    Join
+                 </a>
+                 <a href={DISCORD_INVITE_URL} target="_blank" rel="noopener noreferrer" 
+                    className="shrink-0 bg-brand-primary hover:bg-red-600 text-white font-bold p-2 rounded-lg transition-all hover:scale-105 mb-1 shadow-lg hover:shadow-brand-primary/40 border border-white/10 sm:hidden flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                    </svg>
                  </a>
             </div>
       </div>

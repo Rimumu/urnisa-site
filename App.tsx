@@ -7,12 +7,12 @@ import Home from './pages/Home';
 import Subathon from './pages/Subathon';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
+import MinecraftTeaser from './pages/MinecraftTeaser';
 import Rankings from './pages/Rankings';
 import Archive from './pages/Archive';
 import ArchiveNisathon from './pages/ArchiveNisathon';
 import ArchiveWheel from './pages/ArchiveWheel';
 import ArchiveTournament from './pages/ArchiveTournament';
-import ArchiveRankings from './pages/ArchiveRankings';
 import Gacha from './pages/Gacha';
 import GachaDev from './pages/GachaDev'; // Import Dev Page
 import TournamentDev from './pages/TournamentDev'; // New Import
@@ -68,7 +68,7 @@ const MainLayout: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans overflow-x-hidden">
       <Routes>
         {/* 1. STANDALONE OVERLAY ROUTES (No Navbar/Footer) */}
         <Route path="/overlay" element={<Overlay />} />
@@ -82,13 +82,14 @@ const App: React.FC = () => {
         {/* 2. MAIN WEBSITE ROUTES (Wrapped in Layout) */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/nisathon" element={<Subathon />} />
-          <Route path="/nisathon/wheel" element={<Wheel />} />
+          <Route path="/nisathonBACK" element={<Subathon />} />
+          <Route path="/nisathon/wheelBACK" element={<Wheel />} />
           <Route path="/snakesladder" element={<SnakesLadder />} />
-          <Route path="/minecraft" element={<Minecraft />} />
-          <Route path="/minecraft/gacha" element={<Gacha />} />
-          <Route path="/minecraft/rankings" element={<Rankings />} />
-          <Route path="/minecraft/tournament" element={<Tournament />} />
+          <Route path="/minecraftBACK" element={<Minecraft />} />
+          <Route path="/minecraft" element={<MinecraftTeaser />} />
+          <Route path="/minecraft/gachaBACK" element={<Gacha />} />
+          <Route path="/minecraft/rankingsBACK" element={<Rankings />} />
+          <Route path="/minecraft/tournamentBACK" element={<Tournament />} />
           {/* Dev Routes */}
           <Route path="/dev/gacha" element={<GachaDev />} />
           <Route path="/dev/tournament" element={<TournamentDev />} />
@@ -97,8 +98,8 @@ const App: React.FC = () => {
           {/* Prod Admin Routes */}
           <Route path="/admin/tournament" element={<AdminTournament />} />
 
-          <Route path="/minecraft/bingo" element={<BingoDashboard />} />
-          <Route path="/minecraft/bingo/card" element={<Bingo />} />
+          <Route path="/minecraft/bingoBACK" element={<BingoDashboard />} />
+          <Route path="/minecraft/bingo/cardBACK" element={<Bingo />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/redeem" element={<Redeem />} />
           <Route path="/about" element={<About />} />
@@ -106,7 +107,6 @@ const App: React.FC = () => {
           <Route path="/archive/nisathon" element={<ArchiveNisathon />} />
           <Route path="/archive/wheel" element={<ArchiveWheel />} />
           <Route path="/archive/tournament" element={<ArchiveTournament />} />
-          <Route path="/archive/rankings" element={<ArchiveRankings />} />
           <Route path="/admin" element={<Admin />} />
 
           {/* 404 Fallback - Redirects unknown paths to Home */}

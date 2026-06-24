@@ -27,7 +27,7 @@ const Home: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col items-center text-center">
+        <div className="flex flex-col items-center text-center px-4 md:px-8 overflow-hidden">
             <h1 className="text-4xl md:text-6xl font-extrabold mb-2">
                 Welcome to the <span className="text-brand-primary">STEAK</span> House!
             </h1>
@@ -35,8 +35,8 @@ const Home: React.FC = () => {
                 The hub for everything related to nisa. Check out the streams and enjoy your meat!
             </p>
 
-            <div className="w-full max-w-5xl">
-                <div className="w-full bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
+            <div className="w-full max-w-5xl mt-4 md:mt-0">
+                <div className="w-full bg-black/30 backdrop-blur-lg rounded-2xl p-1 md:p-2 border border-white/10 shadow-2xl shadow-black/40">
                     <TwitchEmbed channel={TWITCH_CHANNEL_NAME} />
                 </div>
             </div>
@@ -64,7 +64,7 @@ const Home: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Stream <span className="text-brand-primary">Schedule</span>
                 </h2>
-                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-2 border border-white/10 shadow-2xl shadow-black/40">
+                <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-1 md:p-2 border border-white/10 shadow-2xl shadow-black/40">
                     <OptimizedImage
                         src={scheduleUrl}
                         alt="Urnisa's weekly stream schedule"
@@ -78,7 +78,7 @@ const Home: React.FC = () => {
             {/* Discord Section */}
             <div 
                 ref={discordRef}
-                className={`mt-16 w-full max-w-5xl transition-all duration-1000 ease-out transform ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
+                className={`mt-16 w-full max-w-5xl transition-all duration-1000 ease-out transform mb-16 ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
             >
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Join our <span className="text-brand-primary">Discord</span>

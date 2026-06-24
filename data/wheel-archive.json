@@ -1,0 +1,1616 @@
+{
+  "info": {
+    "eventName": "Nisathon 2024",
+    "archivedAt": "2026-06-23T06:52:26.698Z",
+    "totalSpins": 223
+  },
+  "history": [
+    {
+      "_id": "695cd1d58b2b0e8984205272",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2026-01-06T09:11:49.514Z",
+      "__v": 0
+    },
+    {
+      "_id": "695cd1c88b2b0e898420520f",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-06T09:11:36.026Z",
+      "__v": 0
+    },
+    {
+      "_id": "695cd1b48b2b0e898420517e",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2026-01-06T09:11:16.207Z",
+      "__v": 0
+    },
+    {
+      "_id": "695cd17b8b2b0e8984204fd4",
+      "user": "nbhlol",
+      "reward": "bark",
+      "timestamp": "2026-01-06T09:10:19.445Z",
+      "__v": 0
+    },
+    {
+      "_id": "695bead78b2b0e89841b86f7",
+      "user": "chaosking71",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T16:46:15.734Z",
+      "__v": 0
+    },
+    {
+      "_id": "695bea828b2b0e89841b84f7",
+      "user": "chaosking71",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2026-01-05T16:44:50.799Z",
+      "__v": 0
+    },
+    {
+      "_id": "695bea4c8b2b0e89841b83a7",
+      "user": "Admin Spin",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2026-01-05T16:43:56.218Z",
+      "__v": 0
+    },
+    {
+      "_id": "695bea258b2b0e89841b82cf",
+      "user": "chaosking71",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2026-01-05T16:43:17.860Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b52a48b2b0e8984191d53",
+      "user": "nbhlol",
+      "reward": "squarts",
+      "timestamp": "2026-01-05T05:56:52.182Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b52988b2b0e8984191d07",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:56:40.950Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b52928b2b0e8984191cd9",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:56:34.025Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b528b8b2b0e8984191cac",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:56:27.331Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b52848b2b0e8984191c77",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:56:20.307Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b52758b2b0e8984191c08",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2026-01-05T05:56:05.509Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b526e8b2b0e8984191bdc",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:55:58.810Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b52678b2b0e8984191bb0",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:55:51.799Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b52608b2b0e8984191b84",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:55:44.609Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b523f8b2b0e8984191acc",
+      "user": "nbhlol",
+      "reward": "bark",
+      "timestamp": "2026-01-05T05:55:11.777Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b520e8b2b0e89841919a9",
+      "user": "nbhlol",
+      "reward": "give a wet kiss",
+      "timestamp": "2026-01-05T05:54:22.165Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b51fb8b2b0e8984191935",
+      "user": "nbhlol",
+      "reward": "golden hour",
+      "timestamp": "2026-01-05T05:54:03.986Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b50ec8b2b0e89841912c6",
+      "user": "Anonymous",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2026-01-05T05:49:32.673Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b50e18b2b0e8984191286",
+      "user": "Anonymous",
+      "reward": "give a wet kiss",
+      "timestamp": "2026-01-05T05:49:21.420Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b50cf8b2b0e898419120f",
+      "user": "Anonymous",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2026-01-05T05:49:03.027Z",
+      "__v": 0
+    },
+    {
+      "_id": "695b50be8b2b0e89841911ad",
+      "user": "Anonymous",
+      "reward": "push up",
+      "timestamp": "2026-01-05T05:48:46.820Z",
+      "__v": 0
+    },
+    {
+      "_id": "69594db68b2b0e89840e83e4",
+      "user": "Admin Spin",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2026-01-03T17:11:18.087Z",
+      "__v": 0
+    },
+    {
+      "_id": "69594d308b2b0e89840e8079",
+      "user": "AzureDreamer",
+      "reward": "bark",
+      "timestamp": "2026-01-03T17:09:04.365Z",
+      "__v": 0
+    },
+    {
+      "_id": "69594d188b2b0e89840e7fa9",
+      "user": "AzureDreamer",
+      "reward": "golden hour",
+      "timestamp": "2026-01-03T17:08:40.197Z",
+      "__v": 0
+    },
+    {
+      "_id": "69594d018b2b0e89840e7ed3",
+      "user": "AzureDreamer",
+      "reward": "golden hour",
+      "timestamp": "2026-01-03T17:08:17.445Z",
+      "__v": 0
+    },
+    {
+      "_id": "69594ce48b2b0e89840e7dbf",
+      "user": "AzureDreamer",
+      "reward": "add an hour to the timer",
+      "timestamp": "2026-01-03T17:07:48.025Z",
+      "__v": 0
+    },
+    {
+      "_id": "695814458b2b0e8984085f56",
+      "user": "_asinru",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2026-01-02T18:53:57.164Z",
+      "__v": 0
+    },
+    {
+      "_id": "695814008b2b0e8984085da9",
+      "user": "_asinru",
+      "reward": "push up",
+      "timestamp": "2026-01-02T18:52:48.336Z",
+      "__v": 0
+    },
+    {
+      "_id": "695813778b2b0e8984085a1f",
+      "user": "_asinru",
+      "reward": "baby photo of nisa",
+      "timestamp": "2026-01-02T18:50:31.285Z",
+      "__v": 0
+    },
+    {
+      "_id": "695813468b2b0e89840858f4",
+      "user": "_asinru",
+      "reward": "push up",
+      "timestamp": "2026-01-02T18:49:42.220Z",
+      "__v": 0
+    },
+    {
+      "_id": "695813168b2b0e89840857e0",
+      "user": "_asinru",
+      "reward": "push up",
+      "timestamp": "2026-01-02T18:48:54.434Z",
+      "__v": 0
+    },
+    {
+      "_id": "695812f48b2b0e89840856ec",
+      "user": "_asinru",
+      "reward": "give a wet kiss",
+      "timestamp": "2026-01-02T18:48:20.805Z",
+      "__v": 0
+    },
+    {
+      "_id": "695812e88b2b0e8984085685",
+      "user": "_asinru",
+      "reward": "add an hour to the timer",
+      "timestamp": "2026-01-02T18:48:08.060Z",
+      "__v": 0
+    },
+    {
+      "_id": "695812d78b2b0e8984085609",
+      "user": "_asinru",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2026-01-02T18:47:51.093Z",
+      "__v": 0
+    },
+    {
+      "_id": "6957e9d38b2b0e89840777b1",
+      "user": "nbhlol",
+      "reward": "give a wet kiss",
+      "timestamp": "2026-01-02T15:52:51.036Z",
+      "__v": 0
+    },
+    {
+      "_id": "6957e97d8b2b0e89840775ad",
+      "user": "nbhlol",
+      "reward": "push up",
+      "timestamp": "2026-01-02T15:51:25.663Z",
+      "__v": 0
+    },
+    {
+      "_id": "69577eeb8b2b0e898405543a",
+      "user": "TheMrMerlion",
+      "reward": "squarts",
+      "timestamp": "2026-01-02T08:16:43.231Z",
+      "__v": 0
+    },
+    {
+      "_id": "69577ee38b2b0e8984055404",
+      "user": "TheMrMerlion",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2026-01-02T08:16:35.228Z",
+      "__v": 0
+    },
+    {
+      "_id": "695668c78b2b0e8984ffa1db",
+      "user": "GreatRimu",
+      "reward": "squarts",
+      "timestamp": "2026-01-01T12:29:59.607Z",
+      "__v": 0
+    },
+    {
+      "_id": "695666908b2b0e8984ff9424",
+      "user": "nbhlol",
+      "reward": "bark",
+      "timestamp": "2026-01-01T12:20:32.864Z",
+      "__v": 0
+    },
+    {
+      "_id": "695666718b2b0e8984ff9342",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2026-01-01T12:20:01.538Z",
+      "__v": 0
+    },
+    {
+      "_id": "6956654d8b2b0e8984ff8b83",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2026-01-01T12:15:09.850Z",
+      "__v": 0
+    },
+    {
+      "_id": "695665038b2b0e8984ff895f",
+      "user": "nbhlol",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2026-01-01T12:13:55.774Z",
+      "__v": 0
+    },
+    {
+      "_id": "69564efe8b2b0e8984ff0f8f",
+      "user": "toastedferris",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2026-01-01T10:39:58.932Z",
+      "__v": 0
+    },
+    {
+      "_id": "6953d0c88b2b0e8984f24273",
+      "user": "nbhlol",
+      "reward": "push up",
+      "timestamp": "2025-12-30T13:16:56.571Z",
+      "__v": 0
+    },
+    {
+      "_id": "6953d07b8b2b0e8984f2407a",
+      "user": "nbhlol",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-30T13:15:39.840Z",
+      "__v": 0
+    },
+    {
+      "_id": "6953d0468b2b0e8984f23ed2",
+      "user": "nbhlol",
+      "reward": "bark",
+      "timestamp": "2025-12-30T13:14:46.295Z",
+      "__v": 0
+    },
+    {
+      "_id": "6953d0388b2b0e8984f23e6e",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-30T13:14:32.843Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d34588b2b0e8984eedfcd",
+      "user": "JikanFox",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-25T12:55:52.412Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d34368b2b0e8984eedeea",
+      "user": "JikanFox",
+      "reward": "push up",
+      "timestamp": "2025-12-25T12:55:18.388Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d342b8b2b0e8984eede9d",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-25T12:55:07.876Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d33ff8b2b0e8984eedd98",
+      "user": "JikanFox",
+      "reward": "bark",
+      "timestamp": "2025-12-25T12:54:23.972Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d33808b2b0e8984eeda87",
+      "user": "nbhlol",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-25T12:52:16.418Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d33768b2b0e8984eeda42",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-25T12:52:06.592Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d332f8b2b0e8984eed86e",
+      "user": "nbhlol",
+      "reward": "push up",
+      "timestamp": "2025-12-25T12:50:55.061Z",
+      "__v": 0
+    },
+    {
+      "_id": "694d330c8b2b0e8984eed784",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-25T12:50:20.574Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ad4367f0dad4744517485",
+      "user": "JikanFox",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-23T17:41:11.000Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ad3f87f0dad474451729c",
+      "user": "JikanFox",
+      "reward": "push up",
+      "timestamp": "2025-12-23T17:40:08.323Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab4287f0dad474450ac7d",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-23T15:24:24.388Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab3277f0dad474450a324",
+      "user": "JikanFox",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-23T15:20:07.146Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab3147f0dad474450a26c",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-23T15:19:48.139Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab2ff7f0dad474450a1bb",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-23T15:19:27.534Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab2e77f0dad474450a0e2",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-23T15:19:03.139Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab2b37f0dad4744509f63",
+      "user": "JikanFox",
+      "reward": "bark",
+      "timestamp": "2025-12-23T15:18:11.763Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab2517f0dad4744509cd7",
+      "user": "JikanFox",
+      "reward": "VIP Status",
+      "timestamp": "2025-12-23T15:16:33.165Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab2287f0dad4744509bdf",
+      "user": "JikanFox",
+      "reward": "squarts",
+      "timestamp": "2025-12-23T15:15:52.389Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab1fd7f0dad4744509ae4",
+      "user": "JikanFox",
+      "reward": "bark",
+      "timestamp": "2025-12-23T15:15:09.884Z",
+      "__v": 0
+    },
+    {
+      "_id": "694ab1d17f0dad47445099a4",
+      "user": "JikanFox",
+      "reward": "bark",
+      "timestamp": "2025-12-23T15:14:25.055Z",
+      "__v": 0
+    },
+    {
+      "_id": "694aa05e7f0dad47445035fc",
+      "user": "nbhlol",
+      "reward": "bark",
+      "timestamp": "2025-12-23T13:59:58.817Z",
+      "__v": 0
+    },
+    {
+      "_id": "69496d93d06ed903ba3e1153",
+      "user": "Admin Spin",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-22T16:10:59.817Z",
+      "__v": 0
+    },
+    {
+      "_id": "69496ba8d06ed903ba3e0716",
+      "user": "Admin Spin",
+      "reward": "happy hour",
+      "timestamp": "2025-12-22T16:02:48.526Z",
+      "__v": 0
+    },
+    {
+      "_id": "6949694ad06ed903ba3dfa61",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-22T15:52:42.274Z",
+      "__v": 0
+    },
+    {
+      "_id": "6949692dd06ed903ba3df998",
+      "user": "kulinger",
+      "reward": "happy hour",
+      "timestamp": "2025-12-22T15:52:13.063Z",
+      "__v": 0
+    },
+    {
+      "_id": "694965abd06ed903ba3de669",
+      "user": "Admin Spin",
+      "reward": "squarts",
+      "timestamp": "2025-12-22T15:37:15.748Z",
+      "__v": 0
+    },
+    {
+      "_id": "69496384d06ed903ba3ddad8",
+      "user": "Admin Spin",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-22T15:28:04.567Z",
+      "__v": 0
+    },
+    {
+      "_id": "69495bded06ed903ba3da5eb",
+      "user": "burnsgothype",
+      "reward": "bark",
+      "timestamp": "2025-12-22T14:55:26.848Z",
+      "__v": 0
+    },
+    {
+      "_id": "6947b3fdd06ed903ba3501bb",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-21T08:46:53.436Z",
+      "__v": 0
+    },
+    {
+      "_id": "6947b3e8d06ed903ba350120",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-21T08:46:32.719Z",
+      "__v": 0
+    },
+    {
+      "_id": "6947b3a0d06ed903ba34fe62",
+      "user": "nbhlol",
+      "reward": "push up",
+      "timestamp": "2025-12-21T08:45:20.136Z",
+      "__v": 0
+    },
+    {
+      "_id": "6947b38ed06ed903ba34fdce",
+      "user": "nbhlol",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-21T08:45:02.109Z",
+      "__v": 0
+    },
+    {
+      "_id": "6947b368d06ed903ba34fc36",
+      "user": "nbhlol",
+      "reward": "squarts",
+      "timestamp": "2025-12-21T08:44:24.060Z",
+      "__v": 0
+    },
+    {
+      "_id": "69464cbd067e82876d29442a",
+      "user": "nbhlol",
+      "reward": "squarts",
+      "timestamp": "2025-12-20T07:14:05.085Z",
+      "__v": 0
+    },
+    {
+      "_id": "69464c82067e82876d294214",
+      "user": "nbhlol",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-20T07:13:06.876Z",
+      "__v": 0
+    },
+    {
+      "_id": "69464c6f067e82876d29418e",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-20T07:12:47.456Z",
+      "__v": 0
+    },
+    {
+      "_id": "69464c34067e82876d294003",
+      "user": "nbhlol",
+      "reward": "squarts",
+      "timestamp": "2025-12-20T07:11:48.042Z",
+      "__v": 0
+    },
+    {
+      "_id": "69464c0b067e82876d293e7d",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-20T07:11:07.965Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945842111420675d2a48ac5",
+      "user": "kulinger",
+      "reward": "squarts",
+      "timestamp": "2025-12-19T16:58:09.211Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945841911420675d2a48a8e",
+      "user": "kulinger",
+      "reward": "happy hour",
+      "timestamp": "2025-12-19T16:58:01.533Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945797e11420675d2a45662",
+      "user": "Admin Spin",
+      "reward": "bark",
+      "timestamp": "2025-12-19T16:12:46.928Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945797611420675d2a4561e",
+      "user": "Admin Spin",
+      "reward": "happy hour",
+      "timestamp": "2025-12-19T16:12:38.263Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945796f11420675d2a455df",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-19T16:12:31.004Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945796711420675d2a4559a",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-19T16:12:23.088Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945638dda3a20dc9e040d8d",
+      "user": "nbhlol",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-19T14:39:09.087Z",
+      "__v": 0
+    },
+    {
+      "_id": "6945636bda3a20dc9e040c9a",
+      "user": "tashawaaaa",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-19T14:38:35.417Z",
+      "__v": 0
+    },
+    {
+      "_id": "69456357da3a20dc9e040c05",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-19T14:38:15.671Z",
+      "__v": 0
+    },
+    {
+      "_id": "69456349da3a20dc9e040b97",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-19T14:38:01.786Z",
+      "__v": 0
+    },
+    {
+      "_id": "69456330da3a20dc9e040af3",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-19T14:37:36.939Z",
+      "__v": 0
+    },
+    {
+      "_id": "69418c360853681760fd0390",
+      "user": "JikanFox",
+      "reward": "squarts",
+      "timestamp": "2025-12-16T16:43:34.119Z",
+      "__v": 0
+    },
+    {
+      "_id": "69418b4c0853681760fcfe79",
+      "user": "JikanFox",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-16T16:39:40.639Z",
+      "__v": 0
+    },
+    {
+      "_id": "69418b400853681760fcfe22",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-16T16:39:28.338Z",
+      "__v": 0
+    },
+    {
+      "_id": "69418b160853681760fcfd2f",
+      "user": "JikanFox",
+      "reward": "squarts",
+      "timestamp": "2025-12-16T16:38:46.018Z",
+      "__v": 0
+    },
+    {
+      "_id": "69418afb0853681760fcfc8b",
+      "user": "JikanFox",
+      "reward": "VIP Status",
+      "timestamp": "2025-12-16T16:38:19.259Z",
+      "__v": 0
+    },
+    {
+      "_id": "69418a3c0853681760fcf793",
+      "user": "JikanFox",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-16T16:35:08.986Z",
+      "__v": 0
+    },
+    {
+      "_id": "69418a0f0853681760fcf51a",
+      "user": "JikanFox",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-16T16:34:23.978Z",
+      "__v": 0
+    },
+    {
+      "_id": "694189fb0853681760fcf471",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-16T16:34:03.217Z",
+      "__v": 0
+    },
+    {
+      "_id": "6941047e50abcf2634af027a",
+      "user": "Admin Spin",
+      "reward": "push up",
+      "timestamp": "2025-12-16T07:04:30.044Z",
+      "__v": 0
+    },
+    {
+      "_id": "6941039b50abcf2634aefd2b",
+      "user": "toastedferris",
+      "reward": "happy hour",
+      "timestamp": "2025-12-16T07:00:43.666Z",
+      "__v": 0
+    },
+    {
+      "_id": "6941038750abcf2634aefcbc",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-16T07:00:23.396Z",
+      "__v": 0
+    },
+    {
+      "_id": "6941012150abcf2634aef04e",
+      "user": "nbhlol",
+      "reward": "bark",
+      "timestamp": "2025-12-16T06:50:09.557Z",
+      "__v": 0
+    },
+    {
+      "_id": "6941010e50abcf2634aeefce",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-16T06:49:50.594Z",
+      "__v": 0
+    },
+    {
+      "_id": "694100f450abcf2634aeef3c",
+      "user": "nbhlol",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-16T06:49:24.683Z",
+      "__v": 0
+    },
+    {
+      "_id": "69398110623c683bcafe4bec",
+      "user": "kulinger",
+      "reward": "push up",
+      "timestamp": "2025-12-10T14:17:52.586Z",
+      "__v": 0
+    },
+    {
+      "_id": "6939801d623c683bcafe45f0",
+      "user": "kulinger",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-10T14:13:49.949Z",
+      "__v": 0
+    },
+    {
+      "_id": "6939760f623c683bcafe0f7a",
+      "user": "Admin Spin",
+      "reward": "happy hour",
+      "timestamp": "2025-12-10T13:30:55.395Z",
+      "__v": 0
+    },
+    {
+      "_id": "693975f4623c683bcafe0ebc",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-10T13:30:28.979Z",
+      "__v": 0
+    },
+    {
+      "_id": "69397428623c683bcafe03fe",
+      "user": "Admin Spin",
+      "reward": "squarts",
+      "timestamp": "2025-12-10T13:22:48.987Z",
+      "__v": 0
+    },
+    {
+      "_id": "693973eb623c683bcafe0298",
+      "user": "Admin Spin",
+      "reward": "squarts",
+      "timestamp": "2025-12-10T13:21:47.097Z",
+      "__v": 0
+    },
+    {
+      "_id": "69396f95623c683bcafdeae8",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-10T13:03:17.057Z",
+      "__v": 0
+    },
+    {
+      "_id": "69396f71623c683bcafde9e2",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-10T13:02:41.193Z",
+      "__v": 0
+    },
+    {
+      "_id": "69396de2623c683bcafde118",
+      "user": "Admin Spin",
+      "reward": "happy hour",
+      "timestamp": "2025-12-10T12:56:02.996Z",
+      "__v": 0
+    },
+    {
+      "_id": "69396db7623c683bcafde00e",
+      "user": "Admin Spin",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-10T12:55:19.122Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938e079841e1426581aebc2",
+      "user": "asunachxn_",
+      "reward": "happy hour",
+      "timestamp": "2025-12-10T02:52:41.333Z",
+      "__v": 0
+    },
+    {
+      "_id": "69385a76bd0dd400a0191b5c",
+      "user": "JikanFox",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-09T17:20:54.690Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384c6fe9ab184312e11dae",
+      "user": "JikanFox",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-09T16:21:03.856Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384c53e9ab184312e11cba",
+      "user": "JikanFox",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-09T16:20:35.970Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384c46e9ab184312e11c40",
+      "user": "JikanFox",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T16:20:22.356Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384c3fe9ab184312e11c0f",
+      "user": "JikanFox",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T16:20:15.438Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384c38e9ab184312e11be1",
+      "user": "JikanFox",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T16:20:08.487Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384bf6e9ab184312e11a11",
+      "user": "JikanFox",
+      "reward": "squarts",
+      "timestamp": "2025-12-09T16:19:02.590Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384bece9ab184312e119ba",
+      "user": "JikanFox",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T16:18:52.973Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384bd9e9ab184312e11940",
+      "user": "JikanFox",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T16:18:33.404Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384b54e9ab184312e115a2",
+      "user": "JikanFox",
+      "reward": "squarts",
+      "timestamp": "2025-12-09T16:16:20.341Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384ad1e9ab184312e11186",
+      "user": "JikanFox",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-09T16:14:09.247Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384a11e9ab184312e10a4c",
+      "user": "AzureDreamer",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T16:10:57.272Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384710e9ab184312e0f775",
+      "user": "AzureDreamer",
+      "reward": "push up",
+      "timestamp": "2025-12-09T15:58:08.840Z",
+      "__v": 0
+    },
+    {
+      "_id": "693846bde9ab184312e0f6d2",
+      "user": "takoz212",
+      "reward": "squarts",
+      "timestamp": "2025-12-09T15:56:45.228Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384678e9ab184312e0f610",
+      "user": "takoz212",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-09T15:55:36.898Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938466de9ab184312e0f5cf",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:55:25.823Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384649e9ab184312e0f512",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:54:49.362Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384624e9ab184312e0f445",
+      "user": "takoz212",
+      "reward": "squarts",
+      "timestamp": "2025-12-09T15:54:12.307Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384605e9ab184312e0f35d",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:53:41.382Z",
+      "__v": 0
+    },
+    {
+      "_id": "693845f0e9ab184312e0f2d6",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:53:20.126Z",
+      "__v": 0
+    },
+    {
+      "_id": "693845a8e9ab184312e0f15f",
+      "user": "takoz212",
+      "reward": "bark",
+      "timestamp": "2025-12-09T15:52:08.522Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938453ae9ab184312e0ee93",
+      "user": "AzureDreamer",
+      "reward": "bark",
+      "timestamp": "2025-12-09T15:50:18.568Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384516e9ab184312e0edbf",
+      "user": "takoz212",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-09T15:49:42.408Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384499e9ab184312e0ea6a",
+      "user": "takoz212",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-09T15:47:37.774Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938444be9ab184312e0e858",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:46:19.602Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938442de9ab184312e0e7c8",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:45:49.030Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938434ae9ab184312e0e1f2",
+      "user": "takoz212",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-09T15:42:02.970Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938432ce9ab184312e0e12f",
+      "user": "takoz212",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-09T15:41:32.933Z",
+      "__v": 0
+    },
+    {
+      "_id": "69384320e9ab184312e0e0ce",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:41:20.835Z",
+      "__v": 0
+    },
+    {
+      "_id": "693842a5e9ab184312e0dcb4",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T15:39:17.072Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938260be9ab184312e04006",
+      "user": "Admin Spin",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-09T13:37:15.112Z",
+      "__v": 0
+    },
+    {
+      "_id": "693825dce9ab184312e03eeb",
+      "user": "nbhlol",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-09T13:36:28.515Z",
+      "__v": 0
+    },
+    {
+      "_id": "69381941e9ab184312dffc90",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T12:42:41.650Z",
+      "__v": 0
+    },
+    {
+      "_id": "69381937e9ab184312dffc45",
+      "user": "Admin Spin",
+      "reward": "bark",
+      "timestamp": "2025-12-09T12:42:31.831Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938191ee9ab184312dffb9e",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T12:42:06.242Z",
+      "__v": 0
+    },
+    {
+      "_id": "693818f9e9ab184312dffaa5",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T12:41:29.803Z",
+      "__v": 0
+    },
+    {
+      "_id": "693818dbe9ab184312dff9f9",
+      "user": "takoz212",
+      "reward": "squarts",
+      "timestamp": "2025-12-09T12:40:59.179Z",
+      "__v": 0
+    },
+    {
+      "_id": "693817b5e9ab184312dff30a",
+      "user": "Admin Spin",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-09T12:36:05.266Z",
+      "__v": 0
+    },
+    {
+      "_id": "69381760e9ab184312dff0e1",
+      "user": "takoz212",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T12:34:40.735Z",
+      "__v": 0
+    },
+    {
+      "_id": "693816efe9ab184312dfee4d",
+      "user": "takoz212",
+      "reward": "bark",
+      "timestamp": "2025-12-09T12:32:47.080Z",
+      "__v": 0
+    },
+    {
+      "_id": "69380e8ce9ab184312dfc0d3",
+      "user": "Admin Spin",
+      "reward": "push up",
+      "timestamp": "2025-12-09T11:57:00.121Z",
+      "__v": 0
+    },
+    {
+      "_id": "69380e7ae9ab184312dfc053",
+      "user": "LordServer_",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T11:56:42.369Z",
+      "__v": 0
+    },
+    {
+      "_id": "69380cb6e9ab184312dfb6d9",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T11:49:10.375Z",
+      "__v": 0
+    },
+    {
+      "_id": "693809d1e9ab184312dfa780",
+      "user": "Admin Spin",
+      "reward": "push up",
+      "timestamp": "2025-12-09T11:36:49.526Z",
+      "__v": 0
+    },
+    {
+      "_id": "693809b6e9ab184312dfa6c6",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T11:36:22.978Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938094be9ab184312dfa420",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T11:34:35.048Z",
+      "__v": 0
+    },
+    {
+      "_id": "6938090de9ab184312dfa283",
+      "user": "nbhlol",
+      "reward": "happy hour",
+      "timestamp": "2025-12-09T11:33:33.644Z",
+      "__v": 0
+    },
+    {
+      "_id": "69380802e9ab184312df9cd9",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-09T11:29:06.525Z",
+      "__v": 0
+    },
+    {
+      "_id": "693807f9e9ab184312df9ca1",
+      "user": "Admin Spin",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-09T11:28:57.351Z",
+      "__v": 0
+    },
+    {
+      "_id": "6936e686e9ab184312d9bb55",
+      "user": "AzureDreamer",
+      "reward": "say a line ",
+      "timestamp": "2025-12-08T14:53:58.988Z",
+      "__v": 0
+    },
+    {
+      "_id": "69366fb9e9ab184312d7094e",
+      "user": "Admin Spin",
+      "reward": "eat a spoon of hot sauce",
+      "timestamp": "2025-12-08T06:27:05.565Z",
+      "__v": 0
+    },
+    {
+      "_id": "69366da5e9ab184312d6fb98",
+      "user": "nbhlol",
+      "reward": "Timeout (10m)",
+      "timestamp": "2025-12-08T06:18:13.991Z",
+      "__v": 0
+    },
+    {
+      "_id": "69366d3fe9ab184312d6f8c4",
+      "user": "nbhlol",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-08T06:16:31.008Z",
+      "__v": 0
+    },
+    {
+      "_id": "69366c4ce9ab184312d6f2c5",
+      "user": "boostiealt",
+      "reward": "say a line ",
+      "timestamp": "2025-12-08T06:12:28.276Z",
+      "__v": 0
+    },
+    {
+      "_id": "69344b71d3368be233ae229d",
+      "user": "nbhlol",
+      "reward": "say a line ",
+      "timestamp": "2025-12-06T15:27:45.610Z",
+      "__v": 0
+    },
+    {
+      "_id": "6932f6e892177882d2092c7e",
+      "user": "nbhlol",
+      "reward": "Timeout (10m)",
+      "timestamp": "2025-12-05T15:14:48.117Z",
+      "__v": 0
+    },
+    {
+      "_id": "6932f28092177882d20913a9",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-05T14:56:00.252Z",
+      "__v": 0
+    },
+    {
+      "_id": "6932ebd392177882d208f250",
+      "user": "nbhlol",
+      "reward": "10 push up",
+      "timestamp": "2025-12-05T14:27:31.494Z",
+      "__v": 0
+    },
+    {
+      "_id": "6932b8dcb844efea1e12d101",
+      "user": "nbhlol",
+      "reward": "cringe",
+      "timestamp": "2025-12-05T10:50:04.668Z",
+      "__v": 0
+    },
+    {
+      "_id": "6932b8c4b844efea1e12d04f",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-05T10:49:40.380Z",
+      "__v": 0
+    },
+    {
+      "_id": "6932567ef879ddf6e1621000",
+      "user": "Admin Spin",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-05T03:50:22.711Z",
+      "__v": 0
+    },
+    {
+      "_id": "69325656f879ddf6e1620ee3",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-05T03:49:42.882Z",
+      "__v": 0
+    },
+    {
+      "_id": "6932563ff879ddf6e1620e4f",
+      "user": "nbhlol",
+      "reward": "cringe",
+      "timestamp": "2025-12-05T03:49:19.866Z",
+      "__v": 0
+    },
+    {
+      "_id": "69318921f879ddf6e15d0f3b",
+      "user": "nbhlol",
+      "reward": "10 push up",
+      "timestamp": "2025-12-04T13:14:09.435Z",
+      "__v": 0
+    },
+    {
+      "_id": "6931883df879ddf6e15d09ad",
+      "user": "Admin Spin",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-04T13:10:21.813Z",
+      "__v": 0
+    },
+    {
+      "_id": "693034e489fe724924a484f0",
+      "user": "nbhlol",
+      "reward": "eat a spoon of hot sauce",
+      "timestamp": "2025-12-03T13:02:28.233Z",
+      "__v": 0
+    },
+    {
+      "_id": "6930078b89fe724924a36144",
+      "user": "Admin Spin",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-03T09:48:59.994Z",
+      "__v": 0
+    },
+    {
+      "_id": "693006ca89fe724924a35b03",
+      "user": "toastedferris",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-03T09:45:46.519Z",
+      "__v": 0
+    },
+    {
+      "_id": "6930062489fe724924a3564f",
+      "user": "nbhlol",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-03T09:43:00.400Z",
+      "__v": 0
+    },
+    {
+      "_id": "693002e489fe724924a3401c",
+      "user": "ThreeGerberas",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-03T09:29:08.690Z",
+      "__v": 0
+    },
+    {
+      "_id": "6930022389fe724924a33ab2",
+      "user": "soohya",
+      "reward": "say a line ",
+      "timestamp": "2025-12-03T09:25:55.360Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f9290466a19d98bf5dfdd",
+      "user": "Admin Spin",
+      "reward": "cringe",
+      "timestamp": "2025-12-03T01:29:52.110Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f9256466a19d98bf5de78",
+      "user": "Admin Spin",
+      "reward": "Timeout (10m)",
+      "timestamp": "2025-12-03T01:28:54.243Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f9215466a19d98bf5dc7f",
+      "user": "AzureDreamer",
+      "reward": "open cam for 2 hours",
+      "timestamp": "2025-12-03T01:27:49.047Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f90e8466a19d98bf5d2b0",
+      "user": "Admin Spin",
+      "reward": "happy hour",
+      "timestamp": "2025-12-03T01:22:48.621Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f0f4b394fbbc011121071",
+      "user": "Admin Spin",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-02T16:09:47.979Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f0f22394fbbc011120f02",
+      "user": "Admin Spin",
+      "reward": "say a line ",
+      "timestamp": "2025-12-02T16:09:06.476Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f0a07394fbbc01111dbb3",
+      "user": "toastedferris",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-02T15:47:19.457Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f04d1394fbbc01111a556",
+      "user": "Admin Spin",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-02T15:25:05.189Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f0454394fbbc01111a0bb",
+      "user": "monkeyomasis",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-02T15:23:00.753Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f041d394fbbc011119ec9",
+      "user": "monkeyomasis",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-02T15:22:05.732Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f02d6394fbbc01111910d",
+      "user": "AzureDreamer",
+      "reward": "say a line ",
+      "timestamp": "2025-12-02T15:16:38.378Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f0242394fbbc011118a32",
+      "user": "AzureDreamer",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-02T15:14:10.654Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f0156e42c5453687f16cb",
+      "user": "Admin Spin",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-02T15:10:14.339Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f00e2e42c5453687f0f95",
+      "user": "Admin Spin",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-02T15:08:18.163Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f005fe42c5453687f0b7e",
+      "user": "gabenVLR",
+      "reward": "say a line ",
+      "timestamp": "2025-12-02T15:06:07.313Z",
+      "__v": 0
+    },
+    {
+      "_id": "692f0028e42c5453687f09b9",
+      "user": "gabenVLR",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-02T15:05:12.282Z",
+      "__v": 0
+    },
+    {
+      "_id": "692eff86e42c5453687f0434",
+      "user": "AzureDreamer",
+      "reward": "10 push up",
+      "timestamp": "2025-12-02T15:02:30.282Z",
+      "__v": 0
+    },
+    {
+      "_id": "692efd5ae42c5453687ee772",
+      "user": "itzjonnny__",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-02T14:53:14.508Z",
+      "__v": 0
+    },
+    {
+      "_id": "692efcbee42c5453687eddad",
+      "user": "itzjonnny__",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-02T14:50:38.207Z",
+      "__v": 0
+    },
+    {
+      "_id": "692efc75e42c5453687edb6c",
+      "user": "itzjonnny__",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-02T14:49:25.388Z",
+      "__v": 0
+    },
+    {
+      "_id": "692efc55e42c5453687eda3b",
+      "user": "itzjonnny__",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-02T14:48:53.462Z",
+      "__v": 0
+    },
+    {
+      "_id": "692efc16e42c5453687ed7f3",
+      "user": "itzjonnny__",
+      "reward": "10 squart/ds ",
+      "timestamp": "2025-12-02T14:47:50.439Z",
+      "__v": 0
+    },
+    {
+      "_id": "692efa8ee42c5453687ec838",
+      "user": "itzjonnny__",
+      "reward": "mute for 5 minutes",
+      "timestamp": "2025-12-02T14:41:18.984Z",
+      "__v": 0
+    },
+    {
+      "_id": "692ef7ddd90c2b0afcfa928d",
+      "user": "nbhlol",
+      "reward": "meow for 2 minutes",
+      "timestamp": "2025-12-02T14:29:49.409Z",
+      "__v": 0
+    },
+    {
+      "_id": "692ef7a6d90c2b0afcfa9016",
+      "user": "nbhlol",
+      "reward": "add an hour to the timer",
+      "timestamp": "2025-12-02T14:28:54.774Z",
+      "__v": 0
+    },
+    {
+      "_id": "692ef694d90c2b0afcfa84c2",
+      "user": "toastedferris",
+      "reward": "10 push up",
+      "timestamp": "2025-12-02T14:24:20.004Z",
+      "__v": 0
+    },
+    {
+      "_id": "692ef641d90c2b0afcfa81ea",
+      "user": "1nudon",
+      "reward": "give a wet kiss",
+      "timestamp": "2025-12-02T14:22:57.906Z",
+      "__v": 0
+    }
+  ],
+  "items": [
+    {
+      "label": "VIP Status",
+      "weight": 2
+    },
+    {
+      "label": "give a wet kiss",
+      "weight": 5
+    },
+    {
+      "label": "meow for 2 minutes",
+      "weight": 7
+    },
+    {
+      "label": "mute for 5 minutes",
+      "weight": 5
+    },
+    {
+      "label": "baby photo of nisa",
+      "weight": 2
+    },
+    {
+      "label": "add an hour to the timer",
+      "weight": 40
+    },
+    {
+      "label": "bark",
+      "weight": 10
+    },
+    {
+      "label": "push up",
+      "weight": 5
+    },
+    {
+      "label": "squarts",
+      "weight": 5
+    },
+    {
+      "label": "open cam for 2 hours",
+      "weight": 5
+    },
+    {
+      "label": "golden hour",
+      "weight": 10
+    }
+  ]
+}
