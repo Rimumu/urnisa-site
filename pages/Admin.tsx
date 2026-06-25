@@ -82,6 +82,22 @@ const AdminIcons = {
             <line x1="3" y1="10" x2="21" y2="10" />
         </svg>
     ),
+    Target: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="6" />
+            <circle cx="12" cy="12" r="2" />
+        </svg>
+    ),
+    Wheel: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="2" x2="12" y2="22" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+        </svg>
+    ),
     Settings: () => (
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="3" />
@@ -196,7 +212,7 @@ const AdminIcons = {
     ),
     DoubleFire: () => (
         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 23c-3.65 0-7.18-2.79-7.18-7.79 0-3.47 2.14-6.64 3.72-8.62a.5.5 0 0 1 .82.4v2.63c0 .41.47.63.78.39l4.45-3.41a.5.5 0 0 1 .8.4c0 2.63.28 5.78 2.18 8.07 1.26 1.52 1.61 2.79 1.61 4.14 0 5-3.53 7.79-7.18 7.79z" />
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
         </svg>
     ),
     Game: ({ className = "w-5 h-5" }: { className?: string }) => (
@@ -429,7 +445,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
 
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'event' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament' | 'snakes'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'goals_editor' | 'wheel_editor' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament' | 'snakes'>('nisathon_mgr');
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -1273,8 +1289,14 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     // --- RENDER ---
     if (!isAuthenticated) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-                <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-2xl w-full max-w-md">
+            <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-brand-surface relative overflow-hidden">
+                {/* Background Effects */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.02)_0%,transparent_60%)]"></div>
+                    <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-brand-primary/10 rounded-full blur-[100px] mix-blend-screen animate-pulse"></div>
+                </div>
+
+                <div className="relative z-10 bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-2xl w-full max-w-md animate-in zoom-in duration-500">
                     <h1 className="text-3xl font-extrabold text-center mb-6 text-white">Admin <span className="text-brand-primary">Login</span></h1>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-brand-primary focus:outline-none" placeholder="Enter password" />
@@ -1287,70 +1309,116 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     }
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-black/20">
+        <div className="flex flex-col md:flex-row h-screen bg-brand-surface relative overflow-hidden font-sans">
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 3px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5383b; border-radius: 3px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+            `}</style>
+            {/* Background Effects */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.02)_0%,transparent_60%)]"></div>
+                <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-brand-primary/10 rounded-full blur-[100px] mix-blend-screen animate-pulse"></div>
+            </div>
+
             {/* --- SIDEBAR --- */}
-            <div className="w-full md:w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 flex-shrink-0 md:h-screen md:sticky md:top-0">
-                <div className="p-6 border-b border-white/10 flex items-center justify-center md:justify-start gap-3">
-                    <span className="text-brand-primary"><AdminIcons.Panel /></span>
-                    <h1 className="text-xl font-extrabold text-white">Admin <span className="text-brand-primary">Panel</span></h1>
+            <div className="relative z-10 w-full md:w-[280px] bg-black/40 backdrop-blur-3xl border-r border-white/5 flex-shrink-0 md:h-screen md:sticky md:top-0 flex flex-col shadow-2xl">
+                <div className="p-6 md:p-8 flex items-center justify-between md:justify-start gap-4 bg-gradient-to-b from-white/5 to-transparent shrink-0">
+                    <div className="flex items-center gap-4">
+                        <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.6)]">
+                            <AdminIcons.Panel />
+                        </span>
+                        <h1 className="text-2xl font-black text-white tracking-tight">Admin <span className="text-brand-primary">Panel</span></h1>
+                    </div>
+                    {/* Mobile Exit Button */}
+                    <Link to="/" className="md:hidden flex items-center justify-center p-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-all" title="Exit Admin">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </Link>
                 </div>
-                <nav className="p-4 space-y-1 flex md:block overflow-x-auto md:overflow-visible custom-scrollbar">
-                    {/* Streaming Tools Section */}
-                    <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-4 pb-2">Streaming Tools</div>
-                    <button onClick={() => setActiveTab('nisathon_mgr')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'nisathon_mgr' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Nisathon /> Nisathon
-                    </button>
-                    <button onClick={() => setActiveTab('countdown')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'countdown' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Countdown /> Countdown
-                    </button>
-                    <button onClick={() => setActiveTab('schedule')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'schedule' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Schedule /> Schedule
-                    </button>
-
-                    {/* Content Section */}
-                    <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-6 pb-2">Website Content</div>
-                    <button onClick={() => setActiveTab('event')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'event' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Settings /> Settings
-                    </button>
-                    <button onClick={() => setActiveTab('profile')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'profile' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Profile /> Profile
-                    </button>
-                    <button onClick={() => setActiveTab('gallery')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'gallery' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Gallery /> Gallery
-                    </button>
-
-                    {/* Gaming Section */}
-                    <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-6 pb-2">Gaming</div>
-                    <button onClick={() => setActiveTab('minecraft')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'minecraft' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Game /> Minecraft
-                    </button>
-                    <button onClick={() => setActiveTab('tournament')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'tournament' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Tournament /> Tournament
-                    </button>
-                    <button onClick={() => setActiveTab('snakes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'snakes' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Snakes /> Snakes Game
-                    </button>
-
-                    {/* Bot & Users Section */}
-                    <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-6 pb-2">Bot & Users</div>
-                    <button onClick={() => setActiveTab('codes')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'codes' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Codes /> Gacha Codes
-                    </button>
-                    <button onClick={() => setActiveTab('users')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'users' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Users /> Users
-                    </button>
-
-                    {/* Developer Section */}
-                    <div className="hidden md:block text-[10px] uppercase font-bold text-gray-500 tracking-widest px-4 pt-6 pb-2">Developer</div>
-                    <button onClick={() => setActiveTab('merger')} className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-semibold text-sm ${activeTab === 'merger' ? 'bg-brand-primary text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                        <AdminIcons.Merger /> JSON Merger
-                    </button>
+                
+                <nav className="flex-1 overflow-y-auto overflow-x-auto md:overflow-x-hidden p-4 md:p-6 flex md:flex-col gap-3 md:gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                    {[
+                        {
+                            title: "Nisathon",
+                            items: [
+                                { id: 'nisathon_mgr', label: 'Nisathon Dashboard', icon: AdminIcons.Nisathon },
+                                { id: 'goals_editor', label: 'Goals Editor', icon: AdminIcons.Target },
+                                { id: 'wheel_editor', label: 'Wheel Editor', icon: AdminIcons.Wheel },
+                            ]
+                        },
+                        {
+                            title: "Website Content",
+                            items: [
+                                { id: 'schedule', label: 'Stream Schedule', icon: AdminIcons.Schedule },
+                                { id: 'profile', label: 'Profile Editor', icon: AdminIcons.Profile },
+                                { id: 'gallery', label: 'Gallery Uploads', icon: AdminIcons.Gallery },
+                            ]
+                        },
+                        {
+                            title: "Widgets & Events",
+                            items: [
+                                { id: 'countdown', label: 'Countdown', icon: AdminIcons.Countdown },
+                                { id: 'snakes', label: 'Snakes & Ladders', icon: AdminIcons.Snakes, special: true },
+                            ]
+                        },
+                        {
+                            title: "Minecraft",
+                            items: [
+                                { id: 'minecraft', label: 'Minecraft Whitelist', icon: AdminIcons.Game },
+                                { id: 'tournament', label: 'Tournament', icon: AdminIcons.Tournament },
+                                { id: 'codes', label: 'Gacha Codes', icon: AdminIcons.Codes },
+                            ]
+                        },
+                        {
+                            title: "Developer Tools",
+                            items: [
+                                { id: 'users', label: 'Users Management', icon: AdminIcons.Users },
+                                { id: 'merger', label: 'JSON Merger', icon: AdminIcons.Merger },
+                            ]
+                        }
+                    ].map((category, idx) => (
+                        <div key={idx} className="flex md:flex-col gap-2 md:gap-1 shrink-0 items-center md:items-stretch">
+                            <div className="hidden md:block text-[10px] uppercase font-extrabold text-gray-500 tracking-[0.2em] px-3 pt-2 pb-1">
+                                {category.title}
+                            </div>
+                            {category.items.map(item => (
+                                <button 
+                                    key={item.id} 
+                                    onClick={() => setActiveTab(item.id as any)} 
+                                    className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 md:px-4 py-2.5 md:py-3 rounded-2xl transition-all duration-300 font-bold text-sm whitespace-nowrap 
+                                    ${activeTab === item.id 
+                                        ? (item.special 
+                                            ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)] scale-105 md:scale-100 translate-y-[-2px] md:translate-y-0' 
+                                            : 'bg-brand-primary text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-105 md:scale-100 translate-y-[-2px] md:translate-y-0') 
+                                        : 'text-gray-400 bg-white/5 md:bg-transparent hover:bg-white/10 hover:text-white hover:scale-105 md:hover:scale-100'}`}
+                                >
+                                    <item.icon /> <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    ))}
                 </nav>
+                
+                <div className="p-4 md:p-6 border-t border-white/5 shrink-0 hidden md:block">
+                    <Link to="/" className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-2xl transition-all font-bold text-sm">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        Exit Admin
+                    </Link>
+                </div>
             </div>
 
             {/* --- CONTENT AREA --- */}
-            <div className="flex-1 p-6 md:p-10 overflow-y-auto min-h-screen">
-                <div className="max-w-6xl mx-auto space-y-8">
+            <div className="relative z-10 flex-1 p-6 md:p-10 overflow-y-auto h-full custom-scrollbar">
+                <div className="max-w-6xl mx-auto space-y-8 pb-20">
 
                     {/* --- STATUS TOASTS (STACKED & POINTER-EVENTS CONTROLLED) --- */}
                     <div className="fixed top-24 right-4 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-sm">
@@ -1364,94 +1432,153 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'nisathon_mgr' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* LIVE HEADER STATS */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 ${isDoubleTimer ? 'bg-gradient-to-br from-yellow-900/40 to-black border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.2)]' : 'bg-black/40 border-white/10'}`}>
-                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1 flex justify-between items-center">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className={`relative overflow-hidden p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between ${isDoubleTimer ? 'bg-gradient-to-br from-yellow-900/40 to-black border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.2)]' : 'bg-white/5 backdrop-blur-2xl border-white/10 shadow-2xl'}`}>
+                                    <div className="text-xs text-gray-400 font-extrabold uppercase tracking-[0.2em] mb-2 flex justify-between items-center">
                                         Time Remaining
-                                        {stats.isPaused && <span className="bg-amber-500 text-black px-2 rounded text-[10px] animate-pulse">PAUSED</span>}
-                                        {isDoubleTimer && <span className="text-yellow-400 animate-pulse"><AdminIcons.DoubleFire /> 2x</span>}
-                                        {stats.isEnded && <span className="bg-red-500 text-white px-2 rounded text-[10px] font-bold">ENDED</span>}
                                     </div>
-                                    <div className={`text-3xl font-black font-mono tracking-tight ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300`}>
-                                        {timeLeftString}
+                                    <div className={`text-4xl md:text-5xl font-black font-mono tracking-tighter flex flex-col justify-center h-full -mt-2 ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300 drop-shadow-lg`}>
+                                        <div>{timeLeftString}</div>
+                                        {(stats.isPaused || stats.isEnded) && (
+                                            <div className="flex flex-wrap items-center gap-2 mt-2 font-sans tracking-normal">
+                                                {stats.isPaused && <span className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-amber-500/10 animate-pulse"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Paused</span>}
+                                                {stats.isEnded && <span className="text-[10px] text-red-500 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-red-500/10"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Ended</span>}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="bg-black/40 p-4 rounded-2xl border border-white/10 relative overflow-hidden group">
-                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Total Nisaballs</div>
-                                    <div className="text-3xl font-black text-brand-primary">{Math.floor(stats.totalNisaballs)}</div>
+                                <div className="bg-white/5 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden group flex flex-col justify-between">
+                                    <div className="text-xs text-gray-400 font-extrabold uppercase tracking-[0.2em] mb-2">Total Nisaballs</div>
+                                    <div className="text-5xl md:text-6xl font-black text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)] flex items-center h-full -mt-2">{Math.floor(stats.totalNisaballs)}</div>
                                 </div>
-                                <div className="bg-black/40 p-4 rounded-2xl border border-white/10 relative overflow-hidden group">
-                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-2">Recent Activity</div>
+                                <div className="bg-white/5 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden group flex flex-col justify-between">
+                                    <div className="text-xs text-gray-400 font-extrabold uppercase tracking-[0.2em] mb-3">Recent Activity</div>
                                     {latestActivity ? (
-                                        <div>
-                                            <div className="font-bold text-white text-lg truncate">{latestActivity.user}</div>
-                                            <div className="text-xs font-mono text-green-400">{latestActivity.amountDisplay}</div>
+                                        <div className="flex flex-col justify-center h-full -mt-2">
+                                            <div className="font-extrabold text-white text-2xl truncate tracking-tight">{latestActivity.user}</div>
+                                            <div className="text-lg font-mono font-bold text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]">{latestActivity.amountDisplay}</div>
                                         </div>
                                     ) : (
-                                        <div className="text-sm text-gray-500 italic">Waiting...</div>
+                                        <div className="text-sm text-gray-500 italic flex items-center h-full -mt-2">Waiting for events...</div>
                                     )}
                                 </div>
-                                <div className="bg-black/40 p-4 rounded-2xl border border-white/10 flex flex-col justify-between">
-                                    <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Stream Status</div>
-                                    <div className={`text-xl font-black uppercase tracking-wide ${streamStatusOverride === 'live' ? 'text-green-500' : streamStatusOverride === 'offline' ? 'text-red-500' : 'text-blue-400'}`}>
-                                        {streamStatusOverride}
+                                <div className="bg-white/5 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 shadow-2xl flex flex-col justify-between">
+                                    <div className="text-xs text-gray-400 font-extrabold uppercase tracking-[0.2em] mb-2">Stream Status</div>
+                                    <div className="flex justify-between items-center h-full -mt-2">
+                                        <div className={`text-4xl md:text-5xl font-black uppercase tracking-tight ${streamStatusOverride === 'live' ? 'text-green-500 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]' : streamStatusOverride === 'offline' ? 'text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]'}`}>
+                                            {streamStatusOverride === 'offline' ? 'OFF' : streamStatusOverride}
+                                        </div>
+                                        <div className="flex flex-col gap-1 shrink-0">
+                                            <button onClick={() => handleSetStreamStatus('auto')} className={`px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all duration-300 ${streamStatusOverride === 'auto' ? 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-black/40 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5'}`}>AUTO</button>
+                                            <button onClick={() => handleSetStreamStatus('live')} className={`px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all duration-300 ${streamStatusOverride === 'live' ? 'bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'bg-black/40 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5'}`}>LIVE</button>
+                                            <button onClick={() => handleSetStreamStatus('offline')} className={`px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all duration-300 ${streamStatusOverride === 'offline' ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-black/40 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5'}`}>OFFLINE</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             {/* Controls */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <div className="lg:col-span-2 bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="font-bold text-white text-lg">Timer Management</h3>
-                                        <button onClick={handleToggleDoubleTimer} className={`text-xs px-4 py-2 rounded-full font-bold border transition-all flex items-center gap-1.5 ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.4)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>{stats.activeEvent === 'DOUBLE_TIMER' ? <><AdminIcons.DoubleFire /> 2x Active</> : 'Enable 2x Event'}</button>
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                                        <h3 className="font-black text-white text-2xl tracking-tight">Timer Management</h3>
+                                        <button onClick={handleToggleDoubleTimer} className={`text-xs px-5 py-2.5 rounded-xl font-bold border transition-all duration-300 flex items-center gap-2 ${stats.activeEvent === 'DOUBLE_TIMER' ? 'bg-yellow-500 text-black border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:scale-105' : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:scale-105'}`}>{stats.activeEvent === 'DOUBLE_TIMER' ? <><AdminIcons.DoubleFire /> 2x Active</> : 'Enable 2x Event'}</button>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-4">
-                                            <label className="text-xs text-gray-500 font-bold uppercase">Set Absolute Time</label>
-                                            <div className="flex gap-2">
-                                                <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerH} onChange={e => setTimerH(parseInt(e.target.value) || 0)} />
-                                                <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerM} onChange={e => setTimerM(parseInt(e.target.value) || 0)} />
-                                                <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={timerS} onChange={e => setTimerS(parseInt(e.target.value) || 0)} />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        <div className="space-y-4 bg-black/20 p-5 rounded-2xl border border-white/5 flex flex-col justify-between">
+                                            <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-[0.2em]">Set Absolute Time</label>
+                                            <div className="flex gap-3">
+                                                <div className="flex flex-col gap-2 w-full">
+                                                    <span className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest text-center">HRS</span>
+                                                    <div className="flex flex-col items-center gap-1.5">
+                                                        <button onClick={() => setTimerH(timerH + 1)} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                        </button>
+                                                        <input type="number" placeholder="00" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 text-center text-white text-xl font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" value={timerH} onChange={e => setTimerH(parseInt(e.target.value) || 0)} />
+                                                        <button onClick={() => setTimerH(Math.max(0, timerH - 1))} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-2 w-full">
+                                                    <span className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest text-center">MINS</span>
+                                                    <div className="flex flex-col items-center gap-1.5">
+                                                        <button onClick={() => setTimerM(timerM + 1)} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                        </button>
+                                                        <input type="number" placeholder="00" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 text-center text-white text-xl font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" value={timerM} onChange={e => setTimerM(parseInt(e.target.value) || 0)} />
+                                                        <button onClick={() => setTimerM(Math.max(0, timerM - 1))} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-2 w-full">
+                                                    <span className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest text-center">SECS</span>
+                                                    <div className="flex flex-col items-center gap-1.5">
+                                                        <button onClick={() => setTimerS(timerS + 1)} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                        </button>
+                                                        <input type="number" placeholder="00" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 text-center text-white text-xl font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" value={timerS} onChange={e => setTimerS(parseInt(e.target.value) || 0)} />
+                                                        <button onClick={() => setTimerS(Math.max(0, timerS - 1))} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <button onClick={handleSetTimer} className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-bold transition-colors">Set Time</button>
+                                            <button onClick={handleSetTimer} className="w-full mt-2 bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-xl font-extrabold tracking-wide transition-all hover:scale-[1.02]">Set Time</button>
                                         </div>
-                                        <div className="space-y-4">
-                                            <label className="text-xs text-gray-500 font-bold uppercase">Quick Adjust</label>
-                                            <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-center text-white text-lg font-mono" value={addM} onChange={e => setAddM(parseInt(e.target.value) || 0)} />
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <button onClick={handleAddTimer} className="bg-green-600/80 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition-colors">+</button>
-                                                <button onClick={handleRemoveTimer} className="bg-red-600/80 hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors">-</button>
-                                                <button onClick={handlePauseTimer} className={`py-3 rounded-xl font-bold text-white transition-colors ${stats.isPaused ? 'bg-green-600 hover:bg-green-500' : 'bg-yellow-600 hover:bg-yellow-500'}`}>{stats.isPaused ? 'RESUME' : 'PAUSE'}</button>
+                                        <div className="space-y-4 bg-black/20 p-5 rounded-2xl border border-white/5 flex flex-col justify-between">
+                                            <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-[0.2em]">Quick Adjust</label>
+                                            <div className="flex flex-col gap-2 w-full">
+                                                <span className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest text-center">MINS</span>
+                                                <div className="flex flex-col items-center gap-1.5">
+                                                    <button onClick={() => setAddM(addM + 1)} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                                    </button>
+                                                    <input type="number" placeholder="0" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 text-center text-white text-xl font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" value={addM} onChange={e => setAddM(parseInt(e.target.value) || 0)} />
+                                                    <button onClick={() => setAddM(Math.max(0, addM - 1))} className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1.5 rounded-lg transition-all flex justify-center hover:scale-[1.02]">
+                                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-3 mt-2">
+                                                <button onClick={handleAddTimer} className="flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white py-3.5 rounded-xl transition-all hover:scale-[1.05] shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                </button>
+                                                <button onClick={handleRemoveTimer} className="flex items-center justify-center bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white py-3.5 rounded-xl transition-all hover:scale-[1.05] shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                </button>
+                                                <button onClick={handlePauseTimer} className={`py-3.5 rounded-xl flex items-center justify-center font-extrabold text-white transition-all hover:scale-[1.05] shadow-lg ${stats.isPaused ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30' : 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'}`}>
+                                                    {stats.isPaused ? (
+                                                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                                    ) : (
+                                                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                                    )}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl flex flex-col justify-between">
-                                    <h3 className="font-bold text-white mb-4">Manual Event Trigger</h3>
-                                    <input type="text" placeholder="Username" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white mb-3" value={testUser} onChange={e => setTestUser(e.target.value)} />
-                                    <div className="flex gap-2 mb-4">
-                                        <select className="bg-black/40 border border-white/10 rounded-xl p-3 text-white flex-1" value={testType} onChange={e => setTestType(e.target.value)}>
-                                            <option value="sub">Sub</option><option value="gift">Gift</option><option value="bits">Bits</option><option value="donation">Dono</option>
-                                        </select>
-                                        <input type="number" placeholder="Amt" className="bg-black/40 border border-white/10 rounded-xl p-3 text-white w-20 text-center" value={testAmount} onChange={e => setTestAmount(e.target.value)} />
+                                <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl flex flex-col">
+                                    <h3 className="font-black text-white text-2xl tracking-tight mb-6">Manual Trigger</h3>
+                                    <div className="flex-1 flex flex-col justify-center">
+                                        <div className="space-y-4">
+                                            <input type="text" placeholder="Username" className="w-full bg-black/40 border border-white/10 rounded-xl p-3.5 text-white font-medium focus:border-brand-primary outline-none transition-colors" value={testUser} onChange={e => setTestUser(e.target.value)} />
+                                            <div className="flex gap-3">
+                                                <select className="bg-black/40 border border-white/10 rounded-xl p-3.5 text-white font-medium flex-1 focus:border-brand-primary outline-none transition-colors appearance-none" value={testType} onChange={e => setTestType(e.target.value)}>
+                                                    <option value="sub">Subscriber</option><option value="gift">Gift Sub</option><option value="bits">Bits</option><option value="donation">Donation</option>
+                                                </select>
+                                                <input type="number" placeholder="Amt" className="bg-black/40 border border-white/10 rounded-xl p-3.5 text-white font-mono w-24 text-center focus:border-brand-primary outline-none transition-colors" value={testAmount} onChange={e => setTestAmount(e.target.value)} />
+                                            </div>
+                                        </div>
+                                        <button onClick={handleSimulateEvent} className="w-full mt-6 bg-brand-primary hover:bg-red-600 text-white font-extrabold py-4 rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_20px_rgba(220,38,38,0.3)]">Trigger Event</button>
                                     </div>
-                                    <button onClick={handleSimulateEvent} className="w-full bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-xl transition-colors">Trigger Event</button>
                                 </div>
                             </div>
-                            {/* Stream Status */}
-                            <div className="bg-black/30 p-4 rounded-2xl border border-white/10 flex items-center justify-between gap-4">
-                                <h3 className="font-bold text-gray-400 text-sm uppercase tracking-wider ml-2">Stream Status Override</h3>
-                                <div className="flex gap-2 bg-black/40 p-1 rounded-xl">
-                                    <button onClick={() => handleSetStreamStatus('auto')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'auto' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-white'}`}>AUTO</button>
-                                    <button onClick={() => handleSetStreamStatus('live')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'live' ? 'bg-green-600 text-white' : 'text-gray-500 hover:text-white'}`}>LIVE</button>
-                                    <button onClick={() => handleSetStreamStatus('offline')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${streamStatusOverride === 'offline' ? 'bg-red-600 text-white' : 'text-gray-500 hover:text-white'}`}>OFFLINE</button>
-                                </div>
-                            </div>
-
+                            
                             {/* Revamped Event Log */}
-                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl h-[600px] flex flex-col">
+                            <div className="bg-white/5 backdrop-blur-3xl p-6 rounded-3xl border border-white/10 shadow-2xl h-[600px] flex flex-col">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                                    <h3 className="font-bold text-white text-lg flex items-center gap-2"><span className="text-brand-primary"><AdminIcons.EventLog /></span> Event Log ({filteredEvents.length})</h3>
+                                    <h3 className="font-black text-white text-2xl tracking-tight flex items-center gap-3"><span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]"><AdminIcons.EventLog /></span> Event Log ({filteredEvents.length})</h3>
 
                                     <div className="flex flex-wrap gap-2 w-full md:w-auto">
                                         <input
@@ -1459,9 +1586,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             placeholder="Search User..."
                                             value={filterUser}
                                             onChange={(e) => setFilterUser(e.target.value)}
-                                            className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-primary outline-none min-w-[150px] flex-1 md:flex-none"
+                                            className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-brand-primary outline-none min-w-[150px] flex-1 md:flex-none transition-colors"
                                         />
-                                        <div className="flex bg-black/40 rounded-lg p-1 border border-white/10">
+                                        <div className="flex bg-black/40 rounded-xl p-1.5 border border-white/10">
                                             {[
                                                 { id: 'all', label: 'ALL' },
                                                 { id: 'sub', label: 'SUB' },
@@ -1472,7 +1599,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 <button
                                                     key={f.id}
                                                     onClick={() => setFilterType(f.id)}
-                                                    className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${filterType === f.id ? 'bg-brand-primary text-white' : 'text-gray-500 hover:text-white'}`}
+                                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300 ${filterType === f.id ? 'bg-brand-primary text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
                                                 >
                                                     {f.label}
                                                 </button>
@@ -1486,31 +1613,31 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         let IconComponent = AdminIcons.EventSub;
                                         let colorClass = 'text-gray-400 bg-gray-500/10 border-gray-500/20';
 
-                                        if (evt.type === 'sub' || evt.type === 'subscriber') { IconComponent = AdminIcons.EventSub; colorClass = 'text-purple-400 bg-purple-500/10 border-purple-500/20'; }
-                                        else if (evt.type === 'gift') { IconComponent = AdminIcons.EventGift; colorClass = 'text-pink-400 bg-pink-500/10 border-pink-500/20'; }
-                                        else if (evt.type === 'bits' || evt.type === 'cheer') { IconComponent = AdminIcons.EventBits; colorClass = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'; }
-                                        else if (evt.type === 'donation' || evt.type === 'tip') { IconComponent = AdminIcons.EventDono; colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'; }
+                                        if (evt.type === 'sub' || evt.type === 'subscriber') { IconComponent = AdminIcons.EventSub; colorClass = 'text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.1)]'; }
+                                        else if (evt.type === 'gift') { IconComponent = AdminIcons.EventGift; colorClass = 'text-pink-400 bg-pink-500/10 border-pink-500/20 shadow-[0_0_10px_rgba(236,72,153,0.1)]'; }
+                                        else if (evt.type === 'bits' || evt.type === 'cheer') { IconComponent = AdminIcons.EventBits; colorClass = 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]'; }
+                                        else if (evt.type === 'donation' || evt.type === 'tip') { IconComponent = AdminIcons.EventDono; colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]'; }
 
                                         return (
-                                            <div key={evt._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all gap-4 group">
-                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${colorClass}`}>
+                                            <div key={evt._id} className="flex items-center justify-between p-3.5 rounded-2xl bg-black/20 border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all gap-4 group shadow-sm">
+                                                <div className="flex items-center gap-4 overflow-hidden">
+                                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${colorClass}`}>
                                                         <IconComponent />
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <div className="font-bold text-white text-sm truncate">{evt.user}</div>
-                                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mt-0.5">
                                                             {evt.type} • {new Date(evt.createdAt).toLocaleString()}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="font-mono font-bold text-brand-accent text-sm whitespace-nowrap bg-black/30 px-2 py-1 rounded border border-white/5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="font-mono font-bold text-brand-accent text-sm whitespace-nowrap bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 drop-shadow-md">
                                                         {evt.amountDisplay}
                                                     </div>
-                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-[10px] font-bold transition-colors">REV</button>
-                                                        <button onClick={() => setConfirmDelete({ id: evt._id, revert: false })} className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] font-bold transition-colors">DEL</button>
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm">REV</button>
+                                                        <button onClick={() => setConfirmDelete({ id: evt._id, revert: false })} className="bg-white/5 border border-white/10 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm">DEL</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1520,24 +1647,24 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             </div>
 
                             {confirmDelete && (
-                                <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-                                    <div className="bg-[#1a0b0e] p-6 rounded-2xl border border-white/10 text-center max-w-sm">
-                                        <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
-                                        <div className="flex flex-col gap-2">
-                                            <button onClick={() => handleDeleteEvent(confirmDelete.id, true)} className="bg-red-600 text-white py-3 rounded-xl font-bold">REVERT NB & DELETE</button>
-                                            <button onClick={() => handleDeleteEvent(confirmDelete.id, false)} className="bg-gray-600 text-white py-3 rounded-xl font-bold">DELETE LOG ONLY</button>
-                                            <button onClick={() => setConfirmDelete(null)} className="text-gray-400 mt-2">Cancel</button>
+                                <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="bg-[#1a0b0e] p-8 rounded-3xl border border-red-900/50 text-center max-w-sm shadow-[0_0_50px_rgba(220,38,38,0.15)]">
+                                        <h3 className="text-2xl font-black text-white tracking-tight mb-6">Confirm Delete</h3>
+                                        <div className="flex flex-col gap-3">
+                                            <button onClick={() => handleDeleteEvent(confirmDelete.id, true)} className="bg-red-600 hover:bg-red-500 text-white py-3.5 rounded-xl font-bold transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.4)]">REVERT NB & DELETE</button>
+                                            <button onClick={() => handleDeleteEvent(confirmDelete.id, false)} className="bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-xl font-bold transition-all hover:scale-[1.02]">DELETE LOG ONLY</button>
+                                            <button onClick={() => setConfirmDelete(null)} className="text-gray-500 hover:text-white font-medium mt-4 transition-colors">Cancel</button>
                                         </div>
                                     </div>
                                 </div>
                             )}
                             {/* Danger Zone */}
-                            <div className="bg-red-900/10 border border-red-900/30 p-6 rounded-2xl flex flex-wrap gap-4">
-                                <button onClick={handleResetData} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmReset ? 'bg-red-600 w-full' : 'bg-red-900/40'}`}>{confirmReset ? "CONFIRM RESET ALL DATA?" : "Reset Nisathon Data"}</button>
-                                <button onClick={handleForceSync} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmSync ? 'bg-blue-600' : 'bg-blue-900/40'}`}>{confirmSync ? "Confirm Force Sync?" : "Force Sync (StreamElements)"}</button>
-                                <button onClick={handleRebuild} className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${confirmRebuild ? 'bg-orange-600' : 'bg-orange-900/40'}`}>{confirmRebuild ? "Confirm Rebuild?" : "Rebuild from History"}</button>
+                            <div className="bg-red-900/10 border border-red-900/30 p-8 rounded-3xl flex flex-wrap gap-4 shadow-[inset_0_0_30px_rgba(220,38,38,0.05)]">
+                                <button onClick={handleResetData} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white transition-all duration-300 ${confirmReset ? 'bg-red-600 w-full shadow-[0_0_20px_rgba(220,38,38,0.5)] scale-[1.01]' : 'bg-red-900/40 hover:bg-red-900/60 border border-red-900/50 hover:border-red-500/50'}`}>{confirmReset ? "CONFIRM RESET ALL DATA?" : "Reset Nisathon Data"}</button>
+                                <button onClick={handleForceSync} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white transition-all duration-300 ${confirmSync ? 'bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.5)] scale-[1.01]' : 'bg-blue-900/40 hover:bg-blue-900/60 border border-blue-900/50 hover:border-blue-500/50'}`}>{confirmSync ? "Confirm Force Sync?" : "Force Sync (StreamElements)"}</button>
+                                <button onClick={handleRebuild} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white transition-all duration-300 ${confirmRebuild ? 'bg-orange-600 shadow-[0_0_20px_rgba(234,88,12,0.5)] scale-[1.01]' : 'bg-orange-900/40 hover:bg-orange-900/60 border border-orange-900/50 hover:border-orange-500/50'}`}>{confirmRebuild ? "Confirm Rebuild?" : "Rebuild from History"}</button>
                                 {/* NEW: END BUTTON */}
-                                <button onClick={handleEndNisathon} className={`px-6 py-3 rounded-xl font-bold text-white transition-all w-full ${confirmEnd ? 'bg-red-700 animate-pulse' : 'bg-red-900/60 hover:bg-red-700'}`}>
+                                <button onClick={handleEndNisathon} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-all duration-300 w-full ${confirmEnd ? 'bg-red-700 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.8)] scale-[1.02] border border-red-500' : 'bg-red-900/60 hover:bg-red-700 border border-red-900/50 hover:border-red-500/50'}`}>
                                     {confirmEnd ? "ARE YOU SURE? CLICK TO END NISATHON" : "END NISATHON"}
                                 </button>
                             </div>
@@ -1546,28 +1673,28 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                     {activeTab === 'countdown' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-white">Standalone Countdown</h2>
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-4">
-                                        <label className="text-gray-400 text-xs uppercase font-bold">Set Time</label>
-                                        <div className="flex gap-2">
-                                            <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdH} onChange={e => setCdH(parseInt(e.target.value) || 0)} />
-                                            <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdM} onChange={e => setCdM(parseInt(e.target.value) || 0)} />
-                                            <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdS} onChange={e => setCdS(parseInt(e.target.value) || 0)} />
+                            <h2 className="text-4xl font-black text-white tracking-tight">Standalone Countdown</h2>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-5 bg-black/20 p-6 rounded-3xl border border-white/5">
+                                        <label className="text-brand-primary text-[10px] uppercase font-extrabold tracking-[0.2em]">Set Time</label>
+                                        <div className="flex gap-3">
+                                            <input type="number" placeholder="H" className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-center text-white text-2xl font-mono focus:border-brand-primary outline-none transition-colors" value={cdH} onChange={e => setCdH(parseInt(e.target.value) || 0)} />
+                                            <input type="number" placeholder="M" className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-center text-white text-2xl font-mono focus:border-brand-primary outline-none transition-colors" value={cdM} onChange={e => setCdM(parseInt(e.target.value) || 0)} />
+                                            <input type="number" placeholder="S" className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-center text-white text-2xl font-mono focus:border-brand-primary outline-none transition-colors" value={cdS} onChange={e => setCdS(parseInt(e.target.value) || 0)} />
                                         </div>
-                                        <button onClick={handleCountdownSet} className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-lg font-bold">Set Countdown</button>
+                                        <button onClick={handleCountdownSet} className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-xl font-extrabold transition-all hover:scale-[1.02]">Set Countdown</button>
                                     </div>
-                                    <div className="space-y-4">
-                                        <label className="text-gray-400 text-xs uppercase font-bold">Quick Actions</label>
-                                        <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-center text-white" value={cdAddM} onChange={e => setCdAddM(parseInt(e.target.value) || 0)} />
-                                        <div className="flex gap-2">
-                                            <button onClick={handleCountdownRemove} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold text-lg">−</button>
-                                            <button onClick={handleCountdownAdd} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg font-bold text-lg">+</button>
+                                    <div className="space-y-5 bg-black/20 p-6 rounded-3xl border border-white/5">
+                                        <label className="text-brand-primary text-[10px] uppercase font-extrabold tracking-[0.2em]">Quick Actions</label>
+                                        <input type="number" placeholder="Minutes" className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-center text-white text-2xl font-mono focus:border-brand-primary outline-none transition-colors" value={cdAddM} onChange={e => setCdAddM(parseInt(e.target.value) || 0)} />
+                                        <div className="flex gap-3">
+                                            <button onClick={handleCountdownRemove} className="flex-1 bg-red-500/20 border border-red-500/30 hover:bg-red-500 text-white py-4 rounded-xl font-black text-2xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(239,68,68,0.1)]">−</button>
+                                            <button onClick={handleCountdownAdd} className="flex-1 bg-emerald-500/20 border border-emerald-500/30 hover:bg-emerald-500 text-white py-4 rounded-xl font-black text-2xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(16,185,129,0.1)]">+</button>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <button onClick={handleCountdownPause} className="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-3 rounded-lg font-bold">Pause/Resume</button>
-                                            <button onClick={handleCountdownReset} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-lg font-bold">Reset</button>
+                                        <div className="flex gap-3">
+                                            <button onClick={handleCountdownPause} className="flex-1 bg-amber-500/20 border border-amber-500/30 hover:bg-amber-600 text-white py-4 rounded-xl font-extrabold transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(245,158,11,0.1)]">Pause/Resume</button>
+                                            <button onClick={handleCountdownReset} className="flex-1 bg-white/5 border border-white/10 hover:bg-white/20 text-white py-4 rounded-xl font-extrabold transition-all hover:scale-[1.02]">Reset</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1577,76 +1704,88 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                     {activeTab === 'schedule' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-white">Schedule Manager</h2>
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <form onSubmit={handleUpdateSchedule} className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-bold text-gray-400 mb-2">Schedule Image URL</label>
+                            <h2 className="text-4xl font-black text-white tracking-tight">Schedule Manager</h2>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <form onSubmit={handleUpdateSchedule} className="space-y-8">
+                                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
+                                        <label className="block text-brand-primary text-[10px] uppercase font-extrabold tracking-[0.2em] mb-4">Schedule Image URL</label>
                                         <input
                                             type="text"
                                             value={newScheduleUrl}
                                             onChange={(e) => setNewScheduleUrl(e.target.value)}
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors"
+                                            className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-white font-mono focus:border-brand-primary outline-none transition-colors"
                                             placeholder="https://..."
                                         />
-                                        <LinkWarning url={newScheduleUrl} />
+                                        <div className="mt-4"><LinkWarning url={newScheduleUrl} /></div>
                                     </div>
-                                    <ImageUploader onUploadSuccess={setNewScheduleUrl} />
+                                    
+                                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
+                                        <ImageUploader onUploadSuccess={setNewScheduleUrl} />
+                                    </div>
 
                                     {newScheduleUrl && (
-                                        <div className="rounded-xl overflow-hidden border border-white/10">
-                                            <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-auto" />
+                                        <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 p-4">
+                                            <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-auto rounded-2xl" />
                                         </div>
                                     )}
-                                    <button type="submit" disabled={loading} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-8 rounded-xl transition-all">
-                                        Save Changes
+                                    <button type="submit" disabled={loading} className="w-full bg-brand-primary hover:bg-red-600 text-white font-extrabold py-4 rounded-xl transition-all hover:scale-[1.01] shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+                                        Save Schedule Changes
                                     </button>
                                 </form>
                             </div>
                         </div>
                     )}
 
-                    {activeTab === 'event' && (
+                    {activeTab === 'goals_editor' && (
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Goals */}
                             <div>
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-3xl font-black text-white">Goals Roadmap</h2>
-                                    <button onClick={handleSaveGoals} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Goals</button>
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-4xl font-black text-white tracking-tight">Goals Roadmap</h2>
+                                    <button onClick={handleSaveGoals} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Goals</button>
                                 </div>
                                 <div className="space-y-4">
                                     {localGoals.map((goal, i) => (
-                                        <div key={i} className="flex gap-4 items-start bg-black/30 p-4 rounded-xl border border-white/5">
+                                        <div key={i} className="flex gap-4 items-center bg-white/5 backdrop-blur-xl p-5 rounded-2xl border border-white/10 shadow-lg group hover:bg-white/10 transition-colors">
                                             <div className="w-24 shrink-0">
-                                                <label className="text-[10px] uppercase font-bold text-gray-500">NB Count</label>
-                                                <input type="number" value={goal.count} onChange={(e) => updateGoal(i, 'count', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-center font-mono" />
+                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-2 block">NB Count</label>
+                                                <input type="number" value={goal.count} onChange={(e) => updateGoal(i, 'count', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-mono focus:border-brand-primary outline-none transition-colors" />
                                             </div>
                                             <div className="flex-1">
-                                                <label className="text-[10px] uppercase font-bold text-gray-500">Reward Description</label>
-                                                <input type="text" value={goal.reward} onChange={(e) => updateGoal(i, 'reward', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" />
+                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-2 block">Reward Description</label>
+                                                <input type="text" value={goal.reward} onChange={(e) => updateGoal(i, 'reward', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors" />
                                             </div>
-                                            <div className="w-20 shrink-0 flex flex-col items-center">
-                                                <label className="text-[10px] uppercase font-bold text-gray-500 mb-2">Secret?</label>
-                                                <input type="checkbox" checked={goal.secret} onChange={(e) => updateGoal(i, 'secret', e.target.checked)} className="w-5 h-5 accent-brand-primary" />
+                                            <div className="w-24 shrink-0 flex flex-col items-center justify-center">
+                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-3 block">Secret?</label>
+                                                <div className="relative flex items-center justify-center">
+                                                    <input type="checkbox" checked={goal.secret} onChange={(e) => updateGoal(i, 'secret', e.target.checked)} className="peer w-6 h-6 appearance-none bg-black/40 border border-white/20 rounded-md checked:bg-brand-primary checked:border-brand-primary transition-all cursor-pointer" />
+                                                    <svg className="absolute w-4 h-4 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </div>
                                             </div>
-                                            <button onClick={() => removeGoal(i)} className="text-red-500 hover:text-red-400 mt-6 px-2">✕</button>
+                                            <button onClick={() => removeGoal(i)} className="text-red-500/50 hover:text-red-400 p-3 mt-4 rounded-xl hover:bg-red-500/10 transition-all">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            </button>
                                         </div>
                                     ))}
-                                    <button onClick={addGoal} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors flex items-center justify-center gap-2">
-                                        <span>+</span> Add Goal
+                                    <button onClick={addGoal} className="w-full py-5 border-2 border-dashed border-white/10 rounded-2xl text-gray-400 font-extrabold hover:text-white hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all flex items-center justify-center gap-3">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add Goal
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    )}
 
+                    {activeTab === 'wheel_editor' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Wheel Settings */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="font-bold text-white">Wheel Items</h3>
-                                    <button onClick={handleSaveWheel} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Wheel</button>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="font-black text-white text-2xl tracking-tight">Wheel Items</h3>
+                                    <button onClick={handleSaveWheel} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Wheel</button>
                                 </div>
                                 <div className="space-y-4">
                                     {localWheel.map((item, i) => (
-                                        <div key={i} className="flex gap-4 items-center bg-black/30 p-4 rounded-xl border border-white/5">
+                                        <div key={i} className="flex gap-4 items-center bg-black/20 p-5 rounded-2xl border border-white/5 group hover:bg-white/5 transition-colors">
                                             <div className="flex-1">
                                                 <label className="text-[10px] uppercase font-bold text-gray-500">Label</label>
                                                 <input type="text" value={item.label} onChange={(e) => updateWheelItem(i, 'label', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" />
@@ -1670,91 +1809,106 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'profile' && (
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* About Section */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-2xl font-black text-white">About Section</h2>
-                                    <button onClick={() => handleSaveProfile('about')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save About</button>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-4xl font-black text-white tracking-tight">About Section</h2>
+                                    <button onClick={() => handleSaveProfile('about')} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save About</button>
                                 </div>
                                 <div className="space-y-8">
                                     {localAbout.map((item, i) => (
-                                        <div key={item.id} className="bg-white/5 p-4 rounded-xl border border-white/5">
-                                            <div className="flex justify-between mb-2">
-                                                <input type="text" value={item.title} onChange={(e) => updateAboutItem(i, 'title', e.target.value)} className="bg-transparent font-bold text-lg text-white border-b border-transparent focus:border-brand-primary outline-none" placeholder="Section Title" />
-                                                <button onClick={() => removeAboutItem(i)} className="text-red-500 hover:text-red-300">✕</button>
+                                        <div key={item.id} className="bg-black/20 p-6 rounded-3xl border border-white/5 group transition-colors hover:bg-white/5">
+                                            <div className="flex justify-between mb-4">
+                                                <input type="text" value={item.title} onChange={(e) => updateAboutItem(i, 'title', e.target.value)} className="w-full bg-transparent font-black text-2xl text-white border-b-2 border-transparent focus:border-brand-primary outline-none transition-colors" placeholder="Section Title" />
+                                                <button onClick={() => removeAboutItem(i)} className="text-red-500/50 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-all">
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                </button>
                                             </div>
-                                            <RichTextEditor value={item.text} onChange={(val) => updateAboutItem(i, 'text', val)} />
+                                            <div className="bg-black/40 rounded-2xl p-2 border border-white/5">
+                                                <RichTextEditor value={item.text} onChange={(val) => updateAboutItem(i, 'text', val)} />
+                                            </div>
                                         </div>
                                     ))}
-                                    <button onClick={addAboutItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors">
-                                        + Add Section
+                                    <button onClick={addAboutItem} className="w-full py-5 border-2 border-dashed border-white/10 rounded-2xl text-gray-400 font-extrabold hover:text-white hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all flex items-center justify-center gap-3">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add Section
                                     </button>
                                 </div>
                             </div>
 
                             {/* Credits Section */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-2xl font-black text-white">Credits</h2>
-                                    <button onClick={() => handleSaveProfile('credits')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Credits</button>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-4xl font-black text-white tracking-tight">Credits</h2>
+                                    <button onClick={() => handleSaveProfile('credits')} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Credits</button>
                                 </div>
-                                <div className="grid grid-cols-1 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {localCredits.map((credit, i) => (
-                                        <div key={credit.id} className="bg-white/5 p-4 rounded-xl border border-white/5 flex flex-col gap-3">
-                                            <div className="flex gap-3">
-                                                <div className="w-12 h-12 shrink-0 bg-black/40 rounded-full overflow-hidden border border-white/10">
-                                                    {credit.image ? <img src={credit.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: credit.color }}>{credit.initial}</div>}
+                                        <div key={credit.id} className="bg-black/20 p-5 rounded-3xl border border-white/5 flex flex-col gap-4 relative group hover:bg-white/5 transition-colors">
+                                            <button onClick={() => removeCreditItem(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 hover:scale-100 z-10">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            </button>
+                                            <div className="flex gap-4 items-center">
+                                                <div className="w-16 h-16 shrink-0 bg-black/40 rounded-full overflow-hidden border-2 border-white/10 shadow-inner">
+                                                    {credit.image ? <img src={credit.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white font-black text-2xl" style={{ backgroundColor: credit.color }}>{credit.initial}</div>}
                                                 </div>
-                                                <div className="flex-1 grid grid-cols-2 gap-2">
-                                                    <input type="text" value={credit.name} onChange={(e) => updateCreditItem(i, 'name', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm" placeholder="Name" />
-                                                    <input type="text" value={credit.role} onChange={(e) => updateCreditItem(i, 'role', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm" placeholder="Role" />
-                                                    <input type="text" value={credit.link} onChange={(e) => updateCreditItem(i, 'link', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm col-span-2" placeholder="Link (Optional)" />
-                                                    <input type="text" value={credit.image || ''} onChange={(e) => updateCreditItem(i, 'image', e.target.value)} className="bg-black/20 border border-white/10 rounded px-2 py-1 text-white text-sm col-span-2" placeholder="Image URL" />
+                                                <div className="flex-1 space-y-2">
+                                                    <input type="text" value={credit.name} onChange={(e) => updateCreditItem(i, 'name', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white font-bold focus:border-brand-primary outline-none transition-colors" placeholder="Name" />
+                                                    <input type="text" value={credit.role} onChange={(e) => updateCreditItem(i, 'role', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-brand-primary text-sm font-semibold focus:border-brand-primary outline-none transition-colors" placeholder="Role" />
                                                 </div>
-                                                <button onClick={() => removeCreditItem(i)} className="text-red-500 hover:text-red-300 self-start">✕</button>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <input type="text" value={credit.link} onChange={(e) => updateCreditItem(i, 'link', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-brand-primary outline-none transition-colors" placeholder="Link (Optional)" />
+                                                <input type="text" value={credit.image || ''} onChange={(e) => updateCreditItem(i, 'image', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-brand-primary outline-none transition-colors" placeholder="Image URL" />
                                             </div>
                                         </div>
                                     ))}
-                                    <button onClick={addCreditItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors">
-                                        + Add Credit
-                                    </button>
                                 </div>
+                                <button onClick={addCreditItem} className="w-full mt-6 py-5 border-2 border-dashed border-white/10 rounded-3xl text-gray-400 font-extrabold hover:text-white hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all flex items-center justify-center gap-3">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add Credit
+                                </button>
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'gallery' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-2xl font-black text-white">Art Gallery</h2>
-                                    <button onClick={() => handleSaveProfile('artworks')} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Save Gallery</button>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h2 className="text-4xl font-black text-white tracking-tight">Art Gallery</h2>
+                                    <button onClick={() => handleSaveProfile('artworks')} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Gallery</button>
                                 </div>
-                                <div className="space-y-8">
+                                <div className="space-y-10">
                                     {localArtworks.map((artist, i) => (
-                                        <div key={artist.id} className="bg-white/5 p-6 rounded-xl border border-white/5">
-                                            <div className="flex gap-4 mb-4">
-                                                <div className="flex-1 space-y-2">
-                                                    <input type="text" value={artist.artistName} onChange={(e) => updateArtistName(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-white font-bold" placeholder="Artist Name" />
-                                                    <input type="text" value={artist.artistLink || ''} onChange={(e) => updateArtistLink(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-3 py-2 text-white text-sm" placeholder="Artist Social Link" />
-                                                </div>
-                                                <button onClick={() => removeArtist(i)} className="bg-red-900/20 hover:bg-red-900/40 text-red-400 p-2 rounded-lg h-fit">Delete Artist</button>
+                                        <div key={artist.id} className="bg-black/20 p-8 rounded-3xl border border-white/5 relative group hover:bg-white/5 transition-colors">
+                                            <button onClick={() => removeArtist(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all shadow-xl scale-90 hover:scale-100 z-10">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            </button>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                                <input type="text" value={artist.artistName} onChange={(e) => updateArtistName(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-black text-xl focus:border-brand-primary outline-none transition-colors" placeholder="Artist Name" />
+                                                <input type="text" value={artist.artistLink || ''} onChange={(e) => updateArtistLink(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-brand-primary font-bold focus:border-brand-primary outline-none transition-colors" placeholder="Artist Social Link" />
                                             </div>
-                                            <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+                                            
+                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
                                                 {artist.images.map((img, imgIdx) => (
-                                                    <div key={imgIdx} className="relative group aspect-square rounded-lg overflow-hidden border border-white/10">
-                                                        <img src={img} className="w-full h-full object-cover" />
-                                                        <button onClick={() => removeImageFromArtist(i, imgIdx)} className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                                                    <div key={imgIdx} className="relative group/img aspect-square rounded-2xl overflow-hidden border-2 border-white/10 hover:border-brand-primary transition-colors shadow-lg">
+                                                        <img src={img} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                            <button onClick={() => removeImageFromArtist(i, imgIdx)} className="bg-red-600 hover:bg-red-500 text-white rounded-full p-2 scale-90 hover:scale-110 transition-all shadow-lg">
+                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
-                                            <div className="flex gap-2">
-                                                <input type="text" placeholder="Add Image URL" className="flex-1 bg-black/40 border border-white/10 rounded px-3 py-2 text-white text-sm" onKeyDown={(e) => { if (e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; } }} />
-                                                <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0" />
+                                            
+                                            <div className="flex gap-3 bg-black/40 p-2 rounded-2xl border border-white/5">
+                                                <input type="text" placeholder="Add Image URL & Press Enter..." className="flex-1 bg-transparent px-4 py-2 text-white text-sm font-medium focus:outline-none" onKeyDown={(e) => { if (e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; } }} />
+                                                <div className="w-px bg-white/10 my-2"></div>
+                                                <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0 scale-90" />
                                             </div>
                                         </div>
                                     ))}
-                                    <button onClick={addArtist} className="w-full py-4 border border-dashed border-white/20 rounded-xl text-brand-primary font-bold hover:bg-brand-primary/10 transition-colors">
-                                        + Add New Artist Collection
+                                    <button onClick={addArtist} className="w-full py-6 border-2 border-dashed border-white/10 rounded-3xl text-brand-primary font-black text-xl hover:bg-brand-primary/10 hover:border-brand-primary/50 transition-all flex items-center justify-center gap-3">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add New Artist Collection
                                     </button>
                                 </div>
                             </div>
@@ -1763,38 +1917,46 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                     {activeTab === 'minecraft' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-3xl font-black text-white">Minecraft Whitelist</h2>
-                                <div className="text-xs text-gray-400">Updates every 10s</div>
+                            <div className="flex justify-between items-center bg-white/5 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-xl">
+                                <h2 className="text-4xl font-black text-white tracking-tight flex items-center gap-4">
+                                    <span className="text-brand-primary"><AdminIcons.Game /></span> Minecraft Dash
+                                </h2>
+                                <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
+                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Live Sync</span>
+                                </div>
                             </div>
 
                             {/* PENDING */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white text-lg mb-6 flex items-center gap-2">
-                                    <span className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse"></span>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <h3 className="font-black text-white text-2xl mb-8 flex items-center gap-3 tracking-tight">
+                                    <span className="w-4 h-4 rounded-full bg-yellow-500 animate-pulse shadow-[0_0_15px_rgba(234,179,8,0.5)]"></span>
                                     Pending Applications ({whitelistApps.length})
                                 </h3>
 
                                 {whitelistApps.length === 0 ? (
-                                    <div className="text-center py-10 text-gray-500 italic">No pending applications.</div>
+                                    <div className="text-center py-16 bg-black/20 rounded-3xl border border-white/5 border-dashed">
+                                        <div className="text-gray-500 font-bold text-lg">No pending applications at the moment.</div>
+                                    </div>
                                 ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {whitelistApps.map((app) => (
-                                            <div key={app._id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-3 group hover:border-brand-primary/30 transition-colors">
-                                                <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                                                    <img src={app.discordAvatar} alt="Disc" className="w-10 h-10 rounded-full" />
+                                            <div key={app._id} className="bg-black/20 border border-white/5 rounded-3xl p-6 flex flex-col gap-5 group hover:bg-white/5 transition-colors shadow-lg relative overflow-hidden">
+                                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/50 to-transparent"></div>
+                                                <div className="flex items-center gap-4">
+                                                    <img src={app.discordAvatar} alt="Disc" className="w-14 h-14 rounded-full border-2 border-white/10 shadow-inner" />
                                                     <div className="min-w-0">
-                                                        <div className="text-sm font-bold text-white truncate">{app.discordUsername}</div>
-                                                        <div className="text-xs text-gray-500">Applied: {new Date(app.appliedAt).toLocaleDateString()}</div>
+                                                        <div className="text-lg font-black text-white truncate">{app.discordUsername}</div>
+                                                        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-0.5">Applied {new Date(app.appliedAt).toLocaleDateString()}</div>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 bg-black/30 p-2 rounded-lg">
-                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/24`} alt="MC" className="w-6 h-6 rounded" />
-                                                    <span className="font-mono text-sm text-brand-primary font-bold truncate">{app.minecraftUsername}</span>
+                                                <div className="flex items-center gap-3 bg-black/40 p-3 rounded-xl border border-white/5">
+                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/32`} alt="MC" className="w-8 h-8 rounded-md shadow-sm" />
+                                                    <span className="font-mono text-lg text-brand-primary font-bold truncate">{app.minecraftUsername}</span>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-2 mt-auto">
-                                                    <button onClick={() => handleApproveApp(app._id)} className="bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-xs transition-colors">APPROVE</button>
-                                                    <button onClick={() => handleRejectApp(app._id)} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg text-xs transition-colors">REJECT</button>
+                                                <div className="grid grid-cols-2 gap-3 mt-auto pt-2">
+                                                    <button onClick={() => handleApproveApp(app._id)} className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600 text-emerald-400 hover:text-white font-extrabold py-3 rounded-xl text-xs transition-all shadow-sm hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]">APPROVE</button>
+                                                    <button onClick={() => handleRejectApp(app._id)} className="bg-red-600/20 border border-red-500/30 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 rounded-xl text-xs transition-all shadow-sm hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]">REJECT</button>
                                                 </div>
                                             </div>
                                         ))}
@@ -1803,53 +1965,53 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             </div>
 
                             {/* APPROVED */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                                    <h3 className="font-bold text-white text-lg">Approved Users ({approvedApps.length})</h3>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+                                    <h3 className="font-black text-white text-2xl tracking-tight">Approved Users ({approvedApps.length})</h3>
                                     <input
                                         type="text"
                                         placeholder="Search User..."
-                                        className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-brand-primary outline-none w-full md:w-64"
+                                        className="bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-sm font-medium text-white focus:border-brand-primary outline-none w-full md:w-80 transition-colors shadow-inner"
                                         value={approvedSearch}
                                         onChange={(e) => setApprovedSearch(e.target.value)}
                                     />
                                 </div>
 
-                                <div className="rounded-xl border border-white/5 overflow-hidden">
-                                    <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+                                <div className="rounded-3xl border border-white/5 overflow-hidden shadow-2xl bg-black/20">
+                                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                                         <table className="w-full text-left text-sm text-gray-400 relative">
-                                            <thead className="text-xs uppercase bg-[#2d1216] text-gray-200 sticky top-0 z-10 shadow-sm">
+                                            <thead className="text-xs uppercase bg-black/60 text-gray-300 sticky top-0 z-10 backdrop-blur-md">
                                                 <tr>
-                                                    <th className="px-4 py-3">User</th>
-                                                    <th className="px-4 py-3">Approved</th>
-                                                    <th className="px-4 py-3 text-right">Action</th>
+                                                    <th className="px-6 py-4 font-black tracking-widest">User Details</th>
+                                                    <th className="px-6 py-4 font-black tracking-widest">Approved Date</th>
+                                                    <th className="px-6 py-4 font-black tracking-widest text-right">Action</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-white/5 bg-black/20">
+                                            <tbody className="divide-y divide-white/5">
                                                 {filteredApprovedApps.map((app) => (
-                                                    <tr key={app._id} className="hover:bg-white/5 transition-colors">
-                                                        <td className="px-4 py-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="relative w-10 h-10 shrink-0">
-                                                                    <img src={app.discordAvatar} className="w-10 h-10 rounded-full border-2 border-white/10 object-cover" />
-                                                                    <div className="absolute -bottom-1 -right-1 bg-[#1a0b0e] rounded-md p-0.5 border border-white/10 shadow-sm">
-                                                                        <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/16`} className="w-4 h-4 object-contain" />
+                                                    <tr key={app._id} className="hover:bg-white/5 transition-colors group">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="relative w-12 h-12 shrink-0">
+                                                                    <img src={app.discordAvatar} className="w-12 h-12 rounded-full border-2 border-white/10 object-cover shadow-sm group-hover:border-brand-primary/50 transition-colors" />
+                                                                    <div className="absolute -bottom-1 -right-1 bg-[#1a0b0e] rounded-md p-1 border border-white/10 shadow-lg">
+                                                                        <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/20`} className="w-5 h-5 object-contain rounded-sm" />
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex flex-col min-w-0">
-                                                                    <span className="font-bold text-white text-sm truncate">{app.discordUsername}</span>
-                                                                    <span className="font-mono text-xs text-brand-primary truncate">{app.minecraftUsername}</span>
+                                                                    <span className="font-bold text-white text-base truncate">{app.discordUsername}</span>
+                                                                    <span className="font-mono text-xs text-brand-primary font-medium truncate bg-brand-primary/10 w-fit px-2 py-0.5 rounded mt-1">{app.minecraftUsername}</span>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 py-3 text-xs">{app.approvedAt ? new Date(app.approvedAt).toLocaleDateString() : '-'}</td>
-                                                        <td className="px-4 py-3 text-right">
-                                                            <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 hover:text-white hover:bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">REVOKE</button>
+                                                        <td className="px-6 py-4 text-sm font-medium text-gray-400">{app.approvedAt ? new Date(app.approvedAt).toLocaleDateString() : '-'}</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <button onClick={() => handleRevokeApp(app._id, app.minecraftUsername)} className="text-red-500 bg-red-500/10 border border-red-500/20 hover:text-white hover:bg-red-600 px-4 py-2 rounded-lg text-xs font-black tracking-wider transition-all opacity-50 group-hover:opacity-100 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]">REVOKE</button>
                                                         </td>
                                                     </tr>
                                                 ))}
                                                 {filteredApprovedApps.length === 0 && (
-                                                    <tr><td colSpan={3} className="text-center py-8">No users found.</td></tr>
+                                                    <tr><td colSpan={3} className="text-center py-16 font-bold text-gray-500">No users found matching "{approvedSearch}".</td></tr>
                                                 )}
                                             </tbody>
                                         </table>
@@ -1858,69 +2020,73 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             </div>
 
                             {/* BINGO CONFIGURATION */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white text-lg mb-6">Bingo Configuration</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Active Card ID</label>
-                                        <input type="text" value={bingoCardId} onChange={e => setBingoCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white font-mono" placeholder="WEEK1" />
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <h3 className="font-black text-white text-2xl mb-8 tracking-tight">Bingo Configuration</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end bg-black/20 p-6 rounded-3xl border border-white/5">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-[0.2em] block">Active Card ID</label>
+                                        <input type="text" value={bingoCardId} onChange={e => setBingoCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-mono text-xl focus:border-brand-primary outline-none transition-colors" placeholder="WEEK1" />
                                     </div>
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-bold uppercase block mb-1">Win Condition Text</label>
-                                        <input type="text" value={bingoWinCondition} onChange={e => setBingoWinCondition(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="1 Line" />
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-[0.2em] block">Win Condition Text</label>
+                                        <input type="text" value={bingoWinCondition} onChange={e => setBingoWinCondition(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-xl focus:border-brand-primary outline-none transition-colors" placeholder="1 Line" />
                                     </div>
-                                    <button onClick={handleSaveBingoConfig} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-3 rounded-lg h-[50px] transition-colors">Update Config</button>
+                                    <button onClick={handleSaveBingoConfig} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-4 rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.3)] md:col-span-2 mt-4">Update Config</button>
                                 </div>
                             </div>
 
                             {/* BINGO WINNERS MANAGEMENT (NEW) */}
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white text-lg mb-6">Bingo Winners Management</h3>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <h3 className="font-black text-white text-2xl mb-8 tracking-tight">Bingo Winners Management</h3>
 
                                 {/* Add Winner Form */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8 bg-white/5 p-4 rounded-xl border border-white/5">
-                                    <div>
-                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Discord ID</label>
-                                        <input type="text" value={winDiscordId} onChange={e => setWinDiscordId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="12345..." />
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8 bg-black/20 p-6 rounded-3xl border border-white/5">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Discord ID</label>
+                                        <input type="text" value={winDiscordId} onChange={e => setWinDiscordId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white text-sm focus:border-brand-primary outline-none transition-colors" placeholder="12345..." />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Minecraft Name</label>
-                                        <input type="text" value={winUsername} onChange={e => setWinUsername(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="Steve" />
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Minecraft Name</label>
+                                        <input type="text" value={winUsername} onChange={e => setWinUsername(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white text-sm focus:border-brand-primary outline-none transition-colors" placeholder="Steve" />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Card ID</label>
-                                        <input type="text" value={winCardId} onChange={e => setWinCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" placeholder="WEEK1" />
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Card ID</label>
+                                        <input type="text" value={winCardId} onChange={e => setWinCardId(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white text-sm font-mono focus:border-brand-primary outline-none transition-colors" placeholder="WEEK1" />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Lines</label>
-                                        <input type="number" value={winLines} onChange={e => setWinLines(parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" min="1" />
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Lines</label>
+                                        <input type="number" value={winLines} onChange={e => setWinLines(parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white text-sm focus:border-brand-primary outline-none transition-colors" min="1" />
                                     </div>
-                                    <div>
-                                        <label className="text-[10px] text-gray-400 font-bold uppercase block mb-1">Date</label>
-                                        <input type="date" value={winDate} onChange={e => setWinDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm" />
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Date</label>
+                                        <input type="date" value={winDate} onChange={e => setWinDate(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white text-sm [color-scheme:dark] focus:border-brand-primary outline-none transition-colors" />
                                     </div>
                                     <div className="flex items-end">
-                                        <button onClick={handleAddWinner} disabled={loading} className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-sm transition-colors shadow-lg">ADD WINNER</button>
+                                        <button onClick={handleAddWinner} disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-lg text-xs tracking-wider transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:scale-[1.02]">ADD WINNER</button>
                                     </div>
                                 </div>
 
                                 {/* Winners List */}
-                                <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                                     {bingoWinners.map((winner) => (
-                                        <div key={winner._id} className="flex items-center justify-between bg-black/20 p-3 rounded-lg border border-white/5 hover:bg-white/5 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <span className="font-mono text-xs text-gray-500">#{winner.cardId}</span>
-                                                <span className="font-bold text-white text-sm">{winner.minecraftUsername}</span>
-                                                <span className="text-xs text-gray-400">({winner.discordId})</span>
-                                            </div>
+                                        <div key={winner._id} className="flex items-center justify-between bg-black/20 p-4 rounded-2xl border border-white/5 hover:bg-white/5 transition-colors group shadow-sm">
                                             <div className="flex items-center gap-4">
-                                                <span className="text-xs bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded font-bold">{winner.linesCompleted} Lines</span>
-                                                <span className="text-xs text-gray-500">{new Date(winner.completedAt).toLocaleDateString()}</span>
-                                                <button onClick={() => handleDeleteWinner(winner._id)} className="text-red-500 hover:text-red-400 font-bold text-xs bg-red-900/20 px-2 py-1 rounded hover:bg-red-900/40 transition-colors">DEL</button>
+                                                <span className="font-mono text-sm text-brand-primary bg-brand-primary/10 px-3 py-1 rounded-lg font-bold border border-brand-primary/20">#{winner.cardId}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-white text-base">{winner.minecraftUsername}</span>
+                                                    <span className="text-[10px] text-gray-500 font-mono tracking-wider">{winner.discordId}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-6">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-sm font-black text-white">{winner.linesCompleted} Lines</span>
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{new Date(winner.completedAt).toLocaleDateString()}</span>
+                                                </div>
+                                                <button onClick={() => handleDeleteWinner(winner._id)} className="text-red-500 bg-red-500/10 border border-red-500/20 hover:text-white font-bold text-xs px-3 py-2 rounded-lg hover:bg-red-600 transition-colors shadow-sm opacity-50 group-hover:opacity-100">DEL</button>
                                             </div>
                                         </div>
                                     ))}
-                                    {bingoWinners.length === 0 && <div className="text-center text-gray-500 py-4 text-xs italic">No winners recorded yet.</div>}
+                                    {bingoWinners.length === 0 && <div className="text-center bg-black/20 rounded-2xl border border-white/5 border-dashed text-gray-500 py-12 font-bold">No winners recorded yet.</div>}
                                 </div>
                             </div>
                         </div>
@@ -1928,16 +2094,17 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                     {activeTab === 'tournament' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-white">Tournament Management</h2>
-                            <div className="bg-black/30 backdrop-blur-lg p-8 rounded-2xl border border-white/10 shadow-xl flex flex-col items-center justify-center min-h-[400px] text-center">
-                                <div className="w-24 h-24 bg-purple-500/20 rounded-full flex items-center justify-center mb-6 text-purple-400">
-                                    <AdminIcons.Game className="w-12 h-12" />
+                            <h2 className="text-4xl font-black text-white tracking-tight">Tournament Management</h2>
+                            <div className="bg-white/5 backdrop-blur-3xl p-10 rounded-3xl border border-white/10 shadow-2xl flex flex-col items-center justify-center min-h-[500px] text-center relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-900/10 pointer-events-none"></div>
+                                <div className="w-32 h-32 bg-purple-500/20 rounded-full flex items-center justify-center mb-8 text-purple-400 border-4 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.2)]">
+                                    <AdminIcons.Game className="w-16 h-16" />
                                 </div>
-                                <h3 className="text-2xl font-black text-white mb-2">Tournament Admin Moved</h3>
-                                <p className="text-gray-400 mb-6 max-w-md">All tournament management features have been consolidated to a dedicated page for better organization.</p>
-                                <Link to="/admin/tournament" className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-8 rounded-xl flex items-center gap-3 shadow-lg transition-transform hover:scale-105 border border-purple-400/50 text-lg">
-                                    <span>Go to Tournament Admin</span>
-                                    <span>→</span>
+                                <h3 className="text-4xl font-black text-white mb-4 tracking-tight">Tournament Admin Moved</h3>
+                                <p className="text-gray-400 mb-10 max-w-lg text-lg">All tournament management features have been consolidated to a dedicated page for a focused workflow.</p>
+                                <Link to="/admin/tournament" className="bg-purple-600 hover:bg-purple-500 text-white font-black py-5 px-10 rounded-2xl flex items-center gap-4 shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all hover:scale-105 border border-purple-400/50 text-xl group z-10">
+                                    <span>Launch Tournament Admin</span>
+                                    <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
                                 </Link>
                             </div>
                         </div>
@@ -1945,63 +2112,211 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                     {activeTab === 'codes' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-white">Gacha Code Generator</h2>
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
-                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Type</label><select value={genType} onChange={e => setGenType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white"><option value="lamb">Lamb Chop</option><option value="wagyu">Wagyu A5</option></select></div>
-                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Packs per Code</label><input type="number" value={genPackAmount} onChange={e => setGenPackAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>
-                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Qty of Codes</label><input type="number" value={genAmount} onChange={e => setGenAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" max="50" /></div>
-                                    <div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Usage Type</label><select value={genUsageType} onChange={e => setGenUsageType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm"><option value="once_global">One Use (Global)</option><option value="once_per_user">Once Per User (Global)</option><option value="time_limited">Time Limited (Unlimited)</option></select></div>
-                                    {genUsageType === 'time_limited' && (<div><label className="text-xs text-gray-400 font-bold uppercase block mb-1">Hours Valid</label><input type="number" value={genHours} onChange={e => setGenHours(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white" min="1" /></div>)}
-                                    <button onClick={handleGenerateCodes} className="bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-all h-[40px] lg:col-span-1">Generate</button>
+                            <h2 className="text-4xl font-black text-white tracking-tight">Gacha Code Generator</h2>
+                            
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <h3 className="font-black text-white text-2xl mb-8 tracking-tight flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                                        <AdminIcons.Game />
+                                    </span>
+                                    Generate New Codes
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 items-end bg-black/20 p-6 rounded-3xl border border-white/5">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Type</label>
+                                        <select value={genType} onChange={e => setGenType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors appearance-none">
+                                            <option value="lamb">Lamb Chop</option>
+                                            <option value="wagyu">Wagyu A5</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Packs per Code</label>
+                                        <input type="number" value={genPackAmount} onChange={e => setGenPackAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors" min="1" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Qty of Codes</label>
+                                        <input type="number" value={genAmount} onChange={e => setGenAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors" min="1" max="50" />
+                                    </div>
+                                    <div className="space-y-2 lg:col-span-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Usage Type</label>
+                                        <select value={genUsageType} onChange={e => setGenUsageType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors appearance-none">
+                                            <option value="once_global">One Use (Global)</option>
+                                            <option value="once_per_user">Once Per User (Global)</option>
+                                            <option value="time_limited">Time Limited (Unlimited)</option>
+                                        </select>
+                                    </div>
+                                    {genUsageType === 'time_limited' && (
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Hours Valid</label>
+                                            <input type="number" value={genHours} onChange={e => setGenHours(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors" min="1" />
+                                        </div>
+                                    )}
+                                    <button onClick={handleGenerateCodes} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-4 rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(220,38,38,0.3)] lg:col-span-1">GENERATE</button>
                                 </div>
-                                {generatedCodes.length > 0 && (<div className="mt-6 bg-green-900/20 p-4 rounded-xl border border-green-500/30"><h4 className="text-green-400 font-bold mb-2">New Codes:</h4><div className="flex flex-wrap gap-2">{generatedCodes.map(c => <code key={c} className="bg-black/40 px-3 py-1 rounded text-white font-mono border border-white/10">{c}</code>)}</div></div>)}
+                                {generatedCodes.length > 0 && (
+                                    <div className="mt-8 bg-emerald-900/20 p-6 rounded-3xl border border-emerald-500/30 shadow-lg relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+                                        <h4 className="text-emerald-400 font-black mb-4 tracking-tight flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                            New Codes Generated:
+                                        </h4>
+                                        <div className="flex flex-wrap gap-3">
+                                            {generatedCodes.map(c => <code key={c} className="bg-black/40 px-4 py-2 rounded-xl text-emerald-300 font-mono font-bold border border-emerald-500/20 shadow-sm">{c}</code>)}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div className="bg-black/30 backdrop-blur-lg p-6 rounded-2xl border border-white/10 shadow-xl"><h3 className="font-bold text-white mb-4">Existing Codes (Recent 100)</h3><div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-300"><thead className="text-xs text-gray-500 uppercase bg-black/20"><tr><th className="px-4 py-3">Code</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Pack Qty</th><th className="px-4 py-3">Usage</th><th className="px-4 py-3">Redeemed</th><th className="px-4 py-3">Expires</th><th className="px-4 py-3">Action</th></tr></thead><tbody>{existingCodes.map(c => (<tr key={c._id} className="border-b border-white/5 hover:bg-white/5"><td className="px-4 py-3 font-mono font-bold text-white">{c.code}</td><td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${c.type === 'lamb' ? 'bg-purple-900 text-purple-200' : 'bg-pink-900 text-pink-200'}`}>{c.type}</span></td><td className="px-4 py-3">{c.packAmount}</td><td className="px-4 py-3 text-xs">{c.usageType}</td><td className="px-4 py-3">{c.usageCount}</td><td className="px-4 py-3 text-xs text-gray-500">{c.expiresAt ? new Date(c.expiresAt).toLocaleString() : '-'}</td><td className="px-4 py-3"><button onClick={() => handleDeleteCode(c._id)} className="text-red-500 hover:text-white hover:bg-red-600 px-2 py-1 rounded transition-colors text-xs font-bold">Del</button></td></tr>))}</tbody></table></div></div>
+
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <h3 className="font-black text-white text-2xl mb-8 tracking-tight">Existing Codes (Recent 100)</h3>
+                                <div className="rounded-3xl border border-white/5 overflow-hidden shadow-2xl bg-black/20">
+                                    <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                                        <table className="w-full text-sm text-left text-gray-300 relative">
+                                            <thead className="text-[10px] text-gray-400 font-black uppercase tracking-widest bg-black/60 sticky top-0 z-10 backdrop-blur-md">
+                                                <tr>
+                                                    <th className="px-6 py-4">Code</th>
+                                                    <th className="px-6 py-4">Type</th>
+                                                    <th className="px-6 py-4">Pack Qty</th>
+                                                    <th className="px-6 py-4">Usage</th>
+                                                    <th className="px-6 py-4">Redeemed</th>
+                                                    <th className="px-6 py-4">Expires</th>
+                                                    <th className="px-6 py-4 text-right">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5">
+                                                {existingCodes.map(c => (
+                                                    <tr key={c._id} className="hover:bg-white/5 transition-colors group">
+                                                        <td className="px-6 py-4 font-mono font-bold text-white text-base">{c.code}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`px-3 py-1 rounded-lg text-xs font-black tracking-widest uppercase shadow-sm border ${c.type === 'lamb' ? 'bg-purple-900/30 text-purple-300 border-purple-500/30' : 'bg-pink-900/30 text-pink-300 border-pink-500/30'}`}>
+                                                                {c.type}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 font-bold">{c.packAmount}</td>
+                                                        <td className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">{c.usageType.replace(/_/g, ' ')}</td>
+                                                        <td className="px-6 py-4 font-bold">
+                                                            <span className="bg-white/10 px-3 py-1 rounded-lg">{c.usageCount}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-widest">{c.expiresAt ? new Date(c.expiresAt).toLocaleString() : 'NEVER'}</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <button onClick={() => handleDeleteCode(c._id)} className="text-red-500 bg-red-500/10 border border-red-500/20 hover:text-white hover:bg-red-600 px-4 py-2 rounded-lg text-xs font-black tracking-wider transition-all opacity-50 group-hover:opacity-100 shadow-sm hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]">DEL</button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {existingCodes.length === 0 && (
+                                                    <tr><td colSpan={7} className="text-center py-16 font-bold text-gray-500">No codes generated yet.</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
                     {activeTab === 'users' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-white">User Management</h2>
-                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl"><h3 className="font-bold text-white mb-4">Reset Daily Check-In</h3><div className="flex gap-4"><input type="text" placeholder="Discord ID or Minecraft Username" value={userQuery} onChange={e => setUserQuery(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-lg p-3 text-white" /><button onClick={handleResetDaily} className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-lg transition-all">Reset Timer</button></div></div>
-                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl"><h3 className="font-bold text-white mb-4">User Merge Tool</h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"><input type="text" value={mergeSource} onChange={e => setMergeSource(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Source Username" /><input type="text" value={mergeTarget} onChange={e => setMergeTarget(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white" placeholder="Target Username" /></div><button onClick={handleMergeUsers} className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-lg transition-all">Merge Data</button></div>
+                            <h2 className="text-4xl font-black text-white tracking-tight">User Management</h2>
+                            
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                                <h3 className="font-black text-white text-2xl mb-6 tracking-tight flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                                    </span>
+                                    Reset Daily Check-In
+                                </h3>
+                                <div className="flex flex-col md:flex-row gap-4 bg-black/20 p-6 rounded-3xl border border-white/5">
+                                    <input type="text" placeholder="Discord ID or Minecraft Username" value={userQuery} onChange={e => setUserQuery(e.target.value)} className="flex-1 bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-red-500 outline-none transition-colors shadow-inner" />
+                                    <button onClick={handleResetDaily} className="bg-red-600/20 border border-red-500/30 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-4 px-8 rounded-xl transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:shadow-[0_0_25px_rgba(239,68,68,0.4)] whitespace-nowrap">RESET TIMER</button>
+                                </div>
+                            </div>
+
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                                <h3 className="font-black text-white text-2xl mb-6 tracking-tight flex items-center gap-3">
+                                    <span className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m8 6 4-4 4 4"/><path d="M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22"/><path d="m20 22-5-5"/></svg>
+                                    </span>
+                                    User Merge Tool
+                                </h3>
+                                <p className="text-gray-400 font-medium mb-6">Merge data from a source user account into a target user account.</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 bg-black/20 p-6 rounded-3xl border border-white/5">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Source Username</label>
+                                        <input type="text" value={mergeSource} onChange={e => setMergeSource(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-orange-500 outline-none transition-colors shadow-inner" placeholder="OldUsername" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Target Username</label>
+                                        <input type="text" value={mergeTarget} onChange={e => setMergeTarget(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-medium focus:border-orange-500 outline-none transition-colors shadow-inner" placeholder="NewUsername" />
+                                    </div>
+                                </div>
+                                <button onClick={handleMergeUsers} className="w-full md:w-auto bg-orange-600/20 border border-orange-500/30 hover:bg-orange-600 text-orange-400 hover:text-white font-extrabold py-4 px-10 rounded-xl transition-all shadow-[0_0_15px_rgba(249,115,22,0.2)] hover:shadow-[0_0_25px_rgba(249,115,22,0.4)]">MERGE DATA</button>
+                            </div>
                         </div>
                     )}
 
                     {activeTab === 'merger' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-3xl font-black text-white">JSON Merger Tool</h2>
-                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl"><input type="file" multiple accept=".json" onChange={handleJsonUpload} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-primary file:text-white hover:file:bg-brand-primary/80 mb-6" /><textarea readOnly value={mergedOutput} className="w-full h-96 bg-black/50 border border-white/10 rounded-xl p-4 font-mono text-xs text-gray-300 focus:outline-none" placeholder="Merged output..." /><button onClick={() => navigator.clipboard.writeText(mergedOutput)} className="mt-4 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-lg transition-all w-full" disabled={!mergedOutput}>Copy Code</button></div>
+                            <h2 className="text-4xl font-black text-white tracking-tight">JSON Merger Tool</h2>
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="bg-black/20 p-6 rounded-3xl border border-white/5 mb-8 border-dashed flex flex-col items-center justify-center min-h-[150px]">
+                                    <input 
+                                        type="file" 
+                                        multiple 
+                                        accept=".json" 
+                                        onChange={handleJsonUpload} 
+                                        className="block w-full text-sm text-gray-400 file:mr-6 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-black file:bg-brand-primary file:text-white hover:file:bg-red-600 file:transition-all file:cursor-pointer file:shadow-[0_0_15px_rgba(220,38,38,0.3)] mx-auto max-w-md" 
+                                    />
+                                    <p className="text-gray-500 text-sm mt-4 font-medium">Select multiple JSON files to merge them into a single object.</p>
+                                </div>
+                                <div className="relative group">
+                                    <textarea 
+                                        readOnly 
+                                        value={mergedOutput} 
+                                        className="w-full h-[500px] bg-black/60 border border-white/10 rounded-3xl p-6 font-mono text-sm text-brand-primary focus:outline-none focus:border-brand-primary transition-colors shadow-inner custom-scrollbar resize-none" 
+                                        placeholder="// Merged output will appear here..." 
+                                    />
+                                    <button 
+                                        onClick={() => navigator.clipboard.writeText(mergedOutput)} 
+                                        className="absolute top-4 right-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-extrabold py-2 px-6 rounded-lg transition-all shadow-lg opacity-0 group-hover:opacity-100 disabled:opacity-0" 
+                                        disabled={!mergedOutput}
+                                    >
+                                        COPY JSON
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
                     {activeTab === 'snakes' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center text-purple-400">
+                            <div className="flex items-center gap-6 mb-8">
+                                <div className="w-16 h-16 bg-purple-500/20 border border-purple-500/30 rounded-2xl flex items-center justify-center text-purple-400 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
                                     <AdminIcons.Snakes />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-black text-white">Snakes & Ladders</h2>
-                                    <p className="text-gray-400 text-sm">Manage special event tiles</p>
+                                    <h2 className="text-4xl font-black text-white tracking-tight">Snakes & Ladders</h2>
+                                    <p className="text-gray-400 font-medium">Manage events, simulate rolls, and configure special tiles.</p>
                                 </div>
                             </div>
 
                             {/* Status Toast */}
                             {snakesStatus && (
-                                <div className={`p-4 rounded-lg ${snakesStatus.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white font-bold`}>
+                                <div className={`p-4 rounded-xl border font-bold text-sm shadow-xl flex items-center gap-3 animate-in slide-in-from-top-2 ${snakesStatus.type === 'success' ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-400' : 'bg-red-900/40 border-red-500/50 text-red-400'}`}>
+                                    <span className="w-2 h-2 rounded-full animate-pulse bg-current"></span>
                                     {snakesStatus.message}
                                 </div>
                             )}
 
                             {/* Listener Control & Simulation */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {/* Listener Control */}
-                                <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl flex flex-col justify-between">
-                                    <div>
-                                        <h3 className="font-bold text-white mb-2">Listener Status</h3>
-                                        <p className="text-sm text-gray-400 mb-4">Controls whether new Subs/Gifts/Donations are accepted.</p>
+                                <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl flex flex-col justify-between relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                                    <div className="mb-8">
+                                        <h3 className="font-black text-white text-2xl tracking-tight mb-2">Listener Status</h3>
+                                        <p className="font-medium text-gray-400">Controls whether new Subs/Gifts/Donations are accepted into the queue.</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
@@ -2020,10 +2335,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     }
                                                 } catch (e) { }
                                             }}
-                                            className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-1 ${snakesSubsActive ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/20'}`}
+                                            className={`w-full py-6 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border ${snakesSubsActive ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]'}`}
                                         >
-                                            <span className="text-lg">SUBS</span>
-                                            <span className="text-xs opacity-75">{snakesSubsActive ? 'ACTIVE' : 'STOPPED'}</span>
+                                            <span className="text-xl">SUBS</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${snakesSubsActive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+                                                <span className="text-[10px] opacity-75">{snakesSubsActive ? 'ACTIVE' : 'STOPPED'}</span>
+                                            </div>
                                         </button>
 
                                         <button
@@ -2042,44 +2360,48 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     }
                                                 } catch (e) { }
                                             }}
-                                            className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-1 ${snakesDonosActive ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/20'}`}
+                                            className={`w-full py-6 rounded-2xl font-black text-sm uppercase tracking-widest transition-all flex flex-col items-center justify-center gap-2 border ${snakesDonosActive ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'bg-red-500/10 border-red-500/50 text-red-400 hover:bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]'}`}
                                         >
-                                            <span className="text-lg">DONATIONS</span>
-                                            <span className="text-xs opacity-75">{snakesDonosActive ? 'ACTIVE' : 'STOPPED'}</span>
+                                            <span className="text-xl">DONATIONS</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${snakesDonosActive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+                                                <span className="text-[10px] opacity-75">{snakesDonosActive ? 'ACTIVE' : 'STOPPED'}</span>
+                                            </div>
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* Simulation Controls */}
-                                <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl">
-                                    <h3 className="font-bold text-white mb-2">Simulate Real Events</h3>
-                                    <p className="text-sm text-gray-400 mb-4">Test queue behavior safely.</p>
+                                <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                                    <h3 className="font-black text-white text-2xl tracking-tight mb-2">Simulate Events</h3>
+                                    <p className="font-medium text-gray-400 mb-6">Test queue behavior safely.</p>
 
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-3 mb-6 bg-black/20 p-2 rounded-xl border border-white/5">
                                         <input
                                             type="text"
                                             placeholder="Target User (Optional)"
                                             value={snakesSimUser}
                                             onChange={(e) => setSnakesSimUser(e.target.value)}
-                                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm"
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-primary font-medium text-sm transition-colors"
                                         />
                                         <input
                                             type="number"
                                             placeholder="#"
                                             value={snakesSimAmount}
                                             onChange={(e) => setSnakesSimAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm text-center"
+                                            className="w-24 bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-primary text-sm font-bold text-center transition-colors"
                                         />
                                         <input
                                             type="number"
                                             placeholder="$"
                                             value={snakesSimDonoAmount}
                                             onChange={(e) => setSnakesSimDonoAmount(Math.max(1, parseInt(e.target.value) || 1))}
-                                            className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-brand-accent text-sm text-center text-green-400 font-bold"
+                                            className="w-24 bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-emerald-400 focus:outline-none focus:border-emerald-500 text-sm font-bold text-center transition-colors"
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 gap-4">
                                         <button
                                             onClick={async () => {
                                                 try {
@@ -2093,7 +2415,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
-                                            className="py-2 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/30"
+                                            className="py-3 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl text-xs font-black tracking-widest hover:bg-purple-500/20 transition-all hover:shadow-[0_0_15px_rgba(168,85,247,0.3)]"
                                         >
                                             SUB T1 (1)
                                         </button>
@@ -2110,7 +2432,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
-                                            className="py-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-xs font-bold hover:bg-blue-500/30"
+                                            className="py-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-xl text-xs font-black tracking-widest hover:bg-blue-500/20 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                                         >
                                             SUB T2 (2)
                                         </button>
@@ -2127,7 +2449,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
-                                            className="py-2 bg-orange-500/20 border border-orange-500/30 text-orange-400 rounded-lg text-xs font-bold hover:bg-orange-500/30"
+                                            className="py-3 bg-orange-500/10 border border-orange-500/30 text-orange-400 rounded-xl text-xs font-black tracking-widest hover:bg-orange-500/20 transition-all hover:shadow-[0_0_15px_rgba(249,115,22,0.3)]"
                                         >
                                             SUB T3 (3)
                                         </button>
@@ -2144,11 +2466,10 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
-                                            className="py-2 bg-pink-500/20 border border-pink-500/30 text-pink-400 rounded-lg text-xs font-bold hover:bg-pink-500/30"
+                                            className="py-3 bg-pink-500/10 border border-pink-500/30 text-pink-400 rounded-xl text-xs font-black tracking-widest hover:bg-pink-500/20 transition-all hover:shadow-[0_0_15px_rgba(236,72,153,0.3)]"
                                         >
                                             GIFT ({snakesSimAmount})
                                         </button>
-
                                         <button
                                             onClick={async () => {
                                                 try {
@@ -2162,7 +2483,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     setTimeout(() => setSnakesStatus(null), 3000);
                                                 } catch (e) { }
                                             }}
-                                            className="col-span-2 py-3 mt-2 bg-green-500/20 border border-green-500/30 text-green-400 rounded-lg text-sm font-bold hover:bg-green-500/30 flex items-center justify-center gap-2"
+                                            className="col-span-2 py-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl text-sm font-black tracking-widest hover:bg-emerald-500/20 flex items-center justify-center gap-3 transition-all hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                                         >
                                             <AdminIcons.EventDono />
                                             DONATE (${snakesSimDonoAmount})
@@ -2171,165 +2492,173 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 </div>
                             </div>
 
-                            {/* Event Queue Log */}
-                            <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl h-[400px] flex flex-col">
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-                                    <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                                        <span className="text-purple-400"><AdminIcons.EventLog /></span>
-                                        Roll Queue ({snakesQueue.length})
-                                    </h3>
-                                    <input
-                                        type="text"
-                                        placeholder="Search User..."
-                                        value={snakesQueueFilter}
-                                        onChange={(e) => setSnakesQueueFilter(e.target.value)}
-                                        className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500 outline-none w-full md:w-48"
-                                    />
-                                </div>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
-                                    {snakesQueue
-                                        .filter(q => snakesQueueFilter.trim() === '' || q.user.toLowerCase().includes(snakesQueueFilter.toLowerCase().trim()))
-                                        .map((queueItem, idx) => (
-                                            <div key={queueItem._id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all gap-4 group">
-                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-xs">
-                                                        {idx + 1}
-                                                    </div>
-                                                    <img
-                                                        src={queueItem.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(queueItem.user)}&background=random`}
-                                                        alt=""
-                                                        className="w-8 h-8 rounded-full object-cover"
-                                                    />
-                                                    <div className="flex flex-col min-w-0">
-                                                        <div className="font-bold text-white text-sm truncate">{queueItem.user}</div>
-                                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
-                                                            {queueItem.type} • {new Date(queueItem.createdAt).toLocaleTimeString()}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                {/* Event Queue Log */}
+                                <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl h-[500px] flex flex-col">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-white/5 pb-4">
+                                        <h3 className="font-black text-white text-2xl tracking-tight flex items-center gap-3">
+                                            <span className="text-purple-400 bg-purple-500/20 p-2 rounded-xl"><AdminIcons.EventLog /></span>
+                                            Roll Queue ({snakesQueue.length})
+                                        </h3>
+                                        <input
+                                            type="text"
+                                            placeholder="Search User..."
+                                            value={snakesQueueFilter}
+                                            onChange={(e) => setSnakesQueueFilter(e.target.value)}
+                                            className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white font-medium focus:border-purple-500 outline-none w-full md:w-48 transition-colors shadow-inner"
+                                        />
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2">
+                                        {snakesQueue
+                                            .filter(q => snakesQueueFilter.trim() === '' || q.user.toLowerCase().includes(snakesQueueFilter.toLowerCase().trim()))
+                                            .map((queueItem, idx) => (
+                                                <div key={queueItem._id} className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:bg-white/5 transition-all gap-4 group shadow-sm">
+                                                    <div className="flex items-center gap-4 overflow-hidden">
+                                                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-black text-sm shadow-inner">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <img
+                                                            src={queueItem.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(queueItem.user)}&background=random`}
+                                                            alt=""
+                                                            className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
+                                                        />
+                                                        <div className="flex flex-col min-w-0">
+                                                            <div className="font-bold text-white text-base truncate">{queueItem.user}</div>
+                                                            <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5">
+                                                                <span className="text-purple-400">{queueItem.type}</span> • {new Date(queueItem.createdAt).toLocaleTimeString()}
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                await fetch(`${API_BASE_URL}/api/snakes/queue/${queueItem._id}`, {
+                                                                    method: 'DELETE',
+                                                                    headers: { Authorization: password }
+                                                                });
+                                                                fetchSnakesTiles();
+                                                                setSnakesStatus({ type: 'success', message: `Removed roll from ${queueItem.user}` });
+                                                                setTimeout(() => setSnakesStatus(null), 3000);
+                                                            } catch (e) {
+                                                                setSnakesStatus({ type: 'error', message: 'Failed to remove' });
+                                                                setTimeout(() => setSnakesStatus(null), 3000);
+                                                            }
+                                                        }}
+                                                        className="bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/20 px-4 py-2 rounded-lg text-xs font-black tracking-wider transition-all opacity-50 group-hover:opacity-100 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                                    >
+                                                        DEL
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    onClick={async () => {
-                                                        try {
-                                                            await fetch(`${API_BASE_URL}/api/snakes/queue/${queueItem._id}`, {
-                                                                method: 'DELETE',
-                                                                headers: { Authorization: password }
-                                                            });
+                                            ))}
+                                        {snakesQueue.length === 0 && (
+                                            <div className="text-center text-gray-500 py-16 font-bold bg-black/20 rounded-2xl border border-white/5 border-dashed">No rolls in queue</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-8">
+                                    {/* Add New Tile */}
+                                    <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                                        <h3 className="font-black text-white text-xl mb-6 flex items-center gap-3 tracking-tight">
+                                            <span className="w-8 h-8 bg-brand-primary/20 rounded-xl flex items-center justify-center text-brand-primary font-black shadow-[0_0_15px_rgba(220,38,38,0.2)]">+</span>
+                                            Add Special Tile
+                                        </h3>
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex gap-4">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    max="100"
+                                                    placeholder="Tile #"
+                                                    value={newSnakeTile}
+                                                    onChange={(e) => setNewSnakeTile(e.target.value)}
+                                                    className="w-24 bg-black/40 border border-white/10 rounded-xl p-3 text-white font-black text-center focus:outline-none focus:border-brand-primary transition-colors shadow-inner"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Event text (e.g., 'Do 10 pushups!')"
+                                                    value={newSnakeText}
+                                                    onChange={(e) => setNewSnakeText(e.target.value)}
+                                                    className="flex-1 bg-black/40 border border-white/10 rounded-xl p-3 text-white font-medium focus:outline-none focus:border-brand-primary transition-colors shadow-inner"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={async () => {
+                                                    if (!newSnakeTile || !newSnakeText) return;
+                                                    try {
+                                                        const res = await fetch(`${API_BASE_URL}/api/snakes/special-tiles`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                            body: JSON.stringify({ tile: parseInt(newSnakeTile), text: newSnakeText })
+                                                        });
+                                                        if (res.ok) {
+                                                            setSnakesStatus({ type: 'success', message: 'Special tile added!' });
+                                                            setNewSnakeTile('');
+                                                            setNewSnakeText('');
                                                             fetchSnakesTiles();
-                                                            setSnakesStatus({ type: 'success', message: `Removed roll from ${queueItem.user}` });
                                                             setTimeout(() => setSnakesStatus(null), 3000);
-                                                        } catch (e) {
-                                                            setSnakesStatus({ type: 'error', message: 'Failed to remove' });
+                                                        } else {
+                                                            setSnakesStatus({ type: 'error', message: 'Failed to add tile' });
                                                             setTimeout(() => setSnakesStatus(null), 3000);
                                                         }
-                                                    }}
-                                                    className="bg-red-500/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded text-xs font-bold transition-colors opacity-0 group-hover:opacity-100"
-                                                >
-                                                    REMOVE
-                                                </button>
-                                            </div>
-                                        ))}
-                                    {snakesQueue.length === 0 && (
-                                        <div className="text-center text-gray-500 py-8 italic">No rolls in queue</div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Add New Tile */}
-                            <div className="bg-black/30 p-6 rounded-2xl border border-purple-500/20 shadow-xl">
-                                <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                                    <span className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-black">+</span>
-                                    Add Special Event Tile
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="100"
-                                        placeholder="Tile # (1-100)"
-                                        value={newSnakeTile}
-                                        onChange={(e) => setNewSnakeTile(e.target.value)}
-                                        className="bg-black/40 border border-white/10 rounded-lg p-3 text-white"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Event text (e.g., 'Do 10 pushups!')"
-                                        value={newSnakeText}
-                                        onChange={(e) => setNewSnakeText(e.target.value)}
-                                        className="md:col-span-2 bg-black/40 border border-white/10 rounded-lg p-3 text-white"
-                                    />
-                                    <button
-                                        onClick={async () => {
-                                            if (!newSnakeTile || !newSnakeText) return;
-                                            try {
-                                                const res = await fetch(`${API_BASE_URL}/api/snakes/special-tiles`, {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json', Authorization: password },
-                                                    body: JSON.stringify({ tile: parseInt(newSnakeTile), text: newSnakeText })
-                                                });
-                                                if (res.ok) {
-                                                    setSnakesStatus({ type: 'success', message: 'Special tile added!' });
-                                                    setNewSnakeTile('');
-                                                    setNewSnakeText('');
-                                                    fetchSnakesTiles();
-                                                    setTimeout(() => setSnakesStatus(null), 3000);
-                                                } else {
-                                                    setSnakesStatus({ type: 'error', message: 'Failed to add tile' });
-                                                    setTimeout(() => setSnakesStatus(null), 3000);
-                                                }
-                                            } catch (e) {
-                                                setSnakesStatus({ type: 'error', message: 'Network error' });
-                                                setTimeout(() => setSnakesStatus(null), 3000);
-                                            }
-                                        }}
-                                        className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-all"
-                                    >
-                                        Add Tile
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Existing Tiles */}
-                            <div className="bg-black/30 p-6 rounded-2xl border border-white/10 shadow-xl">
-                                <h3 className="font-bold text-white mb-4">Current Special Tiles ({snakesTiles.length})</h3>
-                                {snakesTiles.length === 0 ? (
-                                    <p className="text-gray-500 text-center py-8 italic">No special tiles configured yet</p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {snakesTiles.map((tile) => (
-                                            <div key={tile._id} className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-purple-500/20">
-                                                <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-purple-300 font-black text-lg">#{tile.tile}</span>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-white text-sm truncate">{tile.text}</p>
-                                                </div>
-                                                <button
-                                                    onClick={async () => {
-                                                        if (!confirm(`Delete special event for tile #${tile.tile}?`)) return;
-                                                        try {
-                                                            await fetch(`${API_BASE_URL}/api/snakes/special-tiles/${tile.tile}`, {
-                                                                method: 'DELETE',
-                                                                headers: { Authorization: password }
-                                                            });
-                                                            fetchSnakesTiles();
-                                                            setSnakesStatus({ type: 'success', message: 'Tile removed!' });
-                                                            setTimeout(() => setSnakesStatus(null), 3000);
-                                                        } catch (e) { }
-                                                    }}
-                                                    className="px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm font-bold hover:bg-red-500/30 transition-all flex-shrink-0"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        ))}
+                                                    } catch (e) {
+                                                        setSnakesStatus({ type: 'error', message: 'Network error' });
+                                                        setTimeout(() => setSnakesStatus(null), 3000);
+                                                    }
+                                                }}
+                                                className="w-full bg-brand-primary/20 hover:bg-brand-primary border border-brand-primary/30 text-brand-primary hover:text-white font-black py-4 rounded-xl transition-all tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.2)] hover:shadow-[0_0_25px_rgba(220,38,38,0.4)]"
+                                            >
+                                                ADD TILE
+                                            </button>
+                                        </div>
                                     </div>
-                                )}
+
+                                    {/* Existing Tiles */}
+                                    <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl flex flex-col max-h-[300px]">
+                                        <h3 className="font-black text-white text-xl mb-6 tracking-tight">Current Tiles ({snakesTiles.length})</h3>
+                                        {snakesTiles.length === 0 ? (
+                                            <p className="text-gray-500 text-center py-8 font-bold bg-black/20 rounded-2xl border border-white/5 border-dashed">No special tiles configured</p>
+                                        ) : (
+                                            <div className="space-y-3 overflow-y-auto custom-scrollbar pr-2 flex-1">
+                                                {snakesTiles.map((tile) => (
+                                                    <div key={tile._id} className="flex items-center gap-4 p-4 bg-black/20 rounded-2xl border border-white/5 shadow-sm hover:bg-white/5 transition-colors group">
+                                                        <div className="w-12 h-12 bg-purple-500/20 border border-purple-500/30 rounded-xl flex items-center justify-center flex-shrink-0 shadow-inner">
+                                                            <span className="text-purple-400 font-black text-lg">#{tile.tile}</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-white text-sm font-medium truncate">{tile.text}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (!confirm(`Delete special event for tile #${tile.tile}?`)) return;
+                                                                try {
+                                                                    await fetch(`${API_BASE_URL}/api/snakes/special-tiles/${tile.tile}`, {
+                                                                        method: 'DELETE',
+                                                                        headers: { Authorization: password }
+                                                                    });
+                                                                    fetchSnakesTiles();
+                                                                    setSnakesStatus({ type: 'success', message: 'Tile removed!' });
+                                                                    setTimeout(() => setSnakesStatus(null), 3000);
+                                                                } catch (e) { }
+                                                            }}
+                                                            className="px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-500 hover:text-white rounded-lg text-xs font-black tracking-wider hover:bg-red-600 transition-all flex-shrink-0 opacity-50 group-hover:opacity-100 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                                        >
+                                                            DEL
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Quick Link */}
-                            <div className="text-center">
-                                <Link to="/snakes" className="text-purple-400 hover:text-purple-300 font-bold transition-colors">
-                                    → Open Snakes & Ladders Game
+                            <div className="text-center pt-8">
+                                <Link to="/snakes" className="inline-flex items-center justify-center gap-3 bg-purple-600/20 border border-purple-500/30 text-purple-400 hover:text-white hover:bg-purple-600 font-black py-4 px-10 rounded-2xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.2)] hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] group text-lg tracking-wide">
+                                    OPEN SNAKES & LADDERS BOARD
+                                    <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
                                 </Link>
                             </div>
                         </div>

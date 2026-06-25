@@ -25,6 +25,7 @@ import BingoDashboard from './pages/BingoDashboard';
 import Inventory from './pages/Inventory';
 import Redeem from './pages/Redeem';
 import About from './pages/About';
+import Gallery from './pages/Gallery';
 import Admin from './pages/Admin';
 import Overlay from './pages/Overlay';
 import TimerWidget from './pages/overlays/TimerWidget';
@@ -78,6 +79,7 @@ const App: React.FC = () => {
         <Route path="/overlay/spin" element={<SpinWidget />} />
         <Route path="/overlay/countdown" element={<CountdownWidget />} />
         <Route path="/duo-card" element={<DuoCard />} />
+        <Route path="/admin" element={<Admin />} />
 
         {/* 2. MAIN WEBSITE ROUTES (Wrapped in Layout) */}
         <Route element={<MainLayout />}>
@@ -103,11 +105,11 @@ const App: React.FC = () => {
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/redeem" element={<Redeem />} />
           <Route path="/about" element={<About />} />
+          <Route path="/gallery" element={<Gallery />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/archive/nisathon" element={<ArchiveNisathon />} />
           <Route path="/archive/wheel" element={<ArchiveWheel />} />
           <Route path="/archive/tournament" element={<ArchiveTournament />} />
-          <Route path="/admin" element={<Admin />} />
 
           {/* 404 Fallback - Redirects unknown paths to Home */}
           <Route path="*" element={<Home />} />

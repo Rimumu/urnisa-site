@@ -73,11 +73,11 @@ const Archive: React.FC = () => {
                 {/* Header Section */}
                 <div className="flex flex-col items-center justify-center space-y-6 mb-12">
                     <div className="text-center space-y-3">
-                        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-2xl">
-                            <span className="text-brand-primary bg-clip-text text-transparent bg-gradient-to-br from-brand-primary to-red-400">ARCHIVE</span> DUNGEON
+                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-2xl">
+                            <span className="text-brand-primary">ARCHIVE</span> DUNGEON
                         </h1>
-                        <div className="inline-block bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
-                            <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Archived Content</h2>
+                        <div className="inline-flex items-center gap-2 bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
+                            <h2 className="text-lg md:text-xl font-bold text-brand-accent tracking-widest uppercase">Archived Content</h2>
                         </div>
                     </div>
                     <p className="text-gray-300 max-w-2xl text-center text-lg">

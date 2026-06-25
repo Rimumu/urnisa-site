@@ -51,11 +51,11 @@ const ArchiveWheel: React.FC = () => {
                     <div className="inline-block bg-amber-500/20 px-4 py-1 rounded-full border border-amber-500/30 mb-2">
                         <span className="text-amber-400 font-black text-xs uppercase tracking-widest">ARCHIVED CONTENT</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter drop-shadow-2xl">
-                        SPIN THE <span className="text-brand-primary bg-clip-text text-transparent bg-gradient-to-br from-brand-primary to-red-400">WHEEL</span>
+                    <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-2xl">
+                        SPIN THE <span className="text-brand-primary">WHEEL</span>
                     </h1>
-                    <div className="inline-block bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
-                        <h2 className="text-xl md:text-2xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Event</h2>
+                    <div className="inline-flex items-center gap-2 bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
+                        <h2 className="text-lg md:text-xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Event</h2>
                     </div>
                 </div>
 
