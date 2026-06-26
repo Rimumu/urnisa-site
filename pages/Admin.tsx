@@ -446,6 +446,7 @@ const Admin: React.FC = () => {
 
     // --- NAVIGATION STATE ---
     const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'goals_editor' | 'wheel_editor' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament' | 'snakes'>('nisathon_mgr');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // --- DATA STATE ---
     const { scheduleUrl: currentScheduleUrl } = useSchedule();
@@ -1322,26 +1323,61 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                 <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-brand-primary/10 rounded-full blur-[100px] mix-blend-screen animate-pulse"></div>
             </div>
 
-            {/* --- SIDEBAR --- */}
-            <div className="relative z-10 w-full md:w-[280px] bg-black/40 backdrop-blur-3xl border-r border-white/5 flex-shrink-0 md:h-screen md:sticky md:top-0 flex flex-col shadow-2xl">
-                <div className="p-6 md:p-8 flex items-center justify-between md:justify-start gap-4 bg-gradient-to-b from-white/5 to-transparent shrink-0">
-                    <div className="flex items-center gap-4">
-                        <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.6)]">
-                            <AdminIcons.Panel />
-                        </span>
-                        <h1 className="text-2xl font-black text-white tracking-tight">Admin <span className="text-brand-primary">Panel</span></h1>
-                    </div>
-                    {/* Mobile Exit Button */}
-                    <Link to="/" className="md:hidden flex items-center justify-center p-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-all" title="Exit Admin">
+            {/* --- MOBILE HEADER & MENU TOGGLE --- */}
+            <div className="md:hidden relative z-40 flex items-center justify-between p-4 bg-black/60 backdrop-blur-xl border-b border-white/5">
+                <div className="flex items-center gap-3">
+                    <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.6)]">
+                        <AdminIcons.Panel />
+                    </span>
+                    <h1 className="text-xl font-black text-white tracking-tight">Admin <span className="text-brand-primary">Panel</span></h1>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Link to="/" className="flex items-center justify-center p-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-all" title="Exit Admin">
                         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
                     </Link>
+                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-brand-primary hover:bg-red-600 text-white rounded-lg transition-all">
+                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            {isMobileMenuOpen ? (
+                                <>
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </>
+                            ) : (
+                                <>
+                                    <line x1="3" y1="12" x2="21" y2="12" />
+                                    <line x1="3" y1="6" x2="21" y2="6" />
+                                    <line x1="3" y1="18" x2="21" y2="18" />
+                                </>
+                            )}
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
+            {/* --- SIDEBAR --- */}
+            <div className={`fixed md:relative z-50 w-[280px] bg-black/95 md:bg-black/40 backdrop-blur-3xl border-r border-white/5 flex-shrink-0 h-screen md:sticky md:top-0 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} top-0 left-0`}>
+                <div className="hidden md:flex p-6 md:p-8 items-center justify-between md:justify-start gap-4 bg-gradient-to-b from-white/5 to-transparent shrink-0">
+                    <div className="flex items-center gap-4">
+                        <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.6)]">
+                            <AdminIcons.Panel />
+                        </span>
+                        <h1 className="text-2xl font-black text-white tracking-tight">Admin <span className="text-brand-primary">Panel</span></h1>
+                    </div>
                 </div>
                 
-                <nav className="flex-1 overflow-y-auto overflow-x-auto md:overflow-x-hidden p-4 md:p-6 flex md:flex-col gap-3 md:gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <nav className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar mt-[72px] md:mt-0">
                     {[
                         {
                             title: "Nisathon",
@@ -1382,20 +1418,20 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             ]
                         }
                     ].map((category, idx) => (
-                        <div key={idx} className="flex md:flex-col gap-2 md:gap-1 shrink-0 items-center md:items-stretch">
-                            <div className="hidden md:block text-[10px] uppercase font-extrabold text-gray-500 tracking-[0.2em] px-3 pt-2 pb-1">
+                        <div key={idx} className="flex flex-col gap-1 shrink-0">
+                            <div className="text-[10px] uppercase font-extrabold text-gray-500 tracking-[0.2em] px-3 pt-2 pb-1">
                                 {category.title}
                             </div>
                             {category.items.map(item => (
                                 <button 
                                     key={item.id} 
-                                    onClick={() => setActiveTab(item.id as any)} 
-                                    className={`flex-shrink-0 w-auto md:w-full flex items-center gap-3 px-4 md:px-4 py-2.5 md:py-3 rounded-2xl transition-all duration-300 font-bold text-sm whitespace-nowrap 
+                                    onClick={() => { setActiveTab(item.id as any); setIsMobileMenuOpen(false); }} 
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 font-bold text-sm whitespace-nowrap 
                                     ${activeTab === item.id 
                                         ? (item.special 
-                                            ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)] scale-105 md:scale-100 translate-y-[-2px] md:translate-y-0' 
-                                            : 'bg-brand-primary text-white shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-105 md:scale-100 translate-y-[-2px] md:translate-y-0') 
-                                        : 'text-gray-400 bg-white/5 md:bg-transparent hover:bg-white/10 hover:text-white hover:scale-105 md:hover:scale-100'}`}
+                                            ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]' 
+                                            : 'bg-brand-primary text-white shadow-[0_0_20px_rgba(220,38,38,0.3)]') 
+                                        : 'text-gray-400 bg-transparent hover:bg-white/10 hover:text-white'}`}
                                 >
                                     <item.icon /> <span>{item.label}</span>
                                 </button>
@@ -1588,7 +1624,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             onChange={(e) => setFilterUser(e.target.value)}
                                             className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-brand-primary outline-none min-w-[150px] flex-1 md:flex-none transition-colors"
                                         />
-                                        <div className="flex bg-black/40 rounded-xl p-1.5 border border-white/10">
+                                        <div className="flex bg-black/40 rounded-xl p-1.5 border border-white/10 overflow-x-auto custom-scrollbar">
                                             {[
                                                 { id: 'all', label: 'ALL' },
                                                 { id: 'sub', label: 'SUB' },
@@ -1599,7 +1635,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 <button
                                                     key={f.id}
                                                     onClick={() => setFilterType(f.id)}
-                                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300 ${filterType === f.id ? 'bg-brand-primary text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                                                    className={`shrink-0 px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300 ${filterType === f.id ? 'bg-brand-primary text-white shadow-[0_0_10px_rgba(220,38,38,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
                                                 >
                                                     {f.label}
                                                 </button>
@@ -1619,23 +1655,23 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         else if (evt.type === 'donation' || evt.type === 'tip') { IconComponent = AdminIcons.EventDono; colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_10px_rgba(52,211,153,0.1)]'; }
 
                                         return (
-                                            <div key={evt._id} className="flex items-center justify-between p-3.5 rounded-2xl bg-black/20 border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all gap-4 group shadow-sm">
+                                            <div key={evt._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-2xl bg-black/20 border border-white/5 hover:bg-white/5 hover:border-white/10 transition-all gap-4 group shadow-sm">
                                                 <div className="flex items-center gap-4 overflow-hidden">
-                                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${colorClass}`}>
+                                                    <div className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center border ${colorClass}`}>
                                                         <IconComponent />
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <div className="font-bold text-white text-sm truncate">{evt.user}</div>
-                                                        <div className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mt-0.5">
+                                                        <div className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mt-0.5 whitespace-normal sm:whitespace-nowrap">
                                                             {evt.type} • {new Date(evt.createdAt).toLocaleString()}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0">
                                                     <div className="font-mono font-bold text-brand-accent text-sm whitespace-nowrap bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 drop-shadow-md">
                                                         {evt.amountDisplay}
                                                     </div>
-                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
                                                         <button onClick={() => setConfirmDelete({ id: evt._id, revert: true })} className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm">REV</button>
                                                         <button onClick={() => setConfirmDelete({ id: evt._id, revert: false })} className="bg-white/5 border border-white/10 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all shadow-sm">DEL</button>
                                                     </div>
@@ -1740,29 +1776,29 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Goals */}
                             <div>
-                                <div className="flex justify-between items-center mb-8">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                                     <h2 className="text-4xl font-black text-white tracking-tight">Goals Roadmap</h2>
-                                    <button onClick={handleSaveGoals} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Goals</button>
+                                    <button onClick={handleSaveGoals} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Goals</button>
                                 </div>
                                 <div className="space-y-4">
                                     {localGoals.map((goal, i) => (
-                                        <div key={i} className="flex gap-4 items-center bg-white/5 backdrop-blur-xl p-5 rounded-2xl border border-white/10 shadow-lg group hover:bg-white/10 transition-colors">
-                                            <div className="w-24 shrink-0">
+                                        <div key={i} className="flex flex-col sm:flex-row gap-4 sm:items-center bg-white/5 backdrop-blur-xl p-5 rounded-2xl border border-white/10 shadow-lg group hover:bg-white/10 transition-colors">
+                                            <div className="w-full sm:w-24 shrink-0">
                                                 <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-2 block">NB Count</label>
                                                 <input type="number" value={goal.count} onChange={(e) => updateGoal(i, 'count', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-mono focus:border-brand-primary outline-none transition-colors" />
                                             </div>
-                                            <div className="flex-1">
+                                            <div className="flex-1 w-full">
                                                 <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-2 block">Reward Description</label>
                                                 <input type="text" value={goal.reward} onChange={(e) => updateGoal(i, 'reward', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors" />
                                             </div>
-                                            <div className="w-24 shrink-0 flex flex-col items-center justify-center">
-                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-3 block">Secret?</label>
+                                            <div className="w-full sm:w-24 shrink-0 flex sm:flex-col items-center sm:justify-center justify-between mt-2 sm:mt-0">
+                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-0 sm:mb-3 block">Secret?</label>
                                                 <div className="relative flex items-center justify-center">
                                                     <input type="checkbox" checked={goal.secret} onChange={(e) => updateGoal(i, 'secret', e.target.checked)} className="peer w-6 h-6 appearance-none bg-black/40 border border-white/20 rounded-md checked:bg-brand-primary checked:border-brand-primary transition-all cursor-pointer" />
                                                     <svg className="absolute w-4 h-4 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                                 </div>
                                             </div>
-                                            <button onClick={() => removeGoal(i)} className="text-red-500/50 hover:text-red-400 p-3 mt-4 rounded-xl hover:bg-red-500/10 transition-all">
+                                            <button onClick={() => removeGoal(i)} className="w-full sm:w-auto text-red-500/50 hover:text-red-400 p-3 mt-2 sm:mt-4 rounded-xl hover:bg-red-500/10 border border-red-500/20 sm:border-transparent transition-all flex items-center justify-center">
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                             </button>
                                         </div>
@@ -1779,22 +1815,24 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* Wheel Settings */}
                             <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex justify-between items-center mb-8">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                                     <h3 className="font-black text-white text-2xl tracking-tight">Wheel Items</h3>
-                                    <button onClick={handleSaveWheel} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Wheel</button>
+                                    <button onClick={handleSaveWheel} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Wheel</button>
                                 </div>
                                 <div className="space-y-4">
                                     {localWheel.map((item, i) => (
-                                        <div key={i} className="flex gap-4 items-center bg-black/20 p-5 rounded-2xl border border-white/5 group hover:bg-white/5 transition-colors">
-                                            <div className="flex-1">
-                                                <label className="text-[10px] uppercase font-bold text-gray-500">Label</label>
-                                                <input type="text" value={item.label} onChange={(e) => updateWheelItem(i, 'label', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white" />
+                                        <div key={i} className="flex flex-col sm:flex-row gap-4 sm:items-center bg-black/20 p-5 rounded-2xl border border-white/5 group hover:bg-white/5 transition-colors">
+                                            <div className="flex-1 w-full">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500 block mb-2">Label</label>
+                                                <input type="text" value={item.label} onChange={(e) => updateWheelItem(i, 'label', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors" />
                                             </div>
-                                            <div className="w-24 shrink-0">
-                                                <label className="text-[10px] uppercase font-bold text-gray-500">Weight</label>
-                                                <input type="number" value={item.weight} onChange={(e) => updateWheelItem(i, 'weight', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded p-2 text-white text-center font-mono" />
+                                            <div className="w-full sm:w-24 shrink-0">
+                                                <label className="text-[10px] uppercase font-bold text-gray-500 block mb-2">Weight</label>
+                                                <input type="number" value={item.weight} onChange={(e) => updateWheelItem(i, 'weight', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-mono focus:border-brand-primary outline-none transition-colors" />
                                             </div>
-                                            <button onClick={() => removeWheelItem(i)} className="text-red-500 hover:text-red-400 mt-6 px-2">✕</button>
+                                            <button onClick={() => removeWheelItem(i)} className="w-full sm:w-auto text-red-500/50 hover:text-red-400 mt-2 sm:mt-6 p-3 border border-red-500/20 sm:border-transparent rounded-xl hover:bg-red-500/10 transition-all flex justify-center items-center">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            </button>
                                         </div>
                                     ))}
                                     <button onClick={addWheelItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors flex items-center justify-center gap-2">
@@ -1810,16 +1848,16 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             {/* About Section */}
                             <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex justify-between items-center mb-8">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                                     <h2 className="text-4xl font-black text-white tracking-tight">About Section</h2>
-                                    <button onClick={() => handleSaveProfile('about')} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save About</button>
+                                    <button onClick={() => handleSaveProfile('about')} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save About</button>
                                 </div>
                                 <div className="space-y-8">
                                     {localAbout.map((item, i) => (
                                         <div key={item.id} className="bg-black/20 p-6 rounded-3xl border border-white/5 group transition-colors hover:bg-white/5">
-                                            <div className="flex justify-between mb-4">
+                                            <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
                                                 <input type="text" value={item.title} onChange={(e) => updateAboutItem(i, 'title', e.target.value)} className="w-full bg-transparent font-black text-2xl text-white border-b-2 border-transparent focus:border-brand-primary outline-none transition-colors" placeholder="Section Title" />
-                                                <button onClick={() => removeAboutItem(i)} className="text-red-500/50 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-all">
+                                                <button onClick={() => removeAboutItem(i)} className="w-full sm:w-auto shrink-0 text-red-500/50 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-all flex justify-center items-center">
                                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                                 </button>
                                             </div>
@@ -1836,14 +1874,14 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                             {/* Credits Section */}
                             <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex justify-between items-center mb-8">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                                     <h2 className="text-4xl font-black text-white tracking-tight">Credits</h2>
-                                    <button onClick={() => handleSaveProfile('credits')} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Credits</button>
+                                    <button onClick={() => handleSaveProfile('credits')} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Credits</button>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {localCredits.map((credit, i) => (
                                         <div key={credit.id} className="bg-black/20 p-5 rounded-3xl border border-white/5 flex flex-col gap-4 relative group hover:bg-white/5 transition-colors">
-                                            <button onClick={() => removeCreditItem(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-all shadow-lg scale-90 hover:scale-100 z-10">
+                                            <button onClick={() => removeCreditItem(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow-lg scale-90 hover:scale-100 z-10">
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                             </button>
                                             <div className="flex gap-4 items-center">
@@ -1872,14 +1910,14 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     {activeTab === 'gallery' && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex justify-between items-center mb-8">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                                     <h2 className="text-4xl font-black text-white tracking-tight">Art Gallery</h2>
-                                    <button onClick={() => handleSaveProfile('artworks')} className="bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Gallery</button>
+                                    <button onClick={() => handleSaveProfile('artworks')} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Gallery</button>
                                 </div>
                                 <div className="space-y-10">
                                     {localArtworks.map((artist, i) => (
                                         <div key={artist.id} className="bg-black/20 p-8 rounded-3xl border border-white/5 relative group hover:bg-white/5 transition-colors">
-                                            <button onClick={() => removeArtist(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-3 opacity-0 group-hover:opacity-100 transition-all shadow-xl scale-90 hover:scale-100 z-10">
+                                            <button onClick={() => removeArtist(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow-xl scale-90 hover:scale-100 z-10">
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                             </button>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -1891,7 +1929,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 {artist.images.map((img, imgIdx) => (
                                                     <div key={imgIdx} className="relative group/img aspect-square rounded-2xl overflow-hidden border-2 border-white/10 hover:border-brand-primary transition-colors shadow-lg">
                                                         <img src={img} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                        <div className="absolute inset-0 bg-black/40 opacity-100 md:opacity-0 md:group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                                             <button onClick={() => removeImageFromArtist(i, imgIdx)} className="bg-red-600 hover:bg-red-500 text-white rounded-full p-2 scale-90 hover:scale-110 transition-all shadow-lg">
                                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                                             </button>
@@ -1900,10 +1938,10 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 ))}
                                             </div>
                                             
-                                            <div className="flex gap-3 bg-black/40 p-2 rounded-2xl border border-white/5">
+                                            <div className="flex flex-col md:flex-row gap-3 bg-black/40 p-2 rounded-2xl border border-white/5 items-stretch md:items-center">
                                                 <input type="text" placeholder="Add Image URL & Press Enter..." className="flex-1 bg-transparent px-4 py-2 text-white text-sm font-medium focus:outline-none" onKeyDown={(e) => { if (e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; } }} />
-                                                <div className="w-px bg-white/10 my-2"></div>
-                                                <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0 scale-90" />
+                                                <div className="hidden md:block w-px bg-white/10 my-2 h-6"></div>
+                                                <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0 w-full md:w-auto" />
                                             </div>
                                         </div>
                                     ))}
@@ -1978,8 +2016,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 </div>
 
                                 <div className="rounded-3xl border border-white/5 overflow-hidden shadow-2xl bg-black/20">
-                                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                                        <table className="w-full text-left text-sm text-gray-400 relative">
+                                    <div className="max-h-[400px] overflow-y-auto overflow-x-auto custom-scrollbar">
+                                        <table className="w-full min-w-[600px] text-left text-sm text-gray-400 relative">
                                             <thead className="text-xs uppercase bg-black/60 text-gray-300 sticky top-0 z-10 backdrop-blur-md">
                                                 <tr>
                                                     <th className="px-6 py-4 font-black tracking-widest">User Details</th>
@@ -2170,8 +2208,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
                                 <h3 className="font-black text-white text-2xl mb-8 tracking-tight">Existing Codes (Recent 100)</h3>
                                 <div className="rounded-3xl border border-white/5 overflow-hidden shadow-2xl bg-black/20">
-                                    <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                                        <table className="w-full text-sm text-left text-gray-300 relative">
+                                    <div className="max-h-[500px] overflow-y-auto overflow-x-auto custom-scrollbar">
+                                        <table className="w-full min-w-[800px] text-sm text-left text-gray-300 relative">
                                             <thead className="text-[10px] text-gray-400 font-black uppercase tracking-widest bg-black/60 sticky top-0 z-10 backdrop-blur-md">
                                                 <tr>
                                                     <th className="px-6 py-4">Code</th>
@@ -2279,7 +2317,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     />
                                     <button 
                                         onClick={() => navigator.clipboard.writeText(mergedOutput)} 
-                                        className="absolute top-4 right-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-extrabold py-2 px-6 rounded-lg transition-all shadow-lg opacity-0 group-hover:opacity-100 disabled:opacity-0" 
+                                        className="absolute top-4 right-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white font-extrabold py-2 px-6 rounded-lg transition-all shadow-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 disabled:hidden md:disabled:opacity-0" 
                                         disabled={!mergedOutput}
                                     >
                                         COPY JSON
@@ -2512,19 +2550,19 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         {snakesQueue
                                             .filter(q => snakesQueueFilter.trim() === '' || q.user.toLowerCase().includes(snakesQueueFilter.toLowerCase().trim()))
                                             .map((queueItem, idx) => (
-                                                <div key={queueItem._id} className="flex items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:bg-white/5 transition-all gap-4 group shadow-sm">
-                                                    <div className="flex items-center gap-4 overflow-hidden">
-                                                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-black text-sm shadow-inner">
+                                                <div key={queueItem._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-black/20 border border-white/5 hover:bg-white/5 transition-all gap-4 group shadow-sm">
+                                                    <div className="flex items-center gap-4 overflow-hidden w-full sm:w-auto">
+                                                        <div className="shrink-0 w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-black text-sm shadow-inner">
                                                             {idx + 1}
                                                         </div>
                                                         <img
                                                             src={queueItem.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(queueItem.user)}&background=random`}
                                                             alt=""
-                                                            className="w-10 h-10 rounded-full object-cover border-2 border-white/10"
+                                                            className="shrink-0 w-10 h-10 rounded-full object-cover border-2 border-white/10"
                                                         />
-                                                        <div className="flex flex-col min-w-0">
+                                                        <div className="flex flex-col min-w-0 flex-1">
                                                             <div className="font-bold text-white text-base truncate">{queueItem.user}</div>
-                                                            <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5">
+                                                            <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-0.5 whitespace-normal sm:whitespace-nowrap">
                                                                 <span className="text-purple-400">{queueItem.type}</span> • {new Date(queueItem.createdAt).toLocaleTimeString()}
                                                             </div>
                                                         </div>
@@ -2544,7 +2582,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                                 setTimeout(() => setSnakesStatus(null), 3000);
                                                             }
                                                         }}
-                                                        className="bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/20 px-4 py-2 rounded-lg text-xs font-black tracking-wider transition-all opacity-50 group-hover:opacity-100 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+                                                        className="w-full sm:w-auto bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/20 px-4 py-2 rounded-lg text-xs font-black tracking-wider transition-all opacity-100 sm:opacity-50 sm:group-hover:opacity-100 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] mt-2 sm:mt-0"
                                                     >
                                                         DEL
                                                     </button>
