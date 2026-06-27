@@ -51,6 +51,12 @@ const StarIcon = () => (
     </svg>
 );
 
+const DollarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
 const roles = ["VTuber", "Streamer", "Yapper", "Gremlin"];
 
 type TabType = 'about' | 'contact' | 'credits' | null;
@@ -287,9 +293,9 @@ const About: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="bg-[#0a0a0a]/60 rounded-2xl p-4 border border-white/5 mb-4 text-center backdrop-blur-md">
+                        <div className="bg-black/85 rounded-2xl p-4 border border-white/5 mb-4 text-center backdrop-blur-md">
                             <p className="text-gray-300 text-sm leading-relaxed">
-                                "Just here to have fun together being a gremlin and try out new things!"
+                                "heloo ! i'm nisa & i don't stream"
                             </p>
                         </div>
 
@@ -312,14 +318,25 @@ const About: React.FC = () => {
                             ))}
                         </div>
                         
-                        <button 
-                            onClick={handleCopyDiscord}
-                            className="w-full bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/50 text-[#5865F2] font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 mb-4 group hover:shadow-[0_0_15px_rgba(88,101,242,0.3)]"
-                        >
-                            <img src="https://cdn.simpleicons.org/discord/5865F2" className="w-5 h-5" alt="Discord" />
-                            <span>@urnisa</span>
-                            <CopyIcon />
-                        </button>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <button 
+                                onClick={handleCopyDiscord}
+                                className="w-full bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/50 text-[#5865F2] font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(88,101,242,0.3)] text-sm"
+                            >
+                                <img src="https://cdn.simpleicons.org/discord/5865F2" className="w-5 h-5 flex-shrink-0" alt="Discord" />
+                                <span className="truncate">@urnisa</span>
+                                <CopyIcon />
+                            </button>
+                            <a 
+                                href="https://streamelements.com/urnisa_/tip"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 hover:border-emerald-500/60 text-emerald-400 hover:text-emerald-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] text-sm cursor-pointer"
+                            >
+                                <DollarIcon />
+                                <span>Donate</span>
+                            </a>
+                        </div>
 
                         <button 
                             onClick={() => setShowSpecs(!showSpecs)}
@@ -410,15 +427,22 @@ const About: React.FC = () => {
                         <div className="p-6 md:p-8 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10" key={activeTab || 'empty'}>
                             {activeTab === 'about' && (
                                 <div className="text-gray-300 leading-relaxed space-y-4 text-sm md:text-base">
-                                    {aboutContent.map((item) => (
-                                        <div key={item.id} className="bg-white/5 rounded-xl p-5 border border-white/5">
-                                            {item.title && <h3 className="font-bold text-white mb-2">{item.title}</h3>}
-                                            {/* Rich Text Renderer */}
-                                            <div 
-                                                className="rich-text text-gray-300 whitespace-pre-wrap" 
-                                                dangerouslySetInnerHTML={{ __html: item.text }} 
-                                            />
-                                        </div>
+                                    {aboutContent.map((item, index) => (
+                                        <React.Fragment key={item.id}>
+                                            <div className="bg-white/5 rounded-xl p-5 border border-white/5">
+                                                {item.title && <h3 className="font-bold text-white mb-2">{item.title}</h3>}
+                                                {/* Rich Text Renderer */}
+                                                <div 
+                                                    className="rich-text text-gray-300 whitespace-pre-wrap" 
+                                                    dangerouslySetInnerHTML={{ __html: item.text }} 
+                                                />
+                                            </div>
+                                            {index === 0 && (
+                                                <div className="text-center text-xs text-gray-500 font-mono py-2">
+                                                    EST. 2023 • urnisa_
+                                                </div>
+                                            )}
+                                        </React.Fragment>
                                     ))}
                                 </div>
                             )}
@@ -431,9 +455,9 @@ const About: React.FC = () => {
                                         <p className="text-sm text-gray-300 mb-4">For sponsorships, collaborations, and other professional matters.</p>
                                         
                                         <div className="flex items-center justify-between bg-black/50 p-3 rounded-lg border border-white/10 backdrop-blur-sm">
-                                            <span className="text-white font-mono text-sm truncate mr-2">business@urnisa.live</span>
+                                            <span className="text-white font-mono text-sm truncate mr-2">urniisaa@gmail.com</span>
                                             <button 
-                                                onClick={() => { navigator.clipboard.writeText('business@urnisa.live'); triggerToast("Copied email to clipboard!"); }}
+                                                onClick={() => { navigator.clipboard.writeText('urniisaa@gmail.com'); triggerToast("Copied email to clipboard!"); }}
                                                 className="text-brand-primary hover:text-white transition-colors p-1"
                                                 title="Copy Email"
                                             >
@@ -513,12 +537,9 @@ const About: React.FC = () => {
                 </div>
             </div>
             
-            <div className="mt-6 text-xs text-gray-600 font-mono animate-in fade-in delay-500 duration-1000 mb-16">
-                EST. 2023 • urnisa_
-            </div>
 
             {/* Scroll Down Arrow moved below the About Me card */}
-            <div className="text-center mb-16">
+            <div className="text-center mt-6 md:mt-8 mb-16">
                 <button
                     onClick={handleScrollToTwitch}
                     className="text-brand-primary animate-bounce transition-transform duration-200 hover:scale-110 focus:outline-none cursor-pointer"
