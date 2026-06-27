@@ -3,6 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
+import TwitchEmbed from '../components/TwitchEmbed';
+import { TWITCH_CHANNEL_NAME, DISCORD_SERVER_ID } from '../constants';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { useSchedule } from '../hooks/useSchedule';
+import DiscordWidget from '../components/DiscordWidget';
 
 // Assets
 const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764677430/urnisapfp2_l3a3xx.png";
@@ -68,6 +73,22 @@ const About: React.FC = () => {
 
     // Lightbox State
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+    // Dashboard Hooks and State
+    const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
+    const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
+    const { scheduleUrl } = useSchedule();
+    const [hasDiscordLoaded, setHasDiscordLoaded] = useState(false);
+
+    useEffect(() => {
+        if (isDiscordVisible && !hasDiscordLoaded) {
+            setHasDiscordLoaded(true);
+        }
+    }, [isDiscordVisible, hasDiscordLoaded]);
+
+    const handleScrollToSchedule = () => {
+        scheduleRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
     const currentRole = roles[loopNum % roles.length];
     const isWaiting = isDeleting && text === currentRole;
@@ -487,8 +508,73 @@ const About: React.FC = () => {
                 </div>
             </div>
             
-            <div className="mt-6 text-xs text-gray-600 font-mono animate-in fade-in delay-500 duration-1000">
+            <div className="mt-6 text-xs text-gray-600 font-mono animate-in fade-in delay-500 duration-1000 mb-16">
                 EST. 2023 • urnisa_
+            </div>
+
+            {/* Scroll Down Arrow moved below the About Me card */}
+            <div className="text-center mb-16">
+                <button
+                    onClick={handleScrollToSchedule}
+                    className="text-brand-primary animate-bounce transition-transform duration-200 hover:scale-110 focus:outline-none cursor-pointer"
+                    aria-label="Scroll to schedule"
+                    title="Scroll to schedule"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 md:h-20 md:w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* --- DASHBOARD CONTENT COMBINED --- */}
+            <div className="w-full flex flex-col items-center text-center max-w-5xl overflow-hidden mt-8">
+                <h1 className="text-3xl md:text-5xl font-extrabold mb-2 text-white">
+                    Welcome to the <span className="text-brand-primary">STEAK</span> House!
+                </h1>
+                <p className="text-gray-300 mb-8 max-w-2xl text-sm md:text-base">
+                    The hub for everything related to nisa. Check out the streams and enjoy your meat!
+                </p>
+
+                <div className="w-full mt-4 md:mt-0">
+                    <div className="w-full bg-black/30 backdrop-blur-lg rounded-2xl p-1 md:p-2 border border-white/10 shadow-2xl shadow-black/40">
+                        <TwitchEmbed channel={TWITCH_CHANNEL_NAME} />
+                    </div>
+                </div>
+
+                {/* Schedule Section */}
+                <div 
+                    ref={scheduleRef}
+                    className={`mt-8 w-full transition-all duration-1000 ease-out transform ${isScheduleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
+                    style={{ scrollMarginTop: '5rem' }} // Offset for the sticky navbar
+                >
+                    <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-white">
+                        Stream <span className="text-brand-primary">Schedule</span>
+                    </h2>
+                    <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-1 md:p-2 border border-white/10 shadow-2xl shadow-black/40">
+                        <OptimizedImage
+                            src={scheduleUrl}
+                            alt="Urnisa's weekly stream schedule"
+                            className="rounded-lg w-full h-auto aspect-video md:aspect-auto"
+                            contain
+                            priority
+                        />
+                    </div>
+                </div>
+
+                {/* Discord Section */}
+                <div 
+                    ref={discordRef}
+                    className={`mt-16 w-full transition-all duration-1000 ease-out transform mb-16 ${isDiscordVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
+                >
+                    <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-white">
+                        Join our <span className="text-brand-primary">Discord</span>
+                    </h2>
+                    <p className="text-gray-300 mb-8 max-w-2xl mx-auto text-sm md:text-base">
+                        Become a part of the STEAK House community! Join our Discord server to chat with others, get live notifications, and stay updated on all events.
+                    </p>
+                    {/* Keep DiscordWidget mounted once loaded to ensure smooth exit animations */}
+                    {hasDiscordLoaded && <DiscordWidget serverId={DISCORD_SERVER_ID} />}
+                </div>
             </div>
         </div>
     );

@@ -67,6 +67,7 @@ export const useDiscordChat = (channelId: string) => {
 
         const fetchMessages = async () => {
             setLoading(true);
+            setError(null);
             // Use the specific Discord Service URL
             const targetUrl = `${DISCORD_API_URL}/api/messages?channelId=${channelId}`;
             try {
@@ -78,7 +79,11 @@ export const useDiscordChat = (channelId: string) => {
                     throw new Error(`Failed to fetch messages: ${response.status} ${response.statusText}`);
                 }
                 const data = await response.json();
-                setMessages(data);
+                if (Array.isArray(data)) {
+                    setMessages(data);
+                } else {
+                    throw new Error('Response data is not an array of messages');
+                }
             } catch (err) {
                 console.error(`Error loading chat preview from ${targetUrl}:`, err);
                 setError(err instanceof Error ? err : new Error('Unknown error'));

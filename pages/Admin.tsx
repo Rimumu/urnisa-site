@@ -1805,72 +1805,246 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     )}
 
                     {activeTab === 'goals_editor' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
                             {/* Goals */}
                             <div>
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                                    <h2 className="text-4xl font-black text-white tracking-tight">Goals Roadmap</h2>
-                                    <button onClick={handleSaveGoals} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Goals</button>
+                                {/* Sticky Header with Frosted Glass Background and Actions */}
+                                <div className="sticky -top-6 md:-top-10 z-30 bg-brand-surface/90 backdrop-blur-md pt-6 md:pt-10 pb-4 mb-6 border-b border-white/5 -mx-6 px-6 sm:-mx-10 sm:px-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div>
+                                        <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                                            <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">Goals Roadmap</span>
+                                        </h2>
+                                        <p className="text-xs text-gray-400 mt-1">Manage subathon and stream-milestone goals, visibility, and rewards.</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                                        <button 
+                                            onClick={addGoal} 
+                                            className="flex-1 sm:flex-initial bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold py-3 px-6 rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                            <span>Add New Goal</span>
+                                        </button>
+                                        <button 
+                                            onClick={handleSaveGoals} 
+                                            className="flex-1 sm:flex-initial bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-sm"
+                                        >
+                                            Save Goals
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="space-y-4">
-                                    {localGoals.map((goal, i) => (
-                                        <div key={i} className="flex flex-col sm:flex-row gap-4 sm:items-center bg-white/5 backdrop-blur-xl p-5 rounded-2xl border border-white/10 shadow-lg group hover:bg-white/10 transition-colors">
-                                            <div className="w-full sm:w-24 shrink-0">
-                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-2 block">NB Count</label>
-                                                <input type="number" value={goal.count} onChange={(e) => updateGoal(i, 'count', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-mono focus:border-brand-primary outline-none transition-colors" />
-                                            </div>
-                                            <div className="flex-1 w-full">
-                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-2 block">Reward Description</label>
-                                                <input type="text" value={goal.reward} onChange={(e) => updateGoal(i, 'reward', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors" />
-                                            </div>
-                                            <div className="w-full sm:w-24 shrink-0 flex sm:flex-col items-center sm:justify-center justify-between mt-2 sm:mt-0">
-                                                <label className="text-[10px] uppercase font-extrabold text-gray-500 tracking-wider mb-0 sm:mb-3 block">Secret?</label>
-                                                <div className="relative flex items-center justify-center">
-                                                    <input type="checkbox" checked={goal.secret} onChange={(e) => updateGoal(i, 'secret', e.target.checked)} className="peer w-6 h-6 appearance-none bg-black/40 border border-white/20 rounded-md checked:bg-brand-primary checked:border-brand-primary transition-all cursor-pointer" />
-                                                    <svg className="absolute w-4 h-4 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                </div>
-                                            </div>
-                                            <button onClick={() => removeGoal(i)} className="w-full sm:w-auto text-red-500/50 hover:text-red-400 p-3 mt-2 sm:mt-4 rounded-xl hover:bg-red-500/10 border border-red-500/20 sm:border-transparent transition-all flex items-center justify-center">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+
+                                <div className="space-y-3">
+                                    {/* Header labels for Desktop View */}
+                                    {localGoals.length > 0 && (
+                                        <div className="hidden sm:flex items-center gap-4 px-4 py-3.5 bg-black/80 rounded-xl border border-white/10 text-[11px] uppercase font-extrabold text-white tracking-widest mb-1 shadow-md">
+                                            <div className="w-8 shrink-0 text-center text-gray-400 font-black">#</div>
+                                            <div className="w-28 shrink-0 text-center text-brand-primary font-black">NB Count</div>
+                                            <div className="flex-1 font-black">Reward Description</div>
+                                            <div className="w-28 shrink-0 text-center font-black">Visibility</div>
+                                            <div className="w-12 shrink-0 text-center font-black">Delete</div>
+                                        </div>
+                                    )}
+
+                                    {localGoals.length === 0 ? (
+                                        <div className="text-center py-16 bg-white/5 border border-dashed border-white/10 rounded-2xl">
+                                            <p className="text-gray-400 font-bold">No goals added yet.</p>
+                                            <button onClick={addGoal} className="mt-4 bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-xl text-sm transition-all">
+                                                Create First Goal
                                             </button>
                                         </div>
-                                    ))}
-                                    <button onClick={addGoal} className="w-full py-5 border-2 border-dashed border-white/10 rounded-2xl text-gray-400 font-extrabold hover:text-white hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all flex items-center justify-center gap-3">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add Goal
-                                    </button>
+                                    ) : (
+                                        localGoals.map((goal, i) => (
+                                            <div key={i} className="flex flex-col sm:flex-row gap-3 sm:items-center bg-white/5 backdrop-blur-xl p-3.5 sm:p-3 rounded-xl border border-white/5 group hover:bg-white/10 hover:border-white/10 transition-all duration-200 shadow-sm">
+                                                {/* Index Badge */}
+                                                <div className="hidden sm:flex w-8 shrink-0 items-center justify-center font-mono text-xs text-gray-500 font-bold bg-black/40 rounded-lg h-8 border border-white/5">
+                                                    {i + 1}
+                                                </div>
+                                                
+                                                {/* Goal count */}
+                                                <div className="w-full sm:w-28 shrink-0 flex items-center gap-2">
+                                                    <span className="sm:hidden text-xs text-gray-400 font-bold w-16">NB Count:</span>
+                                                    <input 
+                                                        type="number" 
+                                                        value={goal.count} 
+                                                        onChange={(e) => updateGoal(i, 'count', parseInt(e.target.value))} 
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white text-center font-mono text-sm focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                                    />
+                                                </div>
+
+                                                {/* Goal reward description */}
+                                                <div className="flex-1 w-full flex items-center gap-2">
+                                                    <span className="sm:hidden text-xs text-gray-400 font-bold w-16">Reward:</span>
+                                                    <input 
+                                                        type="text" 
+                                                        value={goal.reward} 
+                                                        onChange={(e) => updateGoal(i, 'reward', e.target.value)} 
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all" 
+                                                        placeholder="Enter reward description..."
+                                                    />
+                                                </div>
+
+                                                {/* Redesigned Secret Toggler (eye/eye-off) */}
+                                                <div className="w-full sm:w-28 shrink-0 flex items-center justify-between sm:justify-center gap-2">
+                                                    <span className="sm:hidden text-xs text-gray-400 font-bold">Secret?</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => updateGoal(i, 'secret', !goal.secret)}
+                                                        className={`w-full sm:w-auto px-3.5 py-2.5 rounded-lg border transition-all flex items-center justify-center gap-2 text-xs font-bold tracking-wide ${
+                                                            goal.secret 
+                                                                ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/40' 
+                                                                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40'
+                                                        }`}
+                                                    >
+                                                        {goal.secret ? (
+                                                            <>
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                                                </svg>
+                                                                <span>Secret</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
+                                                                <span>Public</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+
+                                                {/* Redesigned Crimson Delete Button */}
+                                                <div className="w-full sm:w-12 shrink-0 flex items-center justify-between sm:justify-center">
+                                                    <span className="sm:hidden text-xs text-gray-400 font-bold">Actions</span>
+                                                    <button 
+                                                        onClick={() => removeGoal(i)} 
+                                                        className="p-2.5 bg-red-500/10 hover:bg-red-500 border border-red-500/20 hover:border-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center justify-center shrink-0 w-full sm:w-10 h-10"
+                                                        title="Delete Goal"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'wheel_editor' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
                             {/* Wheel Settings */}
-                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                                    <h3 className="font-black text-white text-2xl tracking-tight">Wheel Items</h3>
-                                    <button onClick={handleSaveWheel} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Wheel</button>
+                            <div>
+                                {/* Sticky Header with Frosted Glass Background and Actions */}
+                                <div className="sticky -top-6 md:-top-10 z-30 bg-brand-surface/90 backdrop-blur-md pt-6 md:pt-10 pb-4 mb-6 border-b border-white/5 -mx-6 px-6 sm:-mx-10 sm:px-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div>
+                                        <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                                            <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">Wheel Items</span>
+                                        </h2>
+                                        <p className="text-xs text-gray-400 mt-1">Configure rewards and their respective weights on the wheel spin dashboard.</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                                        <div className="hidden md:flex items-center gap-2 bg-black/40 px-4 py-2.5 rounded-xl border border-white/10 text-xs text-gray-400 font-extrabold tracking-wider">
+                                            <span>TOTAL WEIGHT:</span>
+                                            <span className="text-white font-mono bg-white/10 px-2 py-0.5 rounded text-sm">{totalWheelWeight}</span>
+                                        </div>
+                                        <button 
+                                            onClick={addWheelItem} 
+                                            className="flex-1 sm:flex-initial bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold py-3 px-6 rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                            <span>Add Item</span>
+                                        </button>
+                                        <button 
+                                            onClick={handleSaveWheel} 
+                                            className="flex-1 sm:flex-initial bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-sm"
+                                        >
+                                            Save Wheel
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="space-y-4">
-                                    {localWheel.map((item, i) => (
-                                        <div key={i} className="flex flex-col sm:flex-row gap-4 sm:items-center bg-black/20 p-5 rounded-2xl border border-white/5 group hover:bg-white/5 transition-colors">
-                                            <div className="flex-1 w-full">
-                                                <label className="text-[10px] uppercase font-bold text-gray-500 block mb-2">Label</label>
-                                                <input type="text" value={item.label} onChange={(e) => updateWheelItem(i, 'label', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-brand-primary outline-none transition-colors" />
-                                            </div>
-                                            <div className="w-full sm:w-24 shrink-0">
-                                                <label className="text-[10px] uppercase font-bold text-gray-500 block mb-2">Weight</label>
-                                                <input type="number" value={item.weight} onChange={(e) => updateWheelItem(i, 'weight', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-center font-mono focus:border-brand-primary outline-none transition-colors" />
-                                            </div>
-                                            <button onClick={() => removeWheelItem(i)} className="w-full sm:w-auto text-red-500/50 hover:text-red-400 mt-2 sm:mt-6 p-3 border border-red-500/20 sm:border-transparent rounded-xl hover:bg-red-500/10 transition-all flex justify-center items-center">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+
+                                <div className="space-y-3">
+                                    {/* Header labels for Desktop View */}
+                                    {localWheel.length > 0 && (
+                                        <div className="hidden sm:flex items-center gap-4 px-4 py-3.5 bg-black/80 rounded-xl border border-white/10 text-[11px] uppercase font-extrabold text-white tracking-widest mb-1 shadow-md">
+                                            <div className="w-8 shrink-0 text-center text-gray-400 font-black">#</div>
+                                            <div className="flex-1 font-black">Reward / Label</div>
+                                            <div className="w-28 shrink-0 text-center text-brand-primary font-black">Weight</div>
+                                            <div className="w-12 shrink-0 text-center font-black">Delete</div>
+                                        </div>
+                                    )}
+
+                                    {localWheel.length === 0 ? (
+                                        <div className="text-center py-16 bg-white/5 border border-dashed border-white/10 rounded-2xl">
+                                            <p className="text-gray-400 font-bold">No wheel items configured yet.</p>
+                                            <button onClick={addWheelItem} className="mt-4 bg-brand-primary hover:bg-red-600 text-white font-bold py-2 px-6 rounded-xl text-sm transition-all">
+                                                Add First Item
                                             </button>
                                         </div>
-                                    ))}
-                                    <button onClick={addWheelItem} className="w-full py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-white hover:border-brand-primary/50 transition-colors flex items-center justify-center gap-2">
-                                        <span>+</span> Add Item
-                                    </button>
-                                    <div className="text-right text-xs text-gray-500">Total Weight: {totalWheelWeight}</div>
+                                    ) : (
+                                        localWheel.map((item, i) => (
+                                            <div key={i} className="flex flex-col sm:flex-row gap-3 sm:items-center bg-white/5 backdrop-blur-xl p-3.5 sm:p-3 rounded-xl border border-white/5 group hover:bg-white/10 hover:border-white/10 transition-all duration-200 shadow-sm">
+                                                {/* Index Badge */}
+                                                <div className="hidden sm:flex w-8 shrink-0 items-center justify-center font-mono text-xs text-gray-500 font-bold bg-black/40 rounded-lg h-8 border border-white/5">
+                                                    {i + 1}
+                                                </div>
+                                                
+                                                {/* Reward description / Label */}
+                                                <div className="flex-1 w-full flex items-center gap-2">
+                                                    <span className="sm:hidden text-xs text-gray-400 font-bold w-16">Label:</span>
+                                                    <input 
+                                                        type="text" 
+                                                        value={item.label} 
+                                                        onChange={(e) => updateWheelItem(i, 'label', e.target.value)} 
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all" 
+                                                        placeholder="Enter item description..."
+                                                    />
+                                                </div>
+
+                                                {/* Weight count */}
+                                                <div className="w-full sm:w-28 shrink-0 flex items-center gap-2">
+                                                    <span className="sm:hidden text-xs text-gray-400 font-bold w-16">Weight:</span>
+                                                    <input 
+                                                        type="number" 
+                                                        value={item.weight} 
+                                                        onChange={(e) => updateWheelItem(i, 'weight', parseInt(e.target.value))} 
+                                                        className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white text-center font-mono text-sm focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+
+                                                {/* Redesigned Crimson Delete Button */}
+                                                <div className="w-full sm:w-12 shrink-0 flex items-center justify-between sm:justify-center">
+                                                    <span className="sm:hidden text-xs text-gray-400 font-bold">Actions</span>
+                                                    <button 
+                                                        onClick={() => removeWheelItem(i)} 
+                                                        className="p-2.5 bg-red-500/10 hover:bg-red-500 border border-red-500/20 hover:border-red-500 text-red-400 hover:text-white rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center justify-center shrink-0 w-full sm:w-10 h-10"
+                                                        title="Delete Item"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+
+                                    {localWheel.length > 0 && (
+                                        <div className="md:hidden flex justify-end items-center gap-2 px-4 py-3 bg-black/40 rounded-xl border border-white/5 text-xs text-gray-400 font-extrabold tracking-wider mt-4">
+                                            <span>TOTAL WEIGHT:</span>
+                                            <span className="text-white font-mono bg-white/10 px-2 py-0.5 rounded text-sm">{totalWheelWeight}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Routes, Route, Outlet, useLocation, useOutlet } from 'react-router-dom';
+import { Routes, Route, Outlet, useLocation, useOutlet, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -94,7 +94,8 @@ const App: React.FC = () => {
 
         {/* 2. MAIN WEBSITE ROUTES (Wrapped in Layout) */}
         <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<About />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/nisathonBACK" element={<Subathon />} />
           <Route path="/nisathon/wheelBACK" element={<Wheel />} />
           <Route path="/snakesladder" element={<SnakesLadder />} />
@@ -115,7 +116,7 @@ const App: React.FC = () => {
           <Route path="/minecraft/bingo/cardBACK" element={<Bingo />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/redeem" element={<Redeem />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/archive/nisathon" element={<ArchiveNisathon />} />
@@ -123,7 +124,7 @@ const App: React.FC = () => {
           <Route path="/archive/tournament" element={<ArchiveTournament />} />
 
           {/* 404 Fallback - Redirects unknown paths to Home */}
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<About />} />
         </Route>
       </Routes>
     </div>
