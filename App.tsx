@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { Routes, Route, Outlet, useLocation, useOutlet } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -44,6 +45,7 @@ import ScrollToTop from './components/ScrollToTop';
 const MainLayout: React.FC = () => {
   const [showCapybara, setShowCapybara] = useState(false);
   const location = useLocation();
+  const currentOutlet = useOutlet();
 
   const triggerEasterEgg = () => {
     setShowCapybara(true);
@@ -54,9 +56,18 @@ const MainLayout: React.FC = () => {
       <ScrollToTop />
       <InteractiveBackground />
       <Navbar onEasterEggTrigger={triggerEasterEgg} />
-      <main key={location.pathname} className="flex-grow container mx-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <Outlet /> {/* This is where child routes (Home, Admin, etc) render */}
-      </main>
+      <AnimatePresence mode="wait">
+        <motion.main 
+          key={location.pathname} 
+          className="flex-grow container mx-auto px-4 py-8"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          {currentOutlet}
+        </motion.main>
+      </AnimatePresence>
       <Footer />
       <ScrollToTopButton />
       <CapybaraEasterEgg

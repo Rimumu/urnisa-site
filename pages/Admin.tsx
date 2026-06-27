@@ -1457,10 +1457,42 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                 <div className="max-w-6xl mx-auto space-y-8 pb-20">
 
                     {/* --- STATUS TOASTS (STACKED & POINTER-EVENTS CONTROLLED) --- */}
-                    <div className="fixed top-24 right-4 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-sm">
-                        {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus].map((status, i) => status && (
-                            <div key={i} className={`pointer-events-auto p-4 rounded-lg shadow-xl border border-white/10 ${status.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white animate-in fade-in slide-in-from-right`}>
-                                {status.message}
+                    <div className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[200] flex flex-col gap-3 pointer-events-none w-full max-w-sm">
+                        {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus, snakesStatus].map((status, i) => status && (
+                            <div key={i} className={`pointer-events-auto flex items-center gap-4 p-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${
+                                status.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
+                            } animate-in fade-in slide-in-from-top-4 sm:slide-in-from-right-8 duration-300 ease-out fill-mode-both group relative overflow-hidden`}>
+                                {/* Animated background glow */}
+                                <div className={`absolute inset-0 opacity-20 blur-xl ${status.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                                
+                                {/* Icon */}
+                                <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center border bg-black/40 ${
+                                    status.type === 'success' ? 'border-emerald-500/50 text-emerald-400' : 'border-red-500/50 text-red-400'
+                                }`}>
+                                    {status.type === 'success' ? (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    )}
+                                </div>
+
+                                {/* Message */}
+                                <div className="flex flex-col relative z-10 w-full pr-2">
+                                    <span className="font-bold text-sm tracking-wide text-white drop-shadow-md">{status.type === 'success' ? 'Success' : 'Error'}</span>
+                                    <span className={`text-xs font-medium drop-shadow-md ${status.type === 'success' ? 'text-emerald-200/90' : 'text-red-200/90'}`}>
+                                        {status.message}
+                                    </span>
+                                </div>
+                                
+                                {/* Progress Bar Animation (approx 3 seconds) */}
+                                <style dangerouslySetInnerHTML={{__html: `
+                                    @keyframes shrinkX { from { width: 100%; } to { width: 0%; } }
+                                `}} />
+                                <div className={`absolute bottom-0 left-0 h-1 ${status.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`} style={{ animation: 'shrinkX 3s linear forwards' }}></div>
                             </div>
                         ))}
                     </div>
@@ -2338,14 +2370,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <p className="text-gray-400 font-medium">Manage events, simulate rolls, and configure special tiles.</p>
                                 </div>
                             </div>
-
-                            {/* Status Toast */}
-                            {snakesStatus && (
-                                <div className={`p-4 rounded-xl border font-bold text-sm shadow-xl flex items-center gap-3 animate-in slide-in-from-top-2 ${snakesStatus.type === 'success' ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-400' : 'bg-red-900/40 border-red-500/50 text-red-400'}`}>
-                                    <span className="w-2 h-2 rounded-full animate-pulse bg-current"></span>
-                                    {snakesStatus.message}
-                                </div>
-                            )}
 
                             {/* Listener Control & Simulation */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

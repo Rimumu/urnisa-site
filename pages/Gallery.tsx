@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProfileContent } from '../hooks/useProfileContent';
 import OptimizedImage from '../components/OptimizedImage';
 import { motion, AnimatePresence } from 'motion/react';
@@ -6,6 +6,18 @@ import { motion, AnimatePresence } from 'motion/react';
 const CloseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+
+const ChevronLeftIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+    </svg>
+);
+
+const ChevronRightIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
     </svg>
 );
 
@@ -105,6 +117,31 @@ const Gallery: React.FC = () => {
         artist.artistName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    useEffect(() => {
+        if (!lightboxImage) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setLightboxImage(null);
+            } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                const allImages = filteredArtworks.flatMap(artist => artist.images);
+                const currentIndex = allImages.indexOf(lightboxImage);
+                if (currentIndex === -1) return;
+
+                if (e.key === 'ArrowRight') {
+                    const nextIndex = (currentIndex + 1) % allImages.length;
+                    setLightboxImage(allImages[nextIndex]);
+                } else if (e.key === 'ArrowLeft') {
+                    const prevIndex = (currentIndex - 1 + allImages.length) % allImages.length;
+                    setLightboxImage(allImages[prevIndex]);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [lightboxImage, filteredArtworks]);
+
     return (
         <div className="w-full font-sans">
             {/* Lightbox */}
@@ -115,9 +152,25 @@ const Gallery: React.FC = () => {
                         animate={{ opacity: 1, backdropFilter: "blur(24px)" }}
                         exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
                         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center"
+                        className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center group/lightbox"
                         onClick={() => setLightboxImage(null)}
                     >
+                        <motion.button 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="absolute left-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl opacity-0 group-hover/lightbox:opacity-100 hidden md:block"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const allImages = filteredArtworks.flatMap(artist => artist.images);
+                                const currentIndex = allImages.indexOf(lightboxImage);
+                                if (currentIndex === -1) return;
+                                const prevIndex = (currentIndex - 1 + allImages.length) % allImages.length;
+                                setLightboxImage(allImages[prevIndex]);
+                            }}
+                        >
+                            <ChevronLeftIcon />
+                        </motion.button>
                         <motion.img 
                             initial={{ scale: 0.8, opacity: 0, y: 30 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -129,6 +182,22 @@ const Gallery: React.FC = () => {
                             loading="lazy"
                             onClick={(e) => e.stopPropagation()}
                         />
+                        <motion.button 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            className="absolute right-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl opacity-0 group-hover/lightbox:opacity-100 hidden md:block"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const allImages = filteredArtworks.flatMap(artist => artist.images);
+                                const currentIndex = allImages.indexOf(lightboxImage);
+                                if (currentIndex === -1) return;
+                                const nextIndex = (currentIndex + 1) % allImages.length;
+                                setLightboxImage(allImages[nextIndex]);
+                            }}
+                        >
+                            <ChevronRightIcon />
+                        </motion.button>
                         <motion.button 
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}

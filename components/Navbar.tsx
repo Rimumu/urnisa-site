@@ -67,9 +67,9 @@ const NavLinks: React.FC = () => (
     <NavLink to="/" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
     <EventsDropdown />
     <MinecraftDropdown />
-    <NavLink to="/about" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>About Me</NavLink>
     <NavLink to="/gallery" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Art Gallery</NavLink>
     <NavLink to="/archive" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Archive</NavLink>
+    <NavLink to="/about" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>About Me</NavLink>
   </>
 );
 
@@ -215,9 +215,9 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
             </div>
           </div>
 
-          <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>About Me</NavLink>
           <NavLink to="/gallery" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Art Gallery</NavLink>
           <NavLink to="/archive" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Archive</NavLink>
+          <NavLink to="/about" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>About Me</NavLink>
         </div>
       </div>
     </>
