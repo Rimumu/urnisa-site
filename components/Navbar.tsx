@@ -8,7 +8,7 @@ const EventsDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => 
   <div className="relative group">
     <NavLink
       to="/nisathon"
-      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
       onClick={(e) => { if (window.innerWidth < 768) { e.preventDefault(); } }} // Prevent nav on click on mobile to allow dropdown to open if logic requires
     >
       <span>Events</span>
@@ -36,7 +36,7 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
   <div className="relative group">
     <NavLink
       to="/minecraft"
-      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
       onClick={(e) => { if (window.innerWidth < 768) { e.preventDefault(); } }}
     >
       <span>Minecraft</span>
@@ -64,11 +64,11 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
 // This component is now only for the desktop view.
 const NavLinks: React.FC = () => (
   <>
-    <NavLink to="/" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
+    <NavLink to="/" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
     <EventsDropdown />
     <MinecraftDropdown />
-    <NavLink to="/gallery" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Art Gallery</NavLink>
-    <NavLink to="/archive" className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Archive</NavLink>
+    <NavLink to="/gallery" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Art Gallery</NavLink>
+    <NavLink to="/archive" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Archive</NavLink>
   </>
 );
 
@@ -157,7 +157,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
             </div>
 
             <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
+              <div className="ml-10 flex items-center gap-2">
                 <NavLinks />
               </div>
             </div>
