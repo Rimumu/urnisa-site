@@ -29,6 +29,7 @@ export const useProfileContent = () => {
     const [aboutContent, setAboutContent] = useState<AboutItem[]>(DEFAULT_ABOUT_CONTENT);
     const [creditsContent, setCreditsContent] = useState<CreditItem[]>(DEFAULT_CREDITS_CONTENT);
     const [artworksContent, setArtworksContent] = useState<ArtistItem[]>(DEFAULT_ARTWORKS_CONTENT);
+    const [avatar, setAvatar] = useState<string>('https://res.cloudinary.com/dsencimjn/image/upload/v1764677430/urnisapfp2_l3a3xx.png');
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
@@ -40,6 +41,7 @@ export const useProfileContent = () => {
                 if (data.about && data.about.length > 0) setAboutContent(data.about);
                 if (data.credits && data.credits.length > 0) setCreditsContent(data.credits);
                 if (data.artworks && data.artworks.length > 0) setArtworksContent(data.artworks);
+                if (data.avatar) setAvatar(data.avatar);
             }
         } catch (error) {
             // Silently fail to defaults if backend is unreachable
@@ -53,5 +55,5 @@ export const useProfileContent = () => {
     }, []);
 
     // Return refetch function for admin updates
-    return { aboutContent, creditsContent, artworksContent, loading, refetch: fetchData };
+    return { aboutContent, creditsContent, artworksContent, avatar, loading, refetch: fetchData };
 };

@@ -63,7 +63,7 @@ type TabType = 'about' | 'contact' | 'credits' | null;
 
 const About: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabType>(null);
-    const { aboutContent, creditsContent } = useProfileContent();
+    const { aboutContent, creditsContent, avatar } = useProfileContent();
     
     // Typewriter State
     const [text, setText] = useState('');
@@ -275,7 +275,7 @@ const About: React.FC = () => {
                         <div className="relative -mt-16 mb-4 w-fit mx-auto group z-20">
                             <div className="w-28 h-28 rounded-full p-1 bg-[#121212] relative z-10 overflow-hidden">
                                 <OptimizedImage 
-                                    src={PROFILE_IMAGE} 
+                                    src={avatar || PROFILE_IMAGE} 
                                     alt="PFP" 
                                     className="w-full h-full rounded-full object-cover border-2 border-brand-primary/50 group-hover:border-brand-primary transition-colors duration-300" 
                                     priority

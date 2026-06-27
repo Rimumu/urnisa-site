@@ -5,26 +5,47 @@ interface ImageUploaderProps {
     onUploadSuccess: (url: string) => void;
     className?: string;
     allowedTypes?: string[]; // e.g. ['image/*', 'video/*']
+    initialUrl?: string;
+    dropzoneClassName?: string;
+    compact?: boolean;
+    alwaysShowIcon?: boolean;
+    hidePreview?: boolean;
+    multiple?: boolean;
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
     onUploadSuccess, 
     className = "",
-    allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'video/mp4', 'video/webm']
+    allowedTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'],
+    initialUrl,
+    dropzoneClassName = "",
+    compact = false,
+    alwaysShowIcon = false,
+    hidePreview = false,
+    multiple = false
 }) => {
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState('');
     const [dragActive, setDragActive] = useState(false);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl || null);
     const [fileInfo, setFileInfo] = useState<{ name: string; size: string; type: string } | null>(null);
     
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Synchronize initialUrl with previewUrl
+    useEffect(() => {
+        if (initialUrl) {
+            setPreviewUrl(initialUrl);
+        } else {
+            setPreviewUrl(null);
+        }
+    }, [initialUrl]);
+
     // Clean up object URL previews on unmount
     useEffect(() => {
         return () => {
-            if (previewUrl) {
+            if (previewUrl && previewUrl.startsWith('blob:')) {
                 URL.revokeObjectURL(previewUrl);
             }
         };
@@ -54,15 +75,106 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         e.stopPropagation();
         setDragActive(false);
 
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            validateAndUpload(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            if (multiple) {
+                validateAndUploadMultiple(Array.from(e.dataTransfer.files));
+            } else {
+                validateAndUpload(e.dataTransfer.files[0]);
+            }
         }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            validateAndUpload(e.target.files[0]);
+        if (e.target.files && e.target.files.length > 0) {
+            if (multiple) {
+                validateAndUploadMultiple(Array.from(e.target.files));
+            } else {
+                validateAndUpload(e.target.files[0]);
+            }
         }
+    };
+
+    const validateAndUploadMultiple = async (files: File[]) => {
+        setError('');
+        setProgress(0);
+        setFileInfo(null);
+
+        // Filter valid files
+        const validFiles: File[] = [];
+        for (const file of files) {
+            const isTypeAllowed = allowedTypes.some(type => {
+                if (type.endsWith('/*')) {
+                    const baseType = type.split('/')[0];
+                    return file.type.startsWith(baseType + '/');
+                }
+                return file.type === type;
+            });
+
+            if (!isTypeAllowed) {
+                setError(`Unsupported file type: ${file.name}`);
+                continue;
+            }
+
+            const MAX_SIZE_MB = 50;
+            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+                setError(`File is too large (${formatBytes(file.size)}). Max allowed is ${MAX_SIZE_MB}MB.`);
+                continue;
+            }
+
+            validFiles.push(file);
+        }
+
+        if (validFiles.length === 0) return;
+
+        setUploading(true);
+        let completed = 0;
+        const total = validFiles.length;
+
+        // Perform uploads concurrently
+        const uploadPromises = validFiles.map((file) => {
+            return new Promise<string>((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                xhr.addEventListener('load', () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            const url = data.url || data.data?.url;
+                            if (url) {
+                                onUploadSuccess(url);
+                                resolve(url);
+                            } else {
+                                reject(new Error('Invalid response'));
+                            }
+                        } catch {
+                            reject(new Error('Parse error'));
+                        }
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                });
+
+                xhr.addEventListener('error', () => reject(new Error('Network error')));
+                xhr.open('POST', `${API_BASE_URL}/api/upload`);
+                
+                const adminPass = localStorage.getItem('admin_password');
+                if (adminPass) {
+                    xhr.setRequestHeader('Authorization', adminPass);
+                }
+                
+                xhr.send(formData);
+            }).then(() => {
+                completed++;
+                setProgress(Math.round((completed / total) * 100));
+            }).catch((err) => {
+                setError(`Some uploads failed.`);
+            });
+        });
+
+        await Promise.all(uploadPromises);
+        setUploading(false);
     };
 
     const validateAndUpload = async (file: File) => {
@@ -174,6 +286,46 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
     const isVideo = fileInfo?.type.startsWith('video/') || false;
 
+    if (compact) {
+        return (
+            <div className={`relative ${className}`} id="supabase-uploader-compact">
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                    accept={allowedTypes.join(',')}
+                    multiple={multiple}
+                />
+                <button
+                    type="button"
+                    disabled={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`
+                        w-10 h-10 rounded-xl border flex items-center justify-center 
+                        transition-all duration-300 relative overflow-hidden group/compact shrink-0
+                        ${uploading ? 'bg-brand-primary/10 border-brand-primary/30 cursor-wait' : 'bg-black/40 hover:bg-white/10'}
+                        ${error ? 'border-red-500/50 hover:border-red-500' : 'border-white/10 hover:border-brand-primary/40'}
+                    `}
+                    title={error ? `Error: ${error}` : uploading ? `Uploading... ${progress}%` : "Upload Image"}
+                >
+                    {previewUrl && !alwaysShowIcon ? (
+                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-lg group-hover/compact:opacity-40 transition-opacity" />
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${uploading ? 'text-brand-primary animate-pulse' : 'text-brand-primary group-hover/compact:text-red-400 transition-colors'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                    )}
+                    {uploading && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <span className="text-[10px] font-mono font-black text-brand-primary">{progress}%</span>
+                        </div>
+                    )}
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className={`flex flex-col gap-4 ${className}`} id="supabase-uploader-container">
             <input 
@@ -182,6 +334,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 onChange={handleFileChange} 
                 className="hidden" 
                 accept={allowedTypes.join(',')}
+                multiple={multiple}
             />
             
             {/* Drag and Drop Zone */}
@@ -193,7 +346,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 onClick={() => !uploading && fileInputRef.current?.click()}
                 className={`
                     relative border-2 border-dashed rounded-3xl p-6 flex flex-col items-center justify-center cursor-pointer
-                    transition-all duration-300 min-h-[160px] text-center overflow-hidden group
+                    transition-all duration-300 ${dropzoneClassName || 'min-h-[160px]'} text-center overflow-hidden group
                     ${dragActive 
                         ? 'border-brand-primary bg-brand-primary/10 scale-[0.98]' 
                         : 'border-white/10 bg-white/5 hover:border-brand-primary/40 hover:bg-white/10'}
@@ -201,7 +354,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 `}
                 id="uploader-dropzone"
             >
-                {previewUrl ? (
+                {previewUrl && !hidePreview ? (
                     <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-black/40">
                         {isVideo ? (
                             <video 
@@ -238,7 +391,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 ) : null}
 
                 {/* Content Overlay */}
-                <div className={`flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${previewUrl ? 'opacity-0 hover:opacity-100 z-10' : 'opacity-100'}`}>
+                <div className={`flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${(previewUrl && !hidePreview) ? 'opacity-0 hover:opacity-100 z-10' : 'opacity-100'}`}>
                     <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:scale-110 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />

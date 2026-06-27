@@ -453,11 +453,14 @@ const Admin: React.FC = () => {
     const [newScheduleUrl, setNewScheduleUrl] = useState('');
     const [scheduleStatus, setScheduleStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-    const { aboutContent, creditsContent, artworksContent, refetch: refetchProfile } = useProfileContent();
+    const { aboutContent, creditsContent, artworksContent, avatar, refetch: refetchProfile } = useProfileContent();
     const [localAbout, setLocalAbout] = useState<AboutItem[]>([]);
     const [localCredits, setLocalCredits] = useState<CreditItem[]>([]);
     const [localArtworks, setLocalArtworks] = useState<ArtistItem[]>([]);
+    const [localAvatar, setLocalAvatar] = useState<string>('');
     const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [draggedArtwork, setDraggedArtwork] = useState<{ artistIndex: number; imgIndex: number } | null>(null);
+    const [dragOverArtwork, setDragOverArtwork] = useState<{ artistIndex: number; imgIndex: number } | null>(null);
 
     const { goals: currentGoals, refetch: refetchGoals } = useNisathonGoals();
     const [localGoals, setLocalGoals] = useState<NisathonGoal[]>([]);
@@ -564,7 +567,8 @@ const Admin: React.FC = () => {
         setLocalAbout(aboutContent);
         setLocalCredits(creditsContent);
         setLocalArtworks(artworksContent);
-    }, [aboutContent, creditsContent, artworksContent]);
+        setLocalAvatar(avatar || '');
+    }, [aboutContent, creditsContent, artworksContent, avatar]);
     useEffect(() => { setLocalGoals(currentGoals); }, [currentGoals]);
     useEffect(() => { setLocalWheel(wheelItems); }, [wheelItems]);
 
@@ -752,8 +756,8 @@ const Admin: React.FC = () => {
         }
     };
 
-    const handleUpdateSchedule = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleUpdateSchedule = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setLoading(true);
         setScheduleStatus(null);
         const processedUrl = processImageUrl(newScheduleUrl);
@@ -779,27 +783,52 @@ const Admin: React.FC = () => {
         }
     };
 
-    const handleSaveProfile = async (type: 'about' | 'credits' | 'artworks') => {
+    const handleSaveProfile = async (type?: 'about' | 'credits' | 'artworks' | 'avatar' | 'main') => {
         setLoading(true);
         setProfileStatus(null);
-        let data;
-        if (type === 'about') data = localAbout;
-        else if (type === 'credits') data = localCredits;
-        else if (type === 'artworks') data = localArtworks;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/profile`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': password },
-                body: JSON.stringify({ type, data })
-            });
-            if (response.ok) {
-                setProfileStatus({ type: 'success', message: `${type === 'artworks' ? 'Gallery' : 'Profile'} saved!` });
-                refetchProfile();
-                setTimeout(() => setProfileStatus(null), 3000);
+            if (type === 'artworks') {
+                const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                    body: JSON.stringify({ type: 'artworks', data: localArtworks })
+                });
+                if (response.ok) {
+                    setProfileStatus({ type: 'success', message: 'Gallery saved!' });
+                    refetchProfile();
+                    setTimeout(() => setProfileStatus(null), 3000);
+                } else {
+                    setProfileStatus({ type: 'error', message: 'Failed to save gallery.' });
+                    setTimeout(() => setProfileStatus(null), 3000);
+                }
             } else {
-                setProfileStatus({ type: 'error', message: 'Failed to save.' });
-                setTimeout(() => setProfileStatus(null), 3000);
+                const [resAbout, resCredits, resAvatar] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/profile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                        body: JSON.stringify({ type: 'about', data: localAbout })
+                    }),
+                    fetch(`${API_BASE_URL}/api/profile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                        body: JSON.stringify({ type: 'credits', data: localCredits })
+                    }),
+                    fetch(`${API_BASE_URL}/api/profile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                        body: JSON.stringify({ type: 'avatar', data: localAvatar })
+                    })
+                ]);
+
+                if (resAbout.ok && resCredits.ok && resAvatar.ok) {
+                    setProfileStatus({ type: 'success', message: 'Profile saved!' });
+                    refetchProfile();
+                    setTimeout(() => setProfileStatus(null), 3000);
+                } else {
+                    setProfileStatus({ type: 'error', message: 'Failed to save some profile sections.' });
+                    setTimeout(() => setProfileStatus(null), 3000);
+                }
             }
         } catch (error) {
             setProfileStatus({ type: 'error', message: 'Network error.' });
@@ -1248,12 +1277,141 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     const addCreditItem = () => setLocalCredits([...localCredits, { id: Date.now().toString(), name: 'Name', role: 'Role', color: '#e5383b', initial: '?', link: '' }]);
     const removeCreditItem = (i: number) => setLocalCredits(localCredits.filter((_, idx) => idx !== i));
 
-    const addArtist = () => setLocalArtworks([...localArtworks, { id: Date.now().toString(), artistName: 'New Artist', artistLink: '', images: [] }]);
+    const addArtist = () => {
+        const newId = Date.now().toString();
+        setLocalArtworks([...localArtworks, { id: newId, artistName: 'New Artist', artistLink: '', images: [] }]);
+        setTimeout(() => {
+            const el = document.getElementById(`artist-collection-${newId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 120);
+    };
     const removeArtist = (i: number) => setLocalArtworks(localArtworks.filter((_, idx) => idx !== i));
     const updateArtistName = (i: number, v: string) => { const u = [...localArtworks]; u[i].artistName = v; setLocalArtworks(u); };
     const updateArtistLink = (i: number, v: string) => { const u = [...localArtworks]; u[i].artistLink = v; setLocalArtworks(u); };
-    const addImageToArtist = (i: number, v: string) => { if (!v) return; const u = [...localArtworks]; u[i].images.push(processImageUrl(v)); setLocalArtworks(u); };
-    const removeImageFromArtist = (ai: number, ii: number) => { const u = [...localArtworks]; u[ai].images = u[ai].images.filter((_, idx) => idx !== ii); setLocalArtworks(u); };
+    const addImageToArtist = (i: number, v: string) => { 
+        if (!v) return; 
+        setLocalArtworks((prev) => {
+            const u = [...prev];
+            if (u[i]) {
+                u[i] = {
+                    ...u[i],
+                    images: [...u[i].images, processImageUrl(v)]
+                };
+            }
+            return u;
+        });
+    };
+    const removeImageFromArtist = (ai: number, ii: number) => { 
+        setLocalArtworks((prev) => {
+            const u = [...prev];
+            if (u[ai]) {
+                u[ai] = {
+                    ...u[ai],
+                    images: u[ai].images.filter((_, idx) => idx !== ii)
+                };
+            }
+            return u;
+        });
+    };
+    const moveArtist = (index: number, direction: 'up' | 'down') => {
+        const nextIndex = direction === 'up' ? index - 1 : index + 1;
+        if (nextIndex < 0 || nextIndex >= localArtworks.length) return;
+        setLocalArtworks((prev) => {
+            const u = [...prev];
+            const temp = u[index];
+            u[index] = u[nextIndex];
+            u[nextIndex] = temp;
+            return u;
+        });
+    };
+    const moveArtwork = (artistIndex: number, imgIndex: number, direction: 'left' | 'right') => {
+        setLocalArtworks((prev) => {
+            const u = [...prev];
+            const artist = u[artistIndex];
+            if (!artist) return prev;
+            const nextIdx = direction === 'left' ? imgIndex - 1 : imgIndex + 1;
+            if (nextIdx < 0 || nextIdx >= artist.images.length) return prev;
+            const temp = artist.images[imgIndex];
+            const newImages = [...artist.images];
+            newImages[imgIndex] = newImages[nextIdx];
+            newImages[nextIdx] = temp;
+            u[artistIndex] = {
+                ...artist,
+                images: newImages
+            };
+            return u;
+        });
+    };
+
+    const handleArtworkDragStart = (e: React.DragEvent, artistIndex: number, imgIndex: number) => {
+        setDraggedArtwork({ artistIndex, imgIndex });
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleArtworkDragOver = (e: React.DragEvent, artistIndex: number, imgIndex: number) => {
+        e.preventDefault();
+        if (draggedArtwork) {
+            setDragOverArtwork({ artistIndex, imgIndex });
+        }
+    };
+
+    const handleArtworkDragEnd = () => {
+        setDraggedArtwork(null);
+        setDragOverArtwork(null);
+    };
+
+    const handleArtworkDrop = (e: React.DragEvent, targetArtistIndex: number, targetImgIndex: number) => {
+        e.preventDefault();
+        if (!draggedArtwork) return;
+
+        const sourceArtistIdx = draggedArtwork.artistIndex;
+        const sourceImgIdx = draggedArtwork.imgIndex;
+
+        setLocalArtworks((prev) => {
+            const updated = [...prev];
+            
+            if (sourceArtistIdx === targetArtistIndex) {
+                // Reordering within the same artist
+                const artist = updated[sourceArtistIdx];
+                if (!artist) return prev;
+                
+                const newImages = [...artist.images];
+                const [movedImage] = newImages.splice(sourceImgIdx, 1);
+                newImages.splice(targetImgIndex, 0, movedImage);
+                
+                updated[sourceArtistIdx] = {
+                    ...artist,
+                    images: newImages
+                };
+            } else {
+                // Moving from one artist to another
+                const sourceArtist = updated[sourceArtistIdx];
+                const targetArtist = updated[targetArtistIndex];
+                if (!sourceArtist || !targetArtist) return prev;
+                
+                const sourceImages = [...sourceArtist.images];
+                const targetImages = [...targetArtist.images];
+                
+                const [movedImage] = sourceImages.splice(sourceImgIdx, 1);
+                targetImages.splice(targetImgIndex, 0, movedImage);
+                
+                updated[sourceArtistIdx] = {
+                    ...sourceArtist,
+                    images: sourceImages
+                };
+                updated[targetArtistIndex] = {
+                    ...targetArtist,
+                    images: targetImages
+                };
+            }
+            return updated;
+        });
+
+        setDraggedArtwork(null);
+        setDragOverArtwork(null);
+    };
 
     const addGoal = () => { const max = localGoals.length > 0 ? Math.max(...localGoals.map(g => g.count)) : 0; setLocalGoals([...localGoals, { count: max + 50, reward: "New Goal", secret: false }]); };
     const removeGoal = (i: number) => setLocalGoals(localGoals.filter((_, idx) => idx !== i));
@@ -1770,36 +1928,37 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         </div>
                     )}
 
-                    {activeTab === 'schedule' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <h2 className="text-4xl font-black text-white tracking-tight">Schedule Manager</h2>
-                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <form onSubmit={handleUpdateSchedule} className="space-y-8">
-                                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                                        <label className="block text-brand-primary text-[10px] uppercase font-extrabold tracking-[0.2em] mb-4">Schedule Image URL</label>
-                                        <input
-                                            type="text"
-                                            value={newScheduleUrl}
-                                            onChange={(e) => setNewScheduleUrl(e.target.value)}
-                                            className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-white font-mono focus:border-brand-primary outline-none transition-colors"
-                                            placeholder="https://..."
-                                        />
-                                        <div className="mt-4"><LinkWarning url={newScheduleUrl} /></div>
-                                    </div>
-                                    
-                                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                                        <ImageUploader onUploadSuccess={setNewScheduleUrl} />
-                                    </div>
-
-                                    {newScheduleUrl && (
-                                        <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-black/40 p-4">
-                                            <img src={processImageUrl(newScheduleUrl)} alt="Preview" className="w-full h-auto rounded-2xl" />
-                                        </div>
-                                    )}
-                                    <button type="submit" disabled={loading} className="w-full bg-brand-primary hover:bg-red-600 text-white font-extrabold py-4 rounded-xl transition-all hover:scale-[1.01] shadow-[0_0_20px_rgba(220,38,38,0.3)]">
-                                        Save Schedule Changes
+                     {activeTab === 'schedule' && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+                            {/* Sticky Header with Frosted Glass Background and Actions */}
+                            <div className="sticky -top-6 md:-top-10 z-30 bg-brand-surface/90 backdrop-blur-md pt-6 md:pt-10 pb-4 mb-6 border-b border-white/5 -mx-6 px-6 sm:-mx-10 sm:px-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                                        <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">Schedule Manager</span>
+                                    </h2>
+                                    <p className="text-xs text-gray-400 mt-1">Upload and manage your stream schedule poster image.</p>
+                                </div>
+                                <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <button 
+                                        onClick={() => handleUpdateSchedule()} 
+                                        disabled={loading}
+                                        className="flex-1 sm:flex-initial bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-sm disabled:opacity-50"
+                                    >
+                                        {loading ? 'Saving...' : 'Save Schedule'}
                                     </button>
-                                </form>
+                                </div>
+                            </div>
+
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                <div className="space-y-6">
+                                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
+                                        <ImageUploader 
+                                            onUploadSuccess={setNewScheduleUrl} 
+                                            initialUrl={newScheduleUrl}
+                                            dropzoneClassName="min-h-[450px] md:min-h-[600px] w-full"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -2051,110 +2210,425 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     )}
 
                     {activeTab === 'profile' && (
-                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            {/* About Section */}
-                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                                    <h2 className="text-4xl font-black text-white tracking-tight">About Section</h2>
-                                    <button onClick={() => handleSaveProfile('about')} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save About</button>
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+                            {/* Sticky Header with Frosted Glass Background and Actions */}
+                            <div className="sticky -top-6 md:-top-10 z-30 bg-brand-surface/90 backdrop-blur-md pt-6 md:pt-10 pb-4 mb-6 border-b border-white/5 -mx-6 px-6 sm:-mx-10 sm:px-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                                        <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">Profile Editor</span>
+                                    </h2>
+                                    <p className="text-xs text-gray-400 mt-1">Edit your about me card and credits!</p>
                                 </div>
-                                <div className="space-y-8">
-                                    {localAbout.map((item, i) => (
-                                        <div key={item.id} className="bg-black/20 p-6 rounded-3xl border border-white/5 group transition-colors hover:bg-white/5">
-                                            <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
-                                                <input type="text" value={item.title} onChange={(e) => updateAboutItem(i, 'title', e.target.value)} className="w-full bg-transparent font-black text-2xl text-white border-b-2 border-transparent focus:border-brand-primary outline-none transition-colors" placeholder="Section Title" />
-                                                <button onClick={() => removeAboutItem(i)} className="w-full sm:w-auto shrink-0 text-red-500/50 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-all flex justify-center items-center">
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                                </button>
-                                            </div>
-                                            <div className="bg-black/40 rounded-2xl p-2 border border-white/5">
-                                                <RichTextEditor value={item.text} onChange={(val) => updateAboutItem(i, 'text', val)} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={addAboutItem} className="w-full py-5 border-2 border-dashed border-white/10 rounded-2xl text-gray-400 font-extrabold hover:text-white hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all flex items-center justify-center gap-3">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add Section
+                                <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    {profileStatus && (
+                                        <span className={`text-xs font-bold px-3 py-1.5 rounded-lg ${profileStatus.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                            {profileStatus.message}
+                                        </span>
+                                    )}
+                                    <button 
+                                        onClick={() => handleSaveProfile()} 
+                                        disabled={loading}
+                                        className="flex-1 sm:flex-initial bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-sm disabled:opacity-50"
+                                    >
+                                        {loading ? 'Saving...' : 'Save Profile'}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Credits Section */}
-                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                                    <h2 className="text-4xl font-black text-white tracking-tight">Credits</h2>
-                                    <button onClick={() => handleSaveProfile('credits')} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Credits</button>
+                            {/* Section 1: Dynamic Profile Avatar */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+                                <div className="border-b border-white/5 pb-4">
+                                    <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                                        <span className="text-brand-primary">●</span> Profile Display Picture
+                                    </h3>
+                                    <p className="text-xs text-gray-400 mt-1">Upload your profile picture.</p>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {localCredits.map((credit, i) => (
-                                        <div key={credit.id} className="bg-black/20 p-5 rounded-3xl border border-white/5 flex flex-col gap-4 relative group hover:bg-white/5 transition-colors">
-                                            <button onClick={() => removeCreditItem(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow-lg scale-90 hover:scale-100 z-10">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                            </button>
-                                            <div className="flex gap-4 items-center">
-                                                <div className="w-16 h-16 shrink-0 bg-black/40 rounded-full overflow-hidden border-2 border-white/10 shadow-inner">
-                                                    {credit.image ? <img src={credit.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-white font-black text-2xl" style={{ backgroundColor: credit.color }}>{credit.initial}</div>}
-                                                </div>
-                                                <div className="flex-1 space-y-2">
-                                                    <input type="text" value={credit.name} onChange={(e) => updateCreditItem(i, 'name', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white font-bold focus:border-brand-primary outline-none transition-colors" placeholder="Name" />
-                                                    <input type="text" value={credit.role} onChange={(e) => updateCreditItem(i, 'role', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-brand-primary text-sm font-semibold focus:border-brand-primary outline-none transition-colors" placeholder="Role" />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <input type="text" value={credit.link} onChange={(e) => updateCreditItem(i, 'link', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-brand-primary outline-none transition-colors" placeholder="Link (Optional)" />
-                                                <input type="text" value={credit.image || ''} onChange={(e) => updateCreditItem(i, 'image', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-brand-primary outline-none transition-colors" placeholder="Image URL" />
-                                            </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                                    {/* Preview container */}
+                                    <div className="md:col-span-4 flex flex-col items-center justify-center p-6 bg-black/30 rounded-2xl border border-white/5 relative group">
+                                        <div className="relative w-36 h-36 rounded-full p-1 bg-brand-surface border-2 border-brand-primary/50 group-hover:border-brand-primary transition-all duration-300 shadow-xl overflow-hidden">
+                                            {localAvatar ? (
+                                                <img src={localAvatar} alt="Profile Preview" className="w-full h-full object-cover rounded-full" />
+                                            ) : (
+                                                <div className="w-full h-full bg-white/5 rounded-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                                            )}
                                         </div>
-                                    ))}
+                                        <div className="absolute inset-0 rounded-2xl bg-brand-primary/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-0"></div>
+                                        <span className="text-[10px] text-brand-primary font-mono uppercase tracking-wider mt-4">Live Preview</span>
+                                    </div>
+
+                                    {/* Uploader container */}
+                                    <div className="md:col-span-8">
+                                        <div className="bg-black/20 p-6 rounded-2xl border border-white/5">
+                                            <label className="block text-brand-primary text-[10px] uppercase font-extrabold tracking-[0.2em] mb-4">Upload New Image</label>
+                                            <ImageUploader 
+                                                onUploadSuccess={setLocalAvatar} 
+                                                initialUrl={localAvatar}
+                                                dropzoneClassName="min-h-[140px] w-full"
+                                                hidePreview={true}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <button onClick={addCreditItem} className="w-full mt-6 py-5 border-2 border-dashed border-white/10 rounded-3xl text-gray-400 font-extrabold hover:text-white hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all flex items-center justify-center gap-3">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add Credit
-                                </button>
+                            </div>
+
+                            {/* Section 2: About Section */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+                                <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                                            <span className="text-brand-primary">●</span> About Bio Cards
+                                        </h3>
+                                        <p className="text-xs text-gray-400 mt-1">Edit your bio cards.</p>
+                                    </div>
+                                    <button 
+                                        onClick={addAboutItem} 
+                                        className="bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/20 hover:border-brand-primary text-brand-primary font-extrabold py-2 px-4 rounded-xl transition-all hover:scale-105 text-xs flex items-center gap-2"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                        <span>Add Section</span>
+                                    </button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {localAbout.length === 0 ? (
+                                        <div className="text-center py-12 bg-black/25 rounded-2xl border border-white/5 text-gray-500 text-sm">
+                                            No About sections added yet. Click the button above to add one.
+                                        </div>
+                                    ) : (
+                                        localAbout.map((item, i) => (
+                                            <div key={item.id} className="bg-black/35 p-6 rounded-2xl border border-white/5 relative group transition-all duration-300 hover:border-white/15">
+                                                <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                                                    <input 
+                                                        type="text" 
+                                                        value={item.title} 
+                                                        onChange={(e) => updateAboutItem(i, 'title', e.target.value)} 
+                                                        className="w-full bg-transparent font-black text-xl text-white border-b border-transparent focus:border-brand-primary outline-none transition-colors pb-1" 
+                                                        placeholder="e.g. Lore, Stream Rules, Gear" 
+                                                    />
+                                                    <button 
+                                                        onClick={() => removeAboutItem(i)} 
+                                                        className="text-red-500/40 hover:text-red-400 p-2 rounded-xl hover:bg-red-500/10 transition-all flex items-center justify-center shrink-0"
+                                                        title="Delete Section"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                    </button>
+                                                </div>
+                                                <div className="bg-black/40 rounded-xl p-2 border border-white/5">
+                                                    <RichTextEditor value={item.text} onChange={(val) => updateAboutItem(i, 'text', val)} />
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Section 3: Credits Section */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+                                <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                                            <span className="text-brand-primary">●</span> Credits & Roles
+                                        </h3>
+                                        <p className="text-xs text-gray-400 mt-1">Edit credits section.</p>
+                                    </div>
+                                    <button 
+                                        onClick={addCreditItem} 
+                                        className="bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/20 hover:border-brand-primary text-brand-primary font-extrabold py-2 px-4 rounded-xl transition-all hover:scale-105 text-xs flex items-center gap-2"
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                        <span>Add Credit</span>
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                    {localCredits.length === 0 ? (
+                                        <div className="col-span-full text-center py-12 bg-black/25 rounded-2xl border border-white/5 text-gray-500 text-sm">
+                                            No credits added yet. Click the button above to start crediting.
+                                        </div>
+                                    ) : (
+                                        localCredits.map((credit, i) => (
+                                            <div key={credit.id} className="bg-black/25 hover:bg-black/40 p-5 rounded-2xl border border-white/5 hover:border-white/10 transition-all relative group/card">
+                                                {/* Delete Button */}
+                                                <button 
+                                                    onClick={() => removeCreditItem(i)} 
+                                                    className="absolute -top-2.5 -right-2.5 bg-red-600/20 hover:bg-red-600 border border-red-500/30 text-red-400 hover:text-white rounded-full p-2 opacity-0 group-hover/card:opacity-100 transition-all duration-300 shadow-lg scale-90 hover:scale-100 flex items-center justify-center z-10"
+                                                    title="Delete Credit"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                </button>
+ 
+                                                {/* Credit Meta Details */}
+                                                <div className="flex gap-4 items-start">
+                                                    {/* Avatar preview and uploader on the left */}
+                                                    <div className="flex flex-col items-center gap-2 shrink-0">
+                                                        <div className="w-16 h-16 bg-black/40 rounded-full overflow-hidden border-2 border-white/10 shadow-inner flex items-center justify-center relative">
+                                                            {credit.image ? (
+                                                                <img src={credit.image} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-white font-black text-xl" style={{ backgroundColor: credit.color || '#e5383b' }}>
+                                                                    {credit.name ? credit.name[0].toUpperCase() : '?'}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <ImageUploader 
+                                                            onUploadSuccess={(url) => updateCreditItem(i, 'image', url)} 
+                                                            compact={true}
+                                                            alwaysShowIcon={true}
+                                                            className="shrink-0"
+                                                            initialUrl={credit.image}
+                                                        />
+                                                    </div>
+ 
+                                                    {/* Inputs on the right */}
+                                                    <div className="flex-1 min-w-0 space-y-3">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Name</label>
+                                                                <input 
+                                                                    type="text" 
+                                                                    value={credit.name} 
+                                                                    onChange={(e) => updateCreditItem(i, 'name', e.target.value)} 
+                                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white font-bold text-sm focus:border-brand-primary outline-none transition-colors" 
+                                                                    placeholder="e.g. Rimu" 
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Role / Contribution</label>
+                                                                <input 
+                                                                    type="text" 
+                                                                    value={credit.role} 
+                                                                    onChange={(e) => updateCreditItem(i, 'role', e.target.value)} 
+                                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-brand-primary text-sm font-semibold focus:border-brand-primary outline-none transition-colors" 
+                                                                    placeholder="e.g. Live2D Artist" 
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-1">Social Link</label>
+                                                            <input 
+                                                                type="text" 
+                                                                value={credit.link || ''} 
+                                                                onChange={(e) => updateCreditItem(i, 'link', e.target.value)} 
+                                                                className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:border-brand-primary outline-none transition-colors font-mono" 
+                                                                placeholder="https://twitter.com/..." 
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {activeTab === 'gallery' && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                                    <h2 className="text-4xl font-black text-white tracking-tight">Art Gallery</h2>
-                                    <button onClick={() => handleSaveProfile('artworks')} className="w-full sm:w-auto bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)]">Save Gallery</button>
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+                            {/* Sticky Header with Frosted Glass Background and Actions */}
+                            <div className="sticky -top-6 md:-top-10 z-30 bg-brand-surface/90 backdrop-blur-md pt-6 md:pt-10 pb-4 mb-6 border-b border-white/5 -mx-6 px-6 sm:-mx-10 sm:px-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                                        <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">Art Gallery</span>
+                                    </h2>
+                                    <p className="text-xs text-gray-400 mt-1">Manage artist collections, upload artworks, and reorder artwork grids.</p>
                                 </div>
-                                <div className="space-y-10">
-                                    {localArtworks.map((artist, i) => (
-                                        <div key={artist.id} className="bg-black/20 p-8 rounded-3xl border border-white/5 relative group hover:bg-white/5 transition-colors">
-                                            <button onClick={() => removeArtist(i)} className="absolute -top-3 -right-3 bg-red-600/80 hover:bg-red-500 text-white rounded-full p-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow-xl scale-90 hover:scale-100 z-10">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                            </button>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                                <input type="text" value={artist.artistName} onChange={(e) => updateArtistName(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-black text-xl focus:border-brand-primary outline-none transition-colors" placeholder="Artist Name" />
-                                                <input type="text" value={artist.artistLink || ''} onChange={(e) => updateArtistLink(i, e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-brand-primary font-bold focus:border-brand-primary outline-none transition-colors" placeholder="Artist Social Link" />
-                                            </div>
-                                            
-                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-                                                {artist.images.map((img, imgIdx) => (
-                                                    <div key={imgIdx} className="relative group/img aspect-square rounded-2xl overflow-hidden border-2 border-white/10 hover:border-brand-primary transition-colors shadow-lg">
-                                                        <img src={img} className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-500" />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-100 md:opacity-0 md:group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                                                            <button onClick={() => removeImageFromArtist(i, imgIdx)} className="bg-red-600 hover:bg-red-500 text-white rounded-full p-2 scale-90 hover:scale-110 transition-all shadow-lg">
-                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            
-                                            <div className="flex flex-col md:flex-row gap-3 bg-black/40 p-2 rounded-2xl border border-white/5 items-stretch md:items-center">
-                                                <input type="text" placeholder="Add Image URL & Press Enter..." className="flex-1 bg-transparent px-4 py-2 text-white text-sm font-medium focus:outline-none" onKeyDown={(e) => { if (e.key === 'Enter') { addImageToArtist(i, e.currentTarget.value); e.currentTarget.value = ''; } }} />
-                                                <div className="hidden md:block w-px bg-white/10 my-2 h-6"></div>
-                                                <ImageUploader onUploadSuccess={(url) => addImageToArtist(i, url)} className="shrink-0 w-full md:w-auto" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={addArtist} className="w-full py-6 border-2 border-dashed border-white/10 rounded-3xl text-brand-primary font-black text-xl hover:bg-brand-primary/10 hover:border-brand-primary/50 transition-all flex items-center justify-center gap-3">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add New Artist Collection
+                                <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <button 
+                                        onClick={addArtist} 
+                                        className="flex-1 sm:flex-initial bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold py-3 px-6 rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        <span>Add New Artist Collection</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => handleSaveProfile('artworks')} 
+                                        className="flex-1 sm:flex-initial bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-sm"
+                                    >
+                                        Save Gallery
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="space-y-8">
+                                {localArtworks.length === 0 ? (
+                                    <div className="text-center py-24 bg-white/5 border border-dashed border-white/10 rounded-3xl">
+                                        <p className="text-gray-400 font-bold text-lg">No artist collections added yet.</p>
+                                        <button onClick={addArtist} className="mt-4 bg-brand-primary hover:bg-red-600 text-white font-bold py-3 px-8 rounded-xl transition-all hover:scale-105">
+                                            Create First Collection
+                                        </button>
+                                    </div>
+                                ) : (
+                                    localArtworks.map((artist, i) => (
+                                            <div key={artist.id} id={`artist-collection-${artist.id}`} className="bg-brand-surface/60 backdrop-blur-xl p-6 rounded-3xl border border-white/5 relative group hover:bg-white/5 transition-all duration-300 shadow-xl space-y-6">
+                                            {/* Card Header */}
+                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 w-full">
+                                                    <div>
+                                                        <label className="block text-brand-primary text-[9px] uppercase font-extrabold tracking-wider mb-1.5">Artist Name</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={artist.artistName} 
+                                                            onChange={(e) => updateArtistName(i, e.target.value)} 
+                                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-white font-black text-base focus:border-brand-primary outline-none transition-colors" 
+                                                            placeholder="Artist Name" 
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-brand-primary text-[9px] uppercase font-extrabold tracking-wider mb-1.5">Social Link</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={artist.artistLink || ''} 
+                                                            onChange={(e) => updateArtistLink(i, e.target.value)} 
+                                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-gray-300 font-medium text-sm focus:border-brand-primary outline-none transition-colors" 
+                                                            placeholder="Artist Social Link" 
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Reordering & Actions */}
+                                                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                                                    <button 
+                                                        onClick={() => moveArtist(i, 'up')} 
+                                                        disabled={i === 0}
+                                                        className="bg-white/5 hover:bg-white/10 text-white rounded-xl p-2.5 transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100"
+                                                        title="Move Artist Up"
+                                                    >
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="m18 15-6-6-6 6"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => moveArtist(i, 'down')} 
+                                                        disabled={i === localArtworks.length - 1}
+                                                        className="bg-white/5 hover:bg-white/10 text-white rounded-xl p-2.5 transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100"
+                                                        title="Move Artist Down"
+                                                    >
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="m6 9 6 6 6-6"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div className="w-px h-6 bg-white/10 mx-1"></div>
+                                                    <button 
+                                                        onClick={() => removeArtist(i)} 
+                                                        className="bg-red-600/20 border border-red-500/30 hover:bg-red-600 text-red-400 hover:text-white rounded-xl p-2.5 transition-all hover:scale-105"
+                                                        title="Delete Artist Collection"
+                                                    >
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+ 
+                                            {/* Artwork Images section */}
+                                            <div>
+                                                <label className="block text-brand-primary text-[10px] uppercase font-extrabold tracking-[0.2em] mb-3">Masterpieces / Artworks ({artist.images.length})</label>
+                                                
+                                                {artist.images.length === 0 ? (
+                                                    <div className="text-center py-8 bg-black/20 rounded-2xl border border-dashed border-white/5 mb-4 text-gray-500 text-xs font-bold">
+                                                        No artworks in this collection yet. Use the uploader below to add images!
+                                                    </div>
+                                                ) : (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 mb-4">
+                                                        {artist.images.map((img, imgIdx) => (
+                                                            <div 
+                                                                key={imgIdx} 
+                                                                draggable
+                                                                onDragStart={(e) => handleArtworkDragStart(e, i, imgIdx)}
+                                                                onDragOver={(e) => handleArtworkDragOver(e, i, imgIdx)}
+                                                                onDragEnd={handleArtworkDragEnd}
+                                                                onDrop={(e) => handleArtworkDrop(e, i, imgIdx)}
+                                                                className={`relative group/img aspect-square rounded-2xl overflow-hidden border transition-all shadow-md bg-black/40 cursor-grab active:cursor-grabbing
+                                                                    ${draggedArtwork?.artistIndex === i && draggedArtwork?.imgIndex === imgIdx ? 'opacity-30 border-dashed border-brand-primary scale-95' : 'border-white/10 hover:border-brand-primary/50'}
+                                                                    ${dragOverArtwork?.artistIndex === i && dragOverArtwork?.imgIndex === imgIdx && !(draggedArtwork?.artistIndex === i && draggedArtwork?.imgIndex === imgIdx) ? 'border-brand-primary scale-105 ring-2 ring-brand-primary/50' : ''}
+                                                                `}
+                                                            >
+                                                                <img src={img} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300 pointer-events-none" />
+                                                                
+                                                                {/* Overlay Actions */}
+                                                                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col justify-between p-2 backdrop-blur-[2px]">
+                                                                    {/* Top row: Delete */}
+                                                                    <div className="flex justify-end">
+                                                                        <button 
+                                                                            type="button"
+                                                                            onClick={() => removeImageFromArtist(i, imgIdx)} 
+                                                                            className="bg-red-600 hover:bg-red-500 text-white rounded-lg p-1.5 transition-all shadow-md hover:scale-110"
+                                                                            title="Remove Artwork"
+                                                                        >
+                                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                                                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
+                                                                    
+                                                                    {/* Bottom row: Rearrange Left/Right */}
+                                                                    <div className="flex justify-between gap-1 mt-auto">
+                                                                        <button 
+                                                                            type="button"
+                                                                            onClick={() => moveArtwork(i, imgIdx, 'left')} 
+                                                                            disabled={imgIdx === 0}
+                                                                            className="bg-white/15 hover:bg-white/30 text-white rounded-lg p-1.5 disabled:opacity-20 disabled:hover:bg-white/15 transition-all hover:scale-110 flex-1 flex items-center justify-center"
+                                                                            title="Move Left"
+                                                                        >
+                                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                                                <path d="m15 18-6-6 6-6"/>
+                                                                            </svg>
+                                                                        </button>
+                                                                        <button 
+                                                                            type="button"
+                                                                            onClick={() => moveArtwork(i, imgIdx, 'right')} 
+                                                                            disabled={imgIdx === artist.images.length - 1}
+                                                                            className="bg-white/15 hover:bg-white/30 text-white rounded-lg p-1.5 disabled:opacity-20 disabled:hover:bg-white/15 transition-all hover:scale-110 flex-1 flex items-center justify-center"
+                                                                            title="Move Right"
+                                                                        >
+                                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                                                                <path d="m9 18 6-6-6-6"/>
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Upload & Add */}
+                                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
+                                                {/* Direct URL Box */}
+                                                <div className="lg:col-span-4 bg-black/20 p-4 rounded-2xl border border-white/5 flex flex-col justify-center">
+                                                    <label className="block text-brand-primary text-[9px] uppercase font-extrabold tracking-wider mb-2">Direct Image URL</label>
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Paste link & press Enter..." 
+                                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none transition-all font-mono" 
+                                                        onKeyDown={(e) => { 
+                                                            if (e.key === 'Enter') { 
+                                                                addImageToArtist(i, e.currentTarget.value); 
+                                                                e.currentTarget.value = ''; 
+                                                            } 
+                                                        }} 
+                                                    />
+                                                </div>
+
+                                                {/* Upload Files Box */}
+                                                <div className="lg:col-span-8 bg-black/20 p-4 rounded-2xl border border-white/5 flex flex-col justify-center">
+                                                    <label className="block text-brand-primary text-[9px] uppercase font-extrabold tracking-wider mb-2">Upload Files (Supports Multiple Files)</label>
+                                                    <ImageUploader 
+                                                        onUploadSuccess={(url) => addImageToArtist(i, url)} 
+                                                        hidePreview={true}
+                                                        multiple={true}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     )}

@@ -57,21 +57,70 @@ export interface DiscordMessage {
     } | null;
 }
 
+const CACHE_DURATION_MS = 45000; // 45 seconds cache to drastically reduce requests
+
+interface CacheData {
+    data: DiscordMessage[];
+    timestamp: number;
+}
+
+const getCachedMessages = (channelId: string, ignoreExpiry = false): DiscordMessage[] | null => {
+    try {
+        const cached = sessionStorage.getItem(`discord_chat_${channelId}`);
+        if (cached) {
+            const { data, timestamp }: CacheData = JSON.parse(cached);
+            if (ignoreExpiry || Date.now() - timestamp < CACHE_DURATION_MS) {
+                return data;
+            }
+        }
+    } catch (e) {
+        console.error('Error reading chat cache:', e);
+    }
+    return null;
+};
+
+const setCachedMessages = (channelId: string, data: DiscordMessage[]) => {
+    try {
+        sessionStorage.setItem(
+            `discord_chat_${channelId}`,
+            JSON.stringify({ data, timestamp: Date.now() })
+        );
+    } catch (e) {
+        console.error('Error saving chat cache:', e);
+    }
+};
+
 export const useDiscordChat = (channelId: string) => {
-    const [messages, setMessages] = useState<DiscordMessage[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [messages, setMessages] = useState<DiscordMessage[]>(() => {
+        // Initialize state from cache if available (even if expired, as initial placeholder)
+        return getCachedMessages(channelId, true) || [];
+    });
+    const [loading, setLoading] = useState<boolean>(() => {
+        // If we have fresh cached messages, don't show initial loading screen
+        return !getCachedMessages(channelId, false);
+    });
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (!channelId) return;
 
         const fetchMessages = async () => {
-            setLoading(true);
+            const cachedFresh = getCachedMessages(channelId, false);
+            if (cachedFresh) {
+                setMessages(cachedFresh);
+                setLoading(false);
+                return;
+            }
+
+            // If we have stale cache, don't flash loading spinner
+            const hasStale = getCachedMessages(channelId, true);
+            if (!hasStale) {
+                setLoading(true);
+            }
             setError(null);
-            // Use the specific Discord Service URL
+            
             const targetUrl = `${DISCORD_API_URL}/api/messages?channelId=${channelId}`;
             try {
-                // Debug log to see exactly where we are trying to connect
                 console.log(`Fetching chat from: ${targetUrl}`);
                 
                 const response = await fetch(targetUrl);
@@ -81,12 +130,21 @@ export const useDiscordChat = (channelId: string) => {
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     setMessages(data);
+                    setCachedMessages(channelId, data);
                 } else {
                     throw new Error('Response data is not an array of messages');
                 }
             } catch (err) {
                 console.error(`Error loading chat preview from ${targetUrl}:`, err);
-                setError(err instanceof Error ? err : new Error('Unknown error'));
+                
+                // Graceful fallback to whatever we have in cache (even if stale) on network failure or rate limit
+                const fallbackData = getCachedMessages(channelId, true);
+                if (fallbackData && fallbackData.length > 0) {
+                    console.log('Serving stale Discord chat from cache due to fetch failure (e.g. rate limit/429).');
+                    setMessages(fallbackData);
+                } else {
+                    setError(err instanceof Error ? err : new Error('Unknown error'));
+                }
             } finally {
                 setLoading(false);
             }

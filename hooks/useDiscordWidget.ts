@@ -33,24 +33,71 @@ interface UseDiscordWidgetReturn {
   error: Error | null;
 }
 
+const WIDGET_CACHE_DURATION_MS = 60000; // 60 seconds
+
+interface WidgetCacheData {
+  data: DiscordWidgetData;
+  timestamp: number;
+}
+
+const getCachedWidget = (serverId: string, ignoreExpiry = false): DiscordWidgetData | null => {
+  try {
+    const cached = sessionStorage.getItem(`discord_widget_${serverId}`);
+    if (cached) {
+      const { data, timestamp }: WidgetCacheData = JSON.parse(cached);
+      if (ignoreExpiry || Date.now() - timestamp < WIDGET_CACHE_DURATION_MS) {
+        return data;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading widget cache:', e);
+  }
+  return null;
+};
+
+const setCachedWidget = (serverId: string, data: DiscordWidgetData) => {
+  try {
+    sessionStorage.setItem(
+      `discord_widget_${serverId}`,
+      JSON.stringify({ data, timestamp: Date.now() })
+    );
+  } catch (e) {
+    console.error('Error saving widget cache:', e);
+  }
+};
+
 /**
- * A custom hook to fetch live data from a Discord server's widget API.
+ * A custom hook to fetch live data from a Discord server's widget API with aggressive caching and fallback support.
  * 
  * @param {string} serverId The ID of the Discord server.
  * @returns {UseDiscordWidgetReturn} An object containing the widget data, loading state, and error state.
  */
 export const useDiscordWidget = (serverId: string): UseDiscordWidgetReturn => {
-  const [data, setData] = useState<DiscordWidgetData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<DiscordWidgetData | null>(() => {
+    return getCachedWidget(serverId, true);
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    return !getCachedWidget(serverId, false);
+  });
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!serverId) return;
 
     const fetchData = async () => {
-      // Only set loading true on the very first fetch to prevent UI flickering on polls
-      if (!data) setLoading(true);
+      const cachedFresh = getCachedWidget(serverId, false);
+      if (cachedFresh) {
+        setData(cachedFresh);
+        setLoading(false);
+        return;
+      }
+
+      const hasStale = getCachedWidget(serverId, true);
+      if (!hasStale) {
+        setLoading(true);
+      }
       setError(null);
+      
       try {
         // Fetch Server Widget Data (Online members & presence count)
         const widgetResponse = await fetch(`https://discord.com/api/guilds/${serverId}/widget.json`);
@@ -59,12 +106,22 @@ export const useDiscordWidget = (serverId: string): UseDiscordWidgetReturn => {
         }
         const widgetData: DiscordWidgetData = await widgetResponse.json();
         setData(widgetData);
+        setCachedWidget(serverId, widgetData);
 
       } catch (e) {
-        if (e instanceof Error) {
-            setError(e);
+        console.error('Error fetching Discord widget data:', e);
+        
+        // Serve stale cache on error
+        const fallbackData = getCachedWidget(serverId, true);
+        if (fallbackData) {
+          console.log('Serving stale Discord widget data from cache due to fetch error.');
+          setData(fallbackData);
         } else {
-            setError(new Error('An unknown error occurred while fetching Discord data.'));
+          if (e instanceof Error) {
+              setError(e);
+          } else {
+              setError(new Error('An unknown error occurred while fetching Discord data.'));
+          }
         }
       } finally {
         setLoading(false);
