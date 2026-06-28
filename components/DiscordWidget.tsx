@@ -87,8 +87,19 @@ const splitText = (
     return result;
 };
 
+const preprocessContent = (text: string): string => {
+    if (!text) return "";
+    return text.replace(/&amp;/gi, '&').replace(/&amp/gi, '&');
+};
+
+const sanitizeUrl = (urlStr: string): string => {
+    if (!urlStr) return "";
+    return urlStr.replace(/&amp;/gi, '&').replace(/&amp/gi, '&');
+};
+
 const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boolean = false): React.ReactNode => {
     if (!content) return null;
+    const cleanContent = preprocessContent(content);
 
     const process = (input: string | React.ReactNode[]): React.ReactNode[] => {
         let parts: React.ReactNode[] = Array.isArray(input) ? input : [input];
@@ -135,6 +146,7 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
                     title={`:${name}:`}
                     className={`${isJumbo ? 'w-10 h-10 md:w-12 md:h-12 my-1' : 'w-5 h-5 md:w-6 md:h-6 -translate-y-0.5'} inline-block object-contain align-middle mx-0.5 hover:scale-110 transition-transform duration-200`}
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                 />
             );
         });
@@ -210,7 +222,211 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
         return parts;
     };
 
-    return process(content);
+    return process(cleanContent);
+};
+
+interface MediaEmbed {
+    id: string;
+    type: 'image' | 'tenor-embed';
+    url: string;
+    originalUrl: string;
+}
+
+const extractMediaUrls = (content: string, nativeEmbeds?: any[]): MediaEmbed[] => {
+    const embeds: MediaEmbed[] = [];
+    const preprocessed = preprocessContent(content);
+    
+    // 1. Process Native Discord Embeds first (preferred as they contain direct image/gif/mp4 urls solved by Discord itself)
+    if (nativeEmbeds && Array.isArray(nativeEmbeds)) {
+        nativeEmbeds.forEach((native, index) => {
+            if (native.type === 'gifv' || native.type === 'image') {
+                const mediaUrl = native.image?.url || native.thumbnail?.url || native.video?.url;
+                if (mediaUrl) {
+                    embeds.push({
+                        id: `native-embed-${index}`,
+                        type: 'image',
+                        url: sanitizeUrl(mediaUrl),
+                        originalUrl: native.url || mediaUrl
+                    });
+                }
+            } else if (native.image && native.image.url) {
+                embeds.push({
+                    id: `native-embed-img-${index}`,
+                    type: 'image',
+                    url: sanitizeUrl(native.image.url),
+                    originalUrl: native.url || native.image.url
+                });
+            }
+        });
+    }
+    
+    if (preprocessed) {
+        // Regex for matching http/https URLs
+        const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
+        const matches = preprocessed.match(urlRegex);
+        if (matches) {
+            const uniqueUrls = Array.from(new Set(matches));
+            uniqueUrls.forEach((urlStr, index) => {
+                try {
+                    const cleanUrlStr = sanitizeUrl(urlStr);
+                    const url = new URL(cleanUrlStr);
+                    const pathname = url.pathname.toLowerCase();
+                    const hostname = url.hostname.toLowerCase();
+                    
+                    // Skip if we already extracted this URL via native embeds
+                    if (embeds.some(e => e.originalUrl === cleanUrlStr || e.originalUrl === urlStr)) {
+                        return;
+                    }
+                    
+                    // Tenor View Page fallback (if not processed by native embeds)
+                    if (hostname.includes('tenor.com') && pathname.startsWith('/view/')) {
+                        const parts = pathname.split('-');
+                        const id = parts[parts.length - 1];
+                        if (id && /^\d+$/.test(id)) {
+                            embeds.push({
+                                id: `embed-tenor-${index}`,
+                                type: 'tenor-embed',
+                                url: `https://tenor.com/embed/${id}`,
+                                originalUrl: cleanUrlStr
+                            });
+                            return;
+                        }
+                    }
+                    
+                    // Giphy View Page
+                    if (hostname.includes('giphy.com') && pathname.startsWith('/gifs/')) {
+                        const parts = pathname.split('/');
+                        const slugAndId = parts[parts.length - 1] || parts[parts.length - 2];
+                        if (slugAndId) {
+                            const idParts = slugAndId.split('-');
+                            const id = idParts[idParts.length - 1];
+                            if (id) {
+                                embeds.push({
+                                    id: `embed-giphy-${index}`,
+                                    type: 'image',
+                                    url: `https://media.giphy.com/media/${id}/giphy.gif`,
+                                    originalUrl: cleanUrlStr
+                                });
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // Direct Extensions
+                    if (pathname.endsWith('.png') || 
+                        pathname.endsWith('.jpg') || 
+                        pathname.endsWith('.jpeg') || 
+                        pathname.endsWith('.gif') || 
+                        pathname.endsWith('.webp') || 
+                        pathname.endsWith('.svg') ||
+                        pathname.endsWith('.apng')) {
+                        embeds.push({
+                            id: `embed-direct-${index}`,
+                            type: 'image',
+                            url: cleanUrlStr,
+                            originalUrl: cleanUrlStr
+                        });
+                    }
+                } catch (e) {
+                    // invalid URL, ignore
+                }
+            });
+        }
+    }
+    
+    return embeds;
+};
+
+const EmbedImage: React.FC<{ url: string, alt: string, className?: string, originalUrl?: string }> = ({ url, alt, className = "", originalUrl }) => {
+    const [hasError, setHasError] = useState(false);
+
+    if (hasError) {
+        return (
+            <div className="flex flex-col items-center justify-center p-4 bg-black/30 border border-white/10 rounded-lg max-w-sm text-center">
+                <span className="text-xl mb-1">⚠️</span>
+                <span className="text-xs text-gray-400 font-bold">Media Unavailable</span>
+                <span className="text-[10px] text-gray-500 mt-1 max-w-[200px] truncate block" title={alt}>{alt}</span>
+                {originalUrl && (
+                    <a 
+                        href={originalUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="mt-2 px-2.5 py-1 bg-brand-primary/20 hover:bg-brand-primary border border-brand-primary/30 text-white rounded text-[10px] font-bold transition-all"
+                    >
+                        Open Original Link
+                    </a>
+                )}
+            </div>
+        );
+    }
+
+    // Determine if media is likely transparent (sticker, emoji, or explicitly contains transparent keywords)
+    const lowerUrl = url.toLowerCase();
+    const lowerAlt = alt.toLowerCase();
+    const isLikelyTransparent = 
+        lowerUrl.includes('sticker') || 
+        lowerUrl.includes('emoji') || 
+        lowerUrl.includes('ych') ||
+        lowerUrl.includes('badge') ||
+        lowerAlt.includes('sticker') || 
+        lowerAlt.includes('emoji') || 
+        lowerAlt.includes('ych');
+
+    // Remove stardust-pattern background if the image is NOT transparent/sticker-like (allowing it to be fully opaque)
+    let finalClassName = className;
+    if (!isLikelyTransparent) {
+        finalClassName = className.replace('stardust-pattern', '').trim();
+    }
+
+    return (
+        <img 
+            src={url} 
+            alt={alt}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setHasError(true)}
+            className={finalClassName} 
+        />
+    );
+};
+
+const StickerImage: React.FC<{ stickerId: string, extension: string, name: string }> = ({ stickerId, extension, name }) => {
+    const [hasError, setHasError] = useState(false);
+    if (hasError) {
+        return (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/40 border border-white/5 rounded-lg text-xs text-gray-400">
+                <span>🎨</span>
+                <span className="font-bold">{name} (Sticker)</span>
+            </div>
+        );
+    }
+    return (
+        <img 
+            src={`https://cdn.discordapp.com/stickers/${stickerId}.${extension}`} 
+            alt={name}
+            referrerPolicy="no-referrer"
+            onError={() => setHasError(true)}
+            className="w-28 h-28 md:w-32 md:h-32 object-contain hover:scale-105 transition-transform drop-shadow-md"
+            title={name}
+            loading="lazy"
+        />
+    );
+};
+
+const ReactionEmoji: React.FC<{ url: string, name: string }> = ({ url, name }) => {
+    const [hasError, setHasError] = useState(false);
+    if (hasError || !url) {
+        return <span className="text-sm leading-none text-gray-200">{name}</span>;
+    }
+    return (
+        <img 
+            src={url} 
+            alt={name} 
+            className="w-4 h-4 object-contain" 
+            referrerPolicy="no-referrer" 
+            onError={() => setHasError(true)}
+        />
+    );
 };
 
 const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ message, serverId }) => {
@@ -247,6 +463,7 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                     <img 
                         src={getDiscordAvatarUrl(message.referenced_message.author)}
                         alt="Ref Avatar"
+                        referrerPolicy="no-referrer"
                         className="w-4 h-4 rounded-full bg-brand-secondary shrink-0"
                     />
                     <span className="font-bold text-gray-300 text-xs hover:underline cursor-pointer truncate max-w-[120px]">
@@ -269,6 +486,7 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                         src={avatarUrl} 
                         alt={displayName}
                         loading="lazy"
+                        referrerPolicy="no-referrer"
                         className="w-10 h-10 rounded-full bg-brand-secondary object-cover cursor-pointer ring-2 ring-transparent group-hover:ring-brand-primary/30 transition-all shadow-lg"
                     />
                 </div>
@@ -285,27 +503,66 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                     <div className={`text-gray-300 text-[0.9375rem] whitespace-pre-wrap break-words leading-relaxed ${isJumbo ? 'text-4xl leading-normal mt-1' : 'mt-0.5'}`}>
                         {parseDiscordContent(message.content, message.mentions, isJumbo)}
                     </div>
+
+                    {/* Media Link Embeds */}
+                    {(() => {
+                        const embeds = extractMediaUrls(message.content, (message as any).embeds);
+                        if (embeds.length === 0) return null;
+                        return (
+                            <div className="mt-2 flex flex-col gap-2 max-w-full">
+                                {embeds.map((embed) => (
+                                    <div key={embed.id} className="max-w-full">
+                                        {embed.type === 'image' ? (
+                                            <div className="overflow-hidden rounded-lg border border-white/10 bg-black/30 group/embed max-w-full">
+                                                <div className="relative">
+                                                    <a href={embed.originalUrl} target="_blank" rel="noreferrer" className="block cursor-zoom-in">
+                                                        <EmbedImage 
+                                                            url={embed.url} 
+                                                            alt="Chat Embed Media"
+                                                            originalUrl={embed.originalUrl}
+                                                            className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px] stardust-pattern" 
+                                                        />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-hidden rounded-lg border border-white/10 bg-black/30 max-w-sm w-full aspect-[4/3]">
+                                                <iframe 
+                                                    src={embed.url} 
+                                                    className="w-full h-full border-0 stardust-pattern"
+                                                    title="Tenor GIF"
+                                                    sandbox="allow-scripts allow-same-origin"
+                                                    scrolling="no"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    })()}
                     
                     {/* Attachments */}
                     {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-3">
                             {message.attachments.map((att) => {
                                 const isImage = att.content_type?.startsWith('image/');
+                                const cleanAttUrl = sanitizeUrl(att.url);
                                 return (
                                     <div key={att.id} className="overflow-hidden rounded-lg border border-white/10 bg-black/30 group/att max-w-full">
                                         {isImage ? (
                                              <div className="relative">
-                                                <a href={att.url} target="_blank" rel="noreferrer" className="block cursor-zoom-in">
-                                                    <img 
-                                                        src={att.url} 
+                                                <a href={cleanAttUrl} target="_blank" rel="noreferrer" className="block cursor-zoom-in">
+                                                    <EmbedImage 
+                                                        url={cleanAttUrl} 
                                                         alt={att.filename}
-                                                        loading="lazy"
-                                                        className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] bg-repeat" 
+                                                        originalUrl={cleanAttUrl}
+                                                        className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px] stardust-pattern" 
                                                     />
                                                 </a>
                                              </div>
                                         ) : (
-                                            <a href={att.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 pr-4 max-w-sm hover:bg-white/5 transition-colors">
+                                             <a href={cleanAttUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 pr-4 max-w-sm hover:bg-white/5 transition-colors">
                                                 <div className="w-10 h-10 rounded bg-brand-primary/10 flex items-center justify-center flex-shrink-0">
                                                     <FileIcon />
                                                 </div>
@@ -316,7 +573,7 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                                                 <div className="ml-3">
                                                     <DownloadIcon />
                                                 </div>
-                                            </a>
+                                             </a>
                                         )}
                                     </div>
                                 );
@@ -330,13 +587,11 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                             {message.sticker_items.map((sticker) => {
                                 const extension = sticker.format_type === 4 ? 'gif' : 'png';
                                 return (
-                                    <img 
+                                    <StickerImage 
                                         key={sticker.id} 
-                                        src={`https://cdn.discordapp.com/stickers/${sticker.id}.${extension}`} 
-                                        alt={sticker.name}
-                                        className="w-28 h-28 md:w-32 md:h-32 object-contain hover:scale-105 transition-transform drop-shadow-md"
-                                        title={sticker.name}
-                                        loading="lazy"
+                                        stickerId={sticker.id} 
+                                        extension={extension} 
+                                        name={sticker.name} 
                                     />
                                 );
                             })}
@@ -357,11 +612,7 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                                         className="bg-black/40 hover:bg-brand-primary/20 border border-white/5 hover:border-brand-primary/50 rounded-[8px] px-1.5 py-0.5 flex items-center gap-1.5 cursor-pointer select-none transition-all duration-200 min-h-[1.5rem] group/reaction shadow-sm"
                                         title={`${reaction.emoji.name} - ${reaction.count}`}
                                     >
-                                        {emojiUrl ? (
-                                            <img src={emojiUrl} alt={reaction.emoji.name || ''} className="w-4 h-4 object-contain" />
-                                        ) : (
-                                            <span className="text-sm leading-none text-gray-200">{reaction.emoji.name}</span>
-                                        )}
+                                        <ReactionEmoji url={emojiUrl || ''} name={reaction.emoji.name || ''} />
                                         <span className="text-xs font-bold text-gray-400 group-hover/reaction:text-brand-accent transition-colors">{reaction.count}</span>
                                     </div>
                                 );
@@ -411,6 +662,11 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
         .custom-scrollbar::-webkit-scrollbar-track { background-color: rgba(0,0,0,0.2); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #581c25; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #e5383b; }
+        .stardust-pattern {
+          background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+          background-repeat: repeat;
+          background-color: rgba(0, 0, 0, 0.4);
+        }
       `}</style>
 
       {showJoinOverlay && (
