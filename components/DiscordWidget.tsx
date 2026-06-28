@@ -97,7 +97,7 @@ const sanitizeUrl = (urlStr: string): string => {
     return urlStr.replace(/&amp;/gi, '&').replace(/&amp/gi, '&');
 };
 
-const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boolean = false): React.ReactNode => {
+const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boolean = false, embeds: MediaEmbed[] = []): React.ReactNode => {
     if (!content) return null;
     const cleanContent = preprocessContent(content);
 
@@ -126,11 +126,17 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
         // MOVED UP so that underscores in IDs or names don't trigger Italics parsing.
 
         // 3. Links
-        parts = splitText(parts, /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g, (match, i) => (
-            <a key={`a-${i}`} href={match[1]} target="_blank" rel="noreferrer" className="text-brand-primary hover:text-brand-accent hover:underline break-all transition-colors">
-                {match[1]}
-            </a>
-        ));
+        parts = splitText(parts, /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g, (match, i) => {
+            const url = match[1];
+            if (embeds.some(e => e.originalUrl === url || sanitizeUrl(e.originalUrl) === sanitizeUrl(url))) {
+                return null;
+            }
+            return (
+                <a key={`a-${i}`} href={url} target="_blank" rel="noreferrer" className="text-brand-primary hover:text-brand-accent hover:underline break-all transition-colors">
+                    {url}
+                </a>
+            );
+        });
 
         // 4. Emotes
         parts = splitText(parts, /<(a)?:(\w+):(\d+)>/g, (match, i) => {
@@ -227,7 +233,7 @@ const parseDiscordContent = (content: string, mentions: any[] = [], isJumbo: boo
 
 interface MediaEmbed {
     id: string;
-    type: 'image' | 'tenor-embed';
+    type: 'image';
     url: string;
     originalUrl: string;
 }
@@ -239,8 +245,8 @@ const extractMediaUrls = (content: string, nativeEmbeds?: any[]): MediaEmbed[] =
     // 1. Process Native Discord Embeds first (preferred as they contain direct image/gif/mp4 urls solved by Discord itself)
     if (nativeEmbeds && Array.isArray(nativeEmbeds)) {
         nativeEmbeds.forEach((native, index) => {
-            if (native.type === 'gifv' || native.type === 'image') {
-                const mediaUrl = native.image?.url || native.thumbnail?.url || native.video?.url;
+            if (native.type === 'gifv' || native.type === 'image' || native.type === 'video') {
+                const mediaUrl = native.video?.url || native.image?.url || native.thumbnail?.url;
                 if (mediaUrl) {
                     embeds.push({
                         id: `native-embed-${index}`,
@@ -274,42 +280,8 @@ const extractMediaUrls = (content: string, nativeEmbeds?: any[]): MediaEmbed[] =
                     const hostname = url.hostname.toLowerCase();
                     
                     // Skip if we already extracted this URL via native embeds
-                    if (embeds.some(e => e.originalUrl === cleanUrlStr || e.originalUrl === urlStr)) {
+                    if (embeds.some(e => e.originalUrl === cleanUrlStr || e.originalUrl === urlStr || cleanUrlStr.includes(e.originalUrl) || e.originalUrl.includes(cleanUrlStr))) {
                         return;
-                    }
-                    
-                    // Tenor View Page fallback (if not processed by native embeds)
-                    if (hostname.includes('tenor.com') && pathname.startsWith('/view/')) {
-                        const parts = pathname.split('-');
-                        const id = parts[parts.length - 1];
-                        if (id && /^\d+$/.test(id)) {
-                            embeds.push({
-                                id: `embed-tenor-${index}`,
-                                type: 'tenor-embed',
-                                url: `https://tenor.com/embed/${id}`,
-                                originalUrl: cleanUrlStr
-                            });
-                            return;
-                        }
-                    }
-                    
-                    // Giphy View Page
-                    if (hostname.includes('giphy.com') && pathname.startsWith('/gifs/')) {
-                        const parts = pathname.split('/');
-                        const slugAndId = parts[parts.length - 1] || parts[parts.length - 2];
-                        if (slugAndId) {
-                            const idParts = slugAndId.split('-');
-                            const id = idParts[idParts.length - 1];
-                            if (id) {
-                                embeds.push({
-                                    id: `embed-giphy-${index}`,
-                                    type: 'image',
-                                    url: `https://media.giphy.com/media/${id}/giphy.gif`,
-                                    originalUrl: cleanUrlStr
-                                });
-                                return;
-                            }
-                        }
                     }
                     
                     // Direct Extensions
@@ -337,7 +309,7 @@ const extractMediaUrls = (content: string, nativeEmbeds?: any[]): MediaEmbed[] =
     return embeds;
 };
 
-const EmbedImage: React.FC<{ url: string, alt: string, className?: string, originalUrl?: string }> = ({ url, alt, className = "", originalUrl }) => {
+const EmbedMedia: React.FC<{ url: string, alt: string, className?: string, originalUrl?: string }> = ({ url, alt, className = "", originalUrl }) => {
     const [hasError, setHasError] = useState(false);
 
     if (hasError) {
@@ -360,22 +332,28 @@ const EmbedImage: React.FC<{ url: string, alt: string, className?: string, origi
         );
     }
 
-    // Determine if media is likely transparent (sticker, emoji, or explicitly contains transparent keywords)
     const lowerUrl = url.toLowerCase();
-    const lowerAlt = alt.toLowerCase();
-    const isLikelyTransparent = 
-        lowerUrl.includes('sticker') || 
-        lowerUrl.includes('emoji') || 
-        lowerUrl.includes('ych') ||
-        lowerUrl.includes('badge') ||
-        lowerAlt.includes('sticker') || 
-        lowerAlt.includes('emoji') || 
-        lowerAlt.includes('ych');
+    let isVideo = false;
+    try {
+        const parsedUrl = new URL(url);
+        const pathname = parsedUrl.pathname.toLowerCase();
+        isVideo = pathname.endsWith('.mp4') || pathname.endsWith('.webm') || pathname.endsWith('.mov');
+    } catch (e) {
+        isVideo = lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.webm') || lowerUrl.endsWith('.mov');
+    }
 
-    // Remove stardust-pattern background if the image is NOT transparent/sticker-like (allowing it to be fully opaque)
-    let finalClassName = className;
-    if (!isLikelyTransparent) {
-        finalClassName = className.replace('stardust-pattern', '').trim();
+    if (isVideo) {
+        return (
+            <video 
+                src={url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                onError={() => setHasError(true)}
+                className={className}
+            />
+        );
     }
 
     return (
@@ -385,7 +363,7 @@ const EmbedImage: React.FC<{ url: string, alt: string, className?: string, origi
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={() => setHasError(true)}
-            className={finalClassName} 
+            className={className} 
         />
     );
 };
@@ -500,45 +478,37 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                         </span>
                     </div>
                     
-                    <div className={`text-gray-300 text-[0.9375rem] whitespace-pre-wrap break-words leading-relaxed ${isJumbo ? 'text-4xl leading-normal mt-1' : 'mt-0.5'}`}>
-                        {parseDiscordContent(message.content, message.mentions, isJumbo)}
-                    </div>
-
-                    {/* Media Link Embeds */}
                     {(() => {
                         const embeds = extractMediaUrls(message.content, (message as any).embeds);
-                        if (embeds.length === 0) return null;
+                        
                         return (
-                            <div className="mt-2 flex flex-col gap-2 max-w-full">
-                                {embeds.map((embed) => (
-                                    <div key={embed.id} className="max-w-full">
-                                        {embed.type === 'image' ? (
-                                            <div className="overflow-hidden rounded-lg border border-white/10 bg-black/30 group/embed max-w-full">
-                                                <div className="relative">
-                                                    <a href={embed.originalUrl} target="_blank" rel="noreferrer" className="block cursor-zoom-in">
-                                                        <EmbedImage 
-                                                            url={embed.url} 
-                                                            alt="Chat Embed Media"
-                                                            originalUrl={embed.originalUrl}
-                                                            className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px] stardust-pattern" 
-                                                        />
-                                                    </a>
+                            <>
+                                <div className={`text-gray-300 text-[0.9375rem] whitespace-pre-wrap break-words leading-relaxed ${isJumbo ? 'text-4xl leading-normal mt-1' : 'mt-0.5'}`}>
+                                    {parseDiscordContent(message.content, message.mentions, isJumbo, embeds)}
+                                </div>
+
+                                {/* Media Link Embeds */}
+                                {embeds.length > 0 && (
+                                    <div className="mt-2 flex flex-col gap-2 max-w-full">
+                                        {embeds.map((embed) => (
+                                            <div key={embed.id} className="max-w-full">
+                                                <div className="overflow-hidden rounded-lg group/embed max-w-full w-fit">
+                                                    <div className="relative">
+                                                        <a href={embed.originalUrl} target="_blank" rel="noreferrer" className="block cursor-zoom-in">
+                                                            <EmbedMedia 
+                                                                url={embed.url} 
+                                                                alt="Chat Embed Media"
+                                                                originalUrl={embed.originalUrl}
+                                                                className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px]" 
+                                                            />
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <div className="overflow-hidden rounded-lg border border-white/10 bg-black/30 max-w-sm w-full aspect-[4/3]">
-                                                <iframe 
-                                                    src={embed.url} 
-                                                    className="w-full h-full border-0 stardust-pattern"
-                                                    title="Tenor GIF"
-                                                    sandbox="allow-scripts allow-same-origin"
-                                                    scrolling="no"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                                        ))}
+                                </div>
+                            )}
+                            </>
                         );
                     })()}
                     
@@ -546,18 +516,18 @@ const ChatMessage: React.FC<{ message: DiscordMessage, serverId: string }> = ({ 
                     {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-3">
                             {message.attachments.map((att) => {
-                                const isImage = att.content_type?.startsWith('image/');
+                                const isVisualMedia = att.content_type?.startsWith('image/') || att.content_type?.startsWith('video/');
                                 const cleanAttUrl = sanitizeUrl(att.url);
                                 return (
-                                    <div key={att.id} className="overflow-hidden rounded-lg border border-white/10 bg-black/30 group/att max-w-full">
-                                        {isImage ? (
+                                    <div key={att.id} className={`overflow-hidden rounded-lg group/att max-w-full w-fit ${isVisualMedia ? '' : 'border border-white/10 bg-black/30'}`}>
+                                        {isVisualMedia ? (
                                              <div className="relative">
                                                 <a href={cleanAttUrl} target="_blank" rel="noreferrer" className="block cursor-zoom-in">
-                                                    <EmbedImage 
+                                                    <EmbedMedia 
                                                         url={cleanAttUrl} 
                                                         alt={att.filename}
                                                         originalUrl={cleanAttUrl}
-                                                        className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px] stardust-pattern" 
+                                                        className="max-w-full max-h-[350px] object-contain min-w-[50px] min-h-[50px]" 
                                                     />
                                                 </a>
                                              </div>
@@ -662,11 +632,6 @@ const DiscordWidget: React.FC<DiscordWidgetProps> = ({ serverId }) => {
         .custom-scrollbar::-webkit-scrollbar-track { background-color: rgba(0,0,0,0.2); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #581c25; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #e5383b; }
-        .stardust-pattern {
-          background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
-          background-repeat: repeat;
-          background-color: rgba(0, 0, 0, 0.4);
-        }
       `}</style>
 
       {showJoinOverlay && (
