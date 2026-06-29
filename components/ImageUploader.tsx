@@ -284,7 +284,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         xhr.send(formData);
     };
 
-    const isVideo = fileInfo?.type.startsWith('video/') || false;
+    const isVideo = fileInfo?.type.startsWith('video/') || (previewUrl && previewUrl.match(/\.(mp4|webm)(\?.*)?$/i)) || false;
 
     if (compact) {
         return (
@@ -310,7 +310,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                     title={error ? `Error: ${error}` : uploading ? `Uploading... ${progress}%` : "Upload Image"}
                 >
                     {previewUrl && !alwaysShowIcon ? (
-                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-lg group-hover/compact:opacity-40 transition-opacity" />
+                        isVideo || previewUrl.match(/\.(mp4|webm)(\?.*)?$/i) ? (
+                            <video src={previewUrl} className="w-full h-full object-cover rounded-lg group-hover/compact:opacity-40 transition-opacity" autoPlay loop muted playsInline />
+                        ) : (
+                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-lg group-hover/compact:opacity-40 transition-opacity" />
+                        )
                     ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${uploading ? 'text-brand-primary animate-pulse' : 'text-brand-primary group-hover/compact:text-red-400 transition-colors'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />

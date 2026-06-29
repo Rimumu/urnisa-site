@@ -28,6 +28,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, className = "
         setError(true);
     };
 
+    const isVideo = currentSrc && currentSrc.match(/\.(mp4|webm)(\?.*)?$/i);
+
     return (
         <div className={`relative overflow-hidden bg-white/5 ${className}`}>
             {isLoading && (
@@ -41,8 +43,19 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, className = "
             {error ? (
                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-gray-500 text-xs p-2 text-center border border-white/5 z-20">
                     <span className="text-xl mb-1 opacity-50">⚠️</span>
-                    <span className="opacity-50">Image Error</span>
+                    <span className="opacity-50">Media Error</span>
                  </div>
+            ) : isVideo ? (
+                <video
+                    src={currentSrc}
+                    className={`relative z-10 w-full h-full ${contain ? 'object-contain' : 'object-cover'}`}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    onLoadedData={handleLoad}
+                    onError={handleError}
+                />
             ) : (
                 <img
                     src={currentSrc}
