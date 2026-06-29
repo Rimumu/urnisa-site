@@ -9,19 +9,23 @@ import { useState, useEffect, useRef } from 'react';
  * @returns {[React.RefObject<T>, boolean]} A tuple containing the ref to attach to the element
  * and a boolean state `isVisible` which is true when the element is in the viewport.
  */
-export const useScrollAnimation = <T extends HTMLElement>(): [React.RefObject<T>, boolean] => {
+export const useScrollAnimation = <T extends HTMLElement>(triggerOnce: boolean = true): [React.RefObject<T>, boolean] => {
   const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<T>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Update state based on intersection status.
-        // This allows the animation to reverse when scrolling out of view.
-        setIsVisible(entry.isIntersecting);
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          if (triggerOnce && elementRef.current) {
+            observer.unobserve(elementRef.current);
+          }
+        } else if (!triggerOnce) {
+          setIsVisible(false);
+        }
       },
       {
-        // Trigger the animation when the element is 15% visible
         threshold: 0.15,
       }
     );

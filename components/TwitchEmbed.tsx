@@ -11,7 +11,7 @@ interface TwitchEmbedProps {
   channel: string;
 }
 
-const TwitchEmbed: React.FC<TwitchEmbedProps> = ({ channel }) => {
+const TwitchEmbed: React.FC<TwitchEmbedProps> = React.memo(({ channel }) => {
   const embedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,6 +74,6 @@ const TwitchEmbed: React.FC<TwitchEmbedProps> = ({ channel }) => {
         className="w-full aspect-video min-h-[220px] md:min-h-[400px] rounded-lg overflow-hidden"
     />
   );
-};
+});
 
 export default TwitchEmbed;
