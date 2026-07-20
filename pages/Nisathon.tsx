@@ -1,47 +1,37 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
-import { API_BASE_URL } from '../constants';
-import { DEFAULT_NISATHON_GOALS } from '../constants';
-import archiveData from '../data/nisathon-archive.json';
+import { useNisathonGoals } from '../hooks/useNisathonGoals';
+import { useNisathonStats } from '../hooks/useNisathonStats';
 
 // --- DATA CONSTANTS ---
-const NISABALL_ICON = "https://res.cloudinary.com/dsencimjn/image/upload/v1764173339/1341377045602766868_fbuvnf.webp";
-
-const CURRENCY_RATES = [
-    { label: "$5 USD", value: "1 Nisaball" },
-    { label: "2 Subs", value: "1 Nisaball" },
-    { label: "500 Bits", value: "1 Nisaball" },
-];
-
-const TIMER_CONVERSION = "1 Nisaball → 10 Minutes";
 
 const TOP_REWARDS = [
-    "1. VIP Status",
-    "2. Art Together",
-    "3. Maid Outfit Special Pics"
+    "Exclusive VIP Badge",
+    "Signed Poster",
+    "Special Discord Role"
 ];
 
 const PERSONALISED_REWARDS = [
-    { cost: "1 NB", reward: "Name On Stream" },
-    { cost: "5 NB", reward: "1 Spin The Wheel" },
-    { cost: "10 NB", reward: "Small Sketch Drawing" },
+    { cost: "2 SUB", reward: "Twitch Badge" },
+    { cost: "5 NB", reward: "Wheel Spin" },
+    { cost: "10 NB", reward: "Small Drawing" }
 ];
 
-// Types
-interface ArchiveStats {
-    archiveId: string;
-    eventName: string;
-    archivedAt: string;
-    finalStats: {
-        currentSubs: number;
-        currentBits: number;
-        currentDonations: number;
-        totalNisaballs: number;
-    };
-}
+
+const NISABALL_ICON = "https://res.cloudinary.com/dsencimjn/image/upload/v1764173339/1341377045602766868_fbuvnf.webp";
+
+
 
 // --- ICONS & HELPERS ---
+
+
+const DollarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
 const getEventIcon = (type: string, className: string = "w-5 h-5") => {
     switch (type.toLowerCase()) {
         case 'sub':
@@ -108,8 +98,16 @@ const getEventColor = (type: string) => {
 };
 
 const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return "Just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return date.toLocaleDateString();
 };
 
 const CheckIcon = () => (
@@ -150,22 +148,78 @@ const TrophyIcon = () => (
 );
 
 // --- COMPONENTS ---
-interface ProgressBarProps {
-    label: string;
-    current: number;
-    max: number;
-    color?: string;
+
+const Timer: React.FC<{ endTime: string; isPaused: boolean; remainingTimeMs?: number }> = ({ endTime, isPaused, remainingTimeMs }) => {
+    const [timeLeft, setTimeLeft] = useState("00:00:00");
+
+    useEffect(() => {
+        const formatTime = (ms: number) => {
+            if (ms < 0) return "00:00:00";
+            const hours = Math.floor((ms / (1000 * 60 * 60)));
+            const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+            const h = hours < 10 ? "0" + hours : hours;
+            const m = minutes < 10 ? "0" + minutes : minutes;
+            const s = seconds < 10 ? "0" + seconds : seconds;
+
+            return `${h}:${m}:${s}`;
+        };
+
+        if (isPaused) {
+            // When paused, display the static remaining time from the backend
+            setTimeLeft(formatTime(remainingTimeMs || 0));
+            return;
+        }
+
+        const updateTimer = () => {
+            const now = new Date().getTime();
+            const end = new Date(endTime).getTime();
+            const distance = end - now;
+            setTimeLeft(formatTime(distance));
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [endTime, isPaused, remainingTimeMs]);
+
+    return (
+        <div className="relative group">
+            <div className={`absolute inset-0 ${isPaused ? 'bg-amber-500/20' : 'bg-brand-primary/30'} blur-3xl rounded-full group-hover:bg-brand-primary/40 transition-all duration-700`}></div>
+            <div className={`relative bg-black/40 backdrop-blur-2xl border ${isPaused ? 'border-amber-500/30' : 'border-white/10'} py-8 px-12 rounded-[3rem] text-center transform hover:scale-105 transition-transform duration-300 shadow-2xl`}>
+                
+                {isPaused && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-500 text-black font-black text-xs px-3 py-1 rounded-full uppercase tracking-widest border-2 border-white animate-pulse z-20 shadow-lg">
+                        Timer Paused
+                    </div>
+                )}
+
+                <h3 className={`${isPaused ? 'text-amber-500' : 'text-brand-accent'} font-sans font-bold tracking-widest text-xs uppercase mb-1`}>Time Remaining</h3>
+                <div className={`text-5xl md:text-7xl font-extrabold font-sans tracking-tight drop-shadow-lg tabular-nums transition-colors duration-300 ${isPaused ? 'text-amber-200 opacity-90' : 'text-white'}`}>
+                    {timeLeft || "Loading..."}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+interface ProgressBarProps { 
+    label: string; 
+    current: number; 
+    max: number; 
+    color?: string; 
     icon?: React.ReactNode;
     subLabel?: string;
     size?: 'sm' | 'lg';
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({
-    label, current, max, color = "bg-brand-primary", icon, subLabel, size = 'sm'
+const ProgressBar: React.FC<ProgressBarProps> = ({ 
+    label, current, max, color = "bg-brand-primary", icon, subLabel, size = 'sm' 
 }) => {
     const percentage = max > 0 ? Math.min((current / max) * 100, 100) : 0;
     const heightClass = size === 'lg' ? 'h-8' : 'h-3';
-
+    
     return (
         <div className="w-full">
             <div className="flex justify-between items-end mb-2 relative z-10 px-1">
@@ -181,8 +235,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
                 </div>
             </div>
             <div className={`w-full ${heightClass} bg-black/50 rounded-full overflow-hidden border border-white/5 p-[2px]`}>
-                <div
-                    className={`h-full rounded-full ${color} relative overflow-hidden transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,0,0,0.3)]`}
+                <div 
+                    className={`h-full rounded-full ${color} relative overflow-hidden transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,0,0,0.3)]`} 
                     style={{ width: `${percentage}%` }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]"></div>
@@ -199,13 +253,13 @@ interface ContributionStatProps {
     nbAmount: number;
     totalNb: number;
     color: string;
-    icon: string;
+    icon: React.ReactNode;
     rate: string;
 }
 
 const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, rawUnit, nbAmount, totalNb, color, icon, rate }) => {
     const contributionPercent = totalNb > 0 ? (nbAmount / totalNb) * 100 : 0;
-
+    
     return (
         <div className="bg-white/5 p-5 rounded-3xl border border-white/5 flex flex-col h-full relative overflow-hidden group hover:bg-white/10 transition-colors">
             {/* Header */}
@@ -232,8 +286,8 @@ const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, ra
             {/* Contribution Bar */}
             <div className="mt-auto">
                 <div className="w-full h-2 bg-black/50 rounded-full overflow-hidden flex p-[1px]">
-                    <div
-                        className={`h-full rounded-full ${color} transition-all duration-1000 ease-out`}
+                    <div 
+                        className={`h-full rounded-full ${color} transition-all duration-1000 ease-out`} 
                         style={{ width: `${contributionPercent}%` }}
                     ></div>
                 </div>
@@ -244,6 +298,7 @@ const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, ra
 };
 
 interface NisaballWidgetProps {
+    stats: any;
     currentSubs: number;
     currentBits: number;
     currentDonations: number;
@@ -254,20 +309,20 @@ interface NisaballWidgetProps {
     nbFromBits: number;
     nbFromDonations: number;
     className?: string;
-    eventName?: string;
+    onDonateClick?: () => void;
 }
 
-const NisaballWidget: React.FC<NisaballWidgetProps> = ({
-    currentSubs, currentBits, currentDonations,
+const NisaballWidget: React.FC<NisaballWidgetProps> = ({ stats,
+    currentSubs, currentBits, currentDonations, 
     totalNisaballs, nextGoal, nextGoalLabel,
     nbFromSubs, nbFromBits, nbFromDonations,
     className = "",
-    eventName
+    onDonateClick
 }) => {
     const [expanded, setExpanded] = useState(false);
 
     return (
-        <div
+        <div 
             onClick={() => setExpanded(!expanded)}
             className={`w-full bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-6 md:p-10 cursor-pointer group transition-all duration-300 hover:border-brand-accent/30 hover:shadow-2xl relative overflow-hidden ${className}`}
         >
@@ -275,34 +330,53 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h2 className="text-3xl md:text-4xl font-extrabold font-sans text-white tracking-tight flex items-center gap-4">
-                        <img
-                            src={NISABALL_ICON}
-                            alt="Nisaball"
+                        <img 
+                            src={NISABALL_ICON} 
+                            alt="Nisaball" 
                             className="w-12 h-12 md:w-16 md:h-16 object-contain drop-shadow-[0_0_15px_rgba(247,197,72,0.5)]"
                         />
                         <span>NISABALL <span className="text-brand-accent">GOAL</span></span>
                     </h2>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 md:gap-3 ml-auto" onClick={(e) => e.stopPropagation()}>
+                        <a
+                            href="https://twitch.tv/urnisa_"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-[#9146FF] hover:bg-[#772ce8] text-white text-xs md:text-sm font-bold py-2 px-3 md:px-4 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-purple-500/20 transition-all hover:scale-105 border border-white/10"
+                        >
+                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11.571 4.714h1.715v5.143H11.57zm4.714 0h1.715v5.143h-1.715zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L24 16.286V0zm16.286 15.428-3.428 3.429h-3.429l-3 3v-3H6.857V1.714h15.429v13.714z" />
+                            </svg>
+                            <span>Subscribe</span>
+                        </a>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onDonateClick) onDonateClick();
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold py-2 px-3 md:px-4 rounded-xl flex items-center justify-center shadow-lg hover:shadow-emerald-500/20 transition-all hover:scale-105 border border-white/10"
+                        >
+                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
 
-                    <div className="flex items-center gap-2 md:gap-3 ml-auto">
-                        <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                            ARCHIVED
-                        </span>
-                        <div
+                        <div 
                             onClick={() => setExpanded(!expanded)}
-                            className={`w-10 h-10 rounded-full bg-white/5 flex items-center justify-center transform transition-all duration-300 text-brand-accent group-hover:bg-brand-accent group-hover:text-brand-bg ${expanded ? 'rotate-180' : 'rotate-0'} cursor-pointer`}
+                            className={`w-10 h-10 ml-2 rounded-full bg-white/5 flex items-center justify-center transform transition-all duration-300 text-brand-accent group-hover:bg-brand-accent group-hover:text-brand-bg ${expanded ? 'rotate-180' : 'rotate-0'} cursor-pointer`}
                         >
                             <ChevronDownIcon className="w-6 h-6" />
                         </div>
                     </div>
                 </div>
-
-
-
-                <ProgressBar
-                    label={nextGoalLabel}
-                    current={totalNisaballs}
-                    max={nextGoal}
-                    color="bg-brand-accent"
+                
+                <ProgressBar 
+                    label={nextGoalLabel} 
+                    current={totalNisaballs} 
+                    max={nextGoal} 
+                    color="bg-brand-accent" 
                     size="lg"
                 />
             </div>
@@ -310,22 +384,22 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
             {/* Expanded Breakdown */}
             <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mt-0 transition-all duration-500 ease-in-out overflow-hidden ${expanded ? 'max-h-[600px] opacity-100 pt-8 mt-6 border-t border-white/5' : 'max-h-0 opacity-0'}`}>
                 <ContributionStat
-                    label="Subscriptions"
+                    label="Subs"
                     rawCount={currentSubs}
                     nbAmount={nbFromSubs}
                     totalNb={totalNisaballs}
                     color="bg-purple-500"
-                    icon="⭐"
-                    rate="2 Subs = 1 NB"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-purple-400"><path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" /></svg>}
+                    rate={`${stats.subsRate || 2} Subs = 1 NB`}
                 />
                 <ContributionStat
-                    label="Cheered Bits"
+                    label="Bits"
                     rawCount={currentBits}
                     nbAmount={nbFromBits}
                     totalNb={totalNisaballs}
-                    color="bg-pink-500"
-                    icon="💎"
-                    rate="500 Bits = 1 NB"
+                    color="bg-blue-500"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-blue-400"><path fillRule="evenodd" d="M12 2.25c-.297 0-.58.14-.757.377L2.25 14.25l9 7.5a1.125 1.125 0 0 0 1.5 0l9-7.5-8.993-11.623a1.125 1.125 0 0 0-.757-.377ZM3.536 13.5l7.714-9.971v9.971H3.536Zm8.464-9.971 7.714 9.971H12V3.529Z" clipRule="evenodd" /></svg>}
+                    rate={`${stats.bitsRate || 500} Bits = 1 NB`}
                 />
                 <ContributionStat
                     label="Donations"
@@ -334,11 +408,11 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
                     nbAmount={nbFromDonations}
                     totalNb={totalNisaballs}
                     color="bg-emerald-500"
-                    icon="💸"
-                    rate="$5 USD = 1 NB"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-emerald-400"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>}
+                    rate={`${stats.donationRate || 5} USD = 1 NB`}
                 />
             </div>
-
+            
             <div className={`absolute bottom-3 left-0 right-0 text-center text-[10px] text-gray-500 font-bold uppercase tracking-widest transition-opacity duration-300 ${expanded ? 'opacity-0' : 'opacity-60'}`}>
                 Tap to view details
             </div>
@@ -346,20 +420,20 @@ const NisaballWidget: React.FC<NisaballWidgetProps> = ({
     );
 };
 
-interface MilestoneProps {
-    item: {
-        count: number;
-        reward: string;
-        secret?: boolean;
-        status: 'completed' | 'active' | 'locked'
-    }
+interface MilestoneProps { 
+    item: { 
+        count: number; 
+        reward: string; 
+        secret?: boolean; 
+        status: 'completed' | 'active' | 'locked' 
+    } 
 }
 
 const MilestoneItem: React.FC<MilestoneProps> = ({ item }) => {
     let statusClass = "";
     let icon;
     let textClass = "text-gray-300";
-
+    
     if (item.status === 'completed') {
         statusClass = "bg-green-500/10 border-green-500/30";
         icon = <div className="text-green-400"><CheckIcon /></div>;
@@ -381,7 +455,7 @@ const MilestoneItem: React.FC<MilestoneProps> = ({ item }) => {
         `}>
             {/* Status Bubble */}
             <div className={`
-                flex-shrink-0 w-14 h-14 flex flex-col items-center justify-center rounded-2xl
+                flex-shrink-0 w-14 h-14 flex flex-col items-center justify-center rounded-2xl 
                 bg-black/40 border border-white/5 font-sans
             `}>
                 <span className={`text-lg font-extrabold leading-none ${item.status === 'active' ? 'text-brand-accent' : 'text-gray-400'}`}>
@@ -393,8 +467,8 @@ const MilestoneItem: React.FC<MilestoneProps> = ({ item }) => {
             {/* Content */}
             <div className="flex-1 flex items-center justify-between">
                 <div className={`font-sans text-lg tracking-tight ${textClass}`}>
-                    {item.secret && item.status !== 'completed'
-                        ? <span className="text-brand-accent font-black tracking-wider uppercase text-sm italic">??? Top Secret ???</span>
+                    {item.secret && item.status !== 'completed' 
+                        ? <span className="text-brand-accent font-black tracking-wider uppercase text-sm italic">??? Top Secret ???</span> 
                         : item.reward
                     }
                 </div>
@@ -422,120 +496,50 @@ const InfoCard: React.FC<{ title: string; children: React.ReactNode; className?:
 
 // --- MODALS ---
 
-const ContributionHistorySection: React.FC<{ events: any[] }> = ({ events }) => {
-    const [page, setPage] = useState(1);
-    const [filter, setFilter] = useState('all');
-    const [searchQuery, setSearchQuery] = useState('');
-    const itemsPerPage = 20;
-
-    const filteredEvents = events.filter(e => {
-        let textMatched = true;
-        if (searchQuery) {
-            textMatched = e.user?.toLowerCase().includes(searchQuery.toLowerCase());
-        }
-
-        if (!textMatched) return false;
-
-        if (filter === 'all') return true;
-        if (filter === 'sub' && (e.type.toLowerCase() === 'sub' || e.type.toLowerCase() === 'subscriber')) return true;
-        if (filter === 'gift' && e.type.toLowerCase() === 'gift') return true;
-        if (filter === 'bits' && (e.type.toLowerCase() === 'bits' || e.type.toLowerCase() === 'cheer')) return true;
-        if (filter === 'donation' && (e.type.toLowerCase() === 'donation' || e.type.toLowerCase() === 'tip')) return true;
-        if (filter === 'follow' && (e.type.toLowerCase() === 'follower' || e.type.toLowerCase() === 'follow')) return true;
-        return false;
-    });
-
-    const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
-    const currentEvents = filteredEvents.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
-    const filterOptions = [
-        { id: 'all', label: 'All Events' },
-        { id: 'sub', label: 'Subs' },
-        { id: 'gift', label: 'Gifts' },
-        { id: 'bits', label: 'Bits' },
-        { id: 'donation', label: 'Donations' },
-        { id: 'follow', label: 'Follows' }
-    ];
-
+const ContributorsModal: React.FC<{ onClose: () => void; events: any[] }> = ({ onClose, events }) => {
     return (
-        <div className="w-full bg-[#1a0b0e]/80 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative mt-16 backdrop-blur-md">
-            <div className="p-6 border-b border-white/10 flex flex-col gap-4 bg-black/20 shrink-0">
-                <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-[#1a0b0e] w-full max-w-2xl max-h-[80vh] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500">
+                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
                     <div>
                         <h2 className="text-2xl font-black text-white tracking-tight">Contribution History</h2>
+                        <p className="text-sm text-gray-400">Thank you to everyone supporting the Nisathon!</p>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <input
-                            type="text"
-                            placeholder="Filter by name..."
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                            className="bg-black/50 text-white text-sm px-4 py-2 rounded-xl border border-white/10 outline-none focus:border-brand-primary w-full sm:w-64 placeholder:text-gray-500"
-                        />
-                    </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {filterOptions.map(opt => (
-                        <button
-                            key={opt.id}
-                            onClick={() => { setFilter(opt.id); setPage(1); }}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${filter === opt.id ? 'bg-brand-primary text-white shadow-[0_0_15px_rgba(229,56,59,0.3)] border border-brand-primary/50' : 'bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10 hover:text-white'}`}
-                        >
-                            {opt.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar min-h-[400px]">
-                {currentEvents.length === 0 ? (
-                    <div className="text-center text-gray-500 py-10">No events found matching your filter.</div>
-                ) : (
-                    currentEvents.map((event) => (
-                        <div key={event._id || Math.random().toString()} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${getEventColor(event.type)}`}>
-                                {getEventIcon(event.type)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-baseline mb-1">
-                                    <span className="font-bold text-white truncate text-lg">{event.user}</span>
-                                    <span className="text-xs text-gray-500 font-mono">{formatTimeAgo(event.createdAt || new Date().toISOString())}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${getEventColor(event.type).split(' ')[0]} bg-black/30`}>
-                                        {event.type}
-                                    </span>
-                                    <span className="text-sm font-bold text-gray-300">
-                                        {event.amountDisplay}
-                                    </span>
-                                </div>
-                                {event.message && (
-                                    <p className="text-xs text-gray-400 mt-2 italic border-l-2 border-white/10 pl-2">"{event.message}"</p>
-                                )}
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-            
-            {totalPages > 1 && (
-                <div className="p-4 border-t border-white/10 bg-black/20 flex justify-center items-center gap-4 shrink-0">
-                    <button 
-                        disabled={page === 1} 
-                        onClick={() => setPage(p => p - 1)}
-                        className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold text-white transition-colors"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-sm text-gray-400 font-medium">Page {page} of {totalPages}</span>
-                    <button 
-                        disabled={page === totalPages} 
-                        onClick={() => setPage(p => p + 1)}
-                        className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold text-white transition-colors"
-                    >
-                        Next
+                    <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 hover:text-brand-primary transition-colors">
+                        <CloseIcon />
                     </button>
                 </div>
-            )}
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                    {events.length === 0 ? (
+                        <div className="text-center text-gray-500 py-10">No events found yet.</div>
+                    ) : (
+                        events.map((event) => (
+                            <div key={event._id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${getEventColor(event.type)}`}>
+                                    {getEventIcon(event.type)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <span className="font-bold text-white truncate text-lg">{event.user}</span>
+                                        <span className="text-xs text-gray-500 font-mono">{formatTimeAgo(event.createdAt)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase ${getEventColor(event.type).split(' ')[0]} bg-black/30`}>
+                                            {event.type}
+                                        </span>
+                                        <span className="text-sm font-bold text-gray-300">
+                                            {event.amountDisplay}
+                                        </span>
+                                    </div>
+                                    {event.message && (
+                                        <p className="text-xs text-gray-400 mt-2 italic border-l-2 border-white/10 pl-2">"{event.message}"</p>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
@@ -587,62 +591,36 @@ const TopContributorsModal: React.FC<{ onClose: () => void; contributors: any[] 
     );
 };
 
-const ArchiveNisathon: React.FC = () => {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
-    // Archived stats - loaded once, no polling
-    const [archivedStats, setArchivedStats] = useState<{
-        currentSubs: number;
-        currentBits: number;
-        currentDonations: number;
-        totalNisaballs: number;
-    } | null>(archiveData.stats as any);
-
-    const [eventName, setEventName] = useState('Nisathon Dashboard');
-
+const Nisathon: React.FC = () => {
+    const [showContributorsModal, setShowContributorsModal] = useState(false);
     const [showTopContributorsModal, setShowTopContributorsModal] = useState(false);
+    const [showDonatePopup, setShowDonatePopup] = useState(false);
+    const { goals } = useNisathonGoals();
+    const { stats, leaderboard, recentEvents } = useNisathonStats();
 
-    // Leaderboard for archived event
-    const [leaderboard, setLeaderboard] = useState<{rank: number; user: string; totalNisaballs: number}[]>(archiveData.leaderboard as any);
+    // --- CENTRAL STATE ---
+    const currentSubs = stats.currentSubs;
+    const currentBits = stats.currentBits;
+    const currentDonations = stats.currentDonations;
+    const totalNisaballs = stats.totalNisaballs;
 
-    // Recent events for archived event
-    const [events, setEvents] = useState<{
-        _id: string;
-        user: string;
-        type: string;
-        amountDisplay: string;
-        message: string;
-        createdAt: string;
-        nisaballAmount: number;
-    }[]>(archiveData.events as any);
+    // --- BREAKDOWN CALCULATIONS ---
+    const nbFromSubs = currentSubs / (stats.subsRate || 2);
+    const nbFromBits = currentBits / (stats.bitsRate || 500);
+    const nbFromDonations = currentDonations / (stats.donationRate || 5);
 
-    useEffect(() => {
-        // Data is now loaded synchronously from local json file
-        setLoading(false);
-    }, []);
-
-    // Calculations
-    const currentSubs = archivedStats?.currentSubs ?? 0;
-    const currentBits = archivedStats?.currentBits ?? 0;
-    const currentDonations = archivedStats?.currentDonations ?? 0;
-    const totalNisaballs = archivedStats?.totalNisaballs ?? 0;
-
-    const nbFromSubs = currentSubs * 0.5;
-    const nbFromBits = currentBits * 0.002;
-    const nbFromDonations = currentDonations * 0.2;
-
-    // Processed milestones with completed/active states based on archived final totals
+    // --- SYNC MILESTONE LOGIC ---
     let nextActiveFound = false;
-    let nextGoal = 1000;
+    let nextGoal = 1000; 
     let nextGoalLabel = "All Goals Completed!";
 
-    const processedMilestones = DEFAULT_NISATHON_GOALS.map(m => {
+    const processedMilestones = goals.map(m => {
         if (totalNisaballs >= m.count) {
             return { ...m, status: 'completed' as const };
         } else if (!nextActiveFound) {
             nextActiveFound = true;
-            nextGoal = m.count;
+            nextGoal = m.count; 
             nextGoalLabel = m.secret ? "Top Secret Goal" : m.reward;
             return { ...m, status: 'active' as const };
         } else {
@@ -665,34 +643,43 @@ const ArchiveNisathon: React.FC = () => {
                 .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(229, 56, 59, 0.5); border-radius: 10px; }
             `}</style>
-
+            
             <div className="absolute inset-0 bg-rose-pattern opacity-10 pointer-events-none z-0"></div>
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none"></div>
 
+            {showContributorsModal && <ContributorsModal onClose={() => setShowContributorsModal(false)} events={recentEvents} />}
             {showTopContributorsModal && <TopContributorsModal onClose={() => setShowTopContributorsModal(false)} contributors={leaderboard} />}
 
             <div className="max-w-7xl mx-auto px-4 relative z-10 space-y-12 animate-in fade-in duration-700">
-
-                {/* 1. HEADER & ARCHIVED BADGE */}
+                
+                {/* 1. HEADER & TIMER */}
                 <div className="flex flex-col items-center justify-center space-y-10">
                     <div className="text-center space-y-3">
-                        <div className="inline-block bg-amber-500/20 px-4 py-1 rounded-full border border-amber-500/30 mb-2">
-                            <span className="text-amber-400 font-black text-xs uppercase tracking-widest">ARCHIVED CONTENT</span>
-                        </div>
                         <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-2xl">
-                            <span className="text-brand-primary">UNCAPPED</span> BIRTHDAY NISATHON
+                            <span className="text-brand-primary">FAREWELL</span> NISATHON 
                         </h1>
                         <div className="inline-flex items-center gap-2 bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
-                             <h2 className="text-lg md:text-xl font-bold text-brand-accent tracking-widest uppercase">{eventName}</h2>
+                             <h2 className="text-lg md:text-xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Dashboard</h2>
                         </div>
                     </div>
+                    {/* Use Live Timer from Backend OR Show ENDED card */}
+                    {stats.isEnded ? (
+                        <div className="bg-gradient-to-r from-brand-primary to-brand-secondary p-8 rounded-3xl border-4 border-white/20 shadow-[0_0_50px_rgba(229,56,59,0.5)] text-center animate-in zoom-in duration-500 max-w-2xl w-full">
+                            <h2 className="text-4xl md:text-6xl font-black text-white drop-shadow-lg tracking-tighter">
+                                NISATHON HAS ENDED!
+                            </h2>
+                            <p className="text-white/80 font-bold uppercase tracking-widest mt-2 text-lg">Thank you for all the support!</p>
+                        </div>
+                    ) : (
+                        <Timer endTime={stats.timerEndTime} isPaused={stats.isPaused} remainingTimeMs={stats.remainingTimeMs} />
+                    )}
                 </div>
 
                 <div className="space-y-16">
                     {/* 2. PROGRESS SECTION */}
                     <div className="w-full">
-                        <NisaballWidget
+                        <NisaballWidget 
                             currentSubs={currentSubs}
                             currentBits={currentBits}
                             currentDonations={currentDonations}
@@ -702,14 +689,15 @@ const ArchiveNisathon: React.FC = () => {
                             nbFromSubs={nbFromSubs}
                             nbFromBits={nbFromBits}
                             nbFromDonations={nbFromDonations}
-                            eventName={eventName}
                             className="h-full"
+                            stats={stats}
+                            onDonateClick={() => setShowDonatePopup(true)}
                         />
                     </div>
 
                     {/* 3. MAIN CONTENT SPLIT */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
+                        
                         {/* LEFT: ROADMAP */}
                         <div className="lg:col-span-2 space-y-8">
                             <div className="flex items-center gap-6 mb-6 px-2">
@@ -737,7 +725,7 @@ const ArchiveNisathon: React.FC = () => {
                             >
                                 <div className="space-y-3 relative">
                                     {leaderboard.length === 0 ? (
-                                        <div className="text-center text-sm text-gray-500 py-2">No contributor data</div>
+                                        <div className="text-center text-sm text-gray-500 py-2">No contributors yet</div>
                                     ) : (
                                         leaderboard.slice(0, 3).map((user) => {
                                             let rankColor = "bg-white/5 text-gray-400";
@@ -768,35 +756,65 @@ const ArchiveNisathon: React.FC = () => {
                                 </div>
                             </InfoCard>
 
+                            <InfoCard 
+                                title="Latest Contribution" 
+                                className="group hover:ring-2 hover:ring-brand-primary/30"
+                                onClick={() => setShowContributorsModal(true)}
+                             >
+                                <div className="space-y-3 relative">
+                                    {recentEvents.length === 0 ? (
+                                        <div className="text-center text-sm text-gray-500 py-2">No recent events</div>
+                                    ) : (
+                                        recentEvents.slice(0, 1).map((event) => (
+                                            <div key={event._id} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${getEventColor(event.type)}`}>
+                                                    {getEventIcon(event.type, "w-4 h-4")}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-baseline">
+                                                        <span className="text-xs font-bold text-white truncate">{event.user}</span>
+                                                        <span className="text-[10px] text-gray-500">{formatTimeAgo(event.createdAt)}</span>
+                                                    </div>
+                                                    <div className="text-[10px] font-bold text-brand-primary">{event.amountDisplay}</div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                    <div className="pt-2 text-center">
+                                        <span className="text-xs font-bold text-gray-400 group-hover:text-brand-primary transition-colors flex items-center justify-center gap-1">
+                                            See all history <span className="transform group-hover:translate-x-1 transition-transform">→</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </InfoCard>
+
                             <InfoCard title="Nisaballs Currency">
                                 <ul className="space-y-4 font-sans text-sm flex-1">
-                                    {CURRENCY_RATES.map((rate, idx) => (
-                                        <li key={idx} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                                            <span className="text-brand-accent font-bold">{rate.label}</span>
-                                            <span className="text-gray-500 font-bold text-lg">→</span>
-                                            <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">{rate.value}</span>
-                                        </li>
-                                    ))}
+                                    
+                                    <li className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                        <span className="text-brand-accent font-bold">${stats.donationRate || 5} USD</span>
+                                        <span className="text-gray-500 font-bold text-lg">→</span>
+                                        <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">1 Nisaball</span>
+                                    </li>
+                                    <li className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                        <span className="text-brand-accent font-bold">{stats.subsRate || 2} Subs</span>
+                                        <span className="text-gray-500 font-bold text-lg">→</span>
+                                        <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">1 Nisaball</span>
+                                    </li>
+                                    <li className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                                        <span className="text-brand-accent font-bold">{stats.bitsRate || 500} Bits</span>
+                                        <span className="text-gray-500 font-bold text-lg">→</span>
+                                        <span className="text-white font-bold bg-black/30 px-2 py-1 rounded-lg">1 Nisaball</span>
+                                    </li>
+
                                 </ul>
                                 <div className="mt-6 p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-center">
                                     <div className="text-brand-primary font-bold text-xs uppercase tracking-wider mb-2">Timer Add</div>
-                                    <div className="text-white font-black text-lg">{TIMER_CONVERSION}</div>
+                                    <div className="text-white font-black text-lg">1 Nisaball = {stats.timePerNb || 10} Minutes</div>
                                 </div>
                             </InfoCard>
 
                             <InfoCard title="Event Rewards">
-                                <div className="mb-6">
-                                    <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Top 3 Supporters</h4>
-                                    <div className="text-center mb-3 text-4xl drop-shadow-lg filter grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-500 cursor-default">🌹</div>
-                                    <ul className="space-y-2 text-gray-200">
-                                        {TOP_REWARDS.map((reward, idx) => (
-                                            <li key={idx} className="bg-black/20 py-2 rounded-xl border border-white/5 font-medium text-sm text-center">{reward}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                                <div className="h-px bg-white/10 my-6 flex items-center justify-center">
-                                    <div className="w-2 h-2 rounded-full bg-white/20"></div>
-                                </div>
                                 <div>
                                     <h4 className="text-brand-primary text-xs font-bold uppercase tracking-wider mb-3 text-center opacity-80">Personalised Rewards</h4>
                                     <ul className="space-y-3 text-sm">
@@ -812,12 +830,59 @@ const ArchiveNisathon: React.FC = () => {
 
                         </div>
                     </div>
-                    
-                    <ContributionHistorySection events={events} />
                 </div>
             </div>
+
+            {/* Donate Popup Modals */}
+            {showDonatePopup && (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" 
+                    onClick={() => setShowDonatePopup(false)}
+                >
+                    <div 
+                        className="glass-card rounded-[30px] border border-white/10 p-6 md:p-8 max-w-sm w-full relative shadow-2xl" 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button 
+                            onClick={() => setShowDonatePopup(false)} 
+                            className="absolute top-6 right-6 text-white/50 hover:text-brand-primary p-2 bg-black/40 rounded-full transition-colors"
+                        >
+                            <CloseIcon />
+                        </button>
+                        
+                        <div className="text-center mb-8 mt-2">
+                            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4">
+                                <DollarIcon />
+                            </div>
+                            <h3 className="text-xl font-bold text-white tracking-wide">Donate</h3>
+                            <p className="text-gray-400 text-sm mt-1">Choose your preferred platform</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <a 
+                                href="https://streamelements.com/urnisa_/tip"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-gradient-to-r from-purple-900/30 to-blue-900/30 hover:from-purple-900/50 hover:to-blue-900/50 border border-purple-500/30 hover:border-blue-500/50 text-gray-300 hover:text-white p-4 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 group hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] cursor-pointer"
+                            >
+                                <span className="text-purple-400/70 text-[10px] md:text-xs mb-1 uppercase tracking-widest font-bold group-hover:text-purple-300 transition-colors">For International Viewers</span>
+                                <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:to-blue-300">Streamelements</span>
+                            </a>
+                            <a 
+                                href="https://sociabuzz.com/urnisa"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-gradient-to-r from-emerald-900/30 to-blue-900/30 hover:from-emerald-900/50 hover:to-blue-900/50 border border-emerald-500/30 hover:border-blue-500/50 text-gray-300 hover:text-white p-4 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 group hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] cursor-pointer"
+                            >
+                                <span className="text-emerald-400/70 text-[10px] md:text-xs mb-1 uppercase tracking-widest font-bold group-hover:text-emerald-300 transition-colors">For SEA Viewers</span>
+                                <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent group-hover:from-emerald-300 group-hover:to-blue-300">Sociabuzz</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
-export default ArchiveNisathon;
+export default Nisathon;

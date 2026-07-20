@@ -174,12 +174,12 @@ const AdminIcons = {
     ),
     // Event Type Icons
     EventSub: () => (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
     ),
     EventGift: () => (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 12 20 22 4 22 4 12" />
             <rect x="2" y="7" width="20" height="5" />
             <line x1="12" y1="22" x2="12" y2="7" />
@@ -188,14 +188,12 @@ const AdminIcons = {
         </svg>
     ),
     EventBits: () => (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 2 7 12 12 22 7 12 2" />
-            <polyline points="2 17 12 22 22 17" />
-            <polyline points="2 12 12 17 22 12" />
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path fillRule="evenodd" d="M12 2.25c-.297 0-.58.14-.757.377L2.25 14.25l9 7.5a1.125 1.125 0 0 0 1.5 0l9-7.5-8.993-11.623a1.125 1.125 0 0 0-.757-.377ZM3.536 13.5l7.714-9.971v9.971H3.536Zm8.464-9.971 7.714 9.971H12V3.529Z" clipRule="evenodd" />
         </svg>
     ),
     EventDono: () => (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="1" x2="12" y2="23" />
             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
@@ -561,6 +559,49 @@ const Admin: React.FC = () => {
     const [snakesQueue, setSnakesQueue] = useState<{ _id: string; user: string; avatarUrl?: string; type: string; createdAt: string }[]>([]);
     const [snakesQueueFilter, setSnakesQueueFilter] = useState('');
 
+    const [currencySettings, setCurrencySettings] = useState({
+        subsRate: 2,
+        bitsRate: 500,
+        donationRate: 5,
+        timePerNb: 10
+    });
+
+    useEffect(() => {
+        if (stats) {
+            setCurrencySettings({
+                subsRate: stats.subsRate || 2,
+                bitsRate: stats.bitsRate || 500,
+                donationRate: stats.donationRate || 5,
+                timePerNb: stats.timePerNb || 10
+            });
+        }
+    }, [stats.subsRate, stats.bitsRate, stats.donationRate, stats.timePerNb]);
+
+    const handleSaveCurrencySettings = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/nisathon/settings`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password || ''
+                },
+                body: JSON.stringify(currencySettings)
+            });
+            if (response.ok) {
+                setManagerStatus({ type: 'success', message: 'Settings saved successfully!' });
+                setTimeout(() => setManagerStatus(null), 3000);
+                refetchStats();
+            } else {
+                setManagerStatus({ type: 'error', message: 'Failed to save settings: Unauthorized or invalid password.' });
+                setTimeout(() => setManagerStatus(null), 3000);
+            }
+        } catch (e) {
+            setManagerStatus({ type: 'error', message: 'Failed to save settings due to a network error.' });
+            setTimeout(() => setManagerStatus(null), 3000);
+        }
+    };
+
+
     // --- EFFECTS ---
     useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
     useEffect(() => {
@@ -622,8 +663,8 @@ const Admin: React.FC = () => {
     // Fetch Logs when on manager tab - Increased Limit
     const fetchEventLog = async () => {
         try {
-            // Fetch 500 most recent events from backend
-            const res = await fetch(`${API_BASE_URL}/api/nisathon/recent?limit=500`);
+            // Fetch 5000 most recent events from backend
+            const res = await fetch(`${API_BASE_URL}/api/nisathon/recent?limit=5000`);
             if (res.ok) setRecentEvents(await res.json());
         } catch (e) { }
     };
@@ -1801,6 +1842,122 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 </div>
                             </div>
                             
+                            
+                            {/* Nisaball Currency Settings */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-6 rounded-3xl border border-white/10 shadow-2xl mb-8 flex flex-col">
+                                <h3 className="font-black text-white text-2xl tracking-tight mb-6 flex items-center gap-3">
+                                    <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                        </svg>
+                                    </span>
+                                    Currency Settings
+                                </h3>
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {/* Subs per NB */}
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5 flex flex-col justify-between gap-3">
+                                        <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-widest text-center">Subs per NB</label>
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, subsRate: (currencySettings.subsRate || 0) + 1 })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <input 
+                                                type="number" 
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-2 text-center text-white text-lg font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" 
+                                                value={currencySettings.subsRate} 
+                                                onChange={(e) => setCurrencySettings({ ...currencySettings, subsRate: Math.max(1, Number(e.target.value) || 0) })} 
+                                            />
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, subsRate: Math.max(1, (currencySettings.subsRate || 0) - 1) })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Bits per NB */}
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5 flex flex-col justify-between gap-3">
+                                        <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-widest text-center">Bits per NB</label>
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, bitsRate: (currencySettings.bitsRate || 0) + 50 })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <input 
+                                                type="number" 
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-2 text-center text-white text-lg font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" 
+                                                value={currencySettings.bitsRate} 
+                                                onChange={(e) => setCurrencySettings({ ...currencySettings, bitsRate: Math.max(1, Number(e.target.value) || 0) })} 
+                                            />
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, bitsRate: Math.max(1, (currencySettings.bitsRate || 0) - 50) })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Donation ($) per NB */}
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5 flex flex-col justify-between gap-3">
+                                        <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-widest text-center">Dono ($) per NB</label>
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, donationRate: (currencySettings.donationRate || 0) + 1 })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <input 
+                                                type="number" 
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-2 text-center text-white text-lg font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" 
+                                                value={currencySettings.donationRate} 
+                                                onChange={(e) => setCurrencySettings({ ...currencySettings, donationRate: Math.max(1, Number(e.target.value) || 0) })} 
+                                            />
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, donationRate: Math.max(1, (currencySettings.donationRate || 0) - 1) })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Minutes per NB */}
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5 flex flex-col justify-between gap-3">
+                                        <label className="text-[10px] text-brand-primary font-extrabold uppercase tracking-widest text-center">Mins per NB</label>
+                                        <div className="flex flex-col items-center gap-1.5">
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, timePerNb: (currencySettings.timePerNb || 0) + 1 })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            </button>
+                                            <input 
+                                                type="number" 
+                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-2 text-center text-white text-lg font-mono focus:border-brand-primary outline-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] transition-colors" 
+                                                value={currencySettings.timePerNb} 
+                                                onChange={(e) => setCurrencySettings({ ...currencySettings, timePerNb: Math.max(1, Number(e.target.value) || 0) })} 
+                                            />
+                                            <button 
+                                                onClick={() => setCurrencySettings({ ...currencySettings, timePerNb: Math.max(1, (currencySettings.timePerNb || 0) - 1) })} 
+                                                className="w-full bg-white/5 hover:bg-brand-primary/20 border border-white/10 hover:border-brand-primary/50 text-gray-400 hover:text-brand-primary py-1 rounded-lg transition-all flex justify-center hover:scale-[1.02]"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={handleSaveCurrencySettings} className="mt-6 bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-6 rounded-xl transition-all self-start shadow-lg">Save Settings</button>
+                            </div>
+
                             {/* Revamped Event Log */}
                             <div className="bg-white/5 backdrop-blur-3xl p-6 rounded-3xl border border-white/10 shadow-2xl h-[600px] flex flex-col">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">

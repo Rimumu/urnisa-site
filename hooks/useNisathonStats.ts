@@ -11,7 +11,11 @@ export interface NisathonStatsData {
     isPaused: boolean;
     remainingTimeMs?: number;
     activeEvent?: string | null; // e.g. "DOUBLE_TIMER"
-    isEnded?: boolean; // New field
+    isEnded?: boolean;
+    subsRate?: number;
+    bitsRate?: number;
+    donationRate?: number;
+    timePerNb?: number;
 }
 
 export interface TopContributor {

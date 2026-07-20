@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useWheelGame } from '../../hooks/useWheelGame';
 
+const WheelIcon = ({ className = "w-6 h-6 text-[#fda4af]" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="2" x2="12" y2="22" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+        <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+        <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+    </svg>
+);
+
 const SpinWidget: React.FC = () => {
     const { history: wheelHistory } = useWheelGame();
     const latest = wheelHistory[0];
@@ -38,8 +49,8 @@ const SpinWidget: React.FC = () => {
 
             {latest ? (
                 <div className="w-full max-w-md relative flex items-center gap-4 p-4 rounded-2xl border border-[#fda4af] bg-gradient-to-r from-[#9f1239]/90 to-black/90 shadow-[0_0_20px_rgba(251,113,133,0.25)] overflow-hidden">
-                    <div className="w-12 h-12 rounded-xl bg-black/40 border border-[#fda4af]/30 flex items-center justify-center text-2xl shrink-0 shadow-inner z-10">
-                        🎡
+                    <div className="w-12 h-12 rounded-xl bg-black/40 border border-[#fda4af]/30 flex items-center justify-center shrink-0 shadow-inner z-10">
+                        <WheelIcon />
                     </div>
                     <div className="flex-1 min-w-0 z-10">
                         <div className="flex justify-between items-center mb-0.5">
@@ -56,8 +67,8 @@ const SpinWidget: React.FC = () => {
                 </div>
             ) : (
                 <div className="w-full max-w-md relative flex items-center gap-4 p-4 rounded-2xl border border-white/10 bg-black/40 opacity-50">
-                     <div className="w-12 h-12 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-2xl shrink-0">
-                        🎡
+                     <div className="w-12 h-12 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center shrink-0">
+                        <WheelIcon className="w-6 h-6 text-gray-500" />
                     </div>
                     <div className="flex-1">
                         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Last Spin</div>

@@ -72,6 +72,7 @@ const About: React.FC = () => {
     const [typingSpeed, setTypingSpeed] = useState(150);
 
     const [showSpecs, setShowSpecs] = useState(false);
+    const [showDonatePopup, setShowDonatePopup] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
@@ -327,15 +328,13 @@ const About: React.FC = () => {
                                 <span className="truncate">@urnisa</span>
                                 <CopyIcon />
                             </button>
-                            <a 
-                                href="https://streamelements.com/urnisa_/tip"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <button 
+                                onClick={() => setShowDonatePopup(true)}
                                 className="w-full bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 hover:border-emerald-500/60 text-emerald-400 hover:text-emerald-300 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] text-sm cursor-pointer"
                             >
                                 <DollarIcon />
                                 <span>Donate</span>
-                            </a>
+                            </button>
                         </div>
 
                         <button 
@@ -609,6 +608,55 @@ const About: React.FC = () => {
                     {hasDiscordLoaded && <DiscordWidget serverId={DISCORD_SERVER_ID} />}
                 </div>
             </div>
+
+            {/* Donate Popup Modal */}
+            {showDonatePopup && (
+                <div 
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300" 
+                    onClick={() => setShowDonatePopup(false)}
+                >
+                    <div 
+                        className="glass-card rounded-[30px] border border-white/10 p-6 md:p-8 max-w-sm w-full relative shadow-2xl" 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <button 
+                            onClick={() => setShowDonatePopup(false)} 
+                            className="absolute top-6 right-6 text-white/50 hover:text-brand-primary p-2 bg-black/40 rounded-full transition-colors"
+                        >
+                            <CloseIcon />
+                        </button>
+                        
+                        <div className="text-center mb-8 mt-2">
+                            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4">
+                                <DollarIcon />
+                            </div>
+                            <h3 className="text-xl font-bold text-white tracking-wide">Donate</h3>
+                            <p className="text-gray-400 text-sm mt-1">Choose your preferred platform</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <a 
+                                href="https://streamelements.com/urnisa_/tip"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-gradient-to-r from-purple-900/30 to-blue-900/30 hover:from-purple-900/50 hover:to-blue-900/50 border border-purple-500/30 hover:border-blue-500/50 text-gray-300 hover:text-white p-4 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 group hover:shadow-[0_0_15px_rgba(168,85,247,0.2)] cursor-pointer"
+                            >
+                                <span className="text-purple-400/70 text-[10px] md:text-xs mb-1 uppercase tracking-widest font-bold group-hover:text-purple-300 transition-colors">For International Viewers</span>
+                                <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:to-blue-300">Streamelements</span>
+                            </a>
+                            <a 
+                                href="https://sociabuzz.com/urnisa"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-gradient-to-r from-emerald-900/30 to-blue-900/30 hover:from-emerald-900/50 hover:to-blue-900/50 border border-emerald-500/30 hover:border-blue-500/50 text-gray-300 hover:text-white p-4 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 group hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] cursor-pointer"
+                            >
+                                <span className="text-emerald-400/70 text-[10px] md:text-xs mb-1 uppercase tracking-widest font-bold group-hover:text-emerald-300 transition-colors">For SEA Viewers</span>
+                                <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent group-hover:from-emerald-300 group-hover:to-blue-300">Sociabuzz</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

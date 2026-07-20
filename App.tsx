@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Subathon from './pages/Subathon';
+import Nisathon from './pages/Nisathon';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
 import MinecraftTeaser from './pages/MinecraftTeaser';
@@ -96,8 +96,8 @@ const App: React.FC = () => {
         <Route element={<MainLayout />}>
           <Route path="/" element={<About />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="/nisathonBACK" element={<Subathon />} />
-          <Route path="/nisathon/wheelBACK" element={<Wheel />} />
+          <Route path="/nisathon" element={<Nisathon />} />
+          <Route path="/nisathon/wheel" element={<Wheel />} />
           <Route path="/snakesladder" element={<SnakesLadder />} />
           <Route path="/minecraftBACK" element={<Minecraft />} />
           <Route path="/minecraft" element={<MinecraftTeaser />} />
