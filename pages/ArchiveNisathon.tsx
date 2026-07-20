@@ -720,7 +720,6 @@ const ArchiveNisathon: React.FC = () => {
                             </div>
 
                             <div className="space-y-4 relative pl-4 md:pl-0">
-                                <div className="absolute left-[3.2rem] md:left-[3.25rem] top-8 bottom-8 w-[2px] bg-gradient-to-b from-brand-accent/50 via-white/10 to-transparent hidden md:block"></div>
                                 {processedMilestones.map((milestone, idx) => (
                                     <MilestoneItem key={idx} item={milestone} />
                                 ))}
