@@ -2053,11 +2053,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <button onClick={handleEndNisathon} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-all duration-300 w-full ${confirmEnd ? 'bg-red-700 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.8)] scale-[1.02] border border-red-500' : 'bg-red-900/60 hover:bg-red-700 border border-red-900/50 hover:border-red-500/50'}`}>
                                     {confirmEnd ? "ARE YOU SURE? CLICK TO END NISATHON" : "END NISATHON"}
                                 </button>
-                                {stats.isEnded && (
-                                    <button onClick={handleStartNisathon} className="px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white bg-green-600 hover:bg-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300 w-full border border-green-500/30">
-                                        START / RESUME NISATHON
-                                    </button>
-                                )}
+                                <button onClick={handleStartNisathon} className="px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white bg-green-600 hover:bg-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300 w-full border border-green-500/30">
+                                    START / RESUME NISATHON
+                                </button>
                             </div>
                         </div>
                     )}
