@@ -565,7 +565,7 @@ const MinecraftDev: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Gacha Pack - DISABLED */}
+                    {/* Gacha Crate - DISABLED */}
                     <div className="block flex-1 bg-black/20 backdrop-blur-sm border border-white/5 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group cursor-not-allowed opacity-70 grayscale">
                         {/* Coming Soon Overlay */}
                         <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center">
@@ -580,15 +580,15 @@ const MinecraftDev: React.FC = () => {
                             <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner">
                                 🥩
                             </div>
-                            <h2 className="text-2xl font-black text-white uppercase tracking-wide">Gacha Pack</h2>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-wide">Gacha Crate</h2>
                         </div>
 
                         <p className="text-gray-500 font-medium leading-relaxed">
-                            Slice up some lamb chop and wagyu packs and see if you will get flavorful rewards!
+                            Try your luck and open a lamb or steak loot crate to see if you'll get some delicious rewards!
                         </p>
 
                         <div className="mt-6 flex items-center text-gray-600 font-bold text-sm uppercase tracking-wider">
-                            Open Packs <span className="ml-2">→</span>
+                            Open Crates <span className="ml-2">→</span>
                         </div>
                     </div>
                 </div>

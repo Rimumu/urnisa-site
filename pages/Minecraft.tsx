@@ -192,16 +192,14 @@ const Minecraft: React.FC = () => {
             <div className="flex flex-col items-center text-center space-y-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-16">
                 <div className="relative z-10">
                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight drop-shadow-2xl">
-                        WELCOME TO <span className="text-brand-primary">URNISA</span> MINECRAFT
-                        <br />
-                        <span className="text-[#60a5fa] drop-shadow-[0_0_10px_rgba(96,165,250,0.5)]">COBBLEMON</span> SERVER
+                        WELCOME TO <span className="text-red-500">NISAMON</span>
                     </h1>
                     {/* Decorative element behind title */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-brand-primary/5 blur-[60px] -z-10 rounded-full"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-red-500/5 blur-[60px] -z-10 rounded-full"></div>
                 </div>
 
                 <p className="text-gray-300 max-w-2xl text-lg md:text-xl px-4">
-                    Embark on a journey with nisa and use your balls with her to catch some little gremlins. Well... some are big.
+                    This is urnisa's Minecraft cobblemon server where you can embark on a journey with nisa and use your balls with her to catch some little gremlins. Well... some are big!
                 </p>
 
                 {/* Server IP Box */}
@@ -246,78 +244,76 @@ const Minecraft: React.FC = () => {
 
                 {/* New Navigation Boxes */}
                 <div className="flex flex-col gap-6 h-full">
-                    {/* Bingo Card - ACTIVE */}
-                    <Link to="/minecraft/bingo" className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 hover:border-brand-primary/50 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#60a5fa]/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-[#60a5fa]/10 transition-colors"></div>
-
+                    {/* Bingo Card - DISABLED */}
+                    <div className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden opacity-50 cursor-not-allowed grayscale">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center text-2xl shadow-inner text-[#60a5fa]">
-                                🎫
+                            <div className="w-12 h-12 rounded-2xl bg-[#60a5fa]/20 flex items-center justify-center shadow-inner text-[#60a5fa]">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
                             </div>
-                            <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-[#60a5fa] transition-colors">Bingo Card</h2>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-wide">Bingo Card</h2>
                         </div>
 
                         <p className="text-gray-400 font-medium leading-relaxed">
                             Join the community bingo challenge with everyone and compete and finish first to win rewards on the server!
                         </p>
 
-                        <div className="mt-6 flex items-center text-brand-primary font-bold text-sm uppercase tracking-wider">
-                            View Dashboard <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                        <div className="mt-6 flex items-center text-gray-500 font-bold text-sm uppercase tracking-wider">
+                            COMING SOON
                         </div>
-                    </Link>
+                    </div>
 
                     {/* Gacha Pack - ACTIVE */}
                     <Link to="/minecraft/gacha" className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 hover:border-brand-primary/50 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-brand-accent/10 transition-colors"></div>
 
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center text-2xl shadow-inner text-brand-accent">
-                                🥩
+                            <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center shadow-inner text-brand-accent">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                             </div>
-                            <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-accent transition-colors">Gacha Pack</h2>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-accent transition-colors">Gacha Crate</h2>
                         </div>
 
                         <p className="text-gray-400 font-medium leading-relaxed">
-                            Slice up some lamb chop and wagyu packs and see if you will get flavorful rewards!
+                            Try your luck and open a lamb or steak loot crate to see if you'll get some delicious rewards!
                         </p>
 
                         <div className="mt-6 flex items-center text-brand-primary font-bold text-sm uppercase tracking-wider">
-                            Open Packs <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                            Open Crates <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
                         </div>
                     </Link>
 
-                    {/* Tournament - NEW ACTIVE */}
-                    <Link to="/minecraft/tournament" className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 hover:border-brand-primary/50 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-red-500/10 transition-colors"></div>
-
+                    {/* Tournament - DISABLED */}
+                    <div className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden opacity-50 cursor-not-allowed grayscale">
                         <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-red-500/20 flex items-center justify-center text-2xl shadow-inner text-red-500">
-                                ⚔️
+                            <div className="w-12 h-12 rounded-2xl bg-red-500/20 flex items-center justify-center shadow-inner text-red-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                             </div>
-                            <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-red-500 transition-colors">Tournament</h2>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-wide">Tournament</h2>
                         </div>
 
                         <p className="text-gray-400 font-medium leading-relaxed">
                             Compete and work your way up the brackets to be crowned the STEAK House Nisamon Champion!
                         </p>
 
-                        <div className="mt-6 flex items-center text-brand-primary font-bold text-sm uppercase tracking-wider">
-                            VIEW HUB <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                        <div className="mt-6 flex items-center text-gray-500 font-bold text-sm uppercase tracking-wider">
+                            COMING SOON
                         </div>
-                    </Link>
+                    </div>
                 </div>
 
                 {/* How to Join Section - UPDATED */}
                 <div className="bg-black/30 backdrop-blur-lg border border-white/10 p-8 rounded-[2.5rem] shadow-xl flex flex-col h-full">
                     <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-primary/20 flex items-center justify-center text-2xl">🎮</div>
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="2"/></svg>
+                        </div>
                         <h2 className="text-2xl font-bold text-white">How to Join</h2>
                     </div>
 
                     <div className="space-y-6 relative">
                         <div className="absolute left-[19px] top-8 bottom-8 w-0.5 bg-white/10 -z-10"></div>
                         {[
-                            { step: 1, title: "Download Modpack", desc: "Get the Cobblemon Academy modpack below." },
+                            { step: 1, title: "Download Modpack", desc: "Get the Cobbleverse Nisamon modpack below." },
                             { step: 2, title: "Get Whitelisted", desc: "Apply below to get whitelisted to the server." },
                             { step: 3, title: "Launch Game", desc: "Launch Minecraft with the modpack and go to Multiplayer." },
                             { step: 4, title: "Connect", desc: `Add server IP: ${SERVER_IP}` }
@@ -342,7 +338,7 @@ const Minecraft: React.FC = () => {
                             rel="noopener noreferrer"
                             className="flex items-center justify-center gap-2 w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg bg-[#f16436] hover:bg-[#d6552a] hover:scale-[1.02] shadow-orange-500/20"
                         >
-                            <CurseforgeLogo />
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                             Download Modpack
                         </a>
 

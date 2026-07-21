@@ -414,8 +414,8 @@ const PokemonAdminImage: React.FC<{ pokemon: { id: number; name: string } }> = (
 interface Code {
     _id: string;
     code: string;
-    type: 'lamb' | 'wagyu';
-    packAmount: number;
+    type: 'lamb' | 'steak';
+    keyAmount: number;
     usageType: string;
     usageCount: number;
     expiresAt?: string;
@@ -519,7 +519,7 @@ const Admin: React.FC = () => {
     // --- CODE GENERATION STATE ---
     const [genType, setGenType] = useState('lamb');
     const [genAmount, setGenAmount] = useState(1);
-    const [genPackAmount, setGenPackAmount] = useState(1);
+    const [genKeyAmount, setGenKeyAmount] = useState(1);
     const [genUsageType, setGenUsageType] = useState('once_global');
     const [genHours, setGenHours] = useState(12);
     const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
@@ -959,7 +959,7 @@ const Admin: React.FC = () => {
                 body: JSON.stringify({
                     type: genType,
                     amount: genAmount,
-                    packAmount: genPackAmount,
+                    keyAmount: genKeyAmount,
                     usageType: genUsageType,
                     hours: genHours
                 })
@@ -1239,6 +1239,9 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
             setTimeout(() => setConfirmEnd(false), 3000);
         }
     };
+
+    // NEW: Start Nisathon Handler
+    const handleStartNisathon = () => apiCall('nisathon/start', {});
 
     const handleDeleteEvent = (id: string, revert: boolean) => {
         apiCall('nisathon/delete-event', { id, revert });
@@ -2050,6 +2053,11 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <button onClick={handleEndNisathon} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-all duration-300 w-full ${confirmEnd ? 'bg-red-700 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.8)] scale-[1.02] border border-red-500' : 'bg-red-900/60 hover:bg-red-700 border border-red-900/50 hover:border-red-500/50'}`}>
                                     {confirmEnd ? "ARE YOU SURE? CLICK TO END NISATHON" : "END NISATHON"}
                                 </button>
+                                {stats.isEnded && (
+                                    <button onClick={handleStartNisathon} className="px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white bg-green-600 hover:bg-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300 w-full border border-green-500/30">
+                                        START / RESUME NISATHON
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )}
@@ -3000,13 +3008,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className="space-y-2">
                                         <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Type</label>
                                         <select value={genType} onChange={e => setGenType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors appearance-none">
-                                            <option value="lamb">Lamb Chop</option>
-                                            <option value="wagyu">Wagyu A5</option>
+                                            <option value="lamb">Lamb Crate Key</option>
+                                            <option value="wagyu">Steak Crate Key</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Packs per Code</label>
-                                        <input type="number" value={genPackAmount} onChange={e => setGenPackAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors" min="1" />
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Keys per Code</label>
+                                        <input type="number" value={genKeyAmount} onChange={e => setGenKeyAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors" min="1" />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Qty of Codes</label>
@@ -3051,7 +3059,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 <tr>
                                                     <th className="px-6 py-4">Code</th>
                                                     <th className="px-6 py-4">Type</th>
-                                                    <th className="px-6 py-4">Pack Qty</th>
+                                                    <th className="px-6 py-4">Key Qty</th>
                                                     <th className="px-6 py-4">Usage</th>
                                                     <th className="px-6 py-4">Redeemed</th>
                                                     <th className="px-6 py-4">Expires</th>
@@ -3067,7 +3075,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                                 {c.type}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-4 font-bold">{c.packAmount}</td>
+                                                        <td className="px-6 py-4 font-bold">{c.keyAmount}</td>
                                                         <td className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">{c.usageType.replace(/_/g, ' ')}</td>
                                                         <td className="px-6 py-4 font-bold">
                                                             <span className="bg-white/10 px-3 py-1 rounded-lg">{c.usageCount}</span>
