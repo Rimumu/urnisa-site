@@ -502,6 +502,11 @@ const Admin: React.FC = () => {
     const [approvedApps, setApprovedApps] = useState<any[]>([]);
     const [approvedSearch, setApprovedSearch] = useState('');
 
+    // --- MINECRAFT WIPE MAINTENANCE STATE ---
+    const [isWiping, setIsWiping] = useState(false);
+    const [wipeStatus, setWipeStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [wipeConfirmText, setWipeConfirmText] = useState('');
+
     // --- BINGO CONFIG STATE ---
     const [bingoCardId, setBingoCardId] = useState('');
     const [bingoWinCondition, setBingoWinCondition] = useState('');
@@ -1116,6 +1121,91 @@ const Admin: React.FC = () => {
         } finally { setLoading(false); }
     };
 
+    const handleWipeMinecraftData = async (scope: 'all' | 'inventory' | 'currency' | 'approved_users' | 'bingo' | 'tournament') => {
+        if (scope === 'all' && wipeConfirmText !== 'WIPE') {
+            alert("Please type 'WIPE' exactly to confirm the full database reset.");
+            return;
+        }
+
+        if (!window.confirm(`Are you absolutely sure you want to wipe ${scope === 'all' ? 'ALL previous Minecraft and Tournament data' : scope}? This action cannot be undone.`)) {
+            return;
+        }
+
+        setIsWiping(true);
+        setWipeStatus(null);
+
+        try {
+            let botSuccess = true;
+            let mainSuccess = true;
+            let botResults: any = null;
+            let mainResults: any = null;
+
+            // 1. Wipe Bot Server data (inventories, currencies, approved users)
+            if (scope === 'all' || scope === 'inventory' || scope === 'currency' || scope === 'approved_users') {
+                const res = await fetch(`${DISCORD_API_URL}/api/admin/maintenance/wipe-minecraft-data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': password
+                    },
+                    body: JSON.stringify({ scope: scope === 'all' ? 'all' : scope })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    botResults = data.results;
+                    console.log("Bot server wipe results:", botResults);
+                } else {
+                    botSuccess = false;
+                }
+            }
+
+            // 2. Wipe Main Server data (bingo, tournament data)
+            if (scope === 'all' || scope === 'bingo' || scope === 'tournament') {
+                const res = await fetch(`${API_BASE_URL}/api/admin/maintenance/wipe-minecraft-data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': password
+                    },
+                    body: JSON.stringify({ scope: scope === 'all' ? 'all' : scope })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    mainResults = data.results;
+                    console.log("Main server wipe results:", mainResults);
+                } else {
+                    mainSuccess = false;
+                }
+            }
+
+            if (botSuccess && mainSuccess) {
+                setWipeStatus({
+                    type: 'success',
+                    message: `Successfully wiped ${scope === 'all' ? 'all previous Minecraft data' : scope}!`
+                });
+                setWipeConfirmText('');
+                // Refetch whitelist and winners to update UI
+                fetchWhitelistData();
+                fetchBingoWinners();
+            } else {
+                setWipeStatus({
+                    type: 'error',
+                    message: `Wipe failed on one or more services. Please check backend logs.`
+                });
+            }
+        } catch (e: any) {
+            console.error("Wipe error", e);
+            setWipeStatus({
+                type: 'error',
+                message: `Failed to complete wipe: ${e.message}`
+            });
+        } finally {
+            setIsWiping(false);
+        }
+    };
+
     // TOURNAMENT HANDLERS REMOVED - Now in /admin/tournament
 
     // --- JSON MERGER HANDLER ---
@@ -1607,7 +1697,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         {
                             title: "Minecraft",
                             items: [
-                                { id: 'minecraft', label: 'Minecraft Whitelist', icon: AdminIcons.Game },
+                                { id: 'minecraft', label: 'Minecraft Dashboard', icon: AdminIcons.Game },
                                 { id: 'tournament', label: 'Tournament', icon: AdminIcons.Tournament },
                                 { id: 'codes', label: 'Gacha Codes', icon: AdminIcons.Codes },
                             ]
@@ -2800,7 +2890,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="flex justify-between items-center bg-white/5 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-xl">
                                 <h2 className="text-4xl font-black text-white tracking-tight flex items-center gap-4">
-                                    <span className="text-brand-primary"><AdminIcons.Game /></span> Minecraft Dash
+                                    <span className="text-brand-primary"><AdminIcons.Game /></span> Minecraft Dashboard
                                 </h2>
                                 <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -2831,10 +2921,33 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                         <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-0.5">Applied {new Date(app.appliedAt).toLocaleDateString()}</div>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3 bg-black/40 p-3 rounded-xl border border-white/5">
-                                                    <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/32`} alt="MC" className="w-8 h-8 rounded-md shadow-sm" />
-                                                    <span className="font-mono text-lg text-brand-primary font-bold truncate">{app.minecraftUsername}</span>
+
+                                                {/* Accounts Grid */}
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="flex items-center gap-2 bg-black/40 p-2.5 rounded-xl border border-white/5 min-w-0">
+                                                        <img src={`https://mc-heads.net/avatar/${app.minecraftUsername}/32`} alt="MC" className="w-6 h-6 rounded shadow-sm shrink-0" />
+                                                        <div className="min-w-0 flex flex-col">
+                                                            <span className="text-[9px] text-brand-primary font-extrabold uppercase tracking-wider leading-none">Minecraft</span>
+                                                            <span className="font-mono text-sm text-white font-bold truncate leading-snug mt-0.5" title={app.minecraftUsername}>{app.minecraftUsername}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 bg-black/40 p-2.5 rounded-xl border border-white/5 min-w-0">
+                                                        {app.twitchAvatar ? (
+                                                            <img src={app.twitchAvatar} alt="Twitch" className="w-6 h-6 rounded-full shrink-0" referrerPolicy="no-referrer" />
+                                                        ) : (
+                                                            <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                                                                <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                        <div className="min-w-0 flex flex-col">
+                                                            <span className="text-[9px] text-purple-400 font-extrabold uppercase tracking-wider leading-none">Twitch</span>
+                                                            <span className="font-sans text-sm text-white font-bold truncate leading-snug mt-0.5" title={app.twitchUsername || 'Linked'}>{app.twitchUsername || 'Linked'}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
+
                                                 <div className="grid grid-cols-2 gap-3 mt-auto pt-2">
                                                     <button onClick={() => handleApproveApp(app._id)} className="bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600 text-emerald-400 hover:text-white font-extrabold py-3 rounded-xl text-xs transition-all shadow-sm hover:shadow-[0_0_15px_rgba(16,185,129,0.3)]">APPROVE</button>
                                                     <button onClick={() => handleRejectApp(app._id)} className="bg-red-600/20 border border-red-500/30 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 rounded-xl text-xs transition-all shadow-sm hover:shadow-[0_0_15px_rgba(239,68,68,0.3)]">REJECT</button>
@@ -2881,7 +2994,16 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                                 </div>
                                                                 <div className="flex flex-col min-w-0">
                                                                     <span className="font-bold text-white text-base truncate">{app.discordUsername}</span>
-                                                                    <span className="font-mono text-xs text-brand-primary font-medium truncate bg-brand-primary/10 w-fit px-2 py-0.5 rounded mt-1">{app.minecraftUsername}</span>
+                                                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                                        <span className="font-mono text-[10px] text-brand-primary font-bold truncate bg-brand-primary/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                            <span className="text-[8px] uppercase font-sans tracking-wider font-extrabold text-brand-primary/60">MC:</span> {app.minecraftUsername}
+                                                                        </span>
+                                                                        {app.twitchUsername && (
+                                                                            <span className="font-sans text-[10px] text-purple-400 font-bold truncate bg-purple-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                                <span className="text-[8px] uppercase tracking-wider font-extrabold text-purple-400/60">Twitch:</span> {app.twitchUsername}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -2968,6 +3090,128 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         </div>
                                     ))}
                                     {bingoWinners.length === 0 && <div className="text-center bg-black/20 rounded-2xl border border-white/5 border-dashed text-gray-500 py-12 font-bold">No winners recorded yet.</div>}
+                                </div>
+                            </div>
+
+                            {/* DANGER ZONE: MINECRAFT DATABASE MAINTENANCE */}
+                            <div className="bg-red-950/20 backdrop-blur-3xl p-8 rounded-3xl border border-red-500/20 shadow-2xl">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <span className="text-red-500 text-3xl">⚠️</span>
+                                    <div>
+                                        <h3 className="font-black text-white text-2xl tracking-tight">Danger Zone: Minecraft & Tournament Data Wipe</h3>
+                                        <p className="text-sm text-gray-400 mt-1">Permanently reset and wipe legacy season data, player inventories, and wallets.</p>
+                                    </div>
+                                </div>
+
+                                {wipeStatus && (
+                                    <div className={`p-4 rounded-xl border mb-6 font-semibold text-sm ${
+                                        wipeStatus.type === 'success' 
+                                            ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' 
+                                            : 'bg-red-950/40 border-red-500/30 text-red-400'
+                                    }`}>
+                                        {wipeStatus.message}
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                    {/* Clear Inventories */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Wipe Player Inventories</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Clears out all users' collected items, Pokémons, and rewards in their Minecraft web inventory.</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleWipeMinecraftData('inventory')} 
+                                            disabled={isWiping}
+                                            className="bg-red-600/10 border border-red-500/20 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            WIPE INVENTORIES
+                                        </button>
+                                    </div>
+
+                                    {/* Clear Currencies */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Wipe Key Wallets (Currency)</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Resets lamb and steak key balances for all users to 0, resetting currency state completely.</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleWipeMinecraftData('currency')} 
+                                            disabled={isWiping}
+                                            className="bg-red-600/10 border border-red-500/20 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            WIPE CURRENCY
+                                        </button>
+                                    </div>
+
+                                    {/* Clear Approved Users */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Wipe Approved Whitelists</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Clears out all APPROVED users in the whitelist database. Pending applications will not be affected.</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleWipeMinecraftData('approved_users')} 
+                                            disabled={isWiping}
+                                            className="bg-red-600/10 border border-red-500/20 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            WIPE APPROVED USERS
+                                        </button>
+                                    </div>
+
+                                    {/* Clear Bingo Boards */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Wipe Bingo Boards</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Clears all user-created active bingo board configurations, cell states, grids, and bingo winners.</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleWipeMinecraftData('bingo')} 
+                                            disabled={isWiping}
+                                            className="bg-red-600/10 border border-red-500/20 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            WIPE BINGO BOARDS
+                                        </button>
+                                    </div>
+
+                                    {/* Clear Tournament Data */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Wipe Active Tournaments</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Removes team registrations, brackets, and active duos of non-archived seasons. Does not affect archived seasons.</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleWipeMinecraftData('tournament')} 
+                                            disabled={isWiping}
+                                            className="bg-red-600/10 border border-red-500/20 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            WIPE ACTIVE TOURNAMENTS
+                                        </button>
+                                    </div>
+
+                                    {/* Global Purge */}
+                                    <div className="bg-red-950/10 border border-red-500/10 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-red-400 text-lg">Wipe All Previous Data</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Simultaneously purges inventories, key wallets, approved whitelists, bingo, and active tournament registrations.</p>
+                                        </div>
+                                        <div className="mt-6 space-y-3">
+                                            <input 
+                                                type="text" 
+                                                value={wipeConfirmText} 
+                                                onChange={e => setWipeConfirmText(e.target.value)} 
+                                                placeholder="Type 'WIPE' to confirm" 
+                                                className="w-full bg-black/40 border border-red-500/20 focus:border-red-500 outline-none rounded-xl py-2 px-3 text-white text-center text-xs font-bold tracking-widest uppercase transition-colors"
+                                            />
+                                            <button 
+                                                onClick={() => handleWipeMinecraftData('all')} 
+                                                disabled={isWiping || wipeConfirmText !== 'WIPE'}
+                                                className="w-full bg-red-600 hover:bg-red-500 disabled:bg-red-950/20 disabled:text-red-500/40 text-white font-black py-3 rounded-xl text-xs transition-all shadow-[0_0_20px_rgba(220,38,38,0.2)] disabled:shadow-none"
+                                            >
+                                                {isWiping ? 'WIPING DATABASES...' : 'EXECUTE COMPLETE PURGE'}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

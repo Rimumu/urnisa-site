@@ -9,6 +9,10 @@ export interface UserData {
     global_name?: string;
     avatar: string;
     minecraftUsername?: string | null;
+    minecraftUuid?: string | null;
+    twitchUsername?: string | null;
+    twitchAvatar?: string | null;
+    twitchId?: string | null;
 }
 
 interface UserProfileProps {
@@ -74,7 +78,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [showUnlinkModal, setShowUnlinkModal] = useState(false);
     const [mcInput, setMcInput] = useState('');
-    const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error' | 'conflict'>('idle');
+    const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error' | 'conflict' | 'not_found'>('idle');
     const navigate = useNavigate();
 
     // Daily Claim States
@@ -96,6 +100,100 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
             if (onUserChange) onUserChange(null);
         }
     }, []); 
+
+    // Listen for Twitch OAuth success messages
+    useEffect(() => {
+        const handleTwitchMessage = (event: MessageEvent) => {
+            // Securely ensure the message comes from our own application origin
+            if (event.origin !== window.location.origin) {
+                return;
+            }
+            
+            if (event.data?.type === 'TWITCH_AUTH_SUCCESS' && event.data?.twitchUser) {
+                const { login, display_name, id, profile_image_url } = event.data.twitchUser;
+                
+                setUser(prevUser => {
+                    let currentUser = prevUser;
+                    if (!currentUser) {
+                        const stored = localStorage.getItem('urnisa_mc_user');
+                        if (stored) {
+                            currentUser = JSON.parse(stored);
+                        }
+                    }
+                    
+                    if (!currentUser) {
+                        console.warn("Cannot link Twitch: No logged-in user found.");
+                        return null;
+                    }
+                    
+                    const updatedUser = { 
+                        ...currentUser, 
+                        twitchUsername: display_name || login,
+                        twitchAvatar: profile_image_url,
+                        twitchId: id
+                    };
+                    
+                    localStorage.setItem('urnisa_mc_user', JSON.stringify(updatedUser));
+                    if (onUserChange) onUserChange(updatedUser);
+
+                    if (updatedUser.minecraftUsername) {
+                        fetch(`${DISCORD_API_URL}/api/minecraft/link`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                discordId: updatedUser.id,
+                                discordUsername: updatedUser.global_name || updatedUser.username,
+                                discordAvatar: updatedUser.avatar,
+                                minecraftUsername: updatedUser.minecraftUsername,
+                                twitchUsername: updatedUser.twitchUsername,
+                                twitchAvatar: updatedUser.twitchAvatar
+                            })
+                        }).catch(err => console.error("Failed to sync Twitch link to backend:", err));
+                    }
+
+                    return updatedUser;
+                });
+            }
+        };
+        
+        window.addEventListener('message', handleTwitchMessage);
+        return () => window.removeEventListener('message', handleTwitchMessage);
+    }, [onUserChange]);
+
+    const handleLinkTwitch = () => {
+        if (!user) return;
+        
+        const clientId = import.meta.env.VITE_TWITCH_CLIENT_ID || 'gp762nuuoqcoxypju8c569th9wz7q5';
+        localStorage.setItem('twitch_temp_client_id', clientId);
+        
+        const redirectUri = `${window.location.origin}/twitch/callback`;
+        const scope = 'user:read:email user:read:subscriptions';
+        const twitchAuthUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}&force_verify=true`;
+        
+        const authWindow = window.open(
+            twitchAuthUrl,
+            'twitch_oauth_popup',
+            'width=600,height=750'
+        );
+        
+        if (!authWindow) {
+            alert('Please allow popups for this site to connect your Twitch account.');
+        }
+    };
+
+    const handleUnlinkTwitch = () => {
+        if (!user) return;
+        const updatedUser = { 
+            ...user, 
+            twitchUsername: null,
+            twitchAvatar: null,
+            twitchId: null 
+        };
+        setUser(updatedUser as UserData);
+        localStorage.setItem('urnisa_mc_user', JSON.stringify(updatedUser));
+        if (onUserChange) onUserChange(updatedUser);
+        setMenuOpen(false);
+    };
 
     // Cooldown Timer Logic
     useEffect(() => {
@@ -192,15 +290,22 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     discordId: user.id,
-                    discordUsername: user.username,
+                    discordUsername: user.global_name || user.username,
                     discordAvatar: user.avatar,
-                    minecraftUsername: mcInput
+                    minecraftUsername: mcInput,
+                    twitchUsername: user.twitchUsername || null,
+                    twitchAvatar: user.twitchAvatar || null
                 })
             });
             
             if (response.ok) {
+                const data = await response.json();
                 setLinkStatus('success');
-                const updatedUser = { ...user, minecraftUsername: mcInput };
+                const updatedUser = { 
+                    ...user, 
+                    minecraftUsername: data.minecraftUsername || mcInput,
+                    minecraftUuid: data.minecraftUuid || null
+                };
                 setUser(updatedUser);
                 localStorage.setItem('urnisa_mc_user', JSON.stringify(updatedUser));
                 if (onUserChange) onUserChange(updatedUser);
@@ -209,6 +314,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                     setShowLinkModal(false);
                     setLinkStatus('idle');
                 }, 1500);
+            } else if (response.status === 404) {
+                setLinkStatus('not_found');
             } else if (response.status === 409) {
                 setLinkStatus('conflict');
             } else {
@@ -252,14 +359,24 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                     >
                         <div className="text-right hidden sm:block">
                             <div className="text-xs font-bold text-white group-hover:text-brand-primary transition-colors">{user.global_name || user.username}</div>
-                            {user.minecraftUsername ? (
-                                <div className="text-[10px] text-green-400 font-mono flex items-center justify-end gap-1">
-                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                    {user.minecraftUsername}
-                                </div>
-                            ) : (
-                                <div className="text-[10px] text-gray-500 font-mono">No MC Linked</div>
-                            )}
+                            <div className="flex flex-col items-end gap-0.5 mt-0.5">
+                                {user.minecraftUsername ? (
+                                    <div className="text-[9px] text-green-400 font-mono flex items-center gap-1 leading-none">
+                                        <span className="w-1 h-1 bg-green-500 rounded-full"></span>
+                                        {user.minecraftUsername}
+                                    </div>
+                                ) : (
+                                    <div className="text-[9px] text-gray-500 font-mono leading-none">No MC Linked</div>
+                                )}
+                                {user.twitchUsername ? (
+                                    <div className="text-[9px] text-[#a970ff] font-mono flex items-center gap-1 leading-none">
+                                        <span className="w-1 h-1 bg-[#a970ff] rounded-full"></span>
+                                        {user.twitchUsername}
+                                    </div>
+                                ) : (
+                                    <div className="text-[9px] text-gray-500 font-mono leading-none">No Twitch Linked</div>
+                                )}
+                            </div>
                         </div>
                         <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-white/20" />
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
@@ -316,30 +433,81 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                 Redeem Code
                             </button>
 
-                            {user.minecraftUsername ? (
-                                <div className="px-4 py-3 border-b border-white/5">
-                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Minecraft Account</p>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/24`} alt="Head" className="w-6 h-6 rounded" />
-                                            <span className="text-sm font-mono text-white">{user.minecraftUsername}</span>
-                                        </div>
-                                        <button 
-                                            onClick={() => { setShowUnlinkModal(true); setMenuOpen(false); }}
-                                            className="text-[10px] text-red-400 hover:text-red-300 underline"
-                                        >
-                                            Unlink
-                                        </button>
+                            {/* Account Linking Grid */}
+                            <div className="p-3 border-b border-white/5 bg-black/15">
+                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2 text-center">Linked Accounts</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {/* Minecraft Card */}
+                                    <div className="bg-black/30 border border-white/5 hover:border-white/10 rounded-2xl p-3 flex flex-col items-center justify-between min-h-[115px] transition-all text-center">
+                                        <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none mb-1">Minecraft</span>
+                                        {user.minecraftUsername ? (
+                                            <div className="flex flex-col items-center flex-1 justify-center w-full">
+                                                <img 
+                                                    src={`https://mc-heads.net/avatar/${user.minecraftUsername}/32`} 
+                                                    alt="MC Head" 
+                                                    className="w-9 h-9 rounded-lg border border-emerald-500/20 shadow-md mb-1.5 transition-transform hover:scale-105" 
+                                                />
+                                                <span className="text-xs font-mono text-white font-bold truncate w-full px-1 mb-1.5" title={user.minecraftUsername}>
+                                                    {user.minecraftUsername}
+                                                </span>
+                                                <button 
+                                                    onClick={() => { setShowUnlinkModal(true); setMenuOpen(false); }}
+                                                    className="text-[9px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 px-2 py-0.5 rounded-full transition-all uppercase tracking-wider"
+                                                >
+                                                    Unlink
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center flex-1 w-full">
+                                                <button 
+                                                    onClick={() => { setShowLinkModal(true); setMenuOpen(false); }}
+                                                    className="w-full py-2 text-[10px] bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary rounded-xl font-bold transition-all border border-brand-primary/20 shadow-sm uppercase tracking-wider"
+                                                >
+                                                    Link MC
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Twitch Card */}
+                                    <div className="bg-black/30 border border-white/5 hover:border-white/10 rounded-2xl p-3 flex flex-col items-center justify-between min-h-[115px] transition-all text-center">
+                                        <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest leading-none mb-1">Twitch</span>
+                                        {user.twitchUsername ? (
+                                            <div className="flex flex-col items-center flex-1 justify-center w-full">
+                                                {user.twitchAvatar ? (
+                                                    <img 
+                                                        src={user.twitchAvatar} 
+                                                        alt="Twitch Avatar" 
+                                                        className="w-9 h-9 rounded-full border border-[#a970ff]/30 shadow-md mb-1.5 transition-transform hover:scale-105" 
+                                                    />
+                                                ) : (
+                                                    <div className="w-9 h-9 bg-[#a970ff]/10 border border-[#a970ff]/20 rounded-full flex items-center justify-center text-[#a970ff] mb-1.5 font-bold text-xs">
+                                                        👾
+                                                    </div>
+                                                )}
+                                                <span className="text-xs font-mono text-[#a970ff] font-bold truncate w-full px-1 mb-1.5" title={user.twitchUsername}>
+                                                    {user.twitchUsername}
+                                                </span>
+                                                <button 
+                                                    onClick={handleUnlinkTwitch}
+                                                    className="text-[9px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 px-2 py-0.5 rounded-full transition-all uppercase tracking-wider"
+                                                >
+                                                    Unlink
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center flex-1 w-full">
+                                                <button 
+                                                    onClick={handleLinkTwitch}
+                                                    className="w-full py-2 text-[10px] bg-[#a970ff]/10 hover:bg-[#a970ff]/20 text-[#a970ff] rounded-xl font-bold transition-all border border-[#a970ff]/20 shadow-sm uppercase tracking-wider"
+                                                >
+                                                    Link Twitch
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            ) : (
-                                <button 
-                                    onClick={() => { setShowLinkModal(true); setMenuOpen(false); }}
-                                    className="w-full text-left px-4 py-3 text-sm text-brand-primary hover:bg-brand-primary/10 transition-colors flex items-center gap-2 font-bold"
-                                >
-                                    <span>🔗</span> Link Minecraft Account
-                                </button>
-                            )}
+                            </div>
 
                             <button 
                                 onClick={logout}
@@ -445,7 +613,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                         />
                                     </div>
                                     {linkStatus === 'error' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Failed to link. Invalid username.</p>}
-                                    {linkStatus === 'conflict' && <p className="text-red-500 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> This minecraft username has been linked already!</p>}
+                                    {linkStatus === 'not_found' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Minecraft username does not exist!</p>}
+                                     {linkStatus === 'conflict' && <p className="text-red-500 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> This minecraft username has been linked already!</p>}
                                 </div>
                                 
                                 <div className="flex gap-3">

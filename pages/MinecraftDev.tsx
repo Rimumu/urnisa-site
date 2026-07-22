@@ -60,7 +60,7 @@ const MinecraftDev: React.FC = () => {
 
     // Whitelist State
     const [applying, setApplying] = useState(false);
-    const [whitelistStatus, setWhitelistStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+    const [whitelistStatus, setWhitelistStatus] = useState<{ type: 'success' | 'error' | 'pending', msg: string } | null>(null);
 
     const [mcInput, setMcInput] = useState('');
     const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error' | 'conflict'>('idle');
@@ -242,12 +242,12 @@ const MinecraftDev: React.FC = () => {
             const data = await response.json();
 
             if (response.ok) {
-                setWhitelistStatus({ type: 'success', msg: data.message || "Application Sent! Pending Admin Approval." });
+                setWhitelistStatus({ type: 'success', msg: "Application Sent! Please wait for admin approval." });
             } else if (response.status === 403) {
                 // Explicitly show Modal for Role Failure
                 setShowSubAlert(true);
             } else if (response.status === 409) {
-                setWhitelistStatus({ type: 'success', msg: "Application already pending!" });
+                setWhitelistStatus({ type: 'pending', msg: "Application already pending!" });
             } else {
                 setWhitelistStatus({ type: 'error', msg: data.error || "Application Failed" });
             }
@@ -271,11 +271,47 @@ const MinecraftDev: React.FC = () => {
 
             {/* Whitelist Status Toast */}
             {whitelistStatus && (
-                <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[60] px-6 py-4 rounded-xl shadow-2xl border animate-in slide-in-from-top-4 fade-in duration-300 flex items-center gap-3 ${whitelistStatus.type === 'success' ? 'bg-green-600 border-green-400' : 'bg-red-600 border-red-400'}`}>
-                    <span className="text-2xl">{whitelistStatus.type === 'success' ? '🎉' : '⛔'}</span>
-                    <div>
-                        <div className="font-bold text-white text-lg">{whitelistStatus.type === 'success' ? 'Success!' : 'Access Denied'}</div>
-                        <div className="text-sm text-white/90">{whitelistStatus.msg}</div>
+                <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[60] px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-top-4 fade-in duration-300 flex items-center gap-4 min-w-[320px] max-w-md ${
+                    whitelistStatus.type === 'success' 
+                        ? 'bg-zinc-950/90 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]' 
+                        : whitelistStatus.type === 'pending'
+                        ? 'bg-zinc-950/90 border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                        : 'bg-zinc-950/90 border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
+                }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        whitelistStatus.type === 'success'
+                            ? 'bg-emerald-500/10'
+                            : whitelistStatus.type === 'pending'
+                            ? 'bg-amber-500/10'
+                            : 'bg-rose-500/10'
+                    }`}>
+                        {whitelistStatus.type === 'success' && (
+                            <svg className="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        )}
+                        {whitelistStatus.type === 'pending' && (
+                            <svg className="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                        )}
+                        {whitelistStatus.type === 'error' && (
+                            <svg className="w-5 h-5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="15" y1="9" x2="9" y2="15" />
+                                <line x1="9" y1="9" x2="15" y2="15" />
+                            </svg>
+                        )}
+                    </div>
+                    <div className="flex-1">
+                        <div className="font-extrabold text-white text-base tracking-wide">
+                            {whitelistStatus.type === 'success' && 'Success!'}
+                            {whitelistStatus.type === 'pending' && 'Notice!'}
+                            {whitelistStatus.type === 'error' && 'Access Denied'}
+                        </div>
+                        <div className="text-sm text-zinc-300 font-medium mt-0.5">{whitelistStatus.msg}</div>
                     </div>
                 </div>
             )}

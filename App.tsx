@@ -8,16 +8,17 @@ import Home from './pages/Home';
 import Nisathon from './pages/Nisathon';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
-import MinecraftTeaser from './pages/MinecraftTeaser';
 import Rankings from './pages/Rankings';
 import Archive from './pages/Archive';
 import ArchiveNisathon from './pages/ArchiveNisathon';
 import ArchiveWheel from './pages/ArchiveWheel';
 import ArchiveTournament from './pages/ArchiveTournament';
 import Gacha from './pages/Gacha';
+import GachaBACK from './pages/GachaBACK';
 import GachaDev from './pages/GachaDev'; // Import Dev Page
 import TournamentDev from './pages/TournamentDev'; // New Import
 import Tournament from './pages/Tournament'; // Prod Tournament Page
+import TournamentBACK from './pages/TournamentBACK';
 import AdminTournamentDev from './pages/AdminTournamentDev'; // New Admin Tournament Dev Page
 import AdminTournament from './pages/AdminTournament'; // New Admin Tournament Production Page
 import SnakesLadder from './pages/SnakesLadder'; // Snakes and Ladders Game
@@ -25,6 +26,11 @@ import Bingo from './pages/Bingo';
 import BingoDashboard from './pages/BingoDashboard';
 import Inventory from './pages/Inventory';
 import Redeem from './pages/Redeem';
+import BingoBACK from './pages/BingoBACK';
+import BingoDashboardBACK from './pages/BingoDashboardBACK';
+import InventoryBACK from './pages/InventoryBACK';
+import RedeemBACK from './pages/RedeemBACK';
+import TwitchCallback from './pages/TwitchCallback';
 import About from './pages/About';
 import Gallery from './pages/Gallery';
 import Admin from './pages/Admin';
@@ -91,6 +97,7 @@ const App: React.FC = () => {
         <Route path="/overlay/countdown" element={<CountdownWidget />} />
         <Route path="/duo-card" element={<DuoCard />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/twitch/callback" element={<TwitchCallback />} />
 
         {/* 2. MAIN WEBSITE ROUTES (Wrapped in Layout) */}
         <Route element={<MainLayout />}>
@@ -99,11 +106,10 @@ const App: React.FC = () => {
           <Route path="/nisathon" element={<Nisathon />} />
           <Route path="/nisathon/wheel" element={<Wheel />} />
           <Route path="/snakesladder" element={<SnakesLadder />} />
-          <Route path="/minecraftBACK" element={<Minecraft />} />
-          <Route path="/minecraft" element={<MinecraftTeaser />} />
-          <Route path="/minecraft/gachaBACK" element={<Gacha />} />
-          <Route path="/minecraft/rankingsBACK" element={<Rankings />} />
-          <Route path="/minecraft/tournamentBACK" element={<Tournament />} />
+          <Route path="/minecraft" element={<Minecraft />} />
+          <Route path="/minecraft/gacha" element={<Gacha />} />
+          <Route path="/minecraft/rankings" element={<Rankings />} />
+          <Route path="/minecraft/tournament" element={<Tournament />} />
           {/* Dev Routes */}
           <Route path="/dev/gacha" element={<GachaDev />} />
           <Route path="/dev/tournament" element={<TournamentDev />} />
@@ -112,10 +118,16 @@ const App: React.FC = () => {
           {/* Prod Admin Routes */}
           <Route path="/admin/tournament" element={<AdminTournament />} />
 
-          <Route path="/minecraft/bingoBACK" element={<BingoDashboard />} />
-          <Route path="/minecraft/bingo/cardBACK" element={<Bingo />} />
+          <Route path="/minecraft/bingo" element={<BingoDashboard />} />
+          <Route path="/minecraft/bingo/card" element={<Bingo />} />
+          <Route path="/minecraft/bingoBACK" element={<BingoDashboardBACK />} />
+          <Route path="/minecraft/bingo/cardBACK" element={<BingoBACK />} />
+          <Route path="/minecraft/gachaBACK" element={<GachaBACK />} />
+          <Route path="/minecraft/tournamentBACK" element={<TournamentBACK />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/inventoryBACK" element={<InventoryBACK />} />
           <Route path="/redeem" element={<Redeem />} />
+          <Route path="/redeemBACK" element={<RedeemBACK />} />
           <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/archive" element={<Archive />} />

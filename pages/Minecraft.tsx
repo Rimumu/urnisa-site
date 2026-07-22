@@ -30,11 +30,12 @@ const Minecraft: React.FC = () => {
     // Alert Modals for Requirement Checks
     const [showLoginAlert, setShowLoginAlert] = useState(false);
     const [showMCAlert, setShowMCAlert] = useState(false);
+    const [showTwitchAlert, setShowTwitchAlert] = useState(false);
     const [showSubAlert, setShowSubAlert] = useState(false);
 
     // Whitelist State
     const [applying, setApplying] = useState(false);
-    const [whitelistStatus, setWhitelistStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+    const [whitelistStatus, setWhitelistStatus] = useState<{ type: 'success' | 'error' | 'pending', msg: string } | null>(null);
 
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -114,9 +115,15 @@ const Minecraft: React.FC = () => {
             return;
         }
 
-        // 2. Check Linked Account
+        // 2. Check Minecraft Linked Account
         if (!user.minecraftUsername) {
             setShowMCAlert(true);
+            return;
+        }
+
+        // Check Twitch Linked Account
+        if (!user.twitchUsername) {
+            setShowTwitchAlert(true);
             return;
         }
 
@@ -125,6 +132,20 @@ const Minecraft: React.FC = () => {
         setWhitelistStatus(null);
 
         try {
+            // Sync with backend to ensure the Minecraft and Twitch credentials are fully saved in the DB
+            await fetch(`${DISCORD_API_URL}/api/minecraft/link`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    discordId: user.id,
+                    discordUsername: user.global_name || user.username,
+                    discordAvatar: user.avatar,
+                    minecraftUsername: user.minecraftUsername,
+                    twitchUsername: user.twitchUsername,
+                    twitchAvatar: user.twitchAvatar
+                })
+            });
+
             const response = await fetch(`${DISCORD_API_URL}/api/whitelist/apply`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -134,12 +155,12 @@ const Minecraft: React.FC = () => {
             const data = await response.json();
 
             if (response.ok) {
-                setWhitelistStatus({ type: 'success', msg: data.message || "Application Sent! Pending Admin Approval." });
+                setWhitelistStatus({ type: 'success', msg: "Application Sent! Please wait for admin approval." });
             } else if (response.status === 403) {
                 // Explicitly show Modal for Role Failure
                 setShowSubAlert(true);
             } else if (response.status === 409) {
-                setWhitelistStatus({ type: 'success', msg: "Application already pending!" });
+                setWhitelistStatus({ type: 'pending', msg: "Application already pending!" });
             } else {
                 setWhitelistStatus({ type: 'error', msg: data.error || "Application Failed" });
             }
@@ -163,11 +184,47 @@ const Minecraft: React.FC = () => {
 
             {/* Whitelist Status Toast */}
             {whitelistStatus && (
-                <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[60] px-6 py-4 rounded-xl shadow-2xl border animate-in slide-in-from-top-4 fade-in duration-300 flex items-center gap-3 ${whitelistStatus.type === 'success' ? 'bg-green-600 border-green-400' : 'bg-red-600 border-red-400'}`}>
-                    <span className="text-2xl">{whitelistStatus.type === 'success' ? '🎉' : '⛔'}</span>
-                    <div>
-                        <div className="font-bold text-white text-lg">{whitelistStatus.type === 'success' ? 'Success!' : 'Access Denied'}</div>
-                        <div className="text-sm text-white/90">{whitelistStatus.msg}</div>
+                <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[60] px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-top-4 fade-in duration-300 flex items-center gap-4 min-w-[320px] max-w-md ${
+                    whitelistStatus.type === 'success' 
+                        ? 'bg-zinc-950/90 border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)]' 
+                        : whitelistStatus.type === 'pending'
+                        ? 'bg-zinc-950/90 border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.15)]'
+                        : 'bg-zinc-950/90 border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
+                }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        whitelistStatus.type === 'success'
+                            ? 'bg-emerald-500/10'
+                            : whitelistStatus.type === 'pending'
+                            ? 'bg-amber-500/10'
+                            : 'bg-rose-500/10'
+                    }`}>
+                        {whitelistStatus.type === 'success' && (
+                            <svg className="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        )}
+                        {whitelistStatus.type === 'pending' && (
+                            <svg className="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                        )}
+                        {whitelistStatus.type === 'error' && (
+                            <svg className="w-5 h-5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="15" y1="9" x2="9" y2="15" />
+                                <line x1="9" y1="9" x2="15" y2="15" />
+                            </svg>
+                        )}
+                    </div>
+                    <div className="flex-1">
+                        <div className="font-extrabold text-white text-base tracking-wide">
+                            {whitelistStatus.type === 'success' && 'Success!'}
+                            {whitelistStatus.type === 'pending' && 'Notice!'}
+                            {whitelistStatus.type === 'error' && 'Access Denied'}
+                        </div>
+                        <div className="text-sm text-zinc-300 font-medium mt-0.5">{whitelistStatus.msg}</div>
                     </div>
                 </div>
             )}
@@ -197,9 +254,26 @@ const Minecraft: React.FC = () => {
                         <div className="w-16 h-16 bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl border border-amber-500/20">
                             🔗
                         </div>
-                        <h3 className="text-xl font-black text-white mb-2">Account Link Required</h3>
+                        <h3 className="text-xl font-black text-white mb-2">Minecraft Link Required</h3>
                         <p className="text-gray-400 text-sm mb-6">You have not linked a Minecraft account yet!</p>
                         <button onClick={() => setShowMCAlert(false)} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* REQUIREMENT ALERT: NO TWITCH */}
+            {showTwitchAlert && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-[#1a0b0e] border border-white/10 p-6 rounded-3xl w-full max-w-sm shadow-2xl text-center relative">
+                        <button onClick={() => setShowTwitchAlert(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">✕</button>
+                        <div className="w-16 h-16 bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-400 text-3xl border border-purple-500/20">
+                            🔗
+                        </div>
+                        <h3 className="text-xl font-black text-white mb-2">Twitch Link Required</h3>
+                        <p className="text-gray-400 text-sm mb-6">You have not linked your Twitch account yet!</p>
+                        <button onClick={() => setShowTwitchAlert(false)} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors">
                             Close
                         </button>
                     </div>
@@ -273,9 +347,9 @@ const Minecraft: React.FC = () => {
                             </div>
                         </button>
 
-                        <div className="flex items-center gap-2 text-sm font-medium text-red-400 bg-red-500/10 px-4 py-1.5 rounded-full border border-red-500/20">
-                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                            <span>Server Offline</span>
+                        <div className="flex items-center gap-2 text-sm font-medium text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span>Server Opening Soon</span>
                         </div>
                     </div>
                 </div>

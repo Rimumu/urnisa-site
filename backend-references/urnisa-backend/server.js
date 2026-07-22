@@ -4,7 +4,21 @@ const cors = require('cors');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+
+// Bypass Node 21+ native WebSocket (undici) bug with older socket.io-client
+delete global.WebSocket;
+if (typeof globalThis !== 'undefined') {
+    delete globalThis.WebSocket;
+}
+try {
+    const ws = require('ws');
+    global.WebSocket = ws;
+    globalThis.WebSocket = ws;
+} catch (e) {
+    // Fall back to engine.io-client's internal node fallback if ws cannot be imported
+}
 const io = require('socket.io-client');
+
 const { createClient } = require('@supabase/supabase-js');
 const multer = require('multer');
 require('dotenv').config();
@@ -505,7 +519,10 @@ let socket = null;
 const connectSocket = () => {
     if (!SE_JWT) { console.log("❌ [Socket] No JWT"); return; }
 
-    console.log("🔌 [Socket] Connecting...");
+    const maskedJwt = SE_JWT.length > 20 
+        ? SE_JWT.substring(0, 10) + "..." + SE_JWT.substring(SE_JWT.length - 10)
+        : "[Too Short / Invalid]";
+    console.log(`🔌 [Socket] Connecting with JWT (Length: ${SE_JWT.length}, Masked: ${maskedJwt})`);
 
     // StreamElements uses Socket.IO v2. 
     socket = io('https://realtime.streamelements.com', {
@@ -522,6 +539,10 @@ const connectSocket = () => {
 
     socket.on('authenticated', (data) => {
         console.log(`✅ [Socket] Authenticated! (Channel: ${data.channelId})`);
+    });
+
+    socket.on('unauthorized', (err) => {
+        console.error(`❌ [Socket] Unauthorized error:`, err);
     });
 
     socket.on('disconnect', (reason) => {
@@ -601,7 +622,11 @@ let cachedChannelId = null;
 
 const resolveChannelId = async () => {
     if (cachedChannelId) return cachedChannelId;
-    if (!SE_JWT) return null;
+    if (!SE_JWT) {
+        console.log("❌ [resolveChannelId] STREAMELEMENTS_JWT is missing or empty.");
+        return null;
+    }
+    console.log("🔌 [resolveChannelId] Resolving StreamElements channel ID...");
     try {
         const res = await axios.get(`https://api.streamelements.com/kappa/v2/channels/${TARGET_USERNAME}`, {
             headers: { 
@@ -611,18 +636,24 @@ const resolveChannelId = async () => {
         });
         if (res.data && res.data._id) {
             cachedChannelId = res.data._id;
+            console.log(`✅ [resolveChannelId] Resolved channel ID: ${cachedChannelId} (Target: ${TARGET_USERNAME})`);
             return cachedChannelId;
         }
-    } catch (e) { }
+    } catch (e) { 
+        console.error(`⚠️ [resolveChannelId] Failed to resolve channel for ${TARGET_USERNAME}:`, e.response ? `Status ${e.response.status} - ${JSON.stringify(e.response.data)}` : e.message);
+    }
     try {
         const me = await axios.get('https://api.streamelements.com/kappa/v2/channels/me', {
             headers: { 'Authorization': `Bearer ${SE_JWT}` }
         });
         if (me.data && me.data._id) {
             cachedChannelId = me.data._id;
+            console.log(`✅ [resolveChannelId] Resolved "me" channel ID: ${cachedChannelId}`);
             return cachedChannelId;
         }
-    } catch (e) { }
+    } catch (e) { 
+        console.error(`❌ [resolveChannelId] Failed to resolve channel for "me":`, e.response ? `Status ${e.response.status} - ${JSON.stringify(e.response.data)}` : e.message);
+    }
     return null;
 };
 
@@ -1063,8 +1094,11 @@ app.post('/api/nisathon/end', auth, async (req, res) => {
 app.post('/api/nisathon/start', auth, async (req, res) => {
     try {
         await NisathonStats.findOneAndUpdate({ key: 'main' }, { isEnded: false, isPaused: false });
+        console.log("🟢 [Nisathon] Started / Resumed! Triggering sync...");
+        runSync(true).catch(err => console.error("Error during manual startup sync:", err));
         res.json({ success: true, message: "Nisathon Started" });
     } catch (e) {
+        console.error("❌ Failed to start Nisathon:", e);
         res.status(500).json({ error: "Failed to start Nisathon" });
     }
 });
@@ -3449,6 +3483,65 @@ const initDefaultSeason = async () => {
 };
 if (MONGO_URI) setTimeout(initDefaultSeason, 3000);
 
+// Maintenance Wipe Endpoint for Minecraft/Bingo/Tournament (DANGER ZONE)
+// Wipes only non-archived tournament data and all bingo data
+app.post('/api/admin/maintenance/wipe-minecraft-data', auth, async (req, res) => {
+    const { scope } = req.body; // 'all', 'bingo', 'tournament'
+    try {
+        console.log(`⚠️ Admin triggered Minecraft/Bingo/Tournament Wipe on Main Server. Scope: ${scope}`);
+        const results = {};
+
+        if (!scope || scope === 'all' || scope === 'bingo') {
+            const cardRes = await BingoCard.deleteMany({});
+            const defRes = await BingoDefinition.deleteMany({});
+            const winRes = await BingoWinner.deleteMany({});
+            results.bingo = { 
+                success: true, 
+                cardsDeleted: cardRes.deletedCount, 
+                definitionsDeleted: defRes.deletedCount,
+                winnersDeleted: winRes.deletedCount
+            };
+        }
+
+        if (!scope || scope === 'all' || scope === 'tournament') {
+            // Find all active (non-archived) seasons
+            const activeSeasons = await TournamentSeason.find({ isArchived: { $ne: true } });
+            const activeSeasonIds = activeSeasons.map(s => s.seasonId);
+
+            // Delete tournament entries (registrations) for these active seasons
+            const entryRes = await TournamentEntry.deleteMany({ seasonId: { $in: activeSeasonIds } });
+
+            // Delete tournament brackets for these active seasons
+            const bracketRes = await TournamentBracket.deleteMany({ seasonId: { $in: activeSeasonIds } });
+
+            // Delete duo records and their associated party data
+            const activeDuos = await TournamentDuo.find({ seasonId: { $in: activeSeasonIds } });
+            const activeDuoIds = activeDuos.map(d => d.duoId);
+            
+            const partyRes = await DuoPartyData.deleteMany({ duoId: { $in: activeDuoIds } });
+            const duoRes = await TournamentDuo.deleteMany({ seasonId: { $in: activeSeasonIds } });
+
+            // Delete the active seasons themselves
+            const seasonRes = await TournamentSeason.deleteMany({ isArchived: { $ne: true } });
+
+            results.tournament = {
+                success: true,
+                activeSeasonIdsCleared: activeSeasonIds,
+                entriesDeleted: entryRes.deletedCount,
+                bracketsDeleted: bracketRes.deletedCount,
+                duosDeleted: duoRes.deletedCount,
+                partiesDeleted: partyRes.deletedCount,
+                seasonsDeleted: seasonRes.deletedCount
+            };
+        }
+
+        res.json({ success: true, results });
+    } catch (e) {
+        console.error("❌ Failed to wipe Minecraft/Bingo/Tournament data on Main Server:", e);
+        res.status(500).json({ error: "Failed to wipe data", details: e.message });
+    }
+});
+
 // Get All Seasons
 app.get('/api/tournament/seasons', async (req, res) => {
     try {
@@ -4545,11 +4638,6 @@ app.post('/api/ranked/match', async (req, res) => {
             await ForfeitHistory.deleteMany({ forfeitedAt: { $lt: twelveHoursAgo } });
         }
 
-        // Fire-and-forget call to Discord Bot to sync ranks immediately
-        // On Render, we must use the remote URL provided in env, else fallback to localhost
-        const botUrl = process.env.BOT_API_URL || `http://localhost:${process.env.BOT_PORT || 3002}`;
-        axios.post(`${botUrl}/api/internal/sync-ranks`)
-            .catch(err => console.error("⚠️ Failed to trigger Bot Rank Sync:", err.message));
 
         res.json({
             success: true,

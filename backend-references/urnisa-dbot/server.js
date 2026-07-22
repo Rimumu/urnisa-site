@@ -127,6 +127,9 @@ const MinecraftLinkSchema = new mongoose.Schema({
     discordUsername: String,
     discordAvatar: String,
     minecraftUsername: { type: String, required: true, unique: true },
+    minecraftUuid: String,
+    twitchUsername: String,
+    twitchAvatar: String,
     linkedAt: { type: Date, default: Date.now }
 });
 const MinecraftLink = mongoose.model('MinecraftLink', MinecraftLinkSchema);
@@ -137,6 +140,9 @@ const WhitelistAppSchema = new mongoose.Schema({
     discordUsername: String,
     discordAvatar: String,
     minecraftUsername: String,
+    minecraftUuid: String,
+    twitchUsername: String,
+    twitchAvatar: String,
     status: { type: String, default: 'pending' }, // pending, approved, rejected
     appliedAt: { type: Date, default: Date.now },
     approvedAt: { type: Date } // Added to track approval time
@@ -187,104 +193,6 @@ const RedemptionCodeSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 const RedemptionCode = mongoose.model('RedemptionCode', RedemptionCodeSchema);
-
-// --- RANKED SYSTEM SYNC (HOTFIX) ---
-
-const RankedPlayerSchema = new mongoose.Schema({
-    uuid: { type: String, required: true, unique: true },
-    minecraftName: { type: String, required: true },
-    tier: { type: String, default: 'UNRANKED' },
-    // Only need tier and uuid/name for display sync
-    elo: Number,
-    wins: Number
-});
-const RankedPlayer = mongoose.model('RankedPlayer', RankedPlayerSchema);
-
-const TIER_FORMATS = {
-    DIRT: { color: 'gold', prefix: 'DIRT', sortKey: 'j' },
-    CASUAL: { color: 'gray', prefix: 'CASUAL', sortKey: 'i' },
-    OMEGA: { color: 'green', prefix: 'OMEGA', sortKey: 'h' },
-    BETA: { color: 'blue', prefix: 'BETA', sortKey: 'g' },
-    ALPHA: { color: 'dark_purple', prefix: 'ALPHA', sortKey: 'f' },
-    LEGENDARY: { color: 'yellow', prefix: 'LEGEND', sortKey: 'e' },
-    MYTHIC: { color: 'light_purple', prefix: 'MYTHIC', sortKey: 'd' },
-    ETERNAL: { color: 'red', prefix: 'ETERNAL', sortKey: 'c' }
-    // Note: OWNER='a', ADMIN='b' are handled by the mod (excluded from RCON sync)
-};
-
-const syncRankDisplays = async () => {
-    if (!Rcon || !RCON_HOST || !RCON_PASSWORD) return;
-    try {
-        console.log("🔄 [RankSync] Starting automatic display sync...");
-        const players = await RankedPlayer.find({ tier: { $ne: 'UNRANKED' } });
-
-        console.log(`🔄 [RankSync] Found ${players.length} ranked players to update.`);
-
-        const rcon = new Rcon({
-            host: RCON_HOST,
-            port: RCON_PORT,
-            password: RCON_PASSWORD,
-            timeout: 10000
-        });
-
-        await rcon.connect();
-
-        // Staff UUIDs to SKIP (Maintain Owner/Admin ranks on server)
-        const EXCLUDED_UUIDS = [
-            "e1fd26c1-e485-4ca4-b183-0053b5c7745a", // Owner
-            "4c446d34-2d54-491f-8b71-6d5e009d4cfe"  // Admin
-        ];
-
-        for (const p of players) {
-            // SKIP STAFF from rank overwrites
-            if (EXCLUDED_UUIDS.includes(p.uuid)) {
-                // console.log(`⏩ [RankSync] Skipping Staff Member: ${p.minecraftName}`);
-                continue;
-            }
-
-            const format = TIER_FORMATS[p.tier];
-            if (!format) continue;
-
-            // Team name format: "ranked_X_uuid8" where X is sort key (a-z)
-            // This matches the mod's naming scheme for proper tablist sorting
-            const teamName = `ranked_${format.sortKey}_${p.uuid.substring(0, 8)}`;
-
-            // 0. Remove player from any existing team first (cleans up old format teams)
-            await rcon.send(`team leave ${p.minecraftName}`);
-
-            // 1. Ensure team exists (silent fail if already exists)
-            await rcon.send(`team add ${teamName}`);
-
-            // 2. Set color (Player name white)
-            await rcon.send(`team modify ${teamName} color white`);
-
-            // 3. Set Prefix
-            const prefixJson = JSON.stringify([
-                { text: `${format.prefix} `, color: format.color, bold: true }
-            ]);
-            await rcon.send(`team modify ${teamName} prefix ${prefixJson}`);
-
-            // 4. Add player to team
-            await rcon.send(`team join ${teamName} ${p.minecraftName}`);
-        }
-
-        await rcon.end();
-        console.log("✅ [RankSync] Completed.");
-    } catch (e) {
-        console.error("❌ [RankSync] Failed:", e.message);
-    }
-};
-
-// Run sync every 10 minutes
-setInterval(syncRankDisplays, 10 * 60 * 1000);
-// --- INTERNAL API FOR SYNC TRIGGERS ---
-app.post('/api/internal/sync-ranks', (req, res) => {
-    console.log("⚡ [API] Triggering manual rank sync from Server...");
-    syncRankDisplays();
-    res.json({ success: true });
-});
-
-syncRankDisplays(); // Initial sync on startup
 
 
 // --- CACHING SYSTEMS ---
@@ -429,10 +337,39 @@ app.post('/api/auth/discord', async (req, res) => {
 
         const userData = userResponse.data;
         let mcUsername = null;
+        let mcUuid = null;
+        let twitchUsername = null;
+        let twitchAvatar = null;
 
         if (mongoose.connection.readyState === 1) {
             const existing = await MinecraftLink.findOne({ discordId: userData.id });
-            if (existing) mcUsername = existing.minecraftUsername;
+            if (existing) {
+                mcUsername = existing.minecraftUsername;
+                mcUuid = existing.minecraftUuid || null;
+                twitchUsername = existing.twitchUsername || null;
+                twitchAvatar = existing.twitchAvatar || null;
+
+                // Reverse lookup/update if UUID is present to see if the username has changed
+                if (mcUuid) {
+                    try {
+                        const profileRes = await axios.get(`https://sessionserver.mojang.com/session/minecraft/profile/${mcUuid}`, { timeout: 3000 });
+                        if (profileRes.data && profileRes.data.name && profileRes.data.name !== mcUsername) {
+                            console.log(`🔄 Minecraft username change detected for ${mcUuid}: ${mcUsername} -> ${profileRes.data.name}`);
+                            mcUsername = profileRes.data.name;
+                            existing.minecraftUsername = profileRes.data.name;
+                            await existing.save();
+
+                            // Update applications
+                            await WhitelistApp.updateMany(
+                                { discordId: userData.id },
+                                { minecraftUsername: profileRes.data.name }
+                            );
+                        }
+                    } catch (updateErr) {
+                        console.error("Failed to check for Minecraft username updates via sessionserver:", updateErr.message);
+                    }
+                }
+            }
         }
 
         res.json({
@@ -440,7 +377,10 @@ app.post('/api/auth/discord', async (req, res) => {
             username: userData.username,
             global_name: userData.global_name,
             avatar: userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${userData.discriminator % 5}.png`,
-            minecraftUsername: mcUsername
+            minecraftUsername: mcUsername,
+            minecraftUuid: mcUuid,
+            twitchUsername: twitchUsername,
+            twitchAvatar: twitchAvatar
         });
 
     } catch (error) { res.status(400).json({ error: "Auth Failed" }); }
@@ -448,22 +388,59 @@ app.post('/api/auth/discord', async (req, res) => {
 
 // 3. Link Account
 app.post('/api/minecraft/link', async (req, res) => {
-    const { discordId, discordUsername, discordAvatar, minecraftUsername } = req.body;
+    const { discordId, discordUsername, discordAvatar, minecraftUsername, twitchUsername, twitchAvatar } = req.body;
     if (!discordId || !minecraftUsername) return res.status(400).json({ error: "Missing fields" });
 
     try {
-        const existingLink = await MinecraftLink.findOne({ minecraftUsername: new RegExp(`^${minecraftUsername}$`, 'i') });
-        if (existingLink && existingLink.discordId !== discordId) return res.status(409).json({ error: "Username taken" });
+        let minecraftUuid = null;
+        let resolvedUsername = minecraftUsername;
+
+        try {
+            const uuidRes = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${encodeURIComponent(minecraftUsername)}`, { timeout: 4000 });
+            if (uuidRes.data && uuidRes.data.id) {
+                minecraftUuid = uuidRes.data.id;
+                resolvedUsername = uuidRes.data.name || minecraftUsername;
+            }
+        } catch (uuidErr) {
+            console.error("Failed to fetch UUID from Mojang via Axios during link:", uuidErr.message);
+            if (uuidErr.response && uuidErr.response.status === 404) {
+                return res.status(404).json({ error: "Minecraft username does not exist!" });
+            }
+        }
+
+        let existingLink = null;
+        if (minecraftUuid) {
+            existingLink = await MinecraftLink.findOne({
+                $or: [
+                    { minecraftUuid },
+                    { minecraftUsername: new RegExp(`^${resolvedUsername}$`, 'i') }
+                ]
+            });
+        } else {
+            existingLink = await MinecraftLink.findOne({ minecraftUsername: new RegExp(`^${resolvedUsername}$`, 'i') });
+        }
+
+        if (existingLink && existingLink.discordId !== discordId) {
+            return res.status(409).json({ error: "Minecraft account already linked to another user!" });
+        }
 
         await MinecraftLink.findOneAndUpdate(
             { discordId },
-            { discordUsername, discordAvatar, minecraftUsername, linkedAt: new Date() },
+            { 
+                discordUsername, 
+                discordAvatar, 
+                minecraftUsername: resolvedUsername, 
+                minecraftUuid,
+                twitchUsername, 
+                twitchAvatar, 
+                linkedAt: new Date() 
+            },
             { upsert: true, new: true }
         );
-        res.json({ success: true, minecraftUsername });
+        res.json({ success: true, minecraftUsername: resolvedUsername, minecraftUuid });
     } catch (error) {
-        if (error.code === 11000) return res.status(409).json({ error: "Username taken" });
-        res.status(500).json({ error: "Failed" });
+        if (error.code === 11000) return res.status(409).json({ error: "Minecraft account already linked to another user!" });
+        res.status(500).json({ error: "Failed to link account" });
     }
 });
 
@@ -483,6 +460,7 @@ app.post('/api/whitelist/apply', async (req, res) => {
     // 1. Check DB Link
     const link = await MinecraftLink.findOne({ discordId });
     if (!link || !link.minecraftUsername) return res.status(400).json({ error: "No Minecraft account linked!" });
+    if (!link.twitchUsername) return res.status(400).json({ error: "No Twitch account linked!" });
 
     // 2. Check existing pending app
     const existingApp = await WhitelistApp.findOne({ discordId, status: 'pending' });
@@ -508,11 +486,14 @@ app.post('/api/whitelist/apply', async (req, res) => {
         discordUsername: link.discordUsername,
         discordAvatar: link.discordAvatar,
         minecraftUsername: link.minecraftUsername,
+        minecraftUuid: link.minecraftUuid,
+        twitchUsername: link.twitchUsername,
+        twitchAvatar: link.twitchAvatar,
         status: 'pending',
         appliedAt: new Date()
     });
 
-    console.log(`📝 New Whitelist Application: ${link.minecraftUsername}`);
+    console.log(`📝 New Whitelist Application: ${link.minecraftUsername} (UUID: ${link.minecraftUuid})`);
     res.json({ success: true, message: "Application Sent! Please wait for admin approval." });
 });
 
@@ -562,7 +543,7 @@ app.post('/api/admin/whitelist/approve', auth, async (req, res) => {
                 await axios.post(
                     `https://discord.com/api/v10/channels/${WHITELIST_NOTIFY_CHANNEL}/messages`,
                     {
-                        content: `<@${app.discordId}> You have been whitelisted! 🎉`
+                        content: `<@${app.discordId}> You have been whitelisted!`
                     },
                     {
                         headers: {
@@ -696,6 +677,35 @@ app.post('/api/admin/codes/delete', auth, async (req, res) => {
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: "Failed to delete" });
+    }
+});
+
+// Maintenance Wipe Endpoint for Minecraft Data (DANGER ZONE)
+app.post('/api/admin/maintenance/wipe-minecraft-data', auth, async (req, res) => {
+    const { scope } = req.body; // 'all', 'inventory', 'currency', 'approved_users'
+    try {
+        console.log(`⚠️ Admin triggered Minecraft Data Wipe on Bot Server. Scope: ${scope}`);
+        const results = {};
+
+        if (!scope || scope === 'all' || scope === 'inventory') {
+            const delRes = await InventoryItem.deleteMany({});
+            results.inventory = { success: true, count: delRes.deletedCount };
+        }
+
+        if (!scope || scope === 'all' || scope === 'currency') {
+            const delRes = await UserKey.deleteMany({});
+            results.currency = { success: true, count: delRes.deletedCount };
+        }
+
+        if (!scope || scope === 'all' || scope === 'approved_users') {
+            const delRes = await WhitelistApp.deleteMany({ status: 'approved' });
+            results.approvedUsers = { success: true, count: delRes.deletedCount };
+        }
+
+        res.json({ success: true, results });
+    } catch (e) {
+        console.error("❌ Failed to wipe Minecraft data on Bot Server:", e);
+        res.status(500).json({ error: "Failed to wipe Minecraft data", details: e.message });
     }
 });
 
