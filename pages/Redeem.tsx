@@ -5,18 +5,21 @@ import UserProfile from '../components/UserProfile';
 import { DISCORD_API_URL } from '../constants';
 
 const Redeem: React.FC = () => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<any>(() => {
+        const stored = localStorage.getItem('urnisa_mc_user');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        }
+        return null;
+    });
     const [code, setCode] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
     const [successData, setSuccessData] = useState<{ type: string, wallet: any } | null>(null);
-
-    useEffect(() => {
-        const stored = localStorage.getItem('urnisa_mc_user');
-        if (stored) {
-            setUser(JSON.parse(stored));
-        }
-    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -126,7 +126,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
     };
 
     const loginRedirect = () => {
-        const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+        // Save current page to localStorage to redirect back after Discord OAuth completes
+        localStorage.setItem('discord_login_redirect_to', window.location.pathname + window.location.search);
+        
+        // Pass the exact current URL as state so we can return directly to this page
+        const stateValue = window.location.href;
+        const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${encodeURIComponent(stateValue)}`;
         window.location.href = url;
     };
 

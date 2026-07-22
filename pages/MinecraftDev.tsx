@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
 
 interface UserData {
@@ -35,7 +35,17 @@ const MinecraftDev: React.FC = () => {
     const SERVER_IP = "mc.urnisa.live";
 
     // Auth State
-    const [user, setUser] = useState<UserData | null>(null);
+    const [user, setUser] = useState<UserData | null>(() => {
+        const stored = localStorage.getItem('urnisa_mc_user');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        }
+        return null;
+    });
     const [loading, setLoading] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -55,18 +65,34 @@ const MinecraftDev: React.FC = () => {
     const [mcInput, setMcInput] = useState('');
     const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error' | 'conflict'>('idle');
     const [searchParams, setSearchParams] = useSearchParams();
-
-    // Load user from local storage on mount
-    useEffect(() => {
-        const stored = localStorage.getItem('urnisa_mc_user');
-        if (stored) {
-            setUser(JSON.parse(stored));
-        }
-    }, []);
+    const navigate = useNavigate();
 
     // Handle OAuth Code Callback
     useEffect(() => {
         const code = searchParams.get('code');
+        const state = searchParams.get('state');
+
+        // If there is a state pointing to a different origin, redirect there with code
+        if (state && state.startsWith('http')) {
+            try {
+                const stateUrl = new URL(state);
+                const currentUrl = new URL(window.location.href);
+                // Compare hostnames, ignoring www. prefix
+                const stateHost = stateUrl.hostname.replace(/^www\./, '');
+                const currentHost = currentUrl.hostname.replace(/^www\./, '');
+                
+                if (stateHost !== currentHost) {
+                    if (code) {
+                        stateUrl.searchParams.set('code', code);
+                    }
+                    window.location.href = stateUrl.toString();
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to redirect to state origin:", e);
+            }
+        }
+
         if (code && !user) {
             handleDiscordLogin(code);
         }
@@ -90,6 +116,15 @@ const MinecraftDev: React.FC = () => {
                 const data = await response.json();
                 setUser(data);
                 localStorage.setItem('urnisa_mc_user', JSON.stringify(data));
+                
+                // Redirect if we have a saved path
+                const redirectPath = localStorage.getItem('discord_login_redirect_to');
+                if (redirectPath) {
+                    localStorage.removeItem('discord_login_redirect_to');
+                    if (redirectPath !== window.location.pathname) {
+                        navigate(redirectPath);
+                    }
+                }
             } else {
                 console.error("Login failed");
             }
@@ -101,7 +136,12 @@ const MinecraftDev: React.FC = () => {
     };
 
     const loginRedirect = () => {
-        const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+        // Save current page to localStorage to redirect back after Discord OAuth completes
+        localStorage.setItem('discord_login_redirect_to', window.location.pathname + window.location.search);
+        
+        // Pass the exact current URL as state so we can return directly to this page
+        const stateValue = window.location.href;
+        const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${encodeURIComponent(stateValue)}`;
         window.location.href = url;
     };
 
@@ -623,7 +663,7 @@ const MinecraftDev: React.FC = () => {
                     <div className="mt-auto pt-8 flex flex-col gap-3">
                         {/* DOWNLOAD BUTTON */}
                         <a
-                            href="https://www.curseforge.com/minecraft/modpacks/cobblemon-academy"
+                            href="https://www.curseforge.com/minecraft/modpacks/nisamon"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center gap-2 w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg bg-[#f16436] hover:bg-[#d6552a] hover:scale-[1.02] shadow-orange-500/20"
