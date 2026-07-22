@@ -347,9 +347,9 @@ const Minecraft: React.FC = () => {
                             </div>
                         </button>
 
-                        <div className="flex items-center gap-2 text-sm font-medium text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
-                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                            <span>Server Opening Soon</span>
+                        <div className="flex items-center gap-2 text-sm font-medium text-emerald-400 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Server Online</span>
                         </div>
                     </div>
                 </div>
