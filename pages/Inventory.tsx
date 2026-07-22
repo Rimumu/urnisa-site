@@ -98,7 +98,17 @@ const InventoryCardImage: React.FC<{ item: InventoryItem }> = ({ item }) => {
 const Inventory: React.FC = () => {
     const [items, setItems] = useState<InventoryItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<any>(() => {
+        const stored = localStorage.getItem('urnisa_mc_user');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        }
+        return null;
+    });
     const [claimingId, setClaimingId] = useState<string | null>(null);
     const [filter, setFilter] = useState<'all' | 'unclaimed' | 'pokemon' | 'item'>('all');
     
@@ -110,13 +120,10 @@ const Inventory: React.FC = () => {
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
-    // Load user on mount
+    // Fetch user inventory on mount if logged in
     useEffect(() => {
-        const stored = localStorage.getItem('urnisa_mc_user');
-        if (stored) {
-            const u = JSON.parse(stored);
-            setUser(u);
-            fetchInventory(u.id);
+        if (user) {
+            fetchInventory(user.id);
         } else {
             setLoading(false);
         }
