@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { DISCORD_API_URL, DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI } from '../constants';
 import UserProfile, { UserData } from '../components/UserProfile';
 
@@ -15,7 +15,17 @@ const Minecraft: React.FC = () => {
     const SERVER_IP = "mc.urnisa.live";
 
     // Auth State
-    const [user, setUser] = useState<UserData | null>(null);
+    const [user, setUser] = useState<UserData | null>(() => {
+        const stored = localStorage.getItem('urnisa_mc_user');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        }
+        return null;
+    });
 
     // Alert Modals for Requirement Checks
     const [showLoginAlert, setShowLoginAlert] = useState(false);
@@ -27,13 +37,37 @@ const Minecraft: React.FC = () => {
     const [whitelistStatus, setWhitelistStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
 
     // Handle OAuth Code Callback - Pass it to a handler that saves to LocalStorage, 
     // then UserProfile will pick it up on mount/update. 
     // However, UserProfile reads from LS on mount. We need to manually handle the code exchange here
-    // then save to LS so UserProfile updates.
+    // Handles OAuth Code Callback
     useEffect(() => {
         const code = searchParams.get('code');
+        const state = searchParams.get('state');
+
+        // If there is a state pointing to a different origin, redirect there with code
+        if (state && state.startsWith('http')) {
+            try {
+                const stateUrl = new URL(state);
+                const currentUrl = new URL(window.location.href);
+                // Compare hostnames, ignoring www. prefix
+                const stateHost = stateUrl.hostname.replace(/^www\./, '');
+                const currentHost = currentUrl.hostname.replace(/^www\./, '');
+                
+                if (stateHost !== currentHost) {
+                    if (code) {
+                        stateUrl.searchParams.set('code', code);
+                    }
+                    window.location.href = stateUrl.toString();
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to redirect to state origin:", e);
+            }
+        }
+
         if (code && !user) {
             handleDiscordLogin(code);
         }
@@ -56,7 +90,15 @@ const Minecraft: React.FC = () => {
                 const data = await response.json();
                 setUser(data);
                 localStorage.setItem('urnisa_mc_user', JSON.stringify(data));
-                // Force reload or state update will happen via UserProfile prop
+                
+                // Redirect if we have a saved path
+                const redirectPath = localStorage.getItem('discord_login_redirect_to');
+                if (redirectPath) {
+                    localStorage.removeItem('discord_login_redirect_to');
+                    if (redirectPath !== window.location.pathname) {
+                        navigate(redirectPath);
+                    }
+                }
             } else {
                 console.error("Login failed");
             }
@@ -262,25 +304,23 @@ const Minecraft: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Gacha Pack - ACTIVE */}
-                    <Link to="/minecraft/gacha" className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 hover:border-brand-primary/50 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group transition-all duration-300 hover:scale-[1.02]">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2 group-hover:bg-brand-accent/10 transition-colors"></div>
-
+                    {/* Gacha Pack - DISABLED */}
+                    <div className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden opacity-50 cursor-not-allowed grayscale">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 flex items-center justify-center shadow-inner text-brand-accent">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                             </div>
-                            <h2 className="text-2xl font-black text-white uppercase tracking-wide group-hover:text-brand-accent transition-colors">Gacha Crate</h2>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-wide">Gacha Crate</h2>
                         </div>
 
                         <p className="text-gray-400 font-medium leading-relaxed">
                             Try your luck and open a lamb or steak loot crate to see if you'll get some delicious rewards!
                         </p>
 
-                        <div className="mt-6 flex items-center text-brand-primary font-bold text-sm uppercase tracking-wider">
-                            Open Crates <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                        <div className="mt-6 flex items-center text-gray-500 font-bold text-sm uppercase tracking-wider">
+                            COMING SOON
                         </div>
-                    </Link>
+                    </div>
 
                     {/* Tournament - DISABLED */}
                     <div className="block flex-1 bg-black/30 backdrop-blur-sm border border-white/10 p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden opacity-50 cursor-not-allowed grayscale">
@@ -333,7 +373,7 @@ const Minecraft: React.FC = () => {
                     <div className="mt-auto pt-8 flex flex-col gap-3">
                         {/* DOWNLOAD BUTTON */}
                         <a
-                            href="https://www.curseforge.com/minecraft/modpacks/cobblemon-academy"
+                            href="https://www.curseforge.com/minecraft/modpacks/nisamon"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center gap-2 w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg bg-[#f16436] hover:bg-[#d6552a] hover:scale-[1.02] shadow-orange-500/20"
