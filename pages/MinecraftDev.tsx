@@ -358,8 +358,8 @@ const MinecraftDev: React.FC = () => {
                         <div className="w-16 h-16 bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-400 text-3xl border border-purple-500/20">
                             ⭐
                         </div>
-                        <h3 className="text-xl font-black text-white mb-2">Subscription Required</h3>
-                        <p className="text-gray-400 text-sm mb-6">You are not subscribed to the twitch channel!</p>
+                        <h3 className="text-xl font-black text-white mb-2">Access Required</h3>
+                        <p className="text-gray-400 text-sm mb-6">You must be subscribed to the Twitch channel or have the Minecraft access role in Discord to apply!</p>
                         <button onClick={() => setShowSubAlert(false)} className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors">
                             Close
                         </button>
