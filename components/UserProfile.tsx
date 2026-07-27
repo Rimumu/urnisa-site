@@ -268,15 +268,43 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
             const data = await response.json();
 
             if (response.ok && data.success) {
+                // Save successful claim time locally
+                localStorage.setItem('urnisa_last_daily_claim', Date.now().toString());
                 setDailyModalType('success');
-                setDailyMessage(data.message);
+                setDailyMessage(data.message || 'Daily claim successful!');
                 setShowDailyModal(true);
-            } else if (response.status === 403) {
+            } else if (
+                response.status === 403 || 
+                response.status === 400 || 
+                (data && (data.error === "Already claimed today." || data.message === "Already claimed today."))
+            ) {
                 setDailyModalType('cooldown');
-                setCooldownTime(data.remainingMs || 0);
+                
+                // Get remainingMs if backend provides it
+                let remMs = data.remainingMs;
+                
+                // If not provided by backend, calculate based on localStorage
+                if (!remMs) {
+                    const lastClaimStr = localStorage.getItem('urnisa_last_daily_claim');
+                    if (lastClaimStr) {
+                        const lastClaim = parseInt(lastClaimStr, 10);
+                        remMs = Math.max(0, (24 * 60 * 60 * 1000) - (Date.now() - lastClaim));
+                    }
+                }
+                
+                // If still not available, fallback to time until next UTC midnight
+                if (!remMs || remMs <= 0) {
+                    const now = new Date();
+                    const midnight = new Date(now);
+                    midnight.setUTCHours(24, 0, 0, 0);
+                    remMs = midnight.getTime() - now.getTime();
+                }
+                
+                setCooldownTime(remMs);
                 setShowDailyModal(true);
             } else {
-                alert("Something went wrong with the check-in system.");
+                const errorMsg = data?.error || data?.message || "Something went wrong with the check-in system.";
+                alert(errorMsg);
             }
         } catch (e) {
             console.error("Daily check-in error", e);

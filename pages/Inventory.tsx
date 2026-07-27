@@ -412,7 +412,7 @@ const InventoryBACK: React.FC = () => {
                     <div className="text-center py-20 bg-black/20 rounded-3xl border border-white/5 backdrop-blur-sm">
                         <p className="text-2xl text-gray-600 font-bold mb-4">No items found</p>
                         <Link to="/minecraft/gacha" className="bg-brand-primary/20 text-brand-primary px-6 py-3 rounded-full font-bold hover:bg-brand-primary hover:text-white transition-colors">
-                            Go Open Packs!
+                            Go Open Crates!
                         </Link>
                     </div>
                 ) : (
