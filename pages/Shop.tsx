@@ -917,35 +917,37 @@ const Shop: React.FC = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const itemType = data.itemType; // 'lamb' or 'wagyu'
+        const rawType = (data.reward || data.itemType || '').toLowerCase();
+        const isLamb = rawType === 'lamb';
+        const wonKeyType = isLamb ? 'lamb' : 'wagyu';
         
         // Calculate physics/angle:
-        // Lamb sector is center 90deg. Target rotation = (rotations * 360) + 270 (so 90 deg lands at 12 o'clock pointer)
-        // Wagyu sector is center 270deg. Target rotation = (rotations * 360) + 90 (so 270 deg lands at 12 o'clock pointer)
+        // Lamb sector center is at 90deg on unrotated wheel. Rotating by 270deg brings 90deg to top (12 o'clock pointer).
+        // Wagyu sector center is at 270deg on unrotated wheel. Rotating by 90deg brings 270deg to top (12 o'clock pointer).
         const fullSpins = 5 + Math.floor(Math.random() * 3); // 5 to 7 full rotations
-        const sectorOffset = itemType === 'lamb' ? 270 : 90;
+        const sectorOffset = isLamb ? 270 : 90;
         
-        // Random slight deviation inside the sector (±35 degrees from center of 180-degree sector) to look organic
-        const randomOrganicOffset = Math.floor(Math.random() * 70) - 35;
+        // Organic offset within ±20 degrees around center of the 180-degree sector
+        const randomOrganicOffset = Math.floor(Math.random() * 40) - 20;
         
         const targetAbsoluteAngle = sectorOffset + randomOrganicOffset;
         const currentBase = Math.floor(wheelRotation / 360) * 360;
         let finalRotation = currentBase + (fullSpins * 360) + targetAbsoluteAngle;
-        if (finalRotation <= wheelRotation) {
-          finalRotation += 360;
+        if (finalRotation <= wheelRotation + 1800) {
+          finalRotation += 360 * Math.ceil((wheelRotation + 1800 - finalRotation) / 360);
         }
         
         // Trigger spin animation
         setWheelRotation(finalRotation);
 
-        // After 4s animation completes
+        // After 4.2s animation completes
         setTimeout(async () => {
           setIsSpinning(false);
-          setSpinResult(itemType);
+          setSpinResult(wonKeyType);
           setShowResultBanner(true);
           // Refetch balance to update user stats header
           await refetch();
-        }, 4000);
+        }, 4200);
 
       } else {
         setIsSpinning(false);
@@ -1464,33 +1466,6 @@ const Shop: React.FC = () => {
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[18px] border-t-amber-400 z-30 filter drop-shadow-md"></div>
             </div>
 
-            {/* Results Reveal Overlay */}
-            {showResultBanner && spinResult && (
-              <div className="my-6 p-4 rounded-2xl bg-white/5 border border-white/10 animate-scale-in text-center">
-                <h4 className="text-xl font-extrabold text-white">
-                  You Won 1x {spinResult === 'lamb' ? (
-                    <span className="text-amber-200">Lamb Crate Key</span>
-                  ) : (
-                    <span className="text-rose-200">Wagyu Crate Key</span>
-                  )}!
-                </h4>
-                <div className="mt-4 flex gap-2 justify-center">
-                  <Link 
-                    to="/minecraft/gacha" 
-                    className="cursor-pointer bg-brand-primary hover:bg-red-600 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-md"
-                  >
-                    Open Crate
-                  </Link>
-                  <button 
-                    onClick={() => setShowResultBanner(false)}
-                    className="cursor-pointer bg-white/5 hover:bg-white/10 text-white border border-white/5 font-bold px-5 py-2.5 rounded-xl text-xs transition-all"
-                  >
-                    Thanks
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Main Spin Action Button */}
             <div className="mt-6 flex flex-col gap-2">
               <button
@@ -1516,6 +1491,74 @@ const Shop: React.FC = () => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Wheel Spin Result Modal */}
+      {showResultBanner && spinResult && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl animate-fade-in">
+          <div className="relative bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/10 rounded-[3rem] max-w-md w-full p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] text-center animate-scale-in overflow-hidden">
+            {/* Ambient Background Glow matching the won key */}
+            {spinResult === 'lamb' ? (
+              <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-amber-500/15 rounded-full blur-[80px] pointer-events-none"></div>
+            ) : (
+              <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-rose-500/15 rounded-full blur-[80px] pointer-events-none"></div>
+            )}
+
+            {/* Glowing Key Illustration */}
+            <div className="relative flex justify-center mb-6">
+              {spinResult === 'lamb' ? (
+                <div className="relative">
+                  <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl scale-150 animate-pulse"></div>
+                  <div className="relative w-28 h-28 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                    <LambKeySVG className="w-16 h-16 drop-shadow-[0_0_15px_rgba(252,211,77,0.9)]" />
+                  </div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="absolute inset-0 bg-rose-500/20 rounded-full blur-2xl scale-150 animate-pulse"></div>
+                  <div className="relative w-28 h-28 bg-rose-500/10 border border-rose-500/30 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.2)]">
+                    <WagyuKeySVG className="w-16 h-16 drop-shadow-[0_0_15px_rgba(251,113,133,0.9)]" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Header / Subheader */}
+            <span className="text-brand-accent font-black tracking-widest uppercase text-xs mb-2 block">
+              SPIN COMPLETED!
+            </span>
+            <h3 className="text-3xl font-black text-white tracking-tight mb-2">
+              YOU WON!
+            </h3>
+            <p className="text-gray-400 text-sm max-w-xs mx-auto mb-8">
+              Congratulations! You obtained 1x {spinResult === 'lamb' ? (
+                <span className="text-amber-200 font-extrabold">Lamb Crate Key</span>
+              ) : (
+                <span className="text-rose-200 font-extrabold">Wagyu Crate Key</span>
+              )} in your inventory!
+            </p>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2.5">
+              <Link 
+                to="/minecraft/gacha" 
+                className="w-full py-4 bg-brand-primary hover:bg-red-600 text-white font-extrabold rounded-2xl text-xs uppercase tracking-widest transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-red-950/25 flex items-center justify-center gap-2"
+                onClick={() => {
+                  setShowResultBanner(false);
+                  setIsWheelOpen(false);
+                }}
+              >
+                <span>GO OPEN CRATE</span>
+              </Link>
+              <button 
+                onClick={() => setShowResultBanner(false)}
+                className="w-full py-4 bg-white/5 hover:bg-white/10 text-white border border-white/5 font-extrabold rounded-2xl text-xs uppercase tracking-widest transition-all hover:border-white/10"
+              >
+                CLOSE
+              </button>
+            </div>
           </div>
         </div>
       )}

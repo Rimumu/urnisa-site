@@ -110,7 +110,7 @@ const InventoryBACK: React.FC = () => {
         return null;
     });
     const [claimingId, setClaimingId] = useState<string | null>(null);
-    const [filter, setFilter] = useState<'all' | 'unclaimed' | 'pokemon' | 'item'>('all');
+    const [filter, setFilter] = useState<'all' | 'unclaimed' | 'claimed' | 'pokemon' | 'item'>('all');
     
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -192,6 +192,7 @@ const InventoryBACK: React.FC = () => {
     // Filter Logic
     const filteredItems = items.filter(item => {
         if (filter === 'unclaimed') return !item.claimed;
+        if (filter === 'claimed') return item.claimed;
         if (filter === 'pokemon') return item.type === 'Pokemon';
         if (filter === 'item') return item.type === 'Item';
         return true;
@@ -287,7 +288,7 @@ const InventoryBACK: React.FC = () => {
                     </div>
 
                     <div className="flex bg-black/40 rounded-xl p-1 border border-white/10 backdrop-blur-sm overflow-x-auto w-full md:w-auto">
-                        {(['all', 'unclaimed', 'pokemon', 'item'] as const).map(f => (
+                        {(['all', 'unclaimed', 'claimed', 'pokemon', 'item'] as const).map(f => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
