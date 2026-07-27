@@ -167,7 +167,9 @@ const NisathonEvent = mongoose.model('NisathonEvent', new mongoose.Schema({
     amountDisplay: { type: String, required: true },
     message: String,
     nisaballAmount: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    hidden: { type: Boolean, default: false },
+    isNisathon: { type: Boolean, default: true }
 }));
 
 const SpinQueue = mongoose.model('SpinQueue', new mongoose.Schema({
@@ -457,14 +459,34 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         eventType = 'donation';
         if (isNewEvent) stats.currentDonations += amount;
     }
+    else if (['nisall', 'nisaball', 'nisaballs', 'code', 'redeem'].includes(type)) {
+        earnedNisaballs = amount;
+        amountDisplay = `${amount} Nisaballs`;
+        eventType = 'nisaball';
+    }
+    else if (type === 'reward') {
+        earnedNisaballs = amount;
+        amountDisplay = message || `${amount} Nisaballs (Reward)`;
+        eventType = 'reward';
+    }
+    else if (['shop', 'wheel', 'deduction'].includes(type)) {
+        earnedNisaballs = amount;
+        amountDisplay = message || `${amount} Nisaballs (Shop)`;
+        eventType = 'shop';
+    }
     else if (['follower', 'follow'].includes(type)) {
         earnedNisaballs = 0;
         amountDisplay = "New Follower";
         eventType = 'follower';
     }
 
-    // Update Stats & Timer
-    if (isNewEvent) {
+    // Determine whether this event is part of Nisathon stream events vs Nisaball currency reward/shop transaction
+    const isNonNisathonType = ['reward', 'shop', 'wheel', 'deduction'].includes(eventType) || 
+                              (eventType === 'nisaball' && (amount < 0 || isManual));
+    const isNisathonEvent = !isNonNisathonType;
+
+    // Update Stats & Timer (ONLY for real Nisathon stream contribution events)
+    if (isNewEvent && isNisathonEvent) {
         stats.totalNisaballs = roundOneDecimal(stats.totalNisaballs + earnedNisaballs);
         const mult = stats.activeEvent === 'DOUBLE_TIMER' ? 2 : 1;
         const msAdd = earnedNisaballs * (stats.timePerNb || 10) * mult * 60000;
@@ -488,6 +510,8 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         amountDisplay,
         message,
         nisaballAmount: earnedNisaballs,
+        hidden: !isNisathonEvent ? true : false,
+        isNisathon: isNisathonEvent,
         createdAt: isNewEvent ? new Date() : undefined
     };
     Object.keys(eventData).forEach(k => eventData[k] === undefined && delete eventData[k]);
@@ -498,8 +522,8 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         { upsert: true, new: true }
     );
 
-    // Wheel Logic (Single Transaction >= 5 NB)
-    if (isNewEvent && earnedNisaballs >= 5) {
+    // Wheel Logic (Single Transaction >= 5 NB, ONLY for real Nisathon stream events)
+    if (isNewEvent && earnedNisaballs >= 5 && isNisathonEvent) {
         const spins = Math.floor(earnedNisaballs / 5);
         console.log(`🎡 Queueing ${spins} spins for ${user}`);
         for (let i = 0; i < spins; i++) {
@@ -994,14 +1018,67 @@ app.get('/api/nisathon/stats', async (req, res) => {
 
 app.get('/api/nisathon/leaderboard', async (req, res) => {
     try {
-        const lb = await NisathonEvent.aggregate([{ $group: { _id: "$user", total: { $sum: "$nisaballAmount" } } }, { $sort: { total: -1 } }, { $limit: 10 }]);
+        const lb = await NisathonEvent.aggregate([
+            { 
+                $match: { 
+                    hidden: { $ne: true }, 
+                    isNisathon: { $ne: false },
+                    type: { $nin: ['reward', 'shop', 'wheel', 'deduction'] }
+                } 
+            },
+            { $group: { _id: "$user", total: { $sum: "$nisaballAmount" } } },
+            { $sort: { total: -1 } },
+            { $limit: 10 }
+        ]);
         res.json(lb.map((x, i) => ({ rank: i + 1, user: x._id, totalNisaballs: roundOneDecimal(x.total) })));
     } catch { res.json([]); }
 });
 
 app.get('/api/nisathon/recent', async (req, res) => {
     const limit = parseInt(req.query.limit) || 50;
-    res.json(await NisathonEvent.find().sort({ createdAt: -1 }).limit(limit));
+    res.json(await NisathonEvent.find({ 
+        hidden: { $ne: true }, 
+        isNisathon: { $ne: false },
+        type: { $nin: ['reward', 'shop', 'wheel', 'deduction'] }
+    }).sort({ createdAt: -1 }).limit(limit));
+});
+
+app.get('/api/nisathon/user/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+        if (!username) return res.status(400).json({ error: "Missing username" });
+
+        // Query all events for this specific user to calculate their Nisaball currency balance
+        const events = await NisathonEvent.find({ 
+            user: { $regex: new RegExp(`^${username.trim()}$`, 'i') } 
+        }).sort({ createdAt: -1 });
+
+        // Available Nisaball wallet balance = sum of ALL nisaballAmounts (contributions + rewards - shop spending)
+        const totalNisaballs = events.reduce((sum, e) => sum + (e.nisaballAmount || 0), 0);
+
+        // Nisathon stream contribution events ONLY (exclude shop, wheel, reward, deduction, non-nisathon)
+        const nisathonContributionEvents = events.filter(e => 
+            !e.hidden && 
+            e.isNisathon !== false && 
+            !['reward', 'shop', 'wheel', 'deduction'].includes(e.type)
+        );
+
+        res.json({
+            user: username,
+            totalNisaballs: Math.max(0, roundOneDecimal(totalNisaballs)),
+            events: nisathonContributionEvents.map(e => ({
+                id: e._id || e.providerId,
+                type: e.type,
+                amountDisplay: e.amountDisplay,
+                message: e.message,
+                nisaballAmount: e.nisaballAmount,
+                createdAt: e.createdAt
+            }))
+        });
+    } catch (e) {
+        console.error("Error fetching user nisaball balance:", e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.post('/api/nisathon/test-event', auth, async (req, res) => {
@@ -1823,7 +1900,6 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     }
 });
 const imageValidationCache = new Map();
-app.get('/api/utils/check-image', async (req, res) => { const { url } = req.query; if (!url) return res.json({ valid: false }); if (imageValidationCache.has(url)) { return res.json({ valid: imageValidationCache.get(url) }); } try { const response = await axios.head(url, { timeout: 5000 }); const length = parseInt(response.headers['content-length'] || '0'); const isValid = length > 2048; imageValidationCache.set(url, isValid); res.json({ valid: isValid }); } catch (e) { imageValidationCache.set(url, false); res.json({ valid: false }); } });
 
 // ==========================================
 // NEW BINGO API
@@ -2314,23 +2390,6 @@ app.post('/api/admin/archive/rankings/create', auth, async (req, res) => {
 // TOURNAMENT API ROUTES
 // ==========================================
 
-// Get Tournament Config
-app.get('/api/tournament/config', async (req, res) => {
-    try {
-        const config = await Setting.findOne({ key: 'tournament_config' });
-        // Default to DRAFTING if not present
-        const val = config ? config.value : {};
-        // Use status if present, otherwise infer from legacy lockEnabled
-        const status = val.status || (val.lockEnabled ? 'LOCK_IN' : 'DRAFTING');
-
-        res.json({
-            status,
-            lockEnabled: status === 'LOCK_IN' // Maintain backward compat
-        });
-    } catch (e) {
-        res.status(500).json({ error: "Fetch failed" });
-    }
-});
 
 // Admin: Set Tournament Config
 app.post('/api/admin/tournament/config', auth, async (req, res) => {
@@ -2421,69 +2480,7 @@ app.post('/api/tournament/register', async (req, res) => {
     }
 });
 
-// NEW: End Tournament & Save Winners
-app.post('/api/admin/tournament/end', auth, async (req, res) => {
-    const { winners, seasonId } = req.body;
 
-    if (!winners || !Array.isArray(winners) || winners.length < 1) {
-        return res.status(400).json({ error: "Invalid winners data" });
-    }
-
-    try {
-        const parsedSeasonId = parseInt(seasonId) || 1;
-        // Always use season-specific key for all seasons going forward
-        const key = `tournament_winners_${parsedSeasonId}`;
-
-        await Setting.findOneAndUpdate(
-            { key },
-            { value: winners },
-            { upsert: true }
-        );
-
-        await Setting.findOneAndUpdate(
-            { key: 'tournament_config' }, // This might also need to be season specific? 
-            // The config seems global. For now let's keep it global or the prompt didn't ask to fix status.
-            // Actually, if we end Season 3, we don't want to mess up status if it's shared.
-            // But usually only one tournament is active.
-            { value: { status: 'ENDED', lockEnabled: false } },
-            { upsert: true }
-        );
-
-        res.json({ success: true, message: "Tournament Ended & Winners Saved" });
-    } catch (e) {
-        console.error("End Tournament Error:", e);
-        res.status(500).json({ error: "Failed to end tournament" });
-    }
-});
-
-// NEW: Get Tournament Winners (Public)
-app.get('/api/tournament/winners', async (req, res) => {
-    try {
-        const { seasonId } = req.query;
-        const parsedSeasonId = parseInt(seasonId) || 1;
-
-        // Use season-specific key for all seasons
-        const key = `tournament_winners_${parsedSeasonId}`;
-
-        let setting = await Setting.findOne({ key });
-
-        // Fallback: For Season 1 & 2, try the legacy generic key if specific key not found
-        if (!setting && parsedSeasonId <= 2) {
-            const legacySetting = await Setting.findOne({ key: 'tournament_winners' });
-            // Only use legacy if it exists and this is the most recent concluded season
-            // For proper fix, we should migrate data. For now, return legacy for Season 2 only (most recent)
-            if (legacySetting && parsedSeasonId === 2) {
-                return res.json(legacySetting.value || []);
-            }
-            // For Season 1, return empty if no specific key (likely no data was stored separately)
-            return res.json([]);
-        }
-
-        res.json(setting ? setting.value : []);
-    } catch (e) {
-        res.status(500).json({ error: "Fetch failed" });
-    }
-});
 
 // Lock Team
 app.post('/api/tournament/lock', async (req, res) => {
@@ -2556,40 +2553,6 @@ app.post('/api/tournament/duo/save-team', async (req, res) => {
     }
 });
 
-// Lock Duo Team (Captain Only)
-app.post('/api/tournament/duo/lock', async (req, res) => {
-    const { discordId, duoId } = req.body;
-    if (!discordId || !duoId) return res.status(400).json({ error: "Missing data" });
-
-    try {
-        const duo = await TournamentDuo.findOne({ duoId });
-        if (!duo) return res.status(404).json({ error: "Duo not found" });
-
-        // Verify user is captain
-        if (duo.captainDiscordId !== discordId) {
-            return res.status(403).json({ error: "Only the Captain can lock the team." });
-        }
-
-        // Check season status
-        const season = await TournamentSeason.findOne({ seasonId: duo.seasonId });
-        if (season && season.status !== 'LOCK_IN') {
-            return res.status(403).json({ error: "Lock-ins are currently unavailable." });
-        }
-
-        // Validate team has 6 Pokemon
-        const validCount = (duo.team || []).filter(p => p !== null).length;
-        if (validCount < 6) {
-            return res.status(400).json({ error: "Team must have 6 Pokemon to lock." });
-        }
-
-        duo.isLocked = true;
-        await duo.save();
-        res.json({ success: true });
-    } catch (e) {
-        console.error("Duo Lock Error:", e);
-        res.status(500).json({ error: "Failed to lock team" });
-    }
-});
 
 // Admin: Unlock Duo Team
 app.post('/api/admin/tournament/duo/unlock', auth, async (req, res) => {
@@ -2623,28 +2586,6 @@ app.post('/api/admin/tournament/duo/revoke', auth, async (req, res) => {
     }
 });
 
-// Admin: Update Duo Captain (Swap Captain)
-app.post('/api/admin/tournament/duo/update-captain', auth, async (req, res) => {
-    const { duoId, newCaptainDiscordId } = req.body;
-    if (!duoId || !newCaptainDiscordId) return res.status(400).json({ error: "Missing duoId or newCaptainDiscordId" });
-
-    try {
-        const duo = await TournamentDuo.findOne({ duoId });
-        if (!duo) return res.status(404).json({ error: "Duo not found" });
-
-        // Verify newCaptainDiscordId is one of the duo members
-        if (newCaptainDiscordId !== duo.player1DiscordId && newCaptainDiscordId !== duo.player2DiscordId) {
-            return res.status(400).json({ error: "New captain must be a duo member" });
-        }
-
-        duo.captainDiscordId = newCaptainDiscordId;
-        await duo.save();
-        res.json({ success: true });
-    } catch (e) {
-        console.error("Duo Update Captain Error:", e);
-        res.status(500).json({ error: "Failed to update captain" });
-    }
-});
 
 // Get User's Duo (for "My Team" section)
 app.get('/api/tournament/my-duo', async (req, res) => {
@@ -2670,90 +2611,9 @@ app.get('/api/tournament/my-duo', async (req, res) => {
     }
 });
 
-// Get All Duos for a Season (Public)
-app.get('/api/tournament/duos', async (req, res) => {
-    const { seasonId } = req.query;
-    const targetSeasonId = parseInt(seasonId) || 1;
 
-    try {
-        const duos = await TournamentDuo.find({ seasonId: targetSeasonId }).sort({ createdAt: -1 });
-        res.json(duos);
-    } catch (e) {
-        console.error("Fetch Duos Error:", e);
-        res.status(500).json({ error: "Failed to fetch duos" });
-    }
-});
 
-// Admin: Create Duo (Pair two players)
-app.post('/api/admin/tournament/duo/create', auth, async (req, res) => {
-    const { seasonId, player1, player2, captain } = req.body;
-    // player1, player2 = { discordId, username }
-    // captain = 'player1' | 'player2'
 
-    if (!player1 || !player2 || !captain || !seasonId) {
-        return res.status(400).json({ error: "Missing data" });
-    }
-
-    try {
-        const duoId = `duo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const captainDiscordId = captain === 'player1' ? player1.discordId : player2.discordId;
-
-        const newDuo = new TournamentDuo({
-            duoId,
-            seasonId,
-            player1DiscordId: player1.discordId,
-            player1Username: player1.username,
-            player2DiscordId: player2.discordId,
-            player2Username: player2.username,
-            captainDiscordId,
-            team: [],
-            isLocked: false
-        });
-
-        await newDuo.save();
-        res.json({ success: true, duo: newDuo });
-    } catch (e) {
-        console.error("Create Duo Error:", e);
-        res.status(500).json({ error: "Failed to create duo" });
-    }
-});
-
-// Admin: Delete Duo
-app.post('/api/admin/tournament/duo/delete', auth, async (req, res) => {
-    const { duoId } = req.body;
-    if (!duoId) return res.status(400).json({ error: "Missing duoId" });
-
-    try {
-        await TournamentDuo.deleteOne({ duoId });
-        res.json({ success: true });
-    } catch (e) {
-        console.error("Delete Duo Error:", e);
-        res.status(500).json({ error: "Failed to delete duo" });
-    }
-});
-
-// Admin: Update Duo Captain
-app.post('/api/admin/tournament/duo/update-captain', auth, async (req, res) => {
-    const { duoId, newCaptainDiscordId } = req.body;
-    if (!duoId || !newCaptainDiscordId) return res.status(400).json({ error: "Missing data" });
-
-    try {
-        const duo = await TournamentDuo.findOne({ duoId });
-        if (!duo) return res.status(404).json({ error: "Duo not found" });
-
-        // Verify new captain is in the duo
-        if (newCaptainDiscordId !== duo.player1DiscordId && newCaptainDiscordId !== duo.player2DiscordId) {
-            return res.status(400).json({ error: "New captain must be a duo member" });
-        }
-
-        duo.captainDiscordId = newCaptainDiscordId;
-        await duo.save();
-        res.json({ success: true });
-    } catch (e) {
-        console.error("Update Captain Error:", e);
-        res.status(500).json({ error: "Failed to update captain" });
-    }
-});
 // Updated to filter out Dev players by default unless specified
 app.get('/api/tournament/players', async (req, res) => {
     const { dev, seasonId } = req.query;
@@ -3503,6 +3363,11 @@ app.post('/api/admin/maintenance/wipe-minecraft-data', auth, async (req, res) =>
             };
         }
 
+        if (!scope || scope === 'all' || scope === 'nisaballs') {
+            const updateRes = await NisathonEvent.updateMany({}, { $set: { nisaballAmount: 0 } });
+            results.nisaballs = { success: true, updatedCount: updateRes.modifiedCount };
+        }
+
         if (!scope || scope === 'all' || scope === 'tournament') {
             // Find all active (non-archived) seasons
             const activeSeasons = await TournamentSeason.find({ isArchived: { $ne: true } });
@@ -3600,17 +3465,6 @@ app.get('/api/tournament/config', async (req, res) => {
     }
 });
 
-// Get Tournament Winners - Season Aware
-app.get('/api/tournament/winners', async (req, res) => {
-    try {
-        const seasonId = parseInt(req.query.seasonId) || 1;
-        const season = await TournamentSeason.findOne({ seasonId });
-        if (!season || !season.winners) return res.json([]);
-        res.json(season.winners);
-    } catch (e) {
-        res.status(500).json({ error: "Fetch failed" });
-    }
-});
 
 // Create New Season (Admin)
 app.post('/api/admin/tournament/season/create', auth, async (req, res) => {
@@ -3684,36 +3538,6 @@ app.post('/api/admin/tournament/season/:id/archive', auth, async (req, res) => {
     }
 });
 
-// End Tournament with Winners (Admin)
-app.post('/api/admin/tournament/end', auth, async (req, res) => {
-    try {
-        const { seasonId, winners, isDuos } = req.body;
-
-        if (!seasonId || !winners) {
-            return res.status(400).json({ error: "seasonId and winners are required" });
-        }
-
-        // Update season with winners and set status to ENDED
-        const season = await TournamentSeason.findOneAndUpdate(
-            { seasonId: parseInt(seasonId) },
-            {
-                winners: winners,
-                status: 'ENDED'
-            },
-            { new: true }
-        );
-
-        if (!season) {
-            return res.status(404).json({ error: "Season not found" });
-        }
-
-        console.log(`🏆 Tournament ended for Season ${seasonId}. Winners:`, winners);
-        res.json({ success: true, season });
-    } catch (e) {
-        console.error("End tournament error:", e);
-        res.status(500).json({ error: "Failed to end tournament" });
-    }
-});
 
 // Get Tournament Winners (Public)
 app.get('/api/tournament/winners', async (req, res) => {
@@ -5368,7 +5192,7 @@ if (MONGO_URI) {
                 console.log("🚀 Startup Deep Sync...");
                 await runSync(true);
                 setInterval(() => runSync(false), 30000);
-                setInterval(() => { axios.get('https://urnisa-backend-3b3m.onrender.com').catch(() => { }) }, 300000);
+                setInterval(() => { axios.get('https://urnisa-dbot-m4im.onrender.com').catch(() => { }) }, 300000);
             });
         })
         .catch(e => console.error("❌ DB Fail:", e));

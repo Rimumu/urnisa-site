@@ -1441,7 +1441,7 @@ const ArchiveTournament: React.FC = () => {
 
             {/* DUO DETAILS MODAL */}
             {selectedDuo && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedDuo(null)}>
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300 cursor-pointer" onClick={() => setSelectedDuo(null)}>
                     <div className="bg-[#120507] w-full max-w-4xl max-h-[90vh] rounded-[3rem] border-2 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500" onClick={e => e.stopPropagation()}>
 
                         {/* Decorative Header Background */}

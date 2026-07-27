@@ -1,16 +1,26 @@
 const fs = require('fs');
+let content = fs.readFileSync('pages/GachaDev.tsx', 'utf8');
 
-const KeyIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>`;
-const KeyIcon20 = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>`;
-const LockOpenIcon20 = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
-const ArrowLeftIcon16 = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`;
+// Wait, since I overwrote it, the original SVGs are gone! I need to get them from Gacha.tsx!
+let originalContent = fs.readFileSync('pages/Gacha.tsx', 'utf8');
 
-for (const file of ['pages/Gacha.tsx', 'pages/GachaDev.tsx']) {
-    let code = fs.readFileSync(file, 'utf8');
-    code = code.replace(/import { Package, Key, LockOpen, ArrowLeft } from 'lucide-react';/, '');
-    code = code.replace(/<Key size=\{18\} \/>/g, KeyIcon);
-    code = code.replace(/<Key size=\{20\} \/>/g, KeyIcon20);
-    code = code.replace(/<LockOpen size=\{20\} \/>/g, LockOpenIcon20);
-    code = code.replace(/<ArrowLeft size=\{16\} \/>/g, ArrowLeftIcon16);
-    fs.writeFileSync(file, code);
-}
+const lambSvgMatch = originalContent.match(/(<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 150 100" className="w-full h-full drop-shadow-\[0_0_25px_rgba\(146,64,14,0\.6\)\] relative z-10">.*?<\/svg>)/s);
+const steakSvgMatch = originalContent.match(/(<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 150 100" className="w-full h-full drop-shadow-\[0_0_25px_rgba\(251,191,36,0\.4\)\] relative z-10">.*?<\/svg>)/s);
+
+const lambComponent = `
+const LambCrateSVG: React.FC<{ stage: string; selectedCrate: string | null }> = ({ stage, selectedCrate }) => (
+    ${lambSvgMatch[1]}
+);
+`;
+
+const steakComponent = `
+const SteakCrateSVG: React.FC<{ stage: string; selectedCrate: string | null }> = ({ stage, selectedCrate }) => (
+    ${steakSvgMatch[1]}
+);
+`;
+
+// Now replace the broken components in GachaDev.tsx
+content = content.replace(/const LambCrateSVG.*?<LambCrateSVG.*?\);\s*/s, lambComponent);
+content = content.replace(/const SteakCrateSVG.*?<SteakCrateSVG.*?\);\s*/s, steakComponent);
+
+fs.writeFileSync('pages/GachaDev.tsx', content);

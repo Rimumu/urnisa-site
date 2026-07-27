@@ -5,10 +5,12 @@ import UserProfile from './UserProfile';
 
 interface WipPlaceholderProps {
     backPath?: string;
+    backLabel?: string;
 }
 
 const WipPlaceholder: React.FC<WipPlaceholderProps> = ({ 
-    backPath = "/minecraft"
+    backPath = "/minecraft",
+    backLabel = "Back to Dashboard"
 }) => {
     return (
         <div className="min-h-screen pt-24 pb-12 px-4 font-sans relative flex flex-col justify-center items-center">
@@ -16,9 +18,9 @@ const WipPlaceholder: React.FC<WipPlaceholderProps> = ({
             <UserProfile className="!absolute top-4 right-4 z-50" />
             
             <div className="max-w-md mx-auto w-full space-y-6">
-                <Link to={backPath} className="text-gray-400 hover:text-white mb-2 inline-flex items-center gap-2 group transition-colors">
+                <Link to={backPath} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md mb-2 group">
                     <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                    Back to Minecraft Dashboard
+                    {backLabel}
                 </Link>
 
                 {/* Ultra-Minimalist Under Maintenance Card */}

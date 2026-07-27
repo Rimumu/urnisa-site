@@ -6,9 +6,11 @@ interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
     className?: string;
     contain?: boolean; // If true, uses object-contain instead of object-cover
     priority?: boolean; // If true, sets loading="eager"
+    pixelated?: boolean; // If true, applies imageRendering: 'pixelated'
+    imgStyle?: React.CSSProperties; // custom styles for the img element
 }
 
-const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, className = "", contain = false, priority = false, ...props }) => {
+const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, className = "", contain = false, priority = false, pixelated = false, imgStyle, ...props }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(false);
     const [currentSrc, setCurrentSrc] = useState(src);
@@ -61,6 +63,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({ src, alt, className = "
                     src={currentSrc}
                     alt={alt}
                     className={`relative z-10 w-full h-full ${contain ? 'object-contain' : 'object-cover'}`}
+                    style={{ imageRendering: pixelated ? 'pixelated' : 'auto', ...imgStyle }}
                     loading={priority ? "eager" : "lazy"}
                     decoding="async"
                     referrerPolicy="no-referrer"

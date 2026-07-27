@@ -414,7 +414,7 @@ const PokemonAdminImage: React.FC<{ pokemon: { id: number; name: string } }> = (
 interface Code {
     _id: string;
     code: string;
-    type: 'lamb' | 'steak';
+    type: 'lamb' | 'wagyu';
     keyAmount: number;
     usageType: string;
     usageCount: number;
@@ -1030,6 +1030,12 @@ const Admin: React.FC = () => {
                 headers: { 'Content-Type': 'application/json', Authorization: password },
                 body: JSON.stringify({ sourceUser: mergeSource, targetUser: mergeTarget })
             });
+            // Also call DBOT to merge MinecraftLinks
+            await fetch(`${DISCORD_API_URL}/api/admin/users/merge`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: password },
+                body: JSON.stringify({ sourceUser: mergeSource, targetUser: mergeTarget })
+            }).catch(e => console.error("Dbot merge failed", e));
             const data = await response.json();
             if (response.ok) {
                 setUserActionStatus({ type: 'success', message: data.message });
@@ -1121,7 +1127,7 @@ const Admin: React.FC = () => {
         } finally { setLoading(false); }
     };
 
-    const handleWipeMinecraftData = async (scope: 'all' | 'inventory' | 'currency' | 'approved_users' | 'bingo' | 'tournament') => {
+    const handleWipeMinecraftData = async (scope: 'all' | 'inventory' | 'currency' | 'approved_users' | 'bingo' | 'tournament' | 'nisaballs') => {
         if (scope === 'all' && wipeConfirmText !== 'WIPE') {
             alert("Please type 'WIPE' exactly to confirm the full database reset.");
             return;
@@ -1141,7 +1147,7 @@ const Admin: React.FC = () => {
             let mainResults: any = null;
 
             // 1. Wipe Bot Server data (inventories, currencies, approved users)
-            if (scope === 'all' || scope === 'inventory' || scope === 'currency' || scope === 'approved_users') {
+            if (scope === 'all' || scope === 'inventory' || scope === 'currency' || scope === 'approved_users' || scope === 'nisaballs') {
                 const res = await fetch(`${DISCORD_API_URL}/api/admin/maintenance/wipe-minecraft-data`, {
                     method: 'POST',
                     headers: {
@@ -1161,7 +1167,7 @@ const Admin: React.FC = () => {
             }
 
             // 2. Wipe Main Server data (bingo, tournament data)
-            if (scope === 'all' || scope === 'bingo' || scope === 'tournament') {
+            if (scope === 'all' || scope === 'bingo' || scope === 'tournament' || scope === 'nisaballs') {
                 const res = await fetch(`${API_BASE_URL}/api/admin/maintenance/wipe-minecraft-data`, {
                     method: 'POST',
                     headers: {
@@ -1653,7 +1659,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
             {/* Mobile Overlay */}
             {isMobileMenuOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden cursor-pointer"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
@@ -3133,7 +3139,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
                                         <div>
                                             <h4 className="font-bold text-white text-lg">Wipe Key Wallets (Currency)</h4>
-                                            <p className="text-xs text-gray-500 mt-1">Resets lamb and steak key balances for all users to 0, resetting currency state completely.</p>
+                                            <p className="text-xs text-gray-500 mt-1">Resets lamb and wagyu key balances for all users to 0, resetting currency state completely.</p>
                                         </div>
                                         <button 
                                             onClick={() => handleWipeMinecraftData('currency')} 
@@ -3144,6 +3150,43 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         </button>
                                     </div>
 
+                                    {/* Clear Nisaballs */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Wipe Nisaball Balance</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Resets the Nisaball balance for all users to 0 (does not erase bits/subs history).</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleWipeMinecraftData('nisaballs')} 
+                                            disabled={isWiping}
+                                            className="bg-red-600/10 border border-red-500/20 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            WIPE NISABALLS
+                                        </button>
+                                    </div>
+
+                                    
+                                    {/* Randomize Shop */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Reset & Randomize Daily Shop</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Changes the global seed to instantly force a new selection of 4 daily hats.</p>
+                                        </div>
+                                        <button 
+                                            onClick={async () => {
+                                                if(!window.confirm("Are you sure you want to reroll the 24-hour daily shop for everyone?")) return;
+                                                const res = await fetch(`${DISCORD_API_URL}/api/admin/shop/randomize`, {
+                                                    method: 'POST',
+                                                    headers: { Authorization: password }
+                                                });
+                                                if(res.ok) alert("Shop randomized successfully!");
+                                                else alert("Failed to randomize shop.");
+                                            }}
+                                            className="bg-amber-600/10 border border-amber-500/20 hover:bg-amber-600 text-amber-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm"
+                                        >
+                                            RANDOMIZE SHOP
+                                        </button>
+                                    </div>
                                     {/* Clear Approved Users */}
                                     <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
                                         <div>
@@ -3251,11 +3294,12 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Type</label>
                                         <select value={genType} onChange={e => setGenType(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors appearance-none">
                                             <option value="lamb">Lamb Crate Key</option>
-                                            <option value="wagyu">Steak Crate Key</option>
+                                            <option value="wagyu">Wagyu Crate Key</option>
+                                            <option value="nisaball">Nisaballs</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Keys per Code</label>
+                                        <label className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest block">Keys/Balls Qty</label>
                                         <input type="number" value={genKeyAmount} onChange={e => setGenKeyAmount(parseInt(e.target.value) || 1)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white font-bold focus:border-brand-primary outline-none transition-colors" min="1" />
                                     </div>
                                     <div className="space-y-2">
@@ -3297,11 +3341,11 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <div className="rounded-3xl border border-white/5 overflow-hidden shadow-2xl bg-black/20">
                                     <div className="max-h-[500px] overflow-y-auto overflow-x-auto custom-scrollbar">
                                         <table className="w-full min-w-[800px] text-sm text-left text-gray-300 relative">
-                                            <thead className="text-[10px] text-gray-400 font-black uppercase tracking-widest bg-black/60 sticky top-0 z-10 backdrop-blur-md">
+                                                    <thead className="text-[10px] text-gray-400 font-black uppercase tracking-widest bg-black/60 sticky top-0 z-10 backdrop-blur-md">
                                                 <tr>
                                                     <th className="px-6 py-4">Code</th>
                                                     <th className="px-6 py-4">Type</th>
-                                                    <th className="px-6 py-4">Key Qty</th>
+                                                    <th className="px-6 py-4">Qty</th>
                                                     <th className="px-6 py-4">Usage</th>
                                                     <th className="px-6 py-4">Redeemed</th>
                                                     <th className="px-6 py-4">Expires</th>
@@ -3313,7 +3357,11 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                     <tr key={c._id} className="hover:bg-white/5 transition-colors group">
                                                         <td className="px-6 py-4 font-mono font-bold text-white text-base">{c.code}</td>
                                                         <td className="px-6 py-4">
-                                                            <span className={`px-3 py-1 rounded-lg text-xs font-black tracking-widest uppercase shadow-sm border ${c.type === 'lamb' ? 'bg-purple-900/30 text-purple-300 border-purple-500/30' : 'bg-pink-900/30 text-pink-300 border-pink-500/30'}`}>
+                                                            <span className={`px-3 py-1 rounded-lg text-xs font-black tracking-widest uppercase shadow-sm border ${
+                                                                c.type === 'lamb' ? 'bg-purple-900/30 text-purple-300 border-purple-500/30' :
+                                                                c.type === 'nisaball' ? 'bg-amber-900/30 text-amber-300 border-amber-500/30' :
+                                                                'bg-pink-900/30 text-pink-300 border-pink-500/30'
+                                                            }`}>
                                                                 {c.type}
                                                             </span>
                                                         </td>

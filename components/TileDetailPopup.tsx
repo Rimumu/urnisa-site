@@ -21,7 +21,7 @@ const TileDetailPopup: React.FC<Props> = ({ tile, players, specialEvent, board, 
 
     return (
         <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-in fade-in duration-200 cursor-pointer"
             onClick={onClose}
         >
             <div

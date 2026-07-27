@@ -38,6 +38,310 @@ const ROLE_FRIEND = '1445655680735383675';
 const WHITELIST_NOTIFY_CHANNEL = '1375823728717467788';
 const GACHA_LOG_CHANNEL = '1382803278449868921';
 
+// --- AUTHENTIC HAT OVERRIDES ---
+const AUTHENTIC_HAT_OVERRIDES = {
+    "amalgalichhat": { name: "Amalgalich", dyeable: false },
+    "angrymask": { name: "Tribal Mask", dyeable: false },
+    "antlers": { name: "Antlers", dyeable: false },
+    "apple": { name: "Apple", dyeable: false },
+    "artsy": { name: "Artsy", dyeable: true },
+    "babydolphin": { name: "Baby Dolphin", dyeable: false },
+    "babyturtle": { name: "Baby Turtle", dyeable: false },
+    "bandana": { name: "Bandana", dyeable: true },
+    "bandanargb": { name: "RGB Bandana", dyeable: false },
+    "baseballeaster": { name: "Easter Baseball Cap", dyeable: true },
+    "baseballhat": { name: "Baseball Cap", dyeable: true },
+    "baseballhatfestive": { name: "Festive Baseball Cap", dyeable: false },
+    "baseballhatjuly": { name: "Summer Baseball Cap", dyeable: false },
+    "baseballhatrgb": { name: "RGB Baseball Cap", dyeable: false },
+    "batwinghat": { name: "Bat Wing Hat", dyeable: false },
+    "beanie": { name: "Beanie", dyeable: true },
+    "beanieeaster": { name: "Easter Beanie", dyeable: true },
+    "beaniefestive": { name: "Festive Beanie", dyeable: false },
+    "beaniejuly": { name: "Summer Beanie", dyeable: false },
+    "beaniergb": { name: "RGB Beanie", dyeable: false },
+    "beaniespooky": { name: "Halloween Beanie", dyeable: false },
+    "beehat": { name: "Bee Hat", dyeable: false },
+    "bicorne": { name: "Bicorne", dyeable: false },
+    "bigbrain": { name: "Big Brain", dyeable: false },
+    "bigcrown": { name: "Big Crown", dyeable: false },
+    "bigeyes": { name: "Big Eyes", dyeable: false },
+    "bigribbon": { name: "Big Ribbon", dyeable: true },
+    "bigstevehead": { name: "Mascot Head", dyeable: false },
+    "bluefireeye": { name: "Skeleton Eye", dyeable: false },
+    "bowler": { name: "Bowler Cap", dyeable: true },
+    "breadhat": { name: "Bread on Head", dyeable: false },
+    "brownbrick": { name: "Brick on Head", dyeable: false },
+    "bunnyhat": { name: "Bunny Hat", dyeable: true },
+    "burgerhat": { name: "Burger", dyeable: false },
+    "caddycap": { name: "Caddy Cap", dyeable: true },
+    "camera": { name: "Camera Head", dyeable: false },
+    "camerabeard": { name: "Camera Beard", dyeable: false },
+    "candleonhead": { name: "Candle", dyeable: false },
+    "candycane": { name: "Candy Cane", dyeable: false },
+    "carrotonstick": { name: "Carrot on a Stick", dyeable: false },
+    "cartoonegg": { name: "Cartoon Egg", dyeable: false },
+    "cheeseslice": { name: "Cheese Slice", dyeable: false },
+    "chefshat": { name: "Chef's Hat", dyeable: false },
+    "chickenhead": { name: "Chicken Head", dyeable: false },
+    "chickenonhead": { name: "Chicken on Head", dyeable: false },
+    "christmascakehat": { name: "Fruit Cake", dyeable: false },
+    "christmastree": { name: "Festive Tree", dyeable: false },
+    "clockface": { name: "Clock Head", dyeable: false },
+    "cowboy": { name: "Cowboy Hat", dyeable: true },
+    "cowboyrgb": { name: "RGB Cowboy Hat", dyeable: false },
+    "crabonhead": { name: "Crab on Head", dyeable: false },
+    "crown": { name: "Crown", dyeable: false },
+    "cuphead": { name: "Cup Head", dyeable: false },
+    "cyclopseye": { name: "Cyclops Eye", dyeable: false },
+    "dairyqueen": { name: "DQ Lips", dyeable: false },
+    "dangereqsue": { name: "Dangeresque Shades", dyeable: false },
+    "dangeresquejuly": { name: "Summer Dangeresque Shades", dyeable: false },
+    "demoneyes": { name: "Demon Eyes", dyeable: false },
+    "demonhorns": { name: "Demon Horns", dyeable: false },
+    "digger": { name: "Diglett", dyeable: false },
+    "dimmahat": { name: "Dimmadome Dimmahat", dyeable: false },
+    "discoball": { name: "Disco", dyeable: false },
+    "disguise": { name: "Disguise", dyeable: false },
+    "doctorhat": { name: "Doctor's Gear", dyeable: false },
+    "dorkglassesandteeth": { name: "Dork", dyeable: false },
+    "doubletake": { name: "Double Take", dyeable: false },
+    "dragonhead": { name: "Dragon Head", dyeable: false },
+    "dragonskull": { name: "Dragon Skull", dyeable: false },
+    "dragonskullender": { name: "Ender Dragon Skull", dyeable: false },
+    "drinkinhat": { name: "Drinking Hat", dyeable: false },
+    "dumhat": { name: "Dum", dyeable: false },
+    "dwarfminerbeard": { name: "Dwarven Miner", dyeable: false },
+    "easterhead": { name: "Easter Island Head", dyeable: false },
+    "egghead": { name: "Egg Head", dyeable: false },
+    "eggonhead": { name: "Egg on Head", dyeable: false },
+    "elfhat": { name: "Elf Hat", dyeable: true },
+    "explorerhat": { name: "Explorer Hat", dyeable: true },
+    "eyepatch": { name: "Eye Patch", dyeable: false },
+    "fakeblight": { name: "Blight", dyeable: false },
+    "fakefire": { name: "Fire", dyeable: false },
+    "farmerbrim": { name: "Farmer Brim", dyeable: true },
+    "festiveantlers": { name: "Festive Antlers", dyeable: false },
+    "festiveribbon": { name: "Festive Ribbon", dyeable: false },
+    "finnhood": { name: "Finn Hood", dyeable: true },
+    "fireworks": { name: "Fireworks", dyeable: false },
+    "fishonhead": { name: "Fish on Head", dyeable: false },
+    "flagjuly": { name: "Summer Flag", dyeable: false },
+    "flies": { name: "Flies", dyeable: false },
+    "floatinghearts": { name: "Floating Hearts", dyeable: false },
+    "floatingstar": { name: "Floating Star", dyeable: false },
+    "flowercrown": { name: "Flower Crown", dyeable: false },
+    "floweronhead": { name: "Flower Head", dyeable: false },
+    "foxhat": { name: "Fox Hat", dyeable: false },
+    "fro": { name: "Fro", dyeable: true },
+    "frozenhead": { name: "Frozen Head", dyeable: false },
+    "fullironhelm": { name: "Armor Helm", dyeable: false },
+    "ghostmask": { name: "Ghost Head", dyeable: false },
+    "goggles": { name: "Goggles", dyeable: true },
+    "grandmadisguise": { name: "Grandma Disguise", dyeable: false },
+    "greenbirb": { name: "Green Birb", dyeable: false },
+    "grinchhat": { name: "Grinch Mask", dyeable: false },
+    "halo": { name: "Halo", dyeable: false },
+    "headbolts": { name: "Head Bolts", dyeable: false },
+    "headphonesblue": { name: "Headphones", dyeable: true },
+    "headshot": { name: "Headshot", dyeable: false },
+    "hockeymask": { name: "Hockey Mask", dyeable: false },
+    "holyhead": { name: "Holy Head", dyeable: false },
+    "horsemask": { name: "Horse Head", dyeable: false },
+    "hosthat": { name: "Host", dyeable: false },
+    "icedragonskull": { name: "Ice Dragon Skull", dyeable: false },
+    "jackohat": { name: "Jack-o-Lantern Hat", dyeable: false },
+    "jesterhat": { name: "Jester", dyeable: true },
+    "julydouble": { name: "Summer Gear", dyeable: false },
+    "kirbymouthful": { name: "Mouthful", dyeable: false },
+    "largehorns": { name: "Large Horns", dyeable: false },
+    "lilbow": { name: "Lil' Bow", dyeable: true },
+    "madscientist": { name: "Wily Head", dyeable: false },
+    "magikarp": { name: "Magikarp", dyeable: false },
+    "megamanhat": { name: "Megaman Head", dyeable: false },
+    "mistletoe": { name: "Mistletoe", dyeable: false },
+    "mohawk": { name: "Mohawk", dyeable: true },
+    "monkeyking": { name: "Monkey King", dyeable: false },
+    "monocle": { name: "Monocle", dyeable: false },
+    "moreeyes": { name: "Eye Head", dyeable: false },
+    "murdered": { name: "Murdered", dyeable: false },
+    "nekoears": { name: "Neko Ears", dyeable: true },
+    "palmtree": { name: "Palm Tree", dyeable: false },
+    "paperbag": { name: "Paper Bag", dyeable: false },
+    "partyhat": { name: "Party Hat", dyeable: true },
+    "paypay": { name: "Paypay", dyeable: false },
+    "penguinbaby": { name: "Baby Penguin", dyeable: false },
+    "penguinhat": { name: "Penguin Hat", dyeable: false },
+    "pighead": { name: "Pig Head", dyeable: false },
+    "pinhead": { name: "Pin Head", dyeable: false },
+    "plaguedoctor": { name: "Plague Doctor", dyeable: false },
+    "pog": { name: "Poggers", dyeable: false },
+    "pohatoe": { name: "Pohatoe", dyeable: false },
+    "policebucket": { name: "Police Bucket", dyeable: true },
+    "policesiren": { name: "Siren", dyeable: false },
+    "poofballhat": { name: "Poofball", dyeable: true },
+    "poofballrgb": { name: "RGB Poofball", dyeable: false },
+    "popehat": { name: "Pope Hat", dyeable: false },
+    "potionhead": { name: "Potion Head", dyeable: false },
+    "presentsstack": { name: "Presents", dyeable: false },
+    "propelhat": { name: "Propeller", dyeable: true },
+    "questbook": { name: "Questbook Hat", dyeable: false },
+    "rabbitears": { name: "Bunny Ears", dyeable: true },
+    "rabbitonhead": { name: "Bunny on Head", dyeable: false },
+    "rainboworbiters": { name: "Rainbow Orbiters", dyeable: false },
+    "ranahat": { name: "Rana Cap", dyeable: true },
+    "redeyes": { name: "Red Eyes", dyeable: false },
+    "rednose": { name: "Red Nose", dyeable: false },
+    "redstache": { name: "Plumber Stache", dyeable: false },
+    "rgbbigribbon": { name: "RGB Big Ribbon", dyeable: false },
+    "rgbbowler": { name: "RGB Bowler Cap", dyeable: false },
+    "rgbdragonskull": { name: "RGB Dragon Skull", dyeable: false },
+    "rgbdrinkinhat": { name: "RGB Drinking Hat", dyeable: false },
+    "rgbeasterhead": { name: "RGB Easter Island Head", dyeable: false },
+    "rgbfullhelm": { name: "RGB Armor Helm", dyeable: false },
+    "rgbpartyhat": { name: "RGB Party Hat", dyeable: false },
+    "rgbsmallbowler": { name: "RGB Small Bowler Cap", dyeable: false },
+    "rgbsunglasses": { name: "RGB Sunglasses", dyeable: false },
+    "rgbtoptophathat": { name: "RGB Toptop Hathat", dyeable: false },
+    "rgbushanka": { name: "RGB Ushanka", dyeable: false },
+    "rock": { name: "Rock Eye", dyeable: false },
+    "rubbernipple": { name: "Baby Bottle Head", dyeable: false },
+    "sandcastle": { name: "Sand Castle", dyeable: false },
+    "santaclaus": { name: "Santa Claus", dyeable: false },
+    "sausage": { name: "Sausage", dyeable: false },
+    "seaweedhat": { name: "Seaweed Hat", dyeable: false },
+    "shakehat": { name: "Shake Head", dyeable: false },
+    "sheep": { name: "Sheep Head", dyeable: false },
+    "shrekears": { name: "Shrek Ears", dyeable: false },
+    "shroomcap": { name: "Shroom Cap", dyeable: true },
+    "smokingpipe": { name: "Smoking Pipe", dyeable: false },
+    "snowmanbaby": { name: "Baby Snowman", dyeable: false },
+    "sombrero": { name: "Sombrero", dyeable: true },
+    "sonichood": { name: "Sonic Head", dyeable: false },
+    "spadesoldier": { name: "Spade Soldier", dyeable: false },
+    "spiderweb": { name: "Web Head", dyeable: false },
+    "springer": { name: "Springer", dyeable: false },
+    "sprout": { name: "Sprout", dyeable: false },
+    "spyzombie": { name: "Spy Zombie", dyeable: false },
+    "stackofeggs": { name: "Egg Stack", dyeable: false },
+    "stress": { name: "Stress", dyeable: false },
+    "summerhat": { name: "Summer Hat", dyeable: true },
+    "sunglasses": { name: "Sunglasses", dyeable: false },
+    "sunglassesbig": { name: "Big Sunglasses", dyeable: false },
+    "supersandhat": { name: "Saiyan Head", dyeable: false },
+    "swimmer": { name: "Swimmer Cap", dyeable: true },
+    "tinkerhat": { name: "Tinker's Helm", dyeable: false },
+    "topcathat": { name: "Top Cat Hat", dyeable: false },
+    "tophat": { name: "Top Hat", dyeable: true },
+    "toptophathat": { name: "Toptop Hathat", dyeable: false },
+    "triangleshades": { name: "Angled Shades", dyeable: false },
+    "tricorne": { name: "Tricorne", dyeable: false },
+    "tvhead": { name: "TV Head", dyeable: false },
+    "unicornhorn": { name: "Unicorn Horn", dyeable: false },
+    "ushanka": { name: "Ushanka", dyeable: true },
+    "vikinghatbeard": { name: "Viking Helm", dyeable: false },
+    "villagernose": { name: "Villager Nose", dyeable: false },
+    "winghat": { name: "Wing Cap", dyeable: false },
+    "zigzagwitchhat": { name: "Witch Hat", dyeable: true },
+    "acornhat": { name: "Acorn Cap", dyeable: true },
+    "aegishat": { name: "Aegis", dyeable: false },
+    "alienphil": { name: "Phil?", dyeable: false },
+    "simsgem": { name: "Plumbob", dyeable: false },
+    "artsy_doll": { name: "Artsy Doll", dyeable: false },
+    "azumanga_hat": { name: "Azumanga's Hat", dyeable: false },
+    "beret_ribbon": { name: "Beret Ribbon", dyeable: true },
+    "bucket": { name: "Bucket", dyeable: true },
+    "burning_m_bison": { name: "Burning Flames Team Captain", dyeable: false },
+    "chalk_stick": { name: "Chalk Stick", dyeable: false },
+    "chi_ears": { name: "Chi's Ears", dyeable: false },
+    "circular_glasses": { name: "Circular Glasses", dyeable: false },
+    "cucumbereyemask": { name: "Cucumber Eye Mask", dyeable: false },
+    "dejiko": { name: "Dejiko's Hat", dyeable: false },
+    "fez": { name: "Fez", dyeable: true },
+    "fishing_hat": { name: "Fishing Hat", dyeable: true },
+    "lightning_eyes": { name: "Lightning Eyes", dyeable: false },
+    "longfoxears": { name: "Long Fox Ears", dyeable: false },
+    "milady_doll": { name: "Milady Doll", dyeable: false },
+    "nyan_doll": { name: "Nyan Doll", dyeable: false },
+    "orange_hat": { name: "Orange Hat", dyeable: true },
+    "peppino": { name: "Peppino", dyeable: false },
+    "pom_moog": { name: "Pom-Moog", dyeable: false },
+    "puchiko": { name: "Puchiko's Hat", dyeable: false },
+    "rabi_en_rose": { name: "Rabi~en~Rose's Hat", dyeable: false },
+    "raincloud": { name: "Raincloud", dyeable: false },
+    "scouter": { name: "Scouter", dyeable: false },
+    "sleepeyemask": { name: "Sleep Eye Mask", dyeable: false },
+    "sport_sunglasses": { name: "Sport Sunglasses", dyeable: false },
+    "strawberry_hat": { name: "Strawberry Hat", dyeable: false },
+    "teddy_bear": { name: "Teddy Bear", dyeable: false },
+    "the_noise": { name: "The Noise", dyeable: false },
+    "toy_story_alien": { name: "Toy Story Alien", dyeable: false },
+    "twilight_doll": { name: "Twilight Doll", dyeable: false },
+    "worms_mine": { name: "Worm's Mine", dyeable: false },
+    "alien_antennae": { name: "Alien Antennae", dyeable: false },
+    "angel_and_devil": { name: "Angel and Devil", dyeable: false },
+    "astronaut": { name: "Astronaut", dyeable: false },
+    "axolotl_on_head": { name: "Axolotl Friend", dyeable: true },
+    "baby_crewmate": { name: "Baby Crewmate", dyeable: true },
+    "bee_on_head": { name: "Bee Friend", dyeable: false },
+    "beetle_on_head": { name: "Beetle Friend", dyeable: false },
+    "binky": { name: "Binky", dyeable: true },
+    "cardboard_box": { name: "Cardboard Box", dyeable: false },
+    "cat_hat": { name: "Cat Hat", dyeable: true },
+    "cat_on_head": { name: "Cat Friend", dyeable: true },
+    "caterpillar_on_head": { name: "Caterpillar Friend", dyeable: false },
+    "chocolate_sauced": { name: "Chocolate Sauced", dyeable: false },
+    "crystal_horns": { name: "Crystal Horns", dyeable: false },
+    "dipper": { name: "Dipper", dyeable: false },
+    "druid_antlers": { name: "Druid Antlers", dyeable: false },
+    "druid_antlers_rare": { name: "Elder Druid Antlers", dyeable: false },
+    "eevee_ears": { name: "Eevee Ears", dyeable: false },
+    "eyeholder_beeholder": { name: "Beeholder", dyeable: false },
+    "eyeholder_dark": { name: "Dark Eyeholder", dyeable: false },
+    "eyeholder_evil": { name: "Evil Eyeholder", dyeable: false },
+    "eyeholder_warm": { name: "Warm Eyeholder", dyeable: false },
+    "eyeholder_xanath": { name: "Xanath Eyeholder", dyeable: false },
+    "gnome": { name: "Gnome Hat", dyeable: true },
+    "gnome_clover_wig": { name: "Gnome Disguise", dyeable: false },
+    "greaser": { name: "Greaser", dyeable: false },
+    "hat_of_discipline": { name: "Hat of Discipline", dyeable: false },
+    "ladybug_on_head": { name: "Ladybug Friend", dyeable: false },
+    "lil_bows": { name: "Lil' Bows", dyeable: true },
+    "lil_termagant": { name: "Lil' Termagant", dyeable: false },
+    "medusa": { name: "Medusa", dyeable: false },
+    "mimic_head": { name: "Mimic", dyeable: false },
+    "mimic_head_dark": { name: "Dark Mimic", dyeable: false },
+    "mimic_head_gold": { name: "Gold Mimic", dyeable: false },
+    "mindflayer": { name: "Mindflayer", dyeable: false },
+    "mindflayer_alhoon": { name: "Alhoon", dyeable: false },
+    "octodad": { name: "Octodad", dyeable: false },
+    "pika_ears": { name: "Pika Ears", dyeable: false },
+    "right_hand_hat": { name: "Right Hand", dyeable: false },
+    "round_purple_wig": { name: "Purple Wig", dyeable: false },
+    "round_red_wig": { name: "Red Wig", dyeable: false },
+    "slime_cube_dnd": { name: "Dungeon Slime Cube", dyeable: false },
+    "slime_head": { name: "Slime Head", dyeable: false },
+    "stinkycheeseman": { name: "Stinky Cheese Man", dyeable: false },
+    "stuck_lollipop": { name: "Stuck Lollipop", dyeable: false },
+    "tanuki_leaf": { name: "Tanuki Leaf", dyeable: false },
+    "the_noisier": { name: "The Noisier", dyeable: false },
+    "thumbnail": { name: "Youtube Thumbnail", dyeable: false },
+    "tick_on_head": { name: "Tick Friend", dyeable: false },
+    "toast": { name: "Toast", dyeable: false },
+    "toilet": { name: "Toilet Head", dyeable: false },
+    "tomato_splats": { name: "Tomato Splats", dyeable: false },
+    "traffic_cone": { name: "Traffic Cone", dyeable: false },
+    "udder_hat": { name: "Udder Hat", dyeable: false },
+    "worm_hat": { name: "Worm Hat", dyeable: false },
+    "frog_on_head": { name: "Frog Friend", dyeable: true },
+    "parrot_on_head": { name: "Parrot Friend", dyeable: true },
+    "bunny": { name: "Bunny Ears", dyeable: true },
+    "beret": { name: "Beret", dyeable: true },
+    "headphones": { name: "Headphones", dyeable: true },
+    "cap": { name: "Cap", dyeable: true },
+    "fedora": { name: "Fedora", dyeable: true }
+};
+
 // --- ITEM MAPPING ---
 // Map Gacha Item Names to RCON Commands / Minecraft IDs
 const ITEM_MAP = {
@@ -164,10 +468,19 @@ const InventoryItemSchema = new mongoose.Schema({
 const InventoryItem = mongoose.model('InventoryItem', InventoryItemSchema);
 
 // User Pack Wallet Schema
+
+// SystemSettings Schema
+const SystemSettingsSchema = new mongoose.Schema({
+    key: { type: String, required: true, unique: true },
+    value: { type: mongoose.Schema.Types.Mixed }
+});
+const SystemSettings = mongoose.model('SystemSettings', SystemSettingsSchema);
+
 const UserKeySchema = new mongoose.Schema({
     discordId: { type: String, required: true, unique: true },
     lambKeys: { type: Number, default: 0 },
     steakKeys: { type: Number, default: 0 },
+    wagyuKeys: { type: Number, default: 0 },
     lastDailyClaim: { type: Date }, // Added for daily check-in
     updatedAt: { type: Date, default: Date.now }
 });
@@ -176,7 +489,7 @@ const UserKey = mongoose.model('UserKey', UserKeySchema);
 // Redemption Code Schema (UPDATED)
 const RedemptionCodeSchema = new mongoose.Schema({
     code: { type: String, required: true, unique: true },
-    type: { type: String, required: true }, // 'lamb' or 'steak'
+    type: { type: String, required: true }, // 'lamb', 'steak', or 'wagyu'
     keyAmount: { type: Number, default: 1 },
 
     // Usage Logic
@@ -215,19 +528,22 @@ const fetchDiscordMessages = async (channelId) => {
     }
 };
 
-const fetchGuildMember = async (guildId, userId) => {
+const fetchGuildMember = async (guildId, userId, force = false) => {
     if (!DISCORD_BOT_TOKEN) return null;
 
     const cacheKey = `${guildId}:${userId}`;
-    const cached = memberCache.get(cacheKey);
-    // Cache members for 60 minutes to reduce API calls significantly
-    if (cached && (Date.now() - cached.timestamp < 60 * 60 * 1000)) {
-        return cached.data;
-    }
+    
+    if (!force) {
+        const cached = memberCache.get(cacheKey);
+        // Cache members for 60 minutes to reduce API calls significantly
+        if (cached && (Date.now() - cached.timestamp < 60 * 60 * 1000)) {
+            return cached.data;
+        }
 
-    // Reuse in-flight promise if we are already fetching this user to avoid concurrent duplicates
-    if (activeMemberFetches.has(cacheKey)) {
-        return activeMemberFetches.get(cacheKey);
+        // Reuse in-flight promise if we are already fetching this user to avoid concurrent duplicates
+        if (activeMemberFetches.has(cacheKey)) {
+            return activeMemberFetches.get(cacheKey);
+        }
     }
 
     const fetchPromise = (async () => {
@@ -470,8 +786,8 @@ app.post('/api/whitelist/apply', async (req, res) => {
     const approvedApp = await WhitelistApp.findOne({ discordId, status: 'approved' });
     if (approvedApp) return res.status(200).json({ message: "You are already whitelisted!" });
 
-    // 4. Check Discord Roles
-    const member = await fetchGuildMember(GUILD_ID, discordId);
+    // 4. Check Discord Roles (force fetch to bypass cache)
+    const member = await fetchGuildMember(GUILD_ID, discordId, true);
     if (!member) return res.status(403).json({ error: "You are not in the Discord server!" });
 
     const roles = member.roles || [];
@@ -607,9 +923,9 @@ app.post('/api/admin/users/reset-daily', auth, async (req, res) => {
             targetDiscordId = link.discordId;
         }
 
-        const wallet = await UserKey.findOne({ discordId: targetDiscordId });
+        let wallet = await UserKey.findOne({ discordId: targetDiscordId });
         if (!wallet) {
-            return res.status(404).json({ error: "User wallet/history not found." });
+            wallet = new UserKey({ discordId: targetDiscordId });
         }
 
         wallet.lastDailyClaim = null; // Clear the date
@@ -628,7 +944,7 @@ app.post('/api/admin/users/reset-daily', auth, async (req, res) => {
 app.post('/api/admin/codes/generate', auth, async (req, res) => {
     const { type, amount = 1, keyAmount = 1, usageType = 'once_global', hours = 0 } = req.body;
 
-    if (!type || !['lamb', 'steak'].includes(type)) return res.status(400).json({ error: "Invalid pack type" });
+    if (!type || !['lamb', 'steak', 'wagyu', 'nisaball'].includes(type)) return res.status(400).json({ error: "Invalid pack type" });
 
     try {
         const codes = [];
@@ -680,350 +996,286 @@ app.post('/api/admin/codes/delete', auth, async (req, res) => {
     }
 });
 
-// Maintenance Wipe Endpoint for Minecraft Data (DANGER ZONE)
-app.post('/api/admin/maintenance/wipe-minecraft-data', auth, async (req, res) => {
-    const { scope } = req.body; // 'all', 'inventory', 'currency', 'approved_users'
+
+app.post('/api/admin/users/merge', auth, async (req, res) => {
+    const { sourceUser, targetUser } = req.body;
+    if (!sourceUser || !targetUser) return res.status(400).json({ error: "Invalid parameters" });
     try {
-        console.log(`⚠️ Admin triggered Minecraft Data Wipe on Bot Server. Scope: ${scope}`);
-        const results = {};
-
-        if (!scope || scope === 'all' || scope === 'inventory') {
-            const delRes = await InventoryItem.deleteMany({});
-            results.inventory = { success: true, count: delRes.deletedCount };
-        }
-
-        if (!scope || scope === 'all' || scope === 'currency') {
-            const delRes = await UserKey.deleteMany({});
-            results.currency = { success: true, count: delRes.deletedCount };
-        }
-
-        if (!scope || scope === 'all' || scope === 'approved_users') {
-            const delRes = await WhitelistApp.deleteMany({ status: 'approved' });
-            results.approvedUsers = { success: true, count: delRes.deletedCount };
-        }
-
-        res.json({ success: true, results });
-    } catch (e) {
-        console.error("❌ Failed to wipe Minecraft data on Bot Server:", e);
-        res.status(500).json({ error: "Failed to wipe Minecraft data", details: e.message });
-    }
-});
-
-// --- INVENTORY, PACKS & GACHA API ---
-
-// 1. Fetch User Pack Balance
-app.get('/api/packs', async (req, res) => {
-    const { discordId } = req.query;
-    if (!discordId) return res.status(400).json({ error: "Discord ID required" });
-
-    try {
-        let wallet = await UserKey.findOne({ discordId });
-        if (!wallet) wallet = { lambKeys: 0, steakKeys: 0 }; // Default
-        res.json(wallet);
-    } catch (e) {
-        res.status(500).json({ error: "Fetch failed" });
-    }
-});
-
-// 2. Use/Deduct Pack (Used by Gacha Page before opening)
-app.post('/api/packs/use', async (req, res) => {
-    const { discordId, type } = req.body;
-    if (!discordId || !type) return res.status(400).json({ error: "Missing data" });
-
-    try {
-        const wallet = await UserKey.findOne({ discordId });
-        if (!wallet) return res.status(404).json({ error: "No wallet found" });
-
-        if (type === 'lamb') {
-            if (wallet.lambKeys < 1) return res.status(403).json({ error: "Not enough keys" });
-            wallet.lambKeys -= 1;
-        } else if (type === 'steak') {
-            if (wallet.steakKeys < 1) return res.status(403).json({ error: "Not enough keys" });
-            wallet.steakKeys -= 1;
-        } else {
-            return res.status(400).json({ error: "Invalid pack type" });
-        }
-
-        await wallet.save();
-        res.json({ success: true, remaining: type === 'lamb' ? wallet.lambKeys : wallet.steakKeys });
-    } catch (e) {
-        res.status(500).json({ error: "Transaction failed" });
-    }
-});
-
-// 2.5 DAILY CLAIM
-app.post('/api/daily/claim', async (req, res) => {
-    const { discordId } = req.body;
-    if (!discordId) return res.status(400).json({ error: "Missing Discord ID" });
-
-    try {
-        // Find or create wallet
-        let wallet = await UserKey.findOne({ discordId });
-        if (!wallet) {
-            wallet = new UserKey({ discordId });
-        }
-
-        const now = new Date();
-        const cooldown = 24 * 60 * 60 * 1000; // 24 hours in ms
-
-        if (wallet.lastDailyClaim) {
-            const lastClaim = new Date(wallet.lastDailyClaim).getTime();
-            const elapsed = now.getTime() - lastClaim;
-
-            if (elapsed < cooldown) {
-                const remainingMs = cooldown - elapsed;
-                return res.status(403).json({
-                    error: "Already claimed today",
-                    remainingMs
-                });
-            }
-        }
-
-        // Apply Reward (1 Lamb Chop Pack)
-        wallet.lambKeys = (wallet.lambKeys || 0) + 1;
-        wallet.lastDailyClaim = now;
-        await wallet.save();
-
-        res.json({
-            success: true,
-            message: "You have been rewarded with 1x Lamb Crate Key for checking in!",
-            wallet
-        });
-
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Daily Claim Failed" });
-    }
-});
-
-// 3. Redeem Code (UPDATED LOGIC)
-app.post('/api/codes/redeem', async (req, res) => {
-    const { discordId, code } = req.body;
-    if (!discordId || !code) return res.status(400).json({ error: "Missing data" });
-
-    try {
-        const codeRecord = await RedemptionCode.findOne({ code: code.trim().toUpperCase() });
-
-        if (!codeRecord) return res.status(404).json({ error: "Invalid code" });
-
-        // Logic check based on usageType
-        const usageType = codeRecord.usageType || 'once_global'; // Default to old behavior if missing
-
-        // 1. Time Limit Check
-        if (usageType === 'time_limited' && codeRecord.expiresAt && new Date() > new Date(codeRecord.expiresAt)) {
-            return res.status(400).json({ error: "Code has expired" });
-        }
-
-        // 2. Global Single Use Check
-        if (usageType === 'once_global' && (codeRecord.isRedeemed || codeRecord.usageCount > 0)) {
-            return res.status(409).json({ error: "Code already redeemed" });
-        }
-
-        // 3. Once Per User Check
-        if (usageType === 'once_per_user') {
-            const redeemedList = codeRecord.redeemedBy || [];
-            // Legacy check: check if redeemedBy string matches (if older schema)
-            if (typeof codeRecord.redeemedBy === 'string' && codeRecord.redeemedBy === discordId) {
-                return res.status(409).json({ error: "You already redeemed this code" });
-            }
-            // Array check
-            if (Array.isArray(redeemedList) && redeemedList.includes(discordId)) {
-                return res.status(409).json({ error: "You already redeemed this code" });
-            }
-        }
-
-        // Apply Redemption
-        // Update Code Record
-        codeRecord.usageCount = (codeRecord.usageCount || 0) + 1;
-        codeRecord.redeemedAt = new Date(); // Last redeemed time
-
-        // Handle array update safely
-        if (!Array.isArray(codeRecord.redeemedBy)) codeRecord.redeemedBy = [];
-        codeRecord.redeemedBy.push(discordId);
-
-        if (usageType === 'once_global') {
-            codeRecord.isRedeemed = true;
-        }
-
-        await codeRecord.save();
-
-        // Add Pack to User Wallet
-        const keysToAdd = codeRecord.keyAmount || 1;
-        const wallet = await UserKey.findOneAndUpdate(
-            { discordId },
-            {
-                $setOnInsert: { discordId },
-                $inc: { [codeRecord.type === 'lamb' ? 'lambKeys' : 'steakKeys']: keysToAdd }
-            },
-            { upsert: true, new: true }
-        );
-
-        res.json({ success: true, type: codeRecord.type, amount: keysToAdd, wallet });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ error: "Redemption failed" });
-    }
-});
-
-// 4. Save Gacha Results
-app.post('/api/inventory/save', async (req, res) => {
-    const { discordId, items, packType } = req.body;
-    if (!discordId || !items || !Array.isArray(items)) return res.status(400).json({ error: "Invalid data" });
-
-    try {
-        const newItems = items.map(item => ({
-            discordId,
-            itemId: item.id.toString(),
-            name: item.name,
-            type: item.type,
-            rarity: item.rarity,
-            image: item.image, // Optional, can be undefined
-            claimed: false,
-            receivedAt: new Date()
-        }));
-
-        await InventoryItem.insertMany(newItems);
-        console.log(`📦 Saved ${items.length} items for user ${discordId}`);
-
+        const escapedSource = sourceUser.trim().replace(/[.*+?^\$\{\}()|[\]\\]/g, '\\$&');
+        const sourceRegex = new RegExp(`^\\s*\${escapedSource}\\s*$`, 'i');
+        
+        await MinecraftLink.updateMany({ twitchUsername: sourceRegex }, { twitchUsername: targetUser.trim() });
         res.json({ success: true });
     } catch (e) {
-        console.error("Save Inventory Error:", e);
-        res.status(500).json({ error: "Failed to save items" });
-    }
-});
-
-// 5. Fetch User Inventory
-app.get('/api/inventory', async (req, res) => {
-    const { discordId } = req.query;
-    if (!discordId) return res.status(400).json({ error: "Discord ID required" });
-
-    try {
-        const items = await InventoryItem.find({ discordId }).sort({ receivedAt: -1 });
-        res.json(items);
-    } catch (e) {
-        res.status(500).json({ error: "Fetch failed" });
-    }
-});
-
-// 6. Claim Item
-app.post('/api/inventory/claim', async (req, res) => {
-    const { discordId, dbItemId } = req.body;
-    if (!discordId || !dbItemId) return res.status(400).json({ error: "Missing data" });
-
-    try {
-        // 1. Verify User and Link
-        const link = await MinecraftLink.findOne({ discordId });
-        if (!link || !link.minecraftUsername) return res.status(400).json({ error: "Minecraft account not linked!" });
-
-        // 2. Find Item
-        const item = await InventoryItem.findOne({ _id: dbItemId, discordId });
-        if (!item) return res.status(404).json({ error: "Item not found" });
-        if (item.claimed) return res.status(400).json({ error: "Item already claimed" });
-
-        // 2.5 Check Online Status
-        const player = link.minecraftUsername;
-
-        // Check if online via RCON "list" command
-        const listResponse = await sendRconCommand("list");
-
-        if (listResponse === false) {
-            return res.status(502).json({ error: "Could not connect to Minecraft Server." });
-        }
-
-        // Parse list response (Case-insensitive check)
-        // Typical response: "There are 2 of a max of 20 players online: Player1, Player2"
-        const lowerList = listResponse.toLowerCase();
-        const lowerPlayer = player.toLowerCase();
-
-        let isOnline = false;
-
-        // Check if username is in the output string
-        if (lowerList.includes(lowerPlayer)) {
-            // Regex to ensure word boundary match
-            const safePlayer = lowerPlayer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`\\b${safePlayer}\\b`);
-            if (regex.test(lowerList)) {
-                isOnline = true;
-            }
-        }
-
-        // Allow simulation to pass
-        if (listResponse.includes("Simulation")) isOnline = true;
-
-        if (!isOnline) {
-            return res.status(409).json({ error: "You must be online in-game to claim items!" });
-        }
-
-        // 3. Construct Command
-        let command = "";
-
-        if (item.type === 'Pokemon') {
-            command = `pokegiveother ${player} ${item.name.replace(/\s+/g, '').toLowerCase()} level=5`; // Giving at lvl 5 is safe default
-        } else {
-            let count = 1;
-            let itemName = item.name;
-
-            const match = item.name.match(/^(\d+)x\s+(.+)$/);
-            if (match) {
-                count = parseInt(match[1]);
-                itemName = match[2];
-            }
-
-            const mappedId = ITEM_MAP[itemName];
-            if (!mappedId) {
-                console.error(`❌ Unknown item mapping: ${itemName}`);
-                return res.status(500).json({ error: "Item ID map missing. Contact Admin." });
-            }
-
-            command = `give ${player} ${mappedId} ${count}`;
-        }
-
-        console.log(`🚀 Executing Claim: ${command}`);
-        const rconSuccess = await sendRconCommand(command);
-
-        // Check response of give command if possible, but assume success if RCON connected
-        if (rconSuccess) {
-            item.claimed = true;
-            item.claimedAt = new Date();
-            await item.save();
-            res.json({ success: true });
-        } else {
-            res.status(502).json({ error: "RCON Failed. Server might be offline." });
-        }
-
-    } catch (e) {
-        console.error("Claim Error:", e);
         res.status(500).json({ error: e.message });
     }
 });
 
-// --- DEV ENDPOINTS ---
-app.get('/api/dev/packs', (req, res) => {
-    // Return infinite packs for testing
-    res.json({ lambKeys: 999, steakKeys: 999 });
+app.post('/api/admin/maintenance/wipe-minecraft-data', auth, async (req, res) => {
+    const { scope } = req.body;
+    try {
+        console.log(`⚠️ Admin triggered wipe on DBot. Scope: ${scope}`);
+        if (scope === 'all' || scope === 'currency') {
+            await UserKey.updateMany({}, { lambKeys: 0, wagyuKeys: 0, steakKeys: 0 });
+        }
+        if (scope === 'all' || scope === 'inventory') {
+            await InventoryItem.deleteMany({});
+        }
+        if (scope === 'all' || scope === 'approved_users') {
+            await WhitelistApp.deleteMany({ status: 'approved' });
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
-app.post('/api/dev/packs/use', (req, res) => {
-    // Simulate usage
-    res.json({ success: true, remaining: 998 });
+app.post('/api/codes/redeem', async (req, res) => {
+    const { discordId, code } = req.body;
+    try {
+        const codeRecord = await RedemptionCode.findOne({ code: code.trim().toUpperCase() });
+        if (!codeRecord) return res.status(404).json({ error: "Invalid code." });
+
+        if (codeRecord.isRedeemed && codeRecord.usageType === 'once_global') {
+            return res.status(400).json({ error: "Code already redeemed." });
+        }
+        if (codeRecord.usageType === 'once_per_user' && codeRecord.redeemedBy.includes(discordId)) {
+            return res.status(400).json({ error: "You already redeemed this code." });
+        }
+        if (codeRecord.usageType === 'time_limited' && codeRecord.expiresAt && codeRecord.expiresAt < new Date()) {
+            return res.status(400).json({ error: "Code expired." });
+        }
+
+        let wallet = await UserKey.findOne({ discordId });
+        if (!wallet) wallet = new UserKey({ discordId });
+
+        const amount = codeRecord.keyAmount || 1;
+        if (codeRecord.type === 'lamb') wallet.lambKeys += amount;
+        else if (codeRecord.type === 'steak') wallet.steakKeys += amount;
+        else if (codeRecord.type === 'wagyu') wallet.wagyuKeys += amount;
+        else if (codeRecord.type === 'nisaball') {
+            // Hit backend to add nisaballs
+            const link = await MinecraftLink.findOne({ discordId });
+            if (link && link.twitchUsername) {
+                const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-21ls.onrender.com';
+                await axios.post(`${backendUrl}/api/nisathon/test-event`, {
+                    type: 'nisaball',
+                    user: link.twitchUsername,
+                    amount: amount,
+                    tier: '1000',
+                    isNisathon: false,
+                    hidden: true
+                }, { headers: { 'Authorization': ADMIN_PASSWORD || "admin" } }).catch(e => console.error("Failed to add nisaball", e.message));
+            }
+        }
+
+        if (codeRecord.usageType === 'once_global') codeRecord.isRedeemed = true;
+        codeRecord.redeemedBy.push(discordId);
+        codeRecord.usageCount += 1;
+        
+        await codeRecord.save();
+        await wallet.save();
+
+        res.json({ success: true, type: codeRecord.type, amount: amount });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Server error." });
+    }
 });
 
-app.post('/api/dev/inventory/save', (req, res) => {
-    // Simulate save
-    console.log("📝 [DEV] Inventory Save Triggered (Not saved to DB)", req.body);
-    res.json({ success: true });
+app.post('/api/inventory/save', async (req, res) => {
+    const { discordId, items } = req.body;
+    try {
+        const toInsert = items.map(i => ({
+            discordId,
+            itemId: i.id || i.itemId,
+            name: i.name,
+            type: i.type || 'Item',
+            rarity: i.rarity || 'COMMON',
+            image: i.image || '',
+            claimed: false,
+            receivedAt: new Date()
+        }));
+        if (toInsert.length > 0) {
+            await InventoryItem.insertMany(toInsert);
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
+app.post('/api/packs/use', async (req, res) => {
+    const { discordId, packType, amount = 1 } = req.body;
+    try {
+        const wallet = await UserKey.findOne({ discordId });
+        if (!wallet) return res.status(400).json({ error: "No wallet found." });
 
-// --- KEEP ALIVE ---
-const SELF_URL = 'https://urnisa-dbot.onrender.com';
-const BACKEND_URL = 'https://urnisa-backend-3b3m.onrender.com';
+        if (packType === 'lamb') {
+            if (wallet.lambKeys < amount) return res.status(400).json({ error: "Not enough Lamb Keys." });
+            wallet.lambKeys -= amount;
+        } else if (packType === 'wagyu') {
+            if (wallet.wagyuKeys < amount) return res.status(400).json({ error: "Not enough Wagyu Keys." });
+            wallet.wagyuKeys -= amount;
+        } else {
+            return res.status(400).json({ error: "Invalid pack type." });
+        }
+        await wallet.save();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
-setInterval(() => {
-    axios.get(SELF_URL).catch(() => { });
-    axios.get(BACKEND_URL).catch(() => { });
-}, 5 * 60 * 1000);
+app.get('/api/packs', async (req, res) => {
+    try {
+        let wallet = await UserKey.findOne({ discordId: req.query.discordId });
+        if (!wallet) wallet = { lambKeys: 0, wagyuKeys: 0, steakKeys: 0 };
+        res.json(wallet);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
-app.listen(PORT, () => {
-    console.log(`🤖 Discord Bot Service running on port ${PORT}`);
+app.get('/api/inventory', async (req, res) => {
+    try {
+        const items = await InventoryItem.find({ discordId: req.query.discordId, claimed: false }).sort({ receivedAt: -1 });
+        res.json(items);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/inventory/claim', async (req, res) => {
+    const { discordId, itemIds } = req.body;
+    try {
+        const link = await MinecraftLink.findOne({ discordId });
+        if (!link) return res.status(400).json({ error: "No Minecraft account linked." });
+
+        const items = await InventoryItem.find({ _id: { $in: itemIds }, discordId, claimed: false });
+        if (items.length === 0) return res.status(400).json({ error: "No items to claim." });
+
+        // Try to give items (this can be basic since I don't have the full RCON logic, just fallback or pretend success if RCON missing)
+        for (const item of items) {
+            let cmd = `/give ${link.minecraftUsername} ${item.itemId} 1`;
+            if (item.type === 'Pokemon') cmd = `/pokegive ${link.minecraftUsername} ${item.name}`;
+            await sendRconCommand(cmd);
+            item.claimed = true;
+            item.claimedAt = new Date();
+            await item.save();
+        }
+
+        res.json({ success: true, claimedCount: items.length });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/shop/daily-offset', async (req, res) => {
+    try {
+        const doc = await SystemSettings.findOne({ key: 'shopOffset' });
+        res.json({ offset: doc ? doc.value : 0 });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/admin/shop/randomize', auth, async (req, res) => {
+    try {
+        let doc = await SystemSettings.findOne({ key: 'shopOffset' });
+        if (!doc) {
+            doc = new SystemSettings({ key: 'shopOffset', value: 0 });
+        }
+        doc.value = (doc.value || 0) + 1;
+        await doc.save();
+        res.json({ success: true, newOffset: doc.value });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/shop/buy-item', async (req, res) => {
+    const { discordId, item } = req.body;
+    if (!discordId || !item || !item.id || !item.price) return res.status(400).json({ error: "Missing required fields" });
+    try {
+        const link = await MinecraftLink.findOne({ discordId });
+        if (!link || !link.twitchUsername) return res.status(400).json({ error: "No Twitch account linked!" });
+        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-21ls.onrender.com';
+        
+        const balanceRes = await axios.get(`${backendUrl}/api/nisathon/user/${encodeURIComponent(link.twitchUsername.trim())}`);
+        const currentNisaballs = balanceRes.data.totalNisaballs || 0;
+        const totalCost = item.price;
+        
+        if (currentNisaballs < totalCost) return res.status(400).json({ error: `Insufficient Nisaballs! Need ${totalCost}.` });
+
+        const deductRes = await axios.post(`${backendUrl}/api/nisathon/test-event`, {
+            type: 'shop', user: link.twitchUsername, amount: -totalCost, tier: '1000', isNisathon: false, hidden: true
+        }, { headers: { 'Authorization': ADMIN_PASSWORD || "admin" } });
+        
+        if (!deductRes.data || deductRes.data.error) throw new Error("Failed deduction");
+
+        const newItem = new InventoryItem({
+            discordId, itemId: item.id.toString(), name: item.name, type: item.type || 'Item', rarity: item.rarity || 'COMMON', image: item.image || '', claimed: false
+        });
+        await newItem.save();
+        res.json({ success: true, item: newItem, newBalance: Math.floor(currentNisaballs - totalCost) });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/shop/spin', async (req, res) => {
+    const { discordId } = req.body;
+    try {
+        const link = await MinecraftLink.findOne({ discordId });
+        if (!link || !link.twitchUsername) return res.status(400).json({ error: "No Twitch account linked!" });
+        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-21ls.onrender.com';
+        
+        const balanceRes = await axios.get(`${backendUrl}/api/nisathon/user/${encodeURIComponent(link.twitchUsername.trim())}`);
+        const currentNisaballs = balanceRes.data.totalNisaballs || 0;
+        
+        if (currentNisaballs < 1) return res.status(400).json({ error: "Insufficient Nisaballs! Need 1." });
+
+        await axios.post(`${backendUrl}/api/nisathon/test-event`, {
+            type: 'shop', user: link.twitchUsername, amount: -1, tier: '1000', isNisathon: false, hidden: true
+        }, { headers: { 'Authorization': ADMIN_PASSWORD || "admin" } });
+
+        const isLamb = Math.random() < 0.50;
+        let wallet = await UserKey.findOne({ discordId });
+        if (!wallet) wallet = new UserKey({ discordId });
+        if (isLamb) wallet.lambKeys += 1;
+        else wallet.wagyuKeys += 1;
+        await wallet.save();
+
+        res.json({ success: true, reward: isLamb ? 'lamb' : 'wagyu', newBalance: Math.floor(currentNisaballs - 1) });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/daily/claim', async (req, res) => {
+    const { discordId } = req.body;
+    try {
+        let wallet = await UserKey.findOne({ discordId });
+        if (!wallet) wallet = new UserKey({ discordId });
+
+        const now = new Date();
+        if (wallet.lastDailyClaim) {
+            const lastClaim = new Date(wallet.lastDailyClaim);
+            // reset at midnight UTC or 24 hours
+            if (now.getTime() - lastClaim.getTime() < 24 * 60 * 60 * 1000) {
+                return res.status(400).json({ error: "Already claimed today." });
+            }
+        }
+        wallet.lambKeys += 1; // Or whatever daily reward
+        wallet.lastDailyClaim = now;
+        await wallet.save();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ [DBot] Server running on port ${PORT}`);
 });

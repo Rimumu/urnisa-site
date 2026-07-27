@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-bg: #3a1017;
+  --color-brand-surface: #581c25;
+  --color-brand-primary: #e5383b;
+  --color-brand-secondary: #1f090c;
+  --color-brand-accent: #f7c548;
+
+  --animate-wave: wave 1.5s ease-in-out infinite;
+  
+  @keyframes wave {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+}

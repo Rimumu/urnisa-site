@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DISCORD_CLIENT_ID, DISCORD_REDIRECT_URI, DISCORD_API_URL } from '../constants';
+import { useNisaballs } from '../hooks/useNisaballs';
+
+const NISABALL_ICON = "https://res.cloudinary.com/dsencimjn/image/upload/v1764173339/1341377045602766868_fbuvnf.webp";
 
 export interface UserData {
     id: string;
@@ -52,13 +55,20 @@ const ArchiveBoxIcon = () => (
     </svg>
 );
 
-const GiftIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const GiftIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 12 20 22 4 22 4 12"></polyline>
         <rect x="2" y="7" width="20" height="5"></rect>
         <line x1="12" y1="22" x2="12" y2="7"></line>
         <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
         <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+    </svg>
+);
+
+const TimerIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
     </svg>
 );
 
@@ -80,6 +90,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
     const [mcInput, setMcInput] = useState('');
     const [linkStatus, setLinkStatus] = useState<'idle' | 'success' | 'error' | 'conflict' | 'not_found'>('idle');
     const navigate = useNavigate();
+
+    // Nisaball Economy State
+    const { balance: nisaballBalance } = useNisaballs(user?.twitchUsername || undefined);
 
     // Daily Claim States
     const [dailyLoading, setDailyLoading] = useState(false);
@@ -349,13 +362,15 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
         }
     };
 
+
+
     return (
         <div className={`relative ${className} z-50`}>
             {user ? (
                 <div className="relative">
                     <button 
                         onClick={() => setMenuOpen(!menuOpen)}
-                        className="flex items-center gap-3 bg-black/60 hover:bg-black/80 border border-white/10 hover:border-brand-primary/50 px-4 py-2 rounded-full transition-all duration-300 shadow-lg group"
+                        className="cursor-pointer flex items-center gap-3 bg-black/60 hover:bg-black/80 border border-white/10 hover:border-brand-primary/50 px-4 py-2 rounded-full transition-all duration-300 shadow-lg group"
                     >
                         <div className="text-right hidden sm:block">
                             <div className="text-xs font-bold text-white group-hover:text-brand-primary transition-colors">{user.global_name || user.username}</div>
@@ -378,6 +393,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                 )}
                             </div>
                         </div>
+                        {user.twitchUsername && (
+                            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full text-brand-accent text-xs font-black font-mono">
+                                <img src={NISABALL_ICON} alt="NB" className="w-3.5 h-3.5 object-contain" />
+                                <span>{Math.floor(nisaballBalance)}</span>
+                            </div>
+                        )}
                         <img src={user.avatar} alt="Avatar" className="w-8 h-8 rounded-full border border-white/20" />
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -391,12 +412,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                 <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Connected As</p>
                                 <p className="text-sm text-white truncate font-bold">@{user.username}</p>
                             </div>
+
+
                             
                             {/* Daily Check-In */}
                             <button 
                                 onClick={handleDailyCheckIn}
                                 disabled={dailyLoading}
-                                className="w-full text-left px-4 py-3 text-sm text-brand-accent hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5 disabled:opacity-50"
+                                className="cursor-pointer w-full text-left px-4 py-3 text-sm text-brand-accent hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {dailyLoading ? (
                                     <div className="w-4 h-4 border-2 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
@@ -409,7 +432,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                             {/* Inventory Link */}
                             <button 
                                 onClick={() => { navigate('/inventory'); setMenuOpen(false); }}
-                                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
+                                className="cursor-pointer w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
                             >
                                 <BackpackIcon />
                                 My Inventory
@@ -418,7 +441,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                             {/* My Bingo Link - NEW */}
                             <button 
                                 onClick={() => { navigate('/minecraft/bingo/card?view=saved'); setMenuOpen(false); }}
-                                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
+                                className="cursor-pointer w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
                             >
                                 <ArchiveBoxIcon />
                                 My Bingo
@@ -427,7 +450,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                             {/* Redeem Link */}
                             <button 
                                 onClick={() => { navigate('/redeem'); setMenuOpen(false); }}
-                                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
+                                className="cursor-pointer w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors flex items-center gap-2 font-bold border-b border-white/5"
                             >
                                 <GiftIcon />
                                 Redeem Code
@@ -452,7 +475,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                                 </span>
                                                 <button 
                                                     onClick={() => { setShowUnlinkModal(true); setMenuOpen(false); }}
-                                                    className="text-[9px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 px-2 py-0.5 rounded-full transition-all uppercase tracking-wider"
+                                                    className="cursor-pointer text-[9px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 px-2 py-0.5 rounded-full transition-all uppercase tracking-wider"
                                                 >
                                                     Unlink
                                                 </button>
@@ -461,7 +484,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                             <div className="flex flex-col items-center justify-center flex-1 w-full">
                                                 <button 
                                                     onClick={() => { setShowLinkModal(true); setMenuOpen(false); }}
-                                                    className="w-full py-2 text-[10px] bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary rounded-xl font-bold transition-all border border-brand-primary/20 shadow-sm uppercase tracking-wider"
+                                                    className="cursor-pointer w-full py-2 text-[10px] bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary rounded-xl font-bold transition-all border border-brand-primary/20 shadow-sm uppercase tracking-wider"
                                                 >
                                                     Link MC
                                                 </button>
@@ -490,7 +513,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                                 </span>
                                                 <button 
                                                     onClick={handleUnlinkTwitch}
-                                                    className="text-[9px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 px-2 py-0.5 rounded-full transition-all uppercase tracking-wider"
+                                                    className="cursor-pointer text-[9px] text-red-400 hover:text-red-300 font-bold bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 px-2 py-0.5 rounded-full transition-all uppercase tracking-wider"
                                                 >
                                                     Unlink
                                                 </button>
@@ -499,7 +522,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                                             <div className="flex flex-col items-center justify-center flex-1 w-full">
                                                 <button 
                                                     onClick={handleLinkTwitch}
-                                                    className="w-full py-2 text-[10px] bg-[#a970ff]/10 hover:bg-[#a970ff]/20 text-[#a970ff] rounded-xl font-bold transition-all border border-[#a970ff]/20 shadow-sm uppercase tracking-wider"
+                                                    className="cursor-pointer w-full py-2 text-[10px] bg-[#a970ff]/10 hover:bg-[#a970ff]/20 text-[#a970ff] rounded-xl font-bold transition-all border border-[#a970ff]/20 shadow-sm uppercase tracking-wider"
                                                 >
                                                     Link Twitch
                                                 </button>
@@ -511,7 +534,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
 
                             <button 
                                 onClick={logout}
-                                className="w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
+                                className="cursor-pointer w-full text-left px-4 py-3 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-2"
                             >
                                 <PowerIcon />
                                 Unlink Discord & Sign Out
@@ -522,7 +545,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
             ) : (
                 <button 
                     onClick={loginRedirect}
-                    className="flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all hover:scale-105"
+                    className="cursor-pointer flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all hover:scale-105"
                 >
                     <DiscordLogo />
                     Login with Discord
@@ -536,8 +559,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                         {/* Header */}
                         <div className={`h-24 relative overflow-hidden flex items-center justify-center ${dailyModalType === 'success' ? 'bg-gradient-to-br from-green-900/40 to-black' : 'bg-gradient-to-br from-brand-primary/20 to-black'}`}>
                              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-                             <div className={`w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10 text-3xl`}>
-                                {dailyModalType === 'success' ? '🎁' : '⏳'}
+                             <div className={`w-16 h-16 bg-[#1a0b0e] rounded-2xl border-4 border-[#1a0b0e] shadow-xl flex items-center justify-center translate-y-8 z-10`}>
+                                {dailyModalType === 'success' ? (
+                                    <GiftIcon className="w-8 h-8 text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]" />
+                                ) : (
+                                    <TimerIcon className="w-8 h-8 text-brand-primary drop-shadow-[0_0_12px_rgba(215,72,92,0.6)]" />
+                                )}
                              </div>
                         </div>
 
@@ -548,7 +575,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                             
                             {dailyModalType === 'success' ? (
                                 <p className="text-gray-300 text-sm mb-6">
-                                    You have been rewarded with <strong className="text-brand-accent">1x Lamb Chop Pack</strong> for checking in!
+                                    You have been rewarded with <strong className="text-brand-accent">1x Lamb Crate Key</strong> for checking in!
                                 </p>
                             ) : (
                                 <div className="mb-6">
@@ -564,7 +591,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                             
                             <button 
                                 onClick={() => setShowDailyModal(false)}
-                                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                                className="cursor-pointer w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition-colors text-sm"
                             >
                                 Close
                             </button>
@@ -585,58 +612,58 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                         </div>
 
                         <div className="px-8 pt-12 pb-8 text-center">
-                            <h2 className="text-2xl font-black text-white mb-2">Link Minecraft Account</h2>
-                            <p className="text-gray-400 text-sm mb-6">Enter your Minecraft username to link:</p>
-                            
-                            <form onSubmit={handleLinkSubmit} className="space-y-6 text-left">
-                                <div>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <img 
-                                                src={mcInput ? `https://mc-heads.net/avatar/${mcInput}/20` : "https://mc-heads.net/avatar/Steve/20"} 
-                                                alt="" 
-                                                className="w-5 h-5 rounded-sm grayscale opacity-70 transition-all duration-300"
-                                                onError={(e) => (e.currentTarget.style.display = 'none')}
-                                            />
-                                        </div>
-                                        <input 
-                                            type="text" 
-                                            value={mcInput}
-                                            onChange={(e) => { setMcInput(e.target.value); setLinkStatus('idle'); }}
-                                            className={`
-                                                w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none font-mono transition-all placeholder:text-gray-600
-                                                ${linkStatus === 'conflict' ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-white/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary'}
-                                            `}
-                                            placeholder="Notch"
-                                            required
-                                            autoFocus
-                                        />
-                                    </div>
-                                    {linkStatus === 'error' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Failed to link. Invalid username.</p>}
-                                    {linkStatus === 'not_found' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Minecraft username does not exist!</p>}
-                                     {linkStatus === 'conflict' && <p className="text-red-500 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> This minecraft username has been linked already!</p>}
-                                </div>
-                                
-                                <div className="flex gap-3">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setShowLinkModal(false)} 
-                                        className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button 
-                                        type="submit" 
-                                        disabled={linkStatus === 'success' || linkStatus === 'conflict'}
-                                        className={`
-                                            flex-1 font-bold py-3 rounded-xl transition-all shadow-lg text-sm text-white
-                                            ${linkStatus === 'success' ? 'bg-green-600 scale-105' : linkStatus === 'conflict' ? 'bg-red-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}
-                                        `}
-                                    >
-                                        {linkStatus === 'success' ? '✓ Linked!' : linkStatus === 'conflict' ? 'Taken ✕' : 'Link'}
-                                    </button>
-                                </div>
-                            </form>
+                             <h2 className="text-2xl font-black text-white mb-2">Link Minecraft Account</h2>
+                             <p className="text-gray-400 text-sm mb-6">Enter your Minecraft username to link:</p>
+                             
+                             <form onSubmit={handleLinkSubmit} className="space-y-6 text-left">
+                                 <div>
+                                     <div className="relative">
+                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                             <img 
+                                                 src={mcInput ? `https://mc-heads.net/avatar/${mcInput}/20` : "https://mc-heads.net/avatar/Steve/20"} 
+                                                 alt="" 
+                                                 className="w-5 h-5 rounded-sm grayscale opacity-70 transition-all duration-300"
+                                                 onError={(e) => (e.currentTarget.style.display = 'none')}
+                                             />
+                                         </div>
+                                         <input 
+                                             type="text" 
+                                             value={mcInput}
+                                             onChange={(e) => { setMcInput(e.target.value); setLinkStatus('idle'); }}
+                                             className={`
+                                                 w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none font-mono transition-all placeholder:text-gray-600
+                                                 ${linkStatus === 'conflict' ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-white/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary'}
+                                             `}
+                                             placeholder="Notch"
+                                             required
+                                             autoFocus
+                                         />
+                                     </div>
+                                     {linkStatus === 'error' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Failed to link. Invalid username.</p>}
+                                     {linkStatus === 'not_found' && <p className="text-red-400 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> Minecraft username does not exist!</p>}
+                                      {linkStatus === 'conflict' && <p className="text-red-500 text-xs mt-2 font-bold flex items-center gap-1"><span className="text-lg leading-none">•</span> This minecraft username has been linked already!</p>}
+                                 </div>
+                                 
+                                 <div className="flex gap-3">
+                                     <button 
+                                         type="button" 
+                                         onClick={() => setShowLinkModal(false)} 
+                                         className="cursor-pointer flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
+                                     >
+                                         Cancel
+                                     </button>
+                                     <button 
+                                         type="submit" 
+                                         disabled={linkStatus === 'success' || linkStatus === 'conflict'}
+                                         className={`
+                                             cursor-pointer flex-1 font-bold py-3 rounded-xl transition-all shadow-lg text-sm text-white disabled:cursor-not-allowed
+                                             ${linkStatus === 'success' ? 'bg-green-600 scale-105' : linkStatus === 'conflict' ? 'bg-red-600' : 'bg-green-600 hover:bg-green-500 hover:scale-[1.02]'}
+                                         `}
+                                     >
+                                         {linkStatus === 'success' ? '✓ Linked!' : linkStatus === 'conflict' ? 'Taken ✕' : 'Link'}
+                                     </button>
+                                 </div>
+                             </form>
                         </div>
                     </div>
                 </div>
@@ -662,13 +689,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                             <div className="flex gap-3">
                                 <button 
                                     onClick={() => setShowUnlinkModal(false)} 
-                                    className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
+                                    className="cursor-pointer flex-1 bg-white/5 hover:bg-white/10 text-gray-300 font-bold py-3 rounded-xl transition-colors text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button 
                                     onClick={handleUnlinkMinecraft}
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg text-sm"
+                                    className="cursor-pointer flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg text-sm"
                                 >
                                     Unlink
                                 </button>
@@ -677,6 +704,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ onUserChange, className = "" 
                     </div>
                 </div>
             )}
+
+
         </div>
     );
 };

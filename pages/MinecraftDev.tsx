@@ -660,7 +660,7 @@ const MinecraftDev: React.FC = () => {
                         </div>
 
                         <p className="text-gray-500 font-medium leading-relaxed">
-                            Try your luck and open a lamb or steak loot crate to see if you'll get some delicious rewards!
+                            Try your luck and open a lamb or wagyu crate to see if you'll get some delicious rewards!
                         </p>
 
                         <div className="mt-6 flex items-center text-gray-600 font-bold text-sm uppercase tracking-wider">

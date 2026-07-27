@@ -9,12 +9,12 @@ import Nisathon from './pages/Nisathon';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
 import Rankings from './pages/Rankings';
+import Shop from './pages/Shop';
 import Archive from './pages/Archive';
 import ArchiveNisathon from './pages/ArchiveNisathon';
 import ArchiveWheel from './pages/ArchiveWheel';
 import ArchiveTournament from './pages/ArchiveTournament';
 import Gacha from './pages/Gacha';
-import GachaBACK from './pages/GachaBACK';
 import GachaDev from './pages/GachaDev'; // Import Dev Page
 import TournamentDev from './pages/TournamentDev'; // New Import
 import Tournament from './pages/Tournament'; // Prod Tournament Page
@@ -107,6 +107,7 @@ const App: React.FC = () => {
           <Route path="/nisathon/wheel" element={<Wheel />} />
           <Route path="/snakesladder" element={<SnakesLadder />} />
           <Route path="/minecraft" element={<Minecraft />} />
+          <Route path="/minecraft/shop" element={<Shop />} />
           <Route path="/minecraft/gacha" element={<Gacha />} />
           <Route path="/minecraft/rankings" element={<Rankings />} />
           <Route path="/minecraft/tournament" element={<Tournament />} />
@@ -122,7 +123,6 @@ const App: React.FC = () => {
           <Route path="/minecraft/bingo/card" element={<Bingo />} />
           <Route path="/minecraft/bingoBACK" element={<BingoDashboardBACK />} />
           <Route path="/minecraft/bingo/cardBACK" element={<BingoBACK />} />
-          <Route path="/minecraft/gachaBACK" element={<GachaBACK />} />
           <Route path="/minecraft/tournamentBACK" element={<TournamentBACK />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/inventoryBACK" element={<InventoryBACK />} />

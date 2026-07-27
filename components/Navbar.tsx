@@ -61,14 +61,28 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
 
     {/* Dropdown Menu */}
     <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
-      <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10">
+      <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10 py-1">
         <NavLink
           to="/minecraft"
           end
           onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
         >
           Dashboard
+        </NavLink>
+        <NavLink
+          to="/minecraft/shop"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          Shop
+        </NavLink>
+        <NavLink
+          to="/minecraft/gacha"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          Gacha
         </NavLink>
       </div>
     </div>
@@ -227,6 +241,8 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
             <span className="text-gray-500 uppercase text-xs font-bold tracking-widest">Nisamon</span>
             <div className="flex flex-col space-y-4 pl-4 border-l-2 border-white/10">
               <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Dashboard</NavLink>
+              <NavLink to="/minecraft/shop" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Shop</NavLink>
+              <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Gacha Crate</NavLink>
             </div>
           </div>
 

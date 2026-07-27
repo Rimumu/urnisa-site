@@ -1,0 +1,3042 @@
+[
+  {
+    "id": "acornhat",
+    "name": "Acornhat",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A rare acornhat hat worn by veteran block builders.",
+    "elementCount": 3
+  },
+  {
+    "id": "aegishat",
+    "name": "Aegishat",
+    "category": "Collectible",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sturdy aegishat hat crafted with premium pixels.",
+    "elementCount": 3
+  },
+  {
+    "id": "alien_antennae",
+    "name": "Alien Antennae",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A spectacular alien antennae cosmetic to show off to your friends on the server.",
+    "elementCount": 10
+  },
+  {
+    "id": "alienphil",
+    "name": "Alienphil",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A funny alienphil item that pairs nicely with any Minecraft skin.",
+    "elementCount": 10
+  },
+  {
+    "id": "amalgalichhat",
+    "name": "Amalgalichhat",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An awesome amalgalichhat item that pairs nicely with any Minecraft skin.",
+    "elementCount": 19
+  },
+  {
+    "id": "angel_and_devil",
+    "name": "Angel And Devil",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An elegant angel and devil collectible item that makes you stand out in any lobby.",
+    "elementCount": 21
+  },
+  {
+    "id": "angrymask",
+    "name": "Angrymask",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A spectacular angrymask addition to your growing cosmetic wardrobe.",
+    "elementCount": 11
+  },
+  {
+    "id": "antlers",
+    "name": "Antlers",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A heavy antlers hat crafted with premium pixels.",
+    "elementCount": 18
+  },
+  {
+    "id": "apple",
+    "name": "Apple",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy apple cosmetic to show off to your friends on the server.",
+    "elementCount": 5
+  },
+  {
+    "id": "artsy",
+    "name": "Artsy",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare artsy item that pairs nicely with any Minecraft skin.",
+    "elementCount": 26
+  },
+  {
+    "id": "artsy_doll",
+    "name": "Artsy Doll",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare artsy doll hat crafted with premium pixels.",
+    "elementCount": 14
+  },
+  {
+    "id": "astronaut",
+    "name": "Astronaut",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A rare astronaut gear piece for exploring deep dungeons.",
+    "elementCount": 4
+  },
+  {
+    "id": "axolotl_on_head",
+    "name": "Axolotl On Head",
+    "category": "Wacky Accessory",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A heavy axolotl on head hat worn by veteran block builders.",
+    "elementCount": 10
+  },
+  {
+    "id": "azumanga_hat",
+    "name": "Azumanga Hat",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny azumanga hat gear piece for exploring deep dungeons.",
+    "elementCount": 14
+  },
+  {
+    "id": "baby_crewmate",
+    "name": "Baby Crewmate",
+    "category": "Cosmetic",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An ancient baby crewmate collectible item that makes you stand out in any lobby.",
+    "elementCount": 5
+  },
+  {
+    "id": "babydolphin",
+    "name": "Babydolphin",
+    "category": "Collectible",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A spectacular babydolphin item that pairs nicely with any Minecraft skin.",
+    "elementCount": 7
+  },
+  {
+    "id": "babyturtle",
+    "name": "Babyturtle",
+    "category": "Stylish Outfit",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A mysterious babyturtle accessory that increases your style score by +100.",
+    "elementCount": 6
+  },
+  {
+    "id": "bandana",
+    "name": "Bandana",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A cute bandana hat crafted with premium pixels.",
+    "elementCount": 8
+  },
+  {
+    "id": "bandanargb",
+    "name": "Bandanargb",
+    "category": "Headwear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A legendary bandanargb gear piece for exploring deep dungeons.",
+    "elementCount": 8
+  },
+  {
+    "id": "baseballhat",
+    "name": "Baseballhat",
+    "category": "Collectible",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sturdy baseballhat gear piece for exploring deep dungeons.",
+    "elementCount": 2
+  },
+  {
+    "id": "baseballhatfestive",
+    "name": "Baseballhatfestive",
+    "category": "Wacky Accessory",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A sleek baseballhatfestive gear piece for exploring deep dungeons.",
+    "elementCount": 10
+  },
+  {
+    "id": "baseballhatjuly",
+    "name": "Baseballhatjuly",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A rare baseballhatjuly cosmetic to show off to your friends on the server.",
+    "elementCount": 2
+  },
+  {
+    "id": "baseballhatrgb",
+    "name": "Baseballhatrgb",
+    "category": "Collectible",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A mysterious baseballhatrgb hat worn by veteran block builders.",
+    "elementCount": 2
+  },
+  {
+    "id": "batwinghat",
+    "name": "Batwinghat",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An elegant batwinghat item that pairs nicely with any Minecraft skin.",
+    "elementCount": 14
+  },
+  {
+    "id": "beanie",
+    "name": "Beanie",
+    "category": "Wacky Accessory",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A heavy beanie item that pairs nicely with any Minecraft skin.",
+    "elementCount": 2
+  },
+  {
+    "id": "beanieeaster",
+    "name": "Beanieeaster",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A comfy beanieeaster item that pairs nicely with any Minecraft skin.",
+    "elementCount": 2
+  },
+  {
+    "id": "beaniefestive",
+    "name": "Beaniefestive",
+    "category": "Adventure Gear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "An ancient beaniefestive collectible item that makes you stand out in any lobby.",
+    "elementCount": 2
+  },
+  {
+    "id": "beaniejuly",
+    "name": "Beaniejuly",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A cute beaniejuly addition to your growing cosmetic wardrobe.",
+    "elementCount": 2
+  },
+  {
+    "id": "beaniergb",
+    "name": "Beaniergb",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A spectacular beaniergb gear piece for exploring deep dungeons.",
+    "elementCount": 2
+  },
+  {
+    "id": "beaniespooky",
+    "name": "Beaniespooky",
+    "category": "Wacky Accessory",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A funny beaniespooky gear piece for exploring deep dungeons.",
+    "elementCount": 2
+  },
+  {
+    "id": "bee_on_head",
+    "name": "Bee On Head",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky bee on head item that pairs nicely with any Minecraft skin.",
+    "elementCount": 13
+  },
+  {
+    "id": "beetle_on_head",
+    "name": "Beetle On Head",
+    "category": "Headwear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A cute beetle on head hat crafted with premium pixels.",
+    "elementCount": 10
+  },
+  {
+    "id": "beret_ribbon",
+    "name": "Beret Ribbon",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious beret ribbon addition to your growing cosmetic wardrobe.",
+    "elementCount": 13
+  },
+  {
+    "id": "bicorne",
+    "name": "Bicorne",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A sleek bicorne addition to your growing cosmetic wardrobe.",
+    "elementCount": 9
+  },
+  {
+    "id": "bigbrain",
+    "name": "Bigbrain",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A magical bigbrain hat crafted with premium pixels.",
+    "elementCount": 5
+  },
+  {
+    "id": "bigcrown",
+    "name": "Bigcrown",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny bigcrown accessory that increases your style score by +100.",
+    "elementCount": 19
+  },
+  {
+    "id": "bigeyes",
+    "name": "Bigeyes",
+    "category": "Stylish Outfit",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An ancient bigeyes hat crafted with premium pixels.",
+    "elementCount": 6
+  },
+  {
+    "id": "bigribbon",
+    "name": "Bigribbon",
+    "category": "Headwear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An awesome bigribbon item that pairs nicely with any Minecraft skin.",
+    "elementCount": 9
+  },
+  {
+    "id": "bigstevehead",
+    "name": "Bigstevehead",
+    "category": "Collectible",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A comfy bigstevehead addition to your growing cosmetic wardrobe.",
+    "elementCount": 1
+  },
+  {
+    "id": "binky",
+    "name": "Binky",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An ancient binky accessory that increases your style score by +100.",
+    "elementCount": 4
+  },
+  {
+    "id": "bowler",
+    "name": "Bowler",
+    "category": "Collectible",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A spectacular bowler collectible item that makes you stand out in any lobby.",
+    "elementCount": 2
+  },
+  {
+    "id": "breadhat",
+    "name": "Breadhat",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sleek breadhat cosmetic to show off to your friends on the server.",
+    "elementCount": 4
+  },
+  {
+    "id": "brownbrick",
+    "name": "Brownbrick",
+    "category": "Gamer Hat",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A funny brownbrick hat crafted with premium pixels.",
+    "elementCount": 1
+  },
+  {
+    "id": "bucket",
+    "name": "Bucket",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A quirky bucket addition to your growing cosmetic wardrobe.",
+    "elementCount": 6
+  },
+  {
+    "id": "bunnyhat",
+    "name": "Bunnyhat",
+    "category": "Stylish Outfit",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sturdy bunnyhat collectible item that makes you stand out in any lobby.",
+    "elementCount": 6
+  },
+  {
+    "id": "burgerhat",
+    "name": "Burgerhat",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A quirky burgerhat addition to your growing cosmetic wardrobe.",
+    "elementCount": 11
+  },
+  {
+    "id": "burning_m_bison",
+    "name": "Burning M Bison",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sleek burning m bison hat crafted with premium pixels.",
+    "elementCount": 16
+  },
+  {
+    "id": "caddycap",
+    "name": "Caddycap",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A legendary caddycap addition to your growing cosmetic wardrobe.",
+    "elementCount": 4
+  },
+  {
+    "id": "camera",
+    "name": "Camera",
+    "category": "Adventure Gear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sleek camera item that pairs nicely with any Minecraft skin.",
+    "elementCount": 4
+  },
+  {
+    "id": "camerabeard",
+    "name": "Camerabeard",
+    "category": "Wacky Accessory",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An elegant camerabeard collectible item that makes you stand out in any lobby.",
+    "elementCount": 5
+  },
+  {
+    "id": "candleonhead",
+    "name": "Candleonhead",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny candleonhead hat worn by veteran block builders.",
+    "elementCount": 17
+  },
+  {
+    "id": "candycane",
+    "name": "Candycane",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A comfy candycane hat worn by veteran block builders.",
+    "elementCount": 6
+  },
+  {
+    "id": "capbackwards",
+    "name": "Capbackwards",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A quirky capbackwards accessory that increases your style score by +100.",
+    "elementCount": 2
+  },
+  {
+    "id": "cardboard_box",
+    "name": "Cardboard Box",
+    "category": "Cosmetic",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A legendary cardboard box gear piece for exploring deep dungeons.",
+    "elementCount": 5
+  },
+  {
+    "id": "cartoonegg",
+    "name": "Cartoonegg",
+    "category": "Headwear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A mysterious cartoonegg accessory that increases your style score by +100.",
+    "elementCount": 2
+  },
+  {
+    "id": "cat_hat",
+    "name": "Cat Hat",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious cat hat item that pairs nicely with any Minecraft skin.",
+    "elementCount": 14
+  },
+  {
+    "id": "cat_on_head",
+    "name": "Cat On Head",
+    "category": "Adventure Gear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A sturdy cat on head collectible item that makes you stand out in any lobby.",
+    "elementCount": 10
+  },
+  {
+    "id": "caterpillar_on_head",
+    "name": "Caterpillar On Head",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An ancient caterpillar on head accessory that increases your style score by +100.",
+    "elementCount": 15
+  },
+  {
+    "id": "chalk_stick",
+    "name": "Chalk Stick",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "An elegant chalk stick collectible item that makes you stand out in any lobby.",
+    "elementCount": 1
+  },
+  {
+    "id": "cheeseslice",
+    "name": "Cheeseslice",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A rare cheeseslice cosmetic to show off to your friends on the server.",
+    "elementCount": 1
+  },
+  {
+    "id": "chefshat",
+    "name": "Chefshat",
+    "category": "Stylish Outfit",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sleek chefshat addition to your growing cosmetic wardrobe.",
+    "elementCount": 2
+  },
+  {
+    "id": "chi_ears",
+    "name": "Chi Ears",
+    "category": "Collectible",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A quirky chi ears addition to your growing cosmetic wardrobe.",
+    "elementCount": 6
+  },
+  {
+    "id": "chickenhead",
+    "name": "Chickenhead",
+    "category": "Headwear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "An awesome chickenhead cosmetic to show off to your friends on the server.",
+    "elementCount": 3
+  },
+  {
+    "id": "chickenonhead",
+    "name": "Chickenonhead",
+    "category": "Adventure Gear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sturdy chickenonhead collectible item that makes you stand out in any lobby.",
+    "elementCount": 5
+  },
+  {
+    "id": "chocolate_sauced",
+    "name": "Chocolate Sauced",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sturdy chocolate sauced item that pairs nicely with any Minecraft skin.",
+    "elementCount": 5
+  },
+  {
+    "id": "christmastree",
+    "name": "Christmastree",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare christmastree gear piece for exploring deep dungeons.",
+    "elementCount": 38
+  },
+  {
+    "id": "circular_glasses",
+    "name": "Circular Glasses",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy circular glasses collectible item that makes you stand out in any lobby.",
+    "elementCount": 5
+  },
+  {
+    "id": "cowboy",
+    "name": "Cowboy",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An ancient cowboy accessory that increases your style score by +100.",
+    "elementCount": 5
+  },
+  {
+    "id": "cowboyrgb",
+    "name": "Cowboyrgb",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A cute cowboyrgb gear piece for exploring deep dungeons.",
+    "elementCount": 5
+  },
+  {
+    "id": "crabonhead",
+    "name": "Crabonhead",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious crabonhead collectible item that makes you stand out in any lobby.",
+    "elementCount": 15
+  },
+  {
+    "id": "crown",
+    "name": "Crown",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A heavy crown hat worn by veteran block builders.",
+    "elementCount": 14
+  },
+  {
+    "id": "crystal_horns",
+    "name": "Crystal Horns",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An awesome crystal horns collectible item that makes you stand out in any lobby.",
+    "elementCount": 10
+  },
+  {
+    "id": "cucumbereyemask",
+    "name": "Cucumbereyemask",
+    "category": "Collectible",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A quirky cucumbereyemask gear piece for exploring deep dungeons.",
+    "elementCount": 2
+  },
+  {
+    "id": "cuphead",
+    "name": "Cuphead",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A quirky cuphead hat crafted with premium pixels.",
+    "elementCount": 5
+  },
+  {
+    "id": "cyclopseye",
+    "name": "Cyclopseye",
+    "category": "Adventure Gear",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A rare cyclopseye item that pairs nicely with any Minecraft skin.",
+    "elementCount": 1
+  },
+  {
+    "id": "dairyqueen",
+    "name": "Dairyqueen",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A legendary dairyqueen cosmetic to show off to your friends on the server.",
+    "elementCount": 12
+  },
+  {
+    "id": "dangeresquejuly",
+    "name": "Dangeresquejuly",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A legendary dangeresquejuly cosmetic to show off to your friends on the server.",
+    "elementCount": 17
+  },
+  {
+    "id": "dejiko",
+    "name": "Dejiko",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An awesome dejiko item that pairs nicely with any Minecraft skin.",
+    "elementCount": 22
+  },
+  {
+    "id": "demoneyes",
+    "name": "Demoneyes",
+    "category": "Headwear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A quirky demoneyes addition to your growing cosmetic wardrobe.",
+    "elementCount": 7
+  },
+  {
+    "id": "demonhorns",
+    "name": "Demonhorns",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sturdy demonhorns cosmetic to show off to your friends on the server.",
+    "elementCount": 8
+  },
+  {
+    "id": "digger",
+    "name": "Digger",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sleek digger cosmetic to show off to your friends on the server.",
+    "elementCount": 4
+  },
+  {
+    "id": "dimmahat",
+    "name": "Dimmahat",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy dimmahat cosmetic to show off to your friends on the server.",
+    "elementCount": 4
+  },
+  {
+    "id": "dipper",
+    "name": "Dipper",
+    "category": "Cosmetic",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A mysterious dipper addition to your growing cosmetic wardrobe.",
+    "elementCount": 7
+  },
+  {
+    "id": "discoball",
+    "name": "Discoball",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A sturdy discoball cosmetic to show off to your friends on the server.",
+    "elementCount": 1
+  },
+  {
+    "id": "disguise",
+    "name": "Disguise",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute disguise gear piece for exploring deep dungeons.",
+    "elementCount": 20
+  },
+  {
+    "id": "dorkglassesandteeth",
+    "name": "Dorkglassesandteeth",
+    "category": "Headwear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A rare dorkglassesandteeth gear piece for exploring deep dungeons.",
+    "elementCount": 7
+  },
+  {
+    "id": "doubletake",
+    "name": "Doubletake",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A funny doubletake collectible item that makes you stand out in any lobby.",
+    "elementCount": 4
+  },
+  {
+    "id": "dragonhead",
+    "name": "Dragonhead",
+    "category": "Stylish Outfit",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A funny dragonhead cosmetic to show off to your friends on the server.",
+    "elementCount": 9
+  },
+  {
+    "id": "dragonskull",
+    "name": "Dragonskull",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An ancient dragonskull item that pairs nicely with any Minecraft skin.",
+    "elementCount": 10
+  },
+  {
+    "id": "dragonskullender",
+    "name": "Dragonskullender",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A mysterious dragonskullender gear piece for exploring deep dungeons.",
+    "elementCount": 10
+  },
+  {
+    "id": "drinkinhat",
+    "name": "Drinkinhat",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An elegant drinkinhat accessory that increases your style score by +100.",
+    "elementCount": 16
+  },
+  {
+    "id": "druid_antlers",
+    "name": "Druid Antlers",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sleek druid antlers hat worn by veteran block builders.",
+    "elementCount": 49
+  },
+  {
+    "id": "druid_antlers_rare",
+    "name": "Druid Antlers Rare",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious druid antlers rare cosmetic to show off to your friends on the server.",
+    "elementCount": 50
+  },
+  {
+    "id": "dumhat",
+    "name": "Dumhat",
+    "category": "Stylish Outfit",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A legendary dumhat hat crafted with premium pixels.",
+    "elementCount": 3
+  },
+  {
+    "id": "easterhead",
+    "name": "Easterhead",
+    "category": "Stylish Outfit",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A mysterious easterhead item that pairs nicely with any Minecraft skin.",
+    "elementCount": 2
+  },
+  {
+    "id": "eevee_ears",
+    "name": "Eevee Ears",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sturdy eevee ears item that pairs nicely with any Minecraft skin.",
+    "elementCount": 34
+  },
+  {
+    "id": "eggcracked",
+    "name": "Eggcracked",
+    "category": "Stylish Outfit",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A magical eggcracked cosmetic to show off to your friends on the server.",
+    "elementCount": 3
+  },
+  {
+    "id": "egghead",
+    "name": "Egghead",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy egghead gear piece for exploring deep dungeons.",
+    "elementCount": 4
+  },
+  {
+    "id": "eggonhead",
+    "name": "Eggonhead",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An awesome eggonhead hat worn by veteran block builders.",
+    "elementCount": 5
+  },
+  {
+    "id": "elfhat",
+    "name": "Elfhat",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy elfhat hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "explorerhat",
+    "name": "Explorerhat",
+    "category": "Stylish Outfit",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sleek explorerhat cosmetic to show off to your friends on the server.",
+    "elementCount": 3
+  },
+  {
+    "id": "eyeholder_beeholder",
+    "name": "Eyeholder Beeholder",
+    "category": "Wacky Accessory",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious eyeholder beeholder gear piece for exploring deep dungeons.",
+    "elementCount": 24
+  },
+  {
+    "id": "eyeholder_dark",
+    "name": "Eyeholder Dark",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute eyeholder dark hat worn by veteran block builders.",
+    "elementCount": 22
+  },
+  {
+    "id": "eyeholder_evil",
+    "name": "Eyeholder Evil",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An awesome eyeholder evil hat worn by veteran block builders.",
+    "elementCount": 22
+  },
+  {
+    "id": "eyeholder_warm",
+    "name": "Eyeholder Warm",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sturdy eyeholder warm hat worn by veteran block builders.",
+    "elementCount": 22
+  },
+  {
+    "id": "eyeholder_xanath",
+    "name": "Eyeholder Xanath",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sturdy eyeholder xanath hat crafted with premium pixels.",
+    "elementCount": 35
+  },
+  {
+    "id": "eyepatch",
+    "name": "Eyepatch",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A funny eyepatch hat worn by veteran block builders.",
+    "elementCount": 6
+  },
+  {
+    "id": "fakeblight",
+    "name": "Fakeblight",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A magical fakeblight hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "fakefire",
+    "name": "Fakefire",
+    "category": "Wacky Accessory",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A funny fakefire gear piece for exploring deep dungeons.",
+    "elementCount": 4
+  },
+  {
+    "id": "farmerbrim",
+    "name": "Farmerbrim",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A mysterious farmerbrim collectible item that makes you stand out in any lobby.",
+    "elementCount": 3
+  },
+  {
+    "id": "festiveantlers",
+    "name": "Festiveantlers",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A magical festiveantlers cosmetic to show off to your friends on the server.",
+    "elementCount": 27
+  },
+  {
+    "id": "festiveribbon",
+    "name": "Festiveribbon",
+    "category": "Wacky Accessory",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious festiveribbon addition to your growing cosmetic wardrobe.",
+    "elementCount": 19
+  },
+  {
+    "id": "fez",
+    "name": "Fez",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "An awesome fez cosmetic to show off to your friends on the server.",
+    "elementCount": 3
+  },
+  {
+    "id": "finnhood",
+    "name": "Finnhood",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An elegant finnhood addition to your growing cosmetic wardrobe.",
+    "elementCount": 7
+  },
+  {
+    "id": "fireworks",
+    "name": "Fireworks",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sturdy fireworks hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "fishing_hat",
+    "name": "Fishing Hat",
+    "category": "Collectible",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A cute fishing hat cosmetic to show off to your friends on the server.",
+    "elementCount": 7
+  },
+  {
+    "id": "fishonhead",
+    "name": "Fishonhead",
+    "category": "Headwear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An ancient fishonhead hat crafted with premium pixels.",
+    "elementCount": 11
+  },
+  {
+    "id": "flagjuly",
+    "name": "Flagjuly",
+    "category": "Headwear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sturdy flagjuly gear piece for exploring deep dungeons.",
+    "elementCount": 2
+  },
+  {
+    "id": "flies",
+    "name": "Flies",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy flies cosmetic to show off to your friends on the server.",
+    "elementCount": 4
+  },
+  {
+    "id": "floatinghearts",
+    "name": "Floatinghearts",
+    "category": "Adventure Gear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A cute floatinghearts gear piece for exploring deep dungeons.",
+    "elementCount": 5
+  },
+  {
+    "id": "floatingstar",
+    "name": "Floatingstar",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A mysterious floatingstar collectible item that makes you stand out in any lobby.",
+    "elementCount": 1
+  },
+  {
+    "id": "flowercrown",
+    "name": "Flowercrown",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky flowercrown hat crafted with premium pixels.",
+    "elementCount": 49
+  },
+  {
+    "id": "floweronhead",
+    "name": "Floweronhead",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sturdy floweronhead addition to your growing cosmetic wardrobe.",
+    "elementCount": 54
+  },
+  {
+    "id": "foxhat",
+    "name": "Foxhat",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A funny foxhat hat worn by veteran block builders.",
+    "elementCount": 12
+  },
+  {
+    "id": "fro",
+    "name": "Fro",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A spectacular fro addition to your growing cosmetic wardrobe.",
+    "elementCount": 11
+  },
+  {
+    "id": "fronthorns",
+    "name": "Fronthorns",
+    "category": "Gamer Hat",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A cute fronthorns hat worn by veteran block builders.",
+    "elementCount": 8
+  },
+  {
+    "id": "frozenhead",
+    "name": "Frozenhead",
+    "category": "Wacky Accessory",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A heavy frozenhead hat crafted with premium pixels.",
+    "elementCount": 16
+  },
+  {
+    "id": "fulldiamondhelm",
+    "name": "Fulldiamondhelm",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A magical fulldiamondhelm hat worn by veteran block builders.",
+    "elementCount": 27
+  },
+  {
+    "id": "fullgoldhelm",
+    "name": "Fullgoldhelm",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A magical fullgoldhelm collectible item that makes you stand out in any lobby.",
+    "elementCount": 27
+  },
+  {
+    "id": "fullironhelm",
+    "name": "Fullironhelm",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute fullironhelm collectible item that makes you stand out in any lobby.",
+    "elementCount": 27
+  },
+  {
+    "id": "fullsteelhelm",
+    "name": "Fullsteelhelm",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious fullsteelhelm gear piece for exploring deep dungeons.",
+    "elementCount": 27
+  },
+  {
+    "id": "ghostmask",
+    "name": "Ghostmask",
+    "category": "Collectible",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A cute ghostmask collectible item that makes you stand out in any lobby.",
+    "elementCount": 1
+  },
+  {
+    "id": "gnome",
+    "name": "Gnome",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A magical gnome gear piece for exploring deep dungeons.",
+    "elementCount": 6
+  },
+  {
+    "id": "gnome_clover_wig",
+    "name": "Gnome Clover Wig",
+    "category": "Wacky Accessory",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A sturdy gnome clover wig cosmetic to show off to your friends on the server.",
+    "elementCount": 11
+  },
+  {
+    "id": "goggles",
+    "name": "Goggles",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A quirky goggles addition to your growing cosmetic wardrobe.",
+    "elementCount": 3
+  },
+  {
+    "id": "grandmadisguise",
+    "name": "Grandmadisguise",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky grandmadisguise cosmetic to show off to your friends on the server.",
+    "elementCount": 15
+  },
+  {
+    "id": "greaser",
+    "name": "Greaser",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A magical greaser cosmetic to show off to your friends on the server.",
+    "elementCount": 5
+  },
+  {
+    "id": "greenbirb",
+    "name": "Greenbirb",
+    "category": "Wacky Accessory",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A rare greenbirb addition to your growing cosmetic wardrobe.",
+    "elementCount": 5
+  },
+  {
+    "id": "greenstache",
+    "name": "Greenstache",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A quirky greenstache gear piece for exploring deep dungeons.",
+    "elementCount": 11
+  },
+  {
+    "id": "greyfoxhat",
+    "name": "Greyfoxhat",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny greyfoxhat cosmetic to show off to your friends on the server.",
+    "elementCount": 16
+  },
+  {
+    "id": "grinchhat",
+    "name": "Grinchhat",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An awesome grinchhat hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "halo",
+    "name": "Halo",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A comfy halo collectible item that makes you stand out in any lobby.",
+    "elementCount": 4
+  },
+  {
+    "id": "hat_of_discipline",
+    "name": "Hat Of Discipline",
+    "category": "Gamer Hat",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A spectacular hat of discipline cosmetic to show off to your friends on the server.",
+    "elementCount": 6
+  },
+  {
+    "id": "headbolts",
+    "name": "Headbolts",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A funny headbolts hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "headphonesblue",
+    "name": "Headphonesblue",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A spectacular headphonesblue gear piece for exploring deep dungeons.",
+    "elementCount": 5
+  },
+  {
+    "id": "headphonespink",
+    "name": "Headphonespink",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A funny headphonespink accessory that increases your style score by +100.",
+    "elementCount": 7
+  },
+  {
+    "id": "headphonesred",
+    "name": "Headphonesred",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy headphonesred hat worn by veteran block builders.",
+    "elementCount": 5
+  },
+  {
+    "id": "headphonesreggae",
+    "name": "Headphonesreggae",
+    "category": "Cosmetic",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy headphonesreggae addition to your growing cosmetic wardrobe.",
+    "elementCount": 5
+  },
+  {
+    "id": "headshot",
+    "name": "Headshot",
+    "category": "Stylish Outfit",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A funny headshot hat worn by veteran block builders.",
+    "elementCount": 2
+  },
+  {
+    "id": "hockeymask",
+    "name": "Hockeymask",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A quirky hockeymask gear piece for exploring deep dungeons.",
+    "elementCount": 5
+  },
+  {
+    "id": "holyhead",
+    "name": "Holyhead",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A magical holyhead item that pairs nicely with any Minecraft skin.",
+    "elementCount": 1
+  },
+  {
+    "id": "horsemask",
+    "name": "Horsemask",
+    "category": "Wacky Accessory",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A comfy horsemask item that pairs nicely with any Minecraft skin.",
+    "elementCount": 5
+  },
+  {
+    "id": "hosthat",
+    "name": "Hosthat",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A legendary hosthat collectible item that makes you stand out in any lobby.",
+    "elementCount": 16
+  },
+  {
+    "id": "icedragonskull",
+    "name": "Icedragonskull",
+    "category": "Headwear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An elegant icedragonskull gear piece for exploring deep dungeons.",
+    "elementCount": 11
+  },
+  {
+    "id": "jackohat",
+    "name": "Jackohat",
+    "category": "Adventure Gear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A comfy jackohat hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "jesterhat",
+    "name": "Jesterhat",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny jesterhat cosmetic to show off to your friends on the server.",
+    "elementCount": 16
+  },
+  {
+    "id": "julysunglasses",
+    "name": "Julysunglasses",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An elegant julysunglasses hat worn by veteran block builders.",
+    "elementCount": 7
+  },
+  {
+    "id": "julytophat",
+    "name": "Julytophat",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sleek julytophat hat crafted with premium pixels.",
+    "elementCount": 2
+  },
+  {
+    "id": "kirbymouthful",
+    "name": "Kirbymouthful",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A cute kirbymouthful gear piece for exploring deep dungeons.",
+    "elementCount": 5
+  },
+  {
+    "id": "ladybug_on_head",
+    "name": "Ladybug On Head",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A comfy ladybug on head accessory that increases your style score by +100.",
+    "elementCount": 10
+  },
+  {
+    "id": "largehorns",
+    "name": "Largehorns",
+    "category": "Collectible",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sturdy largehorns collectible item that makes you stand out in any lobby.",
+    "elementCount": 8
+  },
+  {
+    "id": "lightning_eyes",
+    "name": "Lightning Eyes",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An ancient lightning eyes addition to your growing cosmetic wardrobe.",
+    "elementCount": 4
+  },
+  {
+    "id": "lil_bows",
+    "name": "Lil Bows",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sturdy lil bows hat crafted with premium pixels.",
+    "elementCount": 24
+  },
+  {
+    "id": "lil_termagant",
+    "name": "Lil Termagant",
+    "category": "Wacky Accessory",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An awesome lil termagant item that pairs nicely with any Minecraft skin.",
+    "elementCount": 20
+  },
+  {
+    "id": "lilbow",
+    "name": "Lilbow",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A mysterious lilbow hat crafted with premium pixels.",
+    "elementCount": 3
+  },
+  {
+    "id": "longfoxears",
+    "name": "Longfoxears",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare longfoxears gear piece for exploring deep dungeons.",
+    "elementCount": 16
+  },
+  {
+    "id": "madscientist",
+    "name": "Madscientist",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A comfy madscientist addition to your growing cosmetic wardrobe.",
+    "elementCount": 14
+  },
+  {
+    "id": "magikarp",
+    "name": "Magikarp",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An ancient magikarp hat crafted with premium pixels.",
+    "elementCount": 18
+  },
+  {
+    "id": "medusa",
+    "name": "Medusa",
+    "category": "Wacky Accessory",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute medusa addition to your growing cosmetic wardrobe.",
+    "elementCount": 42
+  },
+  {
+    "id": "megamanhat",
+    "name": "Megamanhat",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A legendary megamanhat item that pairs nicely with any Minecraft skin.",
+    "elementCount": 20
+  },
+  {
+    "id": "milady_doll",
+    "name": "Milady Doll",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A spectacular milady doll hat worn by veteran block builders.",
+    "elementCount": 28
+  },
+  {
+    "id": "mimic_head",
+    "name": "Mimic Head",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A mysterious mimic head gear piece for exploring deep dungeons.",
+    "elementCount": 12
+  },
+  {
+    "id": "mimic_head_dark",
+    "name": "Mimic Head Dark",
+    "category": "Wacky Accessory",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A funny mimic head dark collectible item that makes you stand out in any lobby.",
+    "elementCount": 12
+  },
+  {
+    "id": "mimic_head_gold",
+    "name": "Mimic Head Gold",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A comfy mimic head gold hat crafted with premium pixels.",
+    "elementCount": 19
+  },
+  {
+    "id": "mindflayer",
+    "name": "Mindflayer",
+    "category": "Headwear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A heavy mindflayer accessory that increases your style score by +100.",
+    "elementCount": 8
+  },
+  {
+    "id": "mindflayer_alhoon",
+    "name": "Mindflayer Alhoon",
+    "category": "Gamer Hat",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A heavy mindflayer alhoon gear piece for exploring deep dungeons.",
+    "elementCount": 8
+  },
+  {
+    "id": "minerhat",
+    "name": "Minerhat",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare minerhat accessory that increases your style score by +100.",
+    "elementCount": 45
+  },
+  {
+    "id": "mistletoe",
+    "name": "Mistletoe",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute mistletoe addition to your growing cosmetic wardrobe.",
+    "elementCount": 41
+  },
+  {
+    "id": "mohawk",
+    "name": "Mohawk",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A funny mohawk item that pairs nicely with any Minecraft skin.",
+    "elementCount": 3
+  },
+  {
+    "id": "monkeyking",
+    "name": "Monkeyking",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A heavy monkeyking gear piece for exploring deep dungeons.",
+    "elementCount": 7
+  },
+  {
+    "id": "monocle",
+    "name": "Monocle",
+    "category": "Wacky Accessory",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A sleek monocle accessory that increases your style score by +100.",
+    "elementCount": 9
+  },
+  {
+    "id": "moreeyes",
+    "name": "Moreeyes",
+    "category": "Cosmetic",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sturdy moreeyes addition to your growing cosmetic wardrobe.",
+    "elementCount": 7
+  },
+  {
+    "id": "murdered",
+    "name": "Murdered",
+    "category": "Collectible",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "An elegant murdered hat crafted with premium pixels.",
+    "elementCount": 3
+  },
+  {
+    "id": "nyan_doll",
+    "name": "Nyan Doll",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare nyan doll item that pairs nicely with any Minecraft skin.",
+    "elementCount": 13
+  },
+  {
+    "id": "octodad",
+    "name": "Octodad",
+    "category": "Gamer Hat",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An ancient octodad gear piece for exploring deep dungeons.",
+    "elementCount": 6
+  },
+  {
+    "id": "orange_hat",
+    "name": "Orange Hat",
+    "category": "Headwear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An awesome orange hat hat crafted with premium pixels.",
+    "elementCount": 12
+  },
+  {
+    "id": "palmtree",
+    "name": "Palmtree",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious palmtree item that pairs nicely with any Minecraft skin.",
+    "elementCount": 35
+  },
+  {
+    "id": "paperbag",
+    "name": "Paperbag",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A funny paperbag hat crafted with premium pixels.",
+    "elementCount": 1
+  },
+  {
+    "id": "partyhat",
+    "name": "Partyhat",
+    "category": "Adventure Gear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sturdy partyhat collectible item that makes you stand out in any lobby.",
+    "elementCount": 4
+  },
+  {
+    "id": "paypay",
+    "name": "Paypay",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An ancient paypay accessory that increases your style score by +100.",
+    "elementCount": 8
+  },
+  {
+    "id": "peepo",
+    "name": "Peepo",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny peepo hat worn by veteran block builders.",
+    "elementCount": 16
+  },
+  {
+    "id": "penguinbaby",
+    "name": "Penguinbaby",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A heavy penguinbaby hat worn by veteran block builders.",
+    "elementCount": 5
+  },
+  {
+    "id": "penguinhat",
+    "name": "Penguinhat",
+    "category": "Adventure Gear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A quirky penguinhat addition to your growing cosmetic wardrobe.",
+    "elementCount": 3
+  },
+  {
+    "id": "peppino",
+    "name": "Peppino",
+    "category": "Adventure Gear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A spectacular peppino accessory that increases your style score by +100.",
+    "elementCount": 12
+  },
+  {
+    "id": "pighead",
+    "name": "Pighead",
+    "category": "Wacky Accessory",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A mysterious pighead hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "pika_ears",
+    "name": "Pika Ears",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An ancient pika ears gear piece for exploring deep dungeons.",
+    "elementCount": 10
+  },
+  {
+    "id": "pinhead",
+    "name": "Pinhead",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky pinhead addition to your growing cosmetic wardrobe.",
+    "elementCount": 77
+  },
+  {
+    "id": "plaguedoctor",
+    "name": "Plaguedoctor",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A quirky plaguedoctor hat crafted with premium pixels.",
+    "elementCount": 8
+  },
+  {
+    "id": "pog",
+    "name": "Pog",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sleek pog accessory that increases your style score by +100.",
+    "elementCount": 5
+  },
+  {
+    "id": "pohatoe",
+    "name": "Pohatoe",
+    "category": "Headwear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A cute pohatoe cosmetic to show off to your friends on the server.",
+    "elementCount": 9
+  },
+  {
+    "id": "policebucket",
+    "name": "Policebucket",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sleek policebucket cosmetic to show off to your friends on the server.",
+    "elementCount": 7
+  },
+  {
+    "id": "policesiren",
+    "name": "Policesiren",
+    "category": "Headwear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A heavy policesiren accessory that increases your style score by +100.",
+    "elementCount": 6
+  },
+  {
+    "id": "pom_moog",
+    "name": "Pom Moog",
+    "category": "Collectible",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sturdy pom moog collectible item that makes you stand out in any lobby.",
+    "elementCount": 6
+  },
+  {
+    "id": "poofballhat",
+    "name": "Poofballhat",
+    "category": "Adventure Gear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A rare poofballhat addition to your growing cosmetic wardrobe.",
+    "elementCount": 3
+  },
+  {
+    "id": "potionhead",
+    "name": "Potionhead",
+    "category": "Wacky Accessory",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A cute potionhead collectible item that makes you stand out in any lobby.",
+    "elementCount": 3
+  },
+  {
+    "id": "presentsstack",
+    "name": "Presentsstack",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A quirky presentsstack cosmetic to show off to your friends on the server.",
+    "elementCount": 4
+  },
+  {
+    "id": "propelhat",
+    "name": "Propelhat",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An elegant propelhat accessory that increases your style score by +100.",
+    "elementCount": 4
+  },
+  {
+    "id": "puchiko",
+    "name": "Puchiko",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny puchiko accessory that increases your style score by +100.",
+    "elementCount": 20
+  },
+  {
+    "id": "questbook",
+    "name": "Questbook",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sleek questbook hat crafted with premium pixels.",
+    "elementCount": 4
+  },
+  {
+    "id": "rabbitears",
+    "name": "Rabbitears",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A spectacular rabbitears addition to your growing cosmetic wardrobe.",
+    "elementCount": 12
+  },
+  {
+    "id": "rabbitonhead",
+    "name": "Rabbitonhead",
+    "category": "Adventure Gear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A cute rabbitonhead hat crafted with premium pixels.",
+    "elementCount": 11
+  },
+  {
+    "id": "rabi_en_rose_wig",
+    "name": "Rabi En Rose Wig",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A funny rabi en rose wig hat worn by veteran block builders.",
+    "elementCount": 32
+  },
+  {
+    "id": "rainboworbiters",
+    "name": "Rainboworbiters",
+    "category": "Wacky Accessory",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute rainboworbiters gear piece for exploring deep dungeons.",
+    "elementCount": 25
+  },
+  {
+    "id": "raincloud",
+    "name": "Raincloud",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An awesome raincloud hat crafted with premium pixels.",
+    "elementCount": 16
+  },
+  {
+    "id": "ranahat",
+    "name": "Ranahat",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An elegant ranahat collectible item that makes you stand out in any lobby.",
+    "elementCount": 17
+  },
+  {
+    "id": "redeyes",
+    "name": "Redeyes",
+    "category": "Collectible",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A magical redeyes gear piece for exploring deep dungeons.",
+    "elementCount": 1
+  },
+  {
+    "id": "rednose",
+    "name": "Rednose",
+    "category": "Headwear",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A sleek rednose addition to your growing cosmetic wardrobe.",
+    "elementCount": 1
+  },
+  {
+    "id": "redstache",
+    "name": "Redstache",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A legendary redstache item that pairs nicely with any Minecraft skin.",
+    "elementCount": 11
+  },
+  {
+    "id": "rgbbigribbon",
+    "name": "Rgbbigribbon",
+    "category": "Stylish Outfit",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A cute rgbbigribbon gear piece for exploring deep dungeons.",
+    "elementCount": 9
+  },
+  {
+    "id": "rgbbowler",
+    "name": "Rgbbowler",
+    "category": "Adventure Gear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A quirky rgbbowler cosmetic to show off to your friends on the server.",
+    "elementCount": 2
+  },
+  {
+    "id": "rgbdragonskull",
+    "name": "Rgbdragonskull",
+    "category": "Wacky Accessory",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An ancient rgbdragonskull hat worn by veteran block builders.",
+    "elementCount": 10
+  },
+  {
+    "id": "rgbdrinkinhat",
+    "name": "Rgbdrinkinhat",
+    "category": "Wacky Accessory",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An awesome rgbdrinkinhat hat crafted with premium pixels.",
+    "elementCount": 16
+  },
+  {
+    "id": "rgbeasterhead",
+    "name": "Rgbeasterhead",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sleek rgbeasterhead hat crafted with premium pixels.",
+    "elementCount": 2
+  },
+  {
+    "id": "rgbfullhelm",
+    "name": "Rgbfullhelm",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A mysterious rgbfullhelm accessory that increases your style score by +100.",
+    "elementCount": 27
+  },
+  {
+    "id": "rgbpartyhat",
+    "name": "Rgbpartyhat",
+    "category": "Adventure Gear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A quirky rgbpartyhat gear piece for exploring deep dungeons.",
+    "elementCount": 4
+  },
+  {
+    "id": "rgbtoptophathat",
+    "name": "Rgbtoptophathat",
+    "category": "Cosmetic",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A spectacular rgbtoptophathat cosmetic to show off to your friends on the server.",
+    "elementCount": 4
+  },
+  {
+    "id": "rgbushanka",
+    "name": "Rgbushanka",
+    "category": "Cosmetic",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An awesome rgbushanka collectible item that makes you stand out in any lobby.",
+    "elementCount": 4
+  },
+  {
+    "id": "right_hand_hat",
+    "name": "Right Hand Hat",
+    "category": "Adventure Gear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sleek right hand hat addition to your growing cosmetic wardrobe.",
+    "elementCount": 3
+  },
+  {
+    "id": "rimglasses",
+    "name": "Rimglasses",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky rimglasses hat crafted with premium pixels.",
+    "elementCount": 13
+  },
+  {
+    "id": "rock",
+    "name": "Rock",
+    "category": "Cosmetic",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A spectacular rock item that pairs nicely with any Minecraft skin.",
+    "elementCount": 6
+  },
+  {
+    "id": "round_purple_wig",
+    "name": "Round Purple Wig",
+    "category": "Cosmetic",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A funny round purple wig addition to your growing cosmetic wardrobe.",
+    "elementCount": 7
+  },
+  {
+    "id": "round_red_wig",
+    "name": "Round Red Wig",
+    "category": "Headwear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An elegant round red wig gear piece for exploring deep dungeons.",
+    "elementCount": 7
+  },
+  {
+    "id": "rubbernipple",
+    "name": "Rubbernipple",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A comfy rubbernipple hat worn by veteran block builders.",
+    "elementCount": 2
+  },
+  {
+    "id": "sandcastle",
+    "name": "Sandcastle",
+    "category": "Stylish Outfit",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sleek sandcastle item that pairs nicely with any Minecraft skin.",
+    "elementCount": 7
+  },
+  {
+    "id": "santaclaus",
+    "name": "Santaclaus",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A sleek santaclaus collectible item that makes you stand out in any lobby.",
+    "elementCount": 11
+  },
+  {
+    "id": "santahat",
+    "name": "Santahat",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A rare santahat hat worn by veteran block builders.",
+    "elementCount": 5
+  },
+  {
+    "id": "sausage",
+    "name": "Sausage",
+    "category": "Headwear",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A legendary sausage collectible item that makes you stand out in any lobby.",
+    "elementCount": 1
+  },
+  {
+    "id": "scouter",
+    "name": "Scouter",
+    "category": "Headwear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sturdy scouter collectible item that makes you stand out in any lobby.",
+    "elementCount": 3
+  },
+  {
+    "id": "seaweedhat",
+    "name": "Seaweedhat",
+    "category": "Adventure Gear",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A magical seaweedhat hat crafted with premium pixels.",
+    "elementCount": 1
+  },
+  {
+    "id": "shakehat",
+    "name": "Shakehat",
+    "category": "Stylish Outfit",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A cute shakehat accessory that increases your style score by +100.",
+    "elementCount": 3
+  },
+  {
+    "id": "sheep",
+    "name": "Sheep",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A magical sheep item that pairs nicely with any Minecraft skin.",
+    "elementCount": 2
+  },
+  {
+    "id": "shinymagikarp",
+    "name": "Shinymagikarp",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "An elegant shinymagikarp hat crafted with premium pixels.",
+    "elementCount": 31
+  },
+  {
+    "id": "shrekears",
+    "name": "Shrekears",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An awesome shrekears addition to your growing cosmetic wardrobe.",
+    "elementCount": 4
+  },
+  {
+    "id": "sidebow",
+    "name": "Sidebow",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An ancient sidebow item that pairs nicely with any Minecraft skin.",
+    "elementCount": 9
+  },
+  {
+    "id": "simsgem",
+    "name": "Simsgem",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A legendary simsgem accessory that increases your style score by +100.",
+    "elementCount": 1
+  },
+  {
+    "id": "sleepeyemask",
+    "name": "Sleepeyemask",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A magical sleepeyemask accessory that increases your style score by +100.",
+    "elementCount": 6
+  },
+  {
+    "id": "slime_cube_dnd",
+    "name": "Slime Cube Dnd",
+    "category": "Adventure Gear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An awesome slime cube dnd accessory that increases your style score by +100.",
+    "elementCount": 11
+  },
+  {
+    "id": "slime_head",
+    "name": "Slime Head",
+    "category": "Gamer Hat",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A legendary slime head cosmetic to show off to your friends on the server.",
+    "elementCount": 1
+  },
+  {
+    "id": "smokingpipe",
+    "name": "Smokingpipe",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A comfy smokingpipe collectible item that makes you stand out in any lobby.",
+    "elementCount": 5
+  },
+  {
+    "id": "snowmanbaby",
+    "name": "Snowmanbaby",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sturdy snowmanbaby hat worn by veteran block builders.",
+    "elementCount": 5
+  },
+  {
+    "id": "sombrero",
+    "name": "Sombrero",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A heavy sombrero collectible item that makes you stand out in any lobby.",
+    "elementCount": 6
+  },
+  {
+    "id": "sonichood",
+    "name": "Sonichood",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A spectacular sonichood cosmetic to show off to your friends on the server.",
+    "elementCount": 13
+  },
+  {
+    "id": "spadesoldier",
+    "name": "Spadesoldier",
+    "category": "Headwear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sleek spadesoldier addition to your growing cosmetic wardrobe.",
+    "elementCount": 15
+  },
+  {
+    "id": "special",
+    "name": "Special",
+    "category": "Collectible",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A mysterious special gear piece for exploring deep dungeons.",
+    "elementCount": 2
+  },
+  {
+    "id": "spiderweb",
+    "name": "Spiderweb",
+    "category": "Wacky Accessory",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A spectacular spiderweb gear piece for exploring deep dungeons.",
+    "elementCount": 1
+  },
+  {
+    "id": "sport_sunglasses",
+    "name": "Sport Sunglasses",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute sport sunglasses item that pairs nicely with any Minecraft skin.",
+    "elementCount": 15
+  },
+  {
+    "id": "springer",
+    "name": "Springer",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A comfy springer addition to your growing cosmetic wardrobe.",
+    "elementCount": 3
+  },
+  {
+    "id": "sprout",
+    "name": "Sprout",
+    "category": "Cosmetic",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A spectacular sprout item that pairs nicely with any Minecraft skin.",
+    "elementCount": 7
+  },
+  {
+    "id": "spyzombie",
+    "name": "Spyzombie",
+    "category": "Stylish Outfit",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An ancient spyzombie collectible item that makes you stand out in any lobby.",
+    "elementCount": 4
+  },
+  {
+    "id": "stinkycheeseman",
+    "name": "Stinkycheeseman",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky stinkycheeseman addition to your growing cosmetic wardrobe.",
+    "elementCount": 13
+  },
+  {
+    "id": "strawberry_hat",
+    "name": "Strawberry Hat",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare strawberry hat gear piece for exploring deep dungeons.",
+    "elementCount": 18
+  },
+  {
+    "id": "stress",
+    "name": "Stress",
+    "category": "Stylish Outfit",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A magical stress hat crafted with premium pixels.",
+    "elementCount": 1
+  },
+  {
+    "id": "stuck_lollipop",
+    "name": "Stuck Lollipop",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An elegant stuck lollipop addition to your growing cosmetic wardrobe.",
+    "elementCount": 6
+  },
+  {
+    "id": "summerhat",
+    "name": "Summerhat",
+    "category": "Headwear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A sleek summerhat collectible item that makes you stand out in any lobby.",
+    "elementCount": 3
+  },
+  {
+    "id": "sunglasses",
+    "name": "Sunglasses",
+    "category": "Headwear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A funny sunglasses addition to your growing cosmetic wardrobe.",
+    "elementCount": 12
+  },
+  {
+    "id": "sunglassesbig",
+    "name": "Sunglassesbig",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sleek sunglassesbig gear piece for exploring deep dungeons.",
+    "elementCount": 7
+  },
+  {
+    "id": "supersandhat",
+    "name": "Supersandhat",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A sleek supersandhat collectible item that makes you stand out in any lobby.",
+    "elementCount": 43
+  },
+  {
+    "id": "tanuki_leaf",
+    "name": "Tanuki Leaf",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A cute tanuki leaf hat crafted with premium pixels.",
+    "elementCount": 3
+  },
+  {
+    "id": "teddy_bear",
+    "name": "Teddy Bear",
+    "category": "Stylish Outfit",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An elegant teddy bear item that pairs nicely with any Minecraft skin.",
+    "elementCount": 9
+  },
+  {
+    "id": "teddy_bear_bee",
+    "name": "Teddy Bear Bee",
+    "category": "Adventure Gear",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare teddy bear bee accessory that increases your style score by +100.",
+    "elementCount": 17
+  },
+  {
+    "id": "teddy_bear_ken",
+    "name": "Teddy Bear Ken",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A cute teddy bear ken addition to your growing cosmetic wardrobe.",
+    "elementCount": 9
+  },
+  {
+    "id": "teddy_bear_panda",
+    "name": "Teddy Bear Panda",
+    "category": "Gamer Hat",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A funny teddy bear panda hat crafted with premium pixels.",
+    "elementCount": 10
+  },
+  {
+    "id": "teddy_bear_rembo",
+    "name": "Teddy Bear Rembo",
+    "category": "Cosmetic",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An elegant teddy bear rembo collectible item that makes you stand out in any lobby.",
+    "elementCount": 12
+  },
+  {
+    "id": "teddy_bear_ryu",
+    "name": "Teddy Bear Ryu",
+    "category": "Adventure Gear",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A quirky teddy bear ryu hat worn by veteran block builders.",
+    "elementCount": 9
+  },
+  {
+    "id": "teddy_bear_scary",
+    "name": "Teddy Bear Scary",
+    "category": "Stylish Outfit",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A heavy teddy bear scary hat crafted with premium pixels.",
+    "elementCount": 9
+  },
+  {
+    "id": "the_noise",
+    "name": "The Noise",
+    "category": "Gamer Hat",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A sturdy the noise addition to your growing cosmetic wardrobe.",
+    "elementCount": 8
+  },
+  {
+    "id": "the_noisier",
+    "name": "The Noisier",
+    "category": "Stylish Outfit",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A funny the noisier item that pairs nicely with any Minecraft skin.",
+    "elementCount": 12
+  },
+  {
+    "id": "thumbnail",
+    "name": "Thumbnail",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky thumbnail addition to your growing cosmetic wardrobe.",
+    "elementCount": 16
+  },
+  {
+    "id": "tick_on_head",
+    "name": "Tick On Head",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "An awesome tick on head hat worn by veteran block builders.",
+    "elementCount": 10
+  },
+  {
+    "id": "tinkerhat",
+    "name": "Tinkerhat",
+    "category": "Gamer Hat",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A cute tinkerhat accessory that increases your style score by +100.",
+    "elementCount": 18
+  },
+  {
+    "id": "toast",
+    "name": "Toast",
+    "category": "Cosmetic",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "An ancient toast cosmetic to show off to your friends on the server.",
+    "elementCount": 2
+  },
+  {
+    "id": "toilet",
+    "name": "Toilet",
+    "category": "Collectible",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An ancient toilet accessory that increases your style score by +100.",
+    "elementCount": 6
+  },
+  {
+    "id": "tomato_splats",
+    "name": "Tomato Splats",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A legendary tomato splats gear piece for exploring deep dungeons.",
+    "elementCount": 8
+  },
+  {
+    "id": "topcathat",
+    "name": "Topcathat",
+    "category": "Adventure Gear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A cute topcathat hat worn by veteran block builders.",
+    "elementCount": 2
+  },
+  {
+    "id": "tophat",
+    "name": "Tophat",
+    "category": "Headwear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A quirky tophat collectible item that makes you stand out in any lobby.",
+    "elementCount": 2
+  },
+  {
+    "id": "toptophathat",
+    "name": "Toptophathat",
+    "category": "Headwear",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A sturdy toptophathat collectible item that makes you stand out in any lobby.",
+    "elementCount": 4
+  },
+  {
+    "id": "toy_story_alien",
+    "name": "Toy Story Alien",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A magical toy story alien item that pairs nicely with any Minecraft skin.",
+    "elementCount": 12
+  },
+  {
+    "id": "traffic_cone",
+    "name": "Traffic Cone",
+    "category": "Cosmetic",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A spectacular traffic cone accessory that increases your style score by +100.",
+    "elementCount": 5
+  },
+  {
+    "id": "triangleshades",
+    "name": "Triangleshades",
+    "category": "Wacky Accessory",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An ancient triangleshades item that pairs nicely with any Minecraft skin.",
+    "elementCount": 4
+  },
+  {
+    "id": "tricorne",
+    "name": "Tricorne",
+    "category": "Collectible",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A quirky tricorne item that pairs nicely with any Minecraft skin.",
+    "elementCount": 19
+  },
+  {
+    "id": "tvhead",
+    "name": "Tvhead",
+    "category": "Gamer Hat",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A comfy tvhead cosmetic to show off to your friends on the server.",
+    "elementCount": 8
+  },
+  {
+    "id": "tvheadrat",
+    "name": "Tvheadrat",
+    "category": "Cosmetic",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A spectacular tvheadrat collectible item that makes you stand out in any lobby.",
+    "elementCount": 8
+  },
+  {
+    "id": "tvheadstatic",
+    "name": "Tvheadstatic",
+    "category": "Adventure Gear",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A quirky tvheadstatic hat worn by veteran block builders.",
+    "elementCount": 8
+  },
+  {
+    "id": "twilight_doll",
+    "name": "Twilight Doll",
+    "category": "Collectible",
+    "rarity": "EXCLUSIVE",
+    "rarityColor": "from-purple-500/20 to-pink-600/30 text-purple-300 border-purple-500/40",
+    "price": 180,
+    "description": "A sturdy twilight doll accessory that increases your style score by +100.",
+    "elementCount": 9
+  },
+  {
+    "id": "udder_hat",
+    "name": "Udder Hat",
+    "category": "Gamer Hat",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "A spectacular udder hat cosmetic to show off to your friends on the server.",
+    "elementCount": 6
+  },
+  {
+    "id": "unicornhorn",
+    "name": "Unicornhorn",
+    "category": "Gamer Hat",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A funny unicornhorn hat worn by veteran block builders.",
+    "elementCount": 3
+  },
+  {
+    "id": "ushanka",
+    "name": "Ushanka",
+    "category": "Collectible",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A comfy ushanka hat worn by veteran block builders.",
+    "elementCount": 4
+  },
+  {
+    "id": "vikinghat",
+    "name": "Vikinghat",
+    "category": "Cosmetic",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A rare vikinghat hat worn by veteran block builders.",
+    "elementCount": 56
+  },
+  {
+    "id": "vikinghatbeard",
+    "name": "Vikinghatbeard",
+    "category": "Stylish Outfit",
+    "rarity": "ULTRA",
+    "rarityColor": "from-teal-500/20 to-emerald-600/30 text-teal-300 border-teal-500/40",
+    "price": 250,
+    "description": "A heavy vikinghatbeard hat crafted with premium pixels.",
+    "elementCount": 86
+  },
+  {
+    "id": "villagernose",
+    "name": "Villagernose",
+    "category": "Stylish Outfit",
+    "rarity": "COMMON",
+    "rarityColor": "from-zinc-500/20 to-zinc-600/30 text-zinc-300 border-zinc-500/40",
+    "price": 15,
+    "description": "A magical villagernose hat crafted with premium pixels.",
+    "elementCount": 1
+  },
+  {
+    "id": "winghat",
+    "name": "Winghat",
+    "category": "Headwear",
+    "rarity": "RARE",
+    "rarityColor": "from-blue-500/20 to-indigo-600/30 text-blue-300 border-blue-500/40",
+    "price": 35,
+    "description": "A heavy winghat hat worn by veteran block builders.",
+    "elementCount": 2
+  },
+  {
+    "id": "worm_hat",
+    "name": "Worm Hat",
+    "category": "Gamer Hat",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "A rare worm hat cosmetic to show off to your friends on the server.",
+    "elementCount": 4
+  },
+  {
+    "id": "worms_mine",
+    "name": "Worms Mine",
+    "category": "Cosmetic",
+    "rarity": "DELUXE",
+    "rarityColor": "from-yellow-500/20 to-amber-600/30 text-yellow-300 border-yellow-500/40",
+    "price": 60,
+    "description": "An elegant worms mine gear piece for exploring deep dungeons.",
+    "elementCount": 4
+  },
+  {
+    "id": "zigzagwitchhat",
+    "name": "Zigzagwitchhat",
+    "category": "Wacky Accessory",
+    "rarity": "LEGENDARY",
+    "rarityColor": "from-rose-500/20 to-red-600/30 text-rose-300 border-rose-500/40",
+    "price": 120,
+    "description": "An ancient zigzagwitchhat cosmetic to show off to your friends on the server.",
+    "elementCount": 6
+  }
+]
