@@ -77,7 +77,7 @@ const BANNED_IDS = new Set([
     // Gen 6
     716, 717, 718, 719, 720, 721,
     // Gen 7 (Incl. Ultra Beasts)
-    772, 773, 785, 786, 787, 789, 790, 791, 792, 
+    772, 773, 785, 786, 787, 788, 789, 790, 791, 792, 
     793, 794, 795, 796, 797, 798, 799, // UBs
     800, 801, 802, 803, 804, 805, 806, 807, 808, 809,
     // Gen 8
@@ -93,7 +93,7 @@ const clientImageCache = new Map<string, boolean>();
 
 const getFormattedName = (name: string) => {
     return name.toLowerCase()
-        .replace(/[.']/g, '')
+        .replace(/[.':]/g, '')
         .replace(/♀/g, '-f')
         .replace(/♂/g, '-m')
         .replace(/\s+/g, '-');

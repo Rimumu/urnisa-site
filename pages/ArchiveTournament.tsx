@@ -88,13 +88,13 @@ const SEASON1_BANNED_IDS = new Set([
     // Gen 6
     716, 717, 718, 719, 720, 721,
     // Gen 7 (Incl. Ultra Beasts)
-    772, 773, 785, 786, 787, 789, 790, 791, 792,
+    772, 773, 785, 786, 787, 788, 789, 790, 791, 792,
     793, 794, 795, 796, 797, 798, 799, // UBs
     800, 801, 802, 803, 804, 805, 806, 807, 808, 809,
     // Gen 8
     888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898, 905,
     // Gen 9 (Treasures of Ruin + Box Legends + DLC Legends/Mythics)
-    1001, 1002, 1003, 1004, 1007, 1008, 1014, 1015, 1016, 1017, 1024, 1025
+    1001, 1002, 1003, 1004, 1007, 1008, 1014, 1015, 1016, 1017, 1020, 1021, 1022, 1023, 1024, 1025
 ]);
 
 // Season 2: Categories for selective bans
@@ -120,8 +120,7 @@ const MYTHICAL_IDS = new Set([
     807,  // Zeraora
     808, 809,  // Meltan, Melmetal
     893,  // Zarude
-    1001, 1002, 1003, 1004,  // Treasures of Ruin (Chi-Yu, Chien-Pao, Ting-Lu, Wo-Chien)
-    1025  // Pecharunt
+        1025  // Pecharunt
 ]);
 
 // Ultra Beasts (Completely Banned)
@@ -148,25 +147,23 @@ const PARADOX_IDS = new Set([
     987,  // Flutter Mane
     988,  // Slither Wing
     989,  // Sandy Shocks
-    990,  // Roaring Moon
+    1005, // Roaring Moon
     // Future Paradox
-    991,  // Iron Treads
-    992,  // Iron Bundle
-    993,  // Iron Hands
-    994,  // Iron Jugulis
-    995,  // Iron Moth
-    996,  // Iron Thorns
-    997,  // Iron Valiant
-    // Box Legends (Moved to Legendary list)
-    // 1007, 1008,  // Koraidon, Miraidon
+    990,  // Iron Treads
+    991,  // Iron Bundle
+    992,  // Iron Hands
+    993,  // Iron Jugulis
+    994,  // Iron Moth
+    995,  // Iron Thorns
+    1006, // Iron Valiant
     // DLC Paradox
-    1005, 1006,  // Walking Wake, Iron Leaves
-    1009, 1010   // Gouging Fire, Raging Bolt, Iron Boulder, Iron Crown
+    1009, 1010, // Walking Wake, Iron Leaves
+    1020, 1021, 1022, 1023 // Gouging Fire, Raging Bolt, Iron Boulder, Iron Crown
 ]);
 
 // Specific restricted Pokemon (Banned even if their category is allowed)
 const RESTRICTED_IDS = new Set([
-    890 // Eternatus
+    964 // Palafin
 ]);
 
 // Legendary Pokemon (Only 1 allowed per team in Season 2)
@@ -201,10 +198,12 @@ const LEGENDARY_IDS = new Set([
     800,  // Necrozma
     // Gen 8
     888, 889,  // Zacian, Zamazenta
+    890,  // Eternatus
     891, 892,  // Kubfu, Urshifu
     894, 895, 896, 897, 898,  // Regieleki, Regidrago, Glastrier, Spectrier, Calyrex
     905,  // Enamorus
     // Gen 9
+    1001, 1002, 1003, 1004,  // Treasures of Ruin
     1014, 1015, 1016, 1017,  // Ogerpon, Okidogi, Munkidori, Fezandipiti
     1024,  // Terapagos
     1007, 1008  // Koraidon, Miraidon (Moved from Paradox ban)
@@ -219,22 +218,12 @@ const SEASON2_BANNED_IDS = new Set([
 ]);
 
 // Check if Pokemon is banned for the current season
-const isBannedForSeason = (id: number, seasonFormat: string, seasonName?: string): boolean => {
-    // Season 3 specific bans (Mega Rayquaza, Zacian Crowned, Ultra Necrozma, Eternatus)
-    // Note: Mega Rayquaza is id 384 (Rayquaza) with mega form - handled by form
-    // Zacian Crowned is id 888 with crowned form
-    // Ultra Necrozma is id 800 with ultra form  
-    // Eternatus is always banned (id 890)
-    if (seasonName?.includes('Season 3')) {
-        const SEASON3_BANNED = new Set([890]); // Eternatus only as form-specific ones need different handling
-        return SEASON3_BANNED.has(id);
+const isBannedForSeason = (id: number, seasonFormat: string, seasonName?: string, dynamicBannedIds?: number[]): boolean => {
+    if (dynamicBannedIds && Array.isArray(dynamicBannedIds) && dynamicBannedIds.includes(id)) {
+        return true;
     }
-    if (seasonFormat.includes('Duos')) {
-        // Season 2 rules
-        return SEASON2_BANNED_IDS.has(id);
-    }
-    // Season 1 rules
-    return SEASON1_BANNED_IDS.has(id);
+    // Only Palafin is globally banned
+    return id === 964;
 };
 
 // Check if Pokemon is a legendary (for the 1-per-team limit)
@@ -253,7 +242,7 @@ const clientImageCache = new Map<string, boolean>();
 
 const getFormattedName = (name: string) => {
     return name.toLowerCase()
-        .replace(/[.']/g, '')
+        .replace(/[.':]/g, '')
         .replace(/♀/g, '-f')
         .replace(/♂/g, '-m')
         .replace(/\s+/g, '-');
@@ -513,7 +502,61 @@ const ArchiveTournament: React.FC = () => {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/pokemon`);
                 if (res.ok) {
-                    setPokemonList(await res.json());
+                    const data = await res.json();
+                    const fixedData = data.map((p: any) => {
+                        let name = p.name;
+                        if (name.toLowerCase().includes("palafin")) name = "Palafin";
+                        if (name.toLowerCase().includes("minior")) name = "Minior";
+                        if (name.toLowerCase().includes("aegislash")) name = "Aegislash";
+                        if (name.toLowerCase().includes("giratina")) name = "Giratina";
+                        if (name.toLowerCase().includes("darmanitan")) name = "Darmanitan";
+                        if (name.toLowerCase().includes("basculin")) name = "Basculin";
+                        if (name.toLowerCase().includes("keldeo")) name = "Keldeo";
+                        if (name.toLowerCase().includes("meloetta")) name = "Meloetta";
+                        if (name.toLowerCase().includes("meowstic")) name = "Meowstic";
+                        if (name.toLowerCase().includes("pumpkaboo")) name = "Pumpkaboo";
+                        if (name.toLowerCase().includes("gourgeist")) name = "Gourgeist";
+                        if (name.toLowerCase().includes("oricorio")) name = "Oricorio";
+                        if (name.toLowerCase().includes("lycanroc")) name = "Lycanroc";
+                        if (name.toLowerCase().includes("wishiwashi")) name = "Wishiwashi";
+                        if (name.toLowerCase().includes("mimikyu")) name = "Mimikyu";
+                        if (name.toLowerCase().includes("toxtricity")) name = "Toxtricity";
+                        if (name.toLowerCase().includes("eiscue")) name = "Eiscue";
+                        if (name.toLowerCase().includes("morpeko")) name = "Morpeko";
+                        if (name.toLowerCase().includes("urshifu")) name = "Urshifu";
+                        if (name.toLowerCase().includes("enamorus")) name = "Enamorus";
+                        if (name.toLowerCase().includes("oinkologne")) name = "Oinkologne";
+                        if (name.toLowerCase().includes("maushold")) name = "Maushold";
+                        if (name.toLowerCase().includes("squawkabilly")) name = "Squawkabilly";
+                        if (name.toLowerCase().includes("dudunsparce")) name = "Dudunsparce";
+                        if (name.toLowerCase().includes("gimmighoul")) name = "Gimmighoul";
+                        if (name.toLowerCase().includes("tatsugiri")) name = "Tatsugiri";
+                        if (name.toLowerCase().includes("deoxys")) name = "Deoxys";
+                        if (name.toLowerCase().includes("wormadam")) name = "Wormadam";
+                        if (name.toLowerCase().includes("shaymin")) name = "Shaymin";
+                        if (name.toLowerCase().includes("tornadus")) name = "Tornadus";
+                        if (name.toLowerCase().includes("thundurus")) name = "Thundurus";
+                        if (name.toLowerCase().includes("landorus")) name = "Landorus";
+                        if (name.toLowerCase() === "ho-oh") name = "Ho-Oh";
+                        if (name.toLowerCase() === "porygon-z") name = "Porygon-Z";
+                        if (name.toLowerCase() === "jangmo-o") name = "Jangmo-o";
+                        if (name.toLowerCase() === "hakamo-o") name = "Hakamo-o";
+                        if (name.toLowerCase() === "kommo-o") name = "Kommo-o";
+                        if (name.toLowerCase() === "type-null") name = "Type: Null";
+                        if (name.toLowerCase() === "mr-mime") name = "Mr. Mime";
+                        if (name.toLowerCase() === "mr-rime") name = "Mr. Rime";
+                        if (name.toLowerCase() === "mime-jr") name = "Mime Jr.";
+                        if (name.toLowerCase() === "tapu-koko") name = "Tapu Koko";
+                        if (name.toLowerCase() === "tapu-lele") name = "Tapu Lele";
+                        if (name.toLowerCase() === "tapu-bulu") name = "Tapu Bulu";
+                        if (name.toLowerCase() === "tapu-fini") name = "Tapu Fini";
+                        if (name.toLowerCase() === "chi-yu") name = "Chi-Yu";
+                        if (name.toLowerCase() === "chien-pao") name = "Chien-Pao";
+                        if (name.toLowerCase() === "ting-lu") name = "Ting-Lu";
+                        if (name.toLowerCase() === "wo-chien") name = "Wo-Chien";
+                        return { ...p, name };
+                    });
+                    setPokemonList(fixedData);
                 }
             } catch (e) {
                 console.error("Failed to fetch pokemon list", e);
