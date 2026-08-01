@@ -84,6 +84,13 @@ const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) 
         >
           Gacha
         </NavLink>
+        <NavLink
+          to="/minecraft/tournament"
+          onClick={closeMenu}
+          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
+        >
+          Tournament
+        </NavLink>
       </div>
     </div>
   </div>
@@ -242,7 +249,8 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
             <div className="flex flex-col space-y-4 pl-4 border-l-2 border-white/10">
               <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Dashboard</NavLink>
               <NavLink to="/minecraft/shop" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Shop</NavLink>
-              <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Gacha Crate</NavLink>
+              <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Gacha</NavLink>
+              <NavLink to="/minecraft/tournament" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Tournament</NavLink>
             </div>
           </div>
 

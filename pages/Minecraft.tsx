@@ -428,23 +428,25 @@ const Minecraft: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Tournament - DISABLED */}
-                        <div className="bg-black/30 backdrop-blur-sm border border-white/10 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden opacity-50 cursor-not-allowed grayscale flex flex-col justify-between h-full min-h-[190px]">
+                        {/* Tournament - OPEN */}
+                        <Link to="/minecraft/tournament" className="bg-black/40 backdrop-blur-md border border-red-500/30 hover:border-red-500/60 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden hover:scale-[1.02] transition-all duration-300 group flex flex-col justify-between h-full min-h-[190px]">
+                            <div className="absolute top-0 right-0 w-28 h-28 bg-red-500/10 rounded-full blur-xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                             <div>
                                 <div className="flex items-center gap-3.5 mb-3.5">
-                                    <div className="w-12 h-12 rounded-2xl bg-red-500/20 flex items-center justify-center text-red-500 shrink-0 shadow-inner">
+                                    <div className="w-12 h-12 rounded-2xl bg-red-500/10 group-hover:bg-red-500/20 flex items-center justify-center text-red-500 shrink-0 transition-colors shadow-inner">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                                     </div>
-                                    <h2 className="text-xl font-black text-white uppercase tracking-wide">Tournament</h2>
+                                    <h2 className="text-xl font-black text-white uppercase tracking-wide group-hover:text-red-400 transition-colors">Tournament</h2>
                                 </div>
                                 <p className="text-gray-400 text-xs sm:text-sm leading-relaxed font-medium">
                                     Compete and work your way up the brackets to be crowned The Nisamon Champion!
                                 </p>
                             </div>
-                            <div className="mt-6 flex items-center text-gray-500 font-bold text-xs sm:text-sm uppercase tracking-wider">
-                                COMING SOON
+                            <div className="mt-6 flex items-center text-red-400 font-extrabold text-xs sm:text-sm uppercase tracking-wider gap-2">
+                                <span>ENTER TOURNAMENT</span>
+                                <span className="group-hover:translate-x-1 transition-transform">→</span>
                             </div>
-                        </div>
+                        </Link>
 
                         {/* Ranked - DISABLED */}
                         <div className="bg-black/30 backdrop-blur-sm border border-white/10 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden opacity-50 cursor-not-allowed grayscale flex flex-col justify-between h-full min-h-[190px]">

@@ -504,6 +504,7 @@ const Admin: React.FC = () => {
 
     // --- MINECRAFT WIPE MAINTENANCE STATE ---
     const [isWiping, setIsWiping] = useState(false);
+    const [isResettingTournament, setIsResettingTournament] = useState(false);
     const [wipeStatus, setWipeStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [wipeConfirmText, setWipeConfirmText] = useState('');
 
@@ -549,6 +550,7 @@ const Admin: React.FC = () => {
     const [confirmReset, setConfirmReset] = useState(false);
     const [confirmSync, setConfirmSync] = useState(false);
     const [confirmRebuild, setConfirmRebuild] = useState(false);
+    const [confirmRepair, setConfirmRepair] = useState(false);
     const [confirmEnd, setConfirmEnd] = useState(false); // For Ending Nisathon
 
     // --- SNAKES & LADDERS SPECIAL TILES STATE ---
@@ -1212,6 +1214,82 @@ const Admin: React.FC = () => {
         }
     };
 
+    const handleFullTournamentReset = async () => {
+        if (!window.confirm("Are you absolutely sure you want to completely wipe all tournament data and reset to active Season 1? This will erase all registrations, brackets, and seasons (including archives) and start a fresh Season 1. This action is irreversible!")) {
+            return;
+        }
+
+        setIsResettingTournament(true);
+        setWipeStatus(null);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/maintenance/full-tournament-reset`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setWipeStatus({
+                    type: 'success',
+                    message: data.message || "Successfully wiped and reset tournament to Season 1!"
+                });
+            } else {
+                const data = await res.json();
+                setWipeStatus({
+                    type: 'error',
+                    message: data.error || "Failed to reset tournament."
+                });
+            }
+        } catch (e: any) {
+            setWipeStatus({
+                type: 'error',
+                message: "Network Error"
+            });
+        } finally {
+            setIsResettingTournament(false);
+        }
+    };
+
+    const handleInitTournament = async () => {
+        setIsResettingTournament(true);
+        setWipeStatus(null);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/admin/maintenance/init-tournament`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': password
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setWipeStatus({
+                    type: 'success',
+                    message: data.message || "Successfully initialized default tournament season!"
+                });
+            } else {
+                const data = await res.json();
+                setWipeStatus({
+                    type: 'error',
+                    message: data.error || "Failed to initialize tournament default season."
+                });
+            }
+        } catch (e: any) {
+            setWipeStatus({
+                type: 'error',
+                message: "Network Error"
+            });
+        } finally {
+            setIsResettingTournament(false);
+        }
+    };
+
     // TOURNAMENT HANDLERS REMOVED - Now in /admin/tournament
 
     // --- JSON MERGER HANDLER ---
@@ -1348,6 +1426,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     const handleResetData = () => { if (confirmReset) { apiCall('nisathon/reset', {}); setConfirmReset(false); } else { setConfirmReset(true); setTimeout(() => setConfirmReset(false), 3000); } };
     const handleForceSync = () => { if (confirmSync) { apiCall('nisathon/sync', {}); setConfirmSync(false); } else { setConfirmSync(true); setTimeout(() => setConfirmSync(false), 3000); } };
     const handleRebuild = () => { if (confirmRebuild) { apiCall('nisathon/rebuild', {}); setConfirmRebuild(false); } else { setConfirmRebuild(true); setTimeout(() => setConfirmRebuild(false), 3000); } };
+    const handleRepairNisathon = () => { if (confirmRepair) { apiCall('nisathon/repair', {}); setConfirmRepair(false); } else { setConfirmRepair(true); setTimeout(() => setConfirmRepair(false), 3000); } };
 
     // COUNTDOWN HANDLERS
     const handleCountdownSet = () => apiCall('countdown/set', { hours: cdH, minutes: cdM, seconds: cdS });
@@ -2145,6 +2224,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 <button onClick={handleResetData} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white transition-all duration-300 ${confirmReset ? 'bg-red-600 w-full shadow-[0_0_20px_rgba(220,38,38,0.5)] scale-[1.01]' : 'bg-red-900/40 hover:bg-red-900/60 border border-red-900/50 hover:border-red-500/50'}`}>{confirmReset ? "CONFIRM RESET ALL DATA?" : "Reset Nisathon Data"}</button>
                                 <button onClick={handleForceSync} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white transition-all duration-300 ${confirmSync ? 'bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.5)] scale-[1.01]' : 'bg-blue-900/40 hover:bg-blue-900/60 border border-blue-900/50 hover:border-blue-500/50'}`}>{confirmSync ? "Confirm Force Sync?" : "Force Sync (StreamElements)"}</button>
                                 <button onClick={handleRebuild} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white transition-all duration-300 ${confirmRebuild ? 'bg-orange-600 shadow-[0_0_20px_rgba(234,88,12,0.5)] scale-[1.01]' : 'bg-orange-900/40 hover:bg-orange-900/60 border border-orange-900/50 hover:border-orange-500/50'}`}>{confirmRebuild ? "Confirm Rebuild?" : "Rebuild from History"}</button>
+                                <button onClick={handleRepairNisathon} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-white transition-all duration-300 ${confirmRepair ? 'bg-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-[1.01]' : 'bg-emerald-900/40 hover:bg-emerald-900/60 border border-emerald-900/50 hover:border-emerald-500/50'}`}>{confirmRepair ? "Confirm Repair?" : "Repair Nisathon"}</button>
                                 {/* NEW: END BUTTON */}
                                 <button onClick={handleEndNisathon} className={`px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-all duration-300 w-full ${confirmEnd ? 'bg-red-700 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.8)] scale-[1.02] border border-red-500' : 'bg-red-900/60 hover:bg-red-700 border border-red-900/50 hover:border-red-500/50'}`}>
                                     {confirmEnd ? "ARE YOU SURE? CLICK TO END NISATHON" : "END NISATHON"}
@@ -3229,6 +3309,36 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             className="bg-red-600/10 border border-red-500/20 hover:bg-red-600 text-red-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
                                         >
                                             WIPE ACTIVE TOURNAMENTS
+                                        </button>
+                                    </div>
+
+                                    {/* Initialize Tournament System */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Initialize Tournament (Default Season)</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Runs the tournament system wide startup script to initialize active Season 1 if none exists.</p>
+                                        </div>
+                                        <button 
+                                            onClick={handleInitTournament} 
+                                            disabled={isResettingTournament || isWiping}
+                                            className="bg-purple-600/10 border border-purple-500/20 hover:bg-purple-600 text-purple-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            INITIALIZE TOURNAMENT
+                                        </button>
+                                    </div>
+
+                                    {/* Reset Tournament to Season 1 */}
+                                    <div className="bg-black/30 border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg">Reset Tournaments to Season 1</h4>
+                                            <p className="text-xs text-gray-500 mt-1">Completely wipes all tournament registrations, brackets, duos, and seasons (including archive) and resets the system to active Season 1.</p>
+                                        </div>
+                                        <button 
+                                            onClick={handleFullTournamentReset} 
+                                            disabled={isResettingTournament || isWiping}
+                                            className="bg-orange-600/10 border border-orange-500/20 hover:bg-orange-600 text-orange-400 hover:text-white font-extrabold py-3 px-4 rounded-xl text-xs transition-all mt-6 shadow-sm disabled:opacity-50"
+                                        >
+                                            RESET TO SEASON 1
                                         </button>
                                     </div>
 

@@ -265,6 +265,14 @@ const TournamentSeason = mongoose.model('TournamentSeason', new mongoose.Schema(
         player2: String,  // Duos format
         score: String
     }],
+    description: { type: String, default: '' },
+    bannedPokemonIds: { type: [Number], default: [] },
+    rules: [{
+        title: { type: String, required: true },
+        icon: { type: String, default: '⚖️' },
+        color: { type: String, default: 'border-white/10' },
+        content: { type: String, default: '' }
+    }],
     isArchived: { type: Boolean, default: false },
     challongeUrl: { type: String, default: '' },
     archivedAt: { type: Date, default: null }, // When the season was archived
@@ -3392,14 +3400,56 @@ const initDefaultSeason = async () => {
             seasonId: 1,
             name: 'Season 1',
             format: 'Singles 4v4',
-            status: 'ENDED',
-            isArchived: true,
-            challongeUrl: 'https://challonge.com/nisamon1/module'
+            status: 'DRAFTING',
+            isArchived: false,
+            challongeUrl: ''
         });
-        console.log("✅ Created default Season 1");
+        console.log("✅ Created default active Season 1");
     }
 };
-if (MONGO_URI) setTimeout(initDefaultSeason, 3000);
+// Remove the tournament startup wide script and only run it when the admin clicks on a button in the admin panel in the Minecraft Dashboard section
+// if (MONGO_URI) setTimeout(initDefaultSeason, 3000);
+
+// Admin-triggered Default Season Initialization
+app.post('/api/admin/maintenance/init-tournament', auth, async (req, res) => {
+    try {
+        console.log("⚠️ Admin triggered manual initialization of default tournament season...");
+        await initDefaultSeason();
+        res.json({ success: true, message: "Tournament system successfully initialized (Default Season 1)." });
+    } catch (e) {
+        console.error("Failed to initialize default tournament season:", e);
+        res.status(500).json({ error: "Failed to initialize tournament", details: e.message });
+    }
+});
+
+
+// Admin-triggered Complete Tournament Reset to Season 1
+app.post('/api/admin/maintenance/full-tournament-reset', auth, async (req, res) => {
+    try {
+        console.log("⚠️ Admin triggered complete tournament reset to active Season 1...");
+        await TournamentEntry.deleteMany({});
+        await TournamentBracket.deleteMany({});
+        await DuoPartyData.deleteMany({});
+        await TournamentDuo.deleteMany({});
+        await TournamentSeason.deleteMany({});
+
+        await TournamentSeason.create({
+            seasonId: 1,
+            name: 'Season 1',
+            format: 'Singles 4v4',
+            status: 'DRAFTING',
+            isArchived: false,
+            challongeUrl: ''
+        });
+
+        console.log("Tournament data successfully wiped and re-initialized to active Season 1 by admin.");
+        res.json({ success: true, message: "Tournament data successfully wiped and reset to active Season 1." });
+    } catch (e) {
+        console.error("Failed to reset tournament data:", e);
+        res.status(500).json({ error: "Failed to reset tournament data", details: e.message });
+    }
+});
+
 
 // Maintenance Wipe Endpoint for Minecraft/Bingo/Tournament (DANGER ZONE)
 // Wipes only non-archived tournament data and all bingo data
@@ -3526,17 +3576,25 @@ app.get('/api/tournament/config', async (req, res) => {
 
 // Create New Season (Admin)
 app.post('/api/admin/tournament/season/create', auth, async (req, res) => {
-    const { name, format, challongeUrl } = req.body;
+    const { name, format, challongeUrl, description, bannedPokemonIds, rules } = req.body;
     try {
         const lastSeason = await TournamentSeason.findOne().sort({ seasonId: -1 });
         const newId = lastSeason ? lastSeason.seasonId + 1 : 1;
+
+        // Auto-inherit rules, description, and bannedPokemonIds from the previous season if not provided
+        const inheritedDesc = description !== undefined ? description : (lastSeason?.description || '');
+        const inheritedBans = bannedPokemonIds !== undefined ? bannedPokemonIds : (lastSeason?.bannedPokemonIds || []);
+        const inheritedRules = rules !== undefined ? rules : (lastSeason?.rules || []);
 
         const season = await TournamentSeason.create({
             seasonId: newId,
             name: name || `Season ${newId}`,
             format: format || 'Singles 4v4',
             status: 'DRAFTING',
-            challongeUrl: challongeUrl || ''
+            challongeUrl: challongeUrl || '',
+            description: inheritedDesc,
+            bannedPokemonIds: inheritedBans,
+            rules: inheritedRules
         });
         res.json({ success: true, season });
     } catch (e) {
@@ -3547,13 +3605,16 @@ app.post('/api/admin/tournament/season/create', auth, async (req, res) => {
 
 // Update Season (Admin)
 app.post('/api/admin/tournament/season/:id/update', auth, async (req, res) => {
-    const { name, format, challongeUrl, status } = req.body;
+    const { name, format, challongeUrl, status, description, bannedPokemonIds, rules } = req.body;
     try {
         const update = {};
         if (name) update.name = name;
         if (format) update.format = format;
         if (challongeUrl !== undefined) update.challongeUrl = challongeUrl;
         if (status) update.status = status;
+        if (description !== undefined) update.description = description;
+        if (bannedPokemonIds !== undefined) update.bannedPokemonIds = bannedPokemonIds;
+        if (rules !== undefined) update.rules = rules;
 
         const season = await TournamentSeason.findOneAndUpdate(
             { seasonId: parseInt(req.params.id) },
@@ -3563,6 +3624,7 @@ app.post('/api/admin/tournament/season/:id/update', auth, async (req, res) => {
         if (!season) return res.status(404).json({ error: "Season not found" });
         res.json({ success: true, season });
     } catch (e) {
+        console.error(e);
         res.status(500).json({ error: "Update failed" });
     }
 });
@@ -5249,7 +5311,6 @@ if (MONGO_URI) {
 
                 console.log("🚀 Startup Deep Sync...");
                 await runSync(true);
-                await repairNisathonEvents();
                 setInterval(() => runSync(false), 30000);
                 setInterval(() => { axios.get('https://urnisa-dbot-m4im.onrender.com').catch(() => { }) }, 300000);
             });

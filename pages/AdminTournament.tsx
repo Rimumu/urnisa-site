@@ -1,7 +1,46 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../constants';
 import { Link } from 'react-router-dom';
+import {
+    Trophy,
+    Save,
+    Users,
+    Crown,
+    ClipboardList,
+    Eye,
+    CornerDownLeft,
+    Trash2,
+    Archive,
+    Gamepad2,
+    Lock,
+    Unlock,
+    Hourglass,
+    AlertCircle,
+    X,
+    Search,
+    Plus,
+    ChevronRight,
+    Bold,
+    Underline,
+    Italic,
+    Palette,
+    Eraser,
+    Sparkles,
+    Activity,
+    Skull,
+    Star,
+    Flame,
+    Ban,
+    Target,
+    Scroll,
+    CircleSlash,
+    Briefcase,
+    Scale,
+    Gem,
+    RefreshCw,
+    Zap
+} from 'lucide-react';
 
 // --- TYPES ---
 interface TournamentPlayer {
@@ -24,6 +63,14 @@ interface Season {
     status: string;
     isArchived?: boolean;
     challongeUrl?: string;
+    description?: string;
+    bannedPokemonIds?: number[];
+    rules?: {
+        title: string;
+        icon: string;
+        color: string;
+        content: string;
+    }[];
 }
 
 interface Duo {
@@ -48,13 +95,81 @@ interface DuoPartyData {
     lastUpdated: string;
 }
 
+// --- CATEGORY CONSTANTS & SVG ICONS ---
+const LEGENDARY_IDS = new Set([
+    144, 145, 146, 150, 243, 244, 245, 249, 250, 377, 378, 379, 380, 381, 382, 383, 384, 480, 481, 482, 483, 484, 485, 486, 487, 488, 638, 639, 640, 641, 642, 643, 644, 645, 646, 772, 773, 785, 786, 787, 788, 789, 790, 791, 792, 800, 888, 889, 890, 891, 892, 894, 895, 896, 897, 898, 905, 1001, 1002, 1003, 1004, 1007, 1008, 1014, 1015, 1016, 1017, 1024, 1025
+]);
+const MYTHICAL_IDS = new Set([
+    151, 251, 385, 386, 489, 490, 491, 492, 493, 494, 647, 648, 649, 719, 720, 721, 801, 802, 807, 808, 809, 893, 1025
+]);
+const PARADOX_IDS = new Set([
+    984, 985, 986, 987, 988, 989, 990, 991, 992, 993, 994, 995, 1005, 1006, 1009, 1010, 1020, 1021, 1022, 1023
+]);
+const ULTRA_BEAST_IDS = new Set([
+    793, 794, 795, 796, 797, 798, 799, 803, 804, 805, 806
+]);
+
+const getLimitTokenCategory = (id: number): 'Legendary' | 'Mythical' | 'Paradox' | 'Ultra Beast' | null => {
+    if (LEGENDARY_IDS.has(id)) return 'Legendary';
+    if (MYTHICAL_IDS.has(id)) return 'Mythical';
+    if (PARADOX_IDS.has(id)) return 'Paradox';
+    if (ULTRA_BEAST_IDS.has(id)) return 'Ultra Beast';
+    return null;
+};
+
+const LegendarySVG: React.FC<{ className?: string }> = ({ className = "w-5 h-5 text-yellow-400 fill-yellow-400/20 shrink-0" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+);
+
+const MythicalSVG: React.FC<{ className?: string }> = ({ className = "w-5 h-5 text-pink-400 shrink-0 animate-pulse" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-.767a.5.5 0 0 1 0-.992l6.135-.767A2 2 0 0 0 9.937 10.1l.767-6.135a.5.5 0 0 1 .992 0l.767 6.135a2 2 0 0 0 1.437 1.437l6.135.767a.5.5 0 0 1 0 .992l-6.135.767a2 2 0 0 0-1.437 1.437l-.767 6.135a.5.5 0 0 1-.992 0z" />
+        <path d="M20 3a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1z" />
+        <path d="M4 20a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1a1 1 0 0 0-1-1z" />
+    </svg>
+);
+
+const ParadoxSVG: React.FC<{ className?: string }> = ({ className = "w-5 h-5 text-purple-400 shrink-0" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.24 3.95A10 10 0 1 0 21.6 13.5" />
+        <path d="M14.5 8.5a5 5 0 1 0-5.5 4" />
+        <path d="M12.1 11.5a1.5 1.5 0 1 0-.6 1" />
+    </svg>
+);
+
+const UltraBeastSVG: React.FC<{ className?: string }> = ({ className = "w-5 h-5 text-blue-400 shrink-0" }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+    </svg>
+);
+
 // --- POKEMON IMAGE COMPONENT ---
 const PokemonImage: React.FC<{ pokemon: { id: number; name: string } | null }> = ({ pokemon }) => {
     if (!pokemon) return (
         <div className="aspect-square bg-black/40 rounded-xl border border-white/10 flex items-center justify-center text-gray-600 font-black text-xl">?</div>
     );
+    const category = getLimitTokenCategory(pokemon.id);
     return (
         <div className="aspect-square bg-black/40 rounded-xl border border-white/10 overflow-hidden p-1 relative group">
+            {category && (
+                <div className="absolute top-1 left-1 z-20">
+                    <span className={`text-[7px] font-black uppercase px-1 py-0.5 rounded flex items-center gap-0.5 border shadow-sm backdrop-blur-xs ${
+                        category === 'Legendary' ? 'text-yellow-300 bg-yellow-500/20 border-yellow-500/40' :
+                        category === 'Mythical' ? 'text-pink-300 bg-pink-500/20 border-pink-500/40' :
+                        category === 'Paradox' ? 'text-purple-300 bg-purple-500/20 border-purple-500/40' :
+                        'text-cyan-300 bg-cyan-500/20 border-cyan-500/40'
+                    }`}>
+                        {category === 'Legendary' && <LegendarySVG className="w-2 h-2 text-yellow-400 fill-yellow-400/20 shrink-0" />}
+                        {category === 'Mythical' && <MythicalSVG className="w-2 h-2 text-pink-400 shrink-0" />}
+                        {category === 'Paradox' && <ParadoxSVG className="w-2 h-2 text-purple-400 shrink-0" />}
+                        {category === 'Ultra Beast' && <UltraBeastSVG className="w-2 h-2 text-cyan-400 shrink-0" />}
+                    </span>
+                </div>
+            )}
             <img
                 src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`}
                 alt={pokemon.name}
@@ -65,6 +180,154 @@ const PokemonImage: React.FC<{ pokemon: { id: number; name: string } | null }> =
             />
             <div className="absolute bottom-0 left-0 right-0 bg-black/80 text-[8px] font-bold text-white text-center py-0.5 truncate px-1">
                 {pokemon.name}
+            </div>
+        </div>
+    );
+};
+
+// --- GIMMICK BADGE ---
+interface GimmickBadgeProps {
+    type: string;
+    className?: string;
+}
+
+const GimmickBadge: React.FC<GimmickBadgeProps> = ({ type, className = "w-4 h-4" }) => {
+    switch (type?.toLowerCase()) {
+        case 'tera':
+            return <Gem className={`${className} text-blue-400`} />;
+        case 'dynamax':
+            return <Activity className={`${className} text-red-500`} />;
+        case 'mega':
+            return <RefreshCw className={`${className} text-pink-400`} style={{ animation: 'spin 8s linear infinite' }} />;
+        default:
+            return <Zap className={`${className} text-yellow-400`} />;
+    }
+};
+
+// --- RICH TEXT EDITOR ---
+interface RichTextEditorProps {
+    value: string;
+    onChange: (val: string) => void;
+    placeholder?: string;
+}
+
+const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
+    const editorRef = useRef<HTMLDivElement>(null);
+
+    // Sync content changes from external prop to editor
+    useEffect(() => {
+        if (editorRef.current && editorRef.current.innerHTML !== value) {
+            editorRef.current.innerHTML = value;
+        }
+    }, [value]);
+
+    const handleInput = () => {
+        if (editorRef.current) {
+            onChange(editorRef.current.innerHTML);
+        }
+    };
+
+    const execCommand = (command: string, arg: string = '') => {
+        document.execCommand(command, false, arg);
+        handleInput();
+    };
+
+    return (
+        <div className="border border-white/10 rounded-2xl overflow-hidden bg-black/40">
+            {/* Toolbar */}
+            <div className="bg-black/60 border-b border-white/10 p-3 flex flex-wrap gap-2 items-center justify-between">
+                <div className="flex flex-wrap gap-1.5 items-center">
+                    <button
+                        type="button"
+                        onClick={() => execCommand('bold')}
+                        className="bg-white/5 hover:bg-white/15 text-white p-2 rounded-xl transition-colors border border-white/5 flex items-center justify-center cursor-pointer"
+                        title="Bold"
+                    >
+                        <Bold className="w-4 h-4" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => execCommand('underline')}
+                        className="bg-white/5 hover:bg-white/15 text-white p-2 rounded-xl transition-colors border border-white/5 flex items-center justify-center cursor-pointer"
+                        title="Underline"
+                    >
+                        <Underline className="w-4 h-4" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => execCommand('italic')}
+                        className="bg-white/5 hover:bg-white/15 text-white p-2 rounded-xl transition-colors border border-white/5 flex items-center justify-center cursor-pointer"
+                        title="Italic"
+                    >
+                        <Italic className="w-4 h-4" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => execCommand('removeFormat')}
+                        className="bg-white/5 hover:bg-white/15 text-white p-2 rounded-xl transition-colors border border-white/5 flex items-center justify-center cursor-pointer"
+                        title="Clear Formatting"
+                    >
+                        <Eraser className="w-4 h-4" />
+                    </button>
+
+                    <div className="h-5 w-[1px] bg-white/10 mx-2" />
+
+                    <span className="text-[10px] text-gray-400 font-bold uppercase mr-1 flex items-center gap-1">
+                        <Palette className="w-3.5 h-3.5" /> Colors:
+                    </span>
+                    {[
+                        { label: 'Pink', hex: '#ff007f' },
+                        { label: 'Gold', hex: '#fbbf24' },
+                        { label: 'Red', hex: '#ef4444' },
+                        { label: 'Blue', hex: '#3b82f6' },
+                        { label: 'Green', hex: '#22c55e' },
+                        { label: 'Purple', hex: '#a855f7' },
+                        { label: 'Orange', hex: '#f97316' },
+                        { label: 'White', hex: '#ffffff' },
+                    ].map(color => (
+                        <button
+                            key={color.label}
+                            type="button"
+                            onClick={() => execCommand('foreColor', color.hex)}
+                            className="w-6 h-6 rounded-full border border-white/20 hover:scale-125 active:scale-95 transition-all flex items-center justify-center relative cursor-pointer shadow-md"
+                            style={{ backgroundColor: color.hex }}
+                            title={`Color: ${color.label}`}
+                        >
+                            <span className="sr-only">{color.label}</span>
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (window.confirm("Are you sure you want to clear the description text?")) {
+                                onChange('');
+                                if (editorRef.current) editorRef.current.innerHTML = '';
+                            }
+                        }}
+                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold px-3 py-1.5 rounded-xl text-[10px] transition-colors border border-red-500/20 cursor-pointer flex items-center gap-1"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" /> Clear Text
+                    </button>
+                </div>
+            </div>
+
+            {/* Editable Area */}
+            <div className="relative">
+                <div
+                    ref={editorRef}
+                    contentEditable={true}
+                    onInput={handleInput}
+                    className="w-full bg-black/40 p-4 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 min-h-[200px] max-h-[400px] overflow-y-auto leading-relaxed outline-none"
+                    style={{ minHeight: '200px' }}
+                />
+                {!value && (
+                    <div className="absolute top-4 left-4 text-gray-500 text-sm pointer-events-none select-none">
+                        {placeholder || "Enter format description..."}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -90,11 +353,18 @@ const AdminTournament: React.FC = () => {
 
     // Duo State (Season 2)
     const [duos, setDuos] = useState<Duo[]>([]);
-    const [playerListTab, setPlayerListTab] = useState<'solo' | 'duos' | 'parties'>('solo');
+    const [playerListTab, setPlayerListTab] = useState<'solo' | 'duos' | 'parties' | 'rules'>('solo');
     const [showPairModal, setShowPairModal] = useState(false);
     const [pairPlayer1, setPairPlayer1] = useState<TournamentPlayer | null>(null);
     const [pairPlayer2, setPairPlayer2] = useState<TournamentPlayer | null>(null);
     const [pairCaptain, setPairCaptain] = useState<'player1' | 'player2'>('player1');
+
+    // Rules Editor Overhaul States
+    const [ruleGeneralName, setRuleGeneralName] = useState('');
+    const [ruleGeneralFormat, setRuleGeneralFormat] = useState('');
+    const [ruleGeneralDesc, setRuleGeneralDesc] = useState('');
+    const [ruleCards, setRuleCards] = useState<{ title: string; icon: string; color: string; content: string }[]>([]);
+    const [ruleBannedIds, setRuleBannedIds] = useState<number[]>([]);
 
     // Live Party Data State
     const [duoParties, setDuoParties] = useState<DuoPartyData[]>([]);
@@ -192,8 +462,15 @@ const AdminTournament: React.FC = () => {
             fetchDuos(activeSeason.seasonId);
             fetchDuoParties();
             setEditingChallongeUrl(activeSeason.challongeUrl || '');
+            setRuleGeneralName(activeSeason.name || '');
+            setRuleGeneralFormat(activeSeason.format || '');
+            setRuleGeneralDesc(activeSeason.description || '');
+            setRuleCards(activeSeason.rules || []);
+            setRuleBannedIds(activeSeason.bannedPokemonIds || []);
         }
     }, [activeSeason?.seasonId]);
+
+
 
     // Auto-refresh polling for real-time updates (every 15 seconds)
     useEffect(() => {
@@ -262,6 +539,49 @@ const AdminTournament: React.FC = () => {
         } catch (e: any) {
             setStatusMsg(e.message);
         }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    const handleSaveRulesOverhaul = async () => {
+        if (!activeSeason) return;
+        try {
+            const data = await apiCall(`/api/admin/tournament/season/${activeSeason.seasonId}/update`, {
+                name: ruleGeneralName,
+                format: ruleGeneralFormat,
+                description: ruleGeneralDesc,
+                rules: ruleCards,
+                bannedPokemonIds: ruleBannedIds
+            });
+            if (data && data.success) {
+                setStatusMsg('Rules & bans updated!');
+                // Update local activeSeason properties
+                setActiveSeason(prev => prev ? {
+                    ...prev,
+                    name: ruleGeneralName,
+                    format: ruleGeneralFormat,
+                    description: ruleGeneralDesc,
+                    rules: ruleCards,
+                    bannedPokemonIds: ruleBannedIds
+                } : null);
+                fetchSeasons();
+            }
+        } catch (e: any) {
+            setStatusMsg(e.message || 'Error saving rules');
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    const handleInitializeDefaultRules = () => {
+        const defaultRules = [
+            { title: "Party Limits", icon: "⚡", color: "border-yellow-500/40 bg-yellow-900/10", content: "• 1 Legendary allowed per party\n• 1 Mythical allowed per party\n• 1 Paradox allowed per party\n• 1 Ultra Beast allowed per party" },
+            { title: "Gimmick Rules", icon: "💥", color: "border-orange-500/40 bg-orange-900/10", content: "• One Gimmick Per Roster: You can only use ONE type of gimmick in your entire party (Mega, Z-Move, Dynamax, or Tera).\n• Dynamax Restriction: Only standard Pokémon can Dynamax (Legendaries, Mythicals, Paradox, Ultra Beasts are banned from Dynamax).\n• Shedinja Tera Ban: Shedinja is banned from using Tera." },
+            { title: "Clauses", icon: "📜", color: "border-blue-500/40 bg-blue-900/10", content: "• Species Clause: No two Pokémon of the same National Dex number.\n• Item Clause: No two Pokémon may hold the same item.\n• Sleep Clause: Cannot put more than one opponent Pokémon to sleep simultaneously.\n• Endless Battle Clause: No infinite battle situations." },
+            { title: "Move & Ability Bans", icon: "⛔", color: "border-purple-500/40 bg-purple-900/10", content: "• Evasion Clause: Double Team, Minimize are banned.\n• OHKO Clause: Fissure, Sheer Cold, Horn Drill, Guillotine are banned.\n• Moody Ability is banned.\n• Other banned moves/abilities: Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail." },
+            { title: "Item Bans", icon: "🎒", color: "border-pink-500/40 bg-pink-900/10", content: "The following items are completely banned from tournament use:\n• Bright Powder\n• Lax Incense\n• King's Rock\n• Razor Fang\n• Quick Claw" },
+            { title: "General Rules", icon: "⚖️", color: "border-white/10", content: "• Breaking any rule results in instant disqualification.\n• No intentional stalling or disconnect abuse.\n• Report matches within 10 minutes of completion.\n• Admin decisions are final." }
+        ];
+        setRuleCards(defaultRules);
+        setStatusMsg('Loaded default rules template! Don\'t forget to click Save below.');
         setTimeout(() => setStatusMsg(''), 3000);
     };
 
@@ -469,7 +789,7 @@ const AdminTournament: React.FC = () => {
                 { rank: 3, username: finalWinners.rank3.player1, score: finalWinners.rank3.score }
             ].filter(w => w.username);
 
-        console.log('🏆 Ending tournament with:', {
+        console.log('Ending tournament with:', {
             seasonId: activeSeason?.seasonId,
             format: activeSeason?.format,
             isDuos,
@@ -665,23 +985,23 @@ const AdminTournament: React.FC = () => {
                                     });
                                     setShowEndModal(true);
                                 }}
-                                className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 rounded text-sm"
+                                className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 rounded text-sm flex items-center justify-center gap-1.5"
                             >
-                                🏆 End Tournament
+                                <Trophy className="w-4 h-4" /> End Tournament
                             </button>
                             <button
                                 onClick={handleArchiveSeason}
                                 disabled={loading || activeSeason?.isArchived}
-                                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50"
+                                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
                             >
-                                📦 Archive Season
+                                <Archive className="w-4 h-4" /> Archive Season
                             </button>
                             <button
                                 onClick={handleClearWinners}
                                 disabled={loading}
-                                className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded text-sm"
+                                className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 rounded text-sm flex items-center justify-center gap-1.5"
                             >
-                                🗑️ Clear Winners (Reset)
+                                <Trash2 className="w-4 h-4" /> Clear Winners (Reset)
                             </button>
                         </div>
                     </div>
@@ -717,7 +1037,16 @@ const AdminTournament: React.FC = () => {
                                     : 'bg-white/5 text-gray-400 hover:bg-white/10'
                                     }`}
                             >
-                                🎮 Live Parties ({duoParties.length})
+                                <Gamepad2 className="w-4 h-4 inline mr-2" /> Live Parties ({duoParties.length})
+                            </button>
+                            <button
+                                onClick={() => setPlayerListTab('rules')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${playerListTab === 'rules'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    }`}
+                            >
+                                <ClipboardList className="w-4 h-4 inline mr-2" /> Format Desc
                             </button>
                         </div>
                         <div className="flex gap-2">
@@ -757,40 +1086,43 @@ const AdminTournament: React.FC = () => {
                                             <div className="font-bold text-white truncate">{player.minecraftUsername}</div>
                                             <div className="text-[10px] font-bold uppercase">
                                                 {activeSeason?.format.includes('Duos') ? (
-                                                    <span className="text-blue-400">
-                                                        {isPlayerInDuo(player.discordId) ? '✓ In Duo' : '⏳ Awaiting Partner'}
+                                                    <span className="text-blue-400 flex items-center gap-1">
+                                                        {isPlayerInDuo(player.discordId) ? (
+                                                            <>
+                                                                <Lock className="w-3 h-3 text-blue-400" />
+                                                                <span>In Duo</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Hourglass className="w-3 h-3 text-blue-400 animate-pulse" />
+                                                                <span>Awaiting Partner</span>
+                                                            </>
+                                                        )}
                                                     </span>
                                                 ) : (
-                                                    <span className={player.isLocked ? 'text-green-400' : 'text-amber-400'}>
-                                                        {player.isLocked ? '✓ Team Locked' : '⏳ Drafting'}
+                                                    <span className={`flex items-center gap-1 ${player.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
+                                                        {player.isLocked ? (
+                                                            <>
+                                                                <Lock className="w-3 h-3 text-green-400" />
+                                                                <span>Team Locked</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Hourglass className="w-3 h-3 text-amber-400 animate-pulse" />
+                                                                <span>Drafting</span>
+                                                            </>
+                                                        )}
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Season 3 Gimmick Indicator */}
-                                    {activeSeason?.name.includes('Season 3') && player.gimmickType && player.gimmickPokemonId && (
-                                        <div className="flex items-center gap-2 px-2 py-1 mb-2 bg-purple-900/30 rounded-lg border border-purple-500/30">
-                                            <span className="text-xs">{player.gimmickType === 'tera' ? '💎' : player.gimmickType === 'dynamax' ? '🔴' : player.gimmickType === 'mega' ? '🌀' : '⚡'}</span>
-                                            <span className="text-[10px] font-black uppercase text-purple-400">{player.gimmickType}</span>
-                                            <span className="text-gray-500 text-[10px]">on</span>
-                                            <span className="text-[10px] font-bold text-white">{player.team.find(p => p?.id === player.gimmickPokemonId)?.name || `#${player.gimmickPokemonId}`}</span>
-                                        </div>
-                                    )}
-
                                     {/* Show Pokemon grid only for Singles format */}
                                     {!activeSeason?.format.includes('Duos') && (
                                         <div className="grid grid-cols-6 gap-1 mb-3">
                                             {player.team.map((poke, idx) => (
-                                                <div key={idx} className={`relative ${player.gimmickPokemonId === poke?.id ? 'ring-2 ring-purple-500 rounded-lg' : ''}`}>
-                                                    <PokemonImage pokemon={poke} />
-                                                    {player.gimmickPokemonId === poke?.id && (
-                                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border border-black flex items-center justify-center text-[6px]">
-                                                            {player.gimmickType === 'tera' ? '💎' : player.gimmickType === 'dynamax' ? '🔴' : player.gimmickType === 'mega' ? '🌀' : '⚡'}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                <PokemonImage key={idx} pokemon={poke} />
                                             ))}
                                         </div>
                                     )}
@@ -807,9 +1139,13 @@ const AdminTournament: React.FC = () => {
                                                     }
                                                 }}
                                                 disabled={loading || isPlayerInDuo(player.discordId)}
-                                                className="flex-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 text-xs font-bold py-1.5 rounded transition-colors disabled:opacity-50"
+                                                className="flex-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 text-xs font-bold py-1.5 rounded transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
                                             >
-                                                {pairPlayer1?.discordId === player.discordId ? '✓ Selected' : 'Select for Duo'}
+                                                {pairPlayer1?.discordId === player.discordId ? (
+                                                    <>
+                                                        <Lock className="w-3.5 h-3.5" /> Selected
+                                                    </>
+                                                ) : 'Select for Duo'}
                                             </button>
                                         ) : (
                                             <>
@@ -846,7 +1182,7 @@ const AdminTournament: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
                             {duos.length === 0 ? (
                                 <div className="col-span-full text-center py-12 text-gray-500">
-                                    <span className="text-4xl block mb-2">👥</span>
+                                    <Users className="w-12 h-12 text-gray-500 mx-auto mb-2" />
                                     No duos created yet. Select two players and pair them!
                                 </div>
                             ) : duos.map(duo => (
@@ -885,8 +1221,18 @@ const AdminTournament: React.FC = () => {
                                                         : `${duo.player2Username} & ${duo.player1Username}`}
                                                 </div>
                                             )}
-                                            <div className={`text-[10px] font-bold uppercase ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
-                                                {duo.isLocked ? '✓ Team Locked' : '⏳ Drafting Pokemon'}
+                                            <div className="text-[10px] font-bold uppercase flex items-center gap-1">
+                                                {duo.isLocked ? (
+                                                    <>
+                                                        <Lock className="w-3.5 h-3.5 text-green-400" />
+                                                        <span className="text-green-400">Team Locked</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Hourglass className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                                                        <span className="text-amber-400">Drafting Pokemon</span>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -960,9 +1306,9 @@ const AdminTournament: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={() => setShowLogModal(true)}
-                                    className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl text-sm"
+                                    className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5"
                                 >
-                                    📋 Parse from Logs
+                                    <ClipboardList className="w-4 h-4" /> Parse from Logs
                                 </button>
                             </div>
 
@@ -970,7 +1316,7 @@ const AdminTournament: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2">
                                 {duos.length === 0 ? (
                                     <div className="col-span-full text-center py-12 text-gray-500">
-                                        <span className="text-4xl block mb-2">🎮</span>
+                                        <Gamepad2 className="w-12 h-12 text-gray-500 mx-auto mb-2" />
                                         No duos to show party data for yet.
                                     </div>
                                 ) : duos.map(duo => {
@@ -1071,6 +1417,68 @@ const AdminTournament: React.FC = () => {
                             </div>
                         </div>
                     )}
+
+                    {playerListTab === 'rules' && (
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            <div className="border-b border-white/10 pb-4">
+                                <h3 className="text-lg font-black text-white uppercase tracking-wider flex items-center gap-2">
+                                    <ClipboardList className="w-5 h-5 text-blue-400" /> Edit Format Description
+                                </h3>
+                                <p className="text-gray-400 text-xs mt-1">
+                                    Update the official format description shown at the top of the Rules tab on the tournament page.
+                                </p>
+                            </div>
+
+                            <div className="bg-white/5 border border-white/10 p-6 rounded-2xl space-y-6">
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-xs font-bold text-gray-300 uppercase tracking-wide">
+                                            Official Format Description
+                                        </label>
+                                    </div>
+
+                                    <RichTextEditor
+                                        value={ruleGeneralDesc}
+                                        onChange={setRuleGeneralDesc}
+                                        placeholder="Enter high level description of the tournament format..."
+                                    />
+                                    <p className="text-xs text-gray-500 italic">
+                                        Use the toolbar to bold, underline, italicize, or apply vibrant colors to selected text.
+                                    </p>
+                                </div>
+
+                                {/* Live Preview Section */}
+                                <div className="space-y-2 pt-4 border-t border-white/5">
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide flex items-center gap-1.5">
+                                        <Eye className="w-4 h-4 text-gray-400" /> Real-time Live Preview (As seen on site)
+                                    </label>
+                                    <div className="bg-gradient-to-br from-[#ff007f]/15 to-black border border-[#ff007f]/30 p-6 rounded-2xl relative overflow-hidden shadow-inner">
+                                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-[#ff007f]">
+                                            <Trophy className="w-24 h-24" />
+                                        </div>
+                                        <h4 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Official Format</h4>
+                                        <div className="text-base text-gray-200 leading-relaxed min-h-[3rem] break-words">
+                                            {ruleGeneralDesc ? (
+                                                <div dangerouslySetInnerHTML={{ __html: ruleGeneralDesc.includes('<') ? ruleGeneralDesc : ruleGeneralDesc.replace(/\n/g, '<br />') }} />
+                                            ) : (
+                                                <span className="text-gray-500 italic text-sm">No description entered yet. The default template description will be shown on the main page.</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={handleSaveRulesOverhaul}
+                                    disabled={loading}
+                                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all text-sm uppercase tracking-wider flex items-center justify-center gap-2"
+                                >
+                                    <Save className="w-4 h-4" /> Save Format Description
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1078,7 +1486,9 @@ const AdminTournament: React.FC = () => {
             {showPairModal && (
                 <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
                     <div className="bg-[#1a0b0e] p-8 rounded-2xl border border-purple-500/30 w-full max-w-lg space-y-6">
-                        <h3 className="text-2xl font-black text-purple-400 text-center uppercase">👥 Create Duo</h3>
+                        <h3 className="text-2xl font-black text-purple-400 text-center uppercase flex items-center justify-center gap-2">
+                            <Users className="w-6 h-6" /> Create Duo
+                        </h3>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -1114,22 +1524,22 @@ const AdminTournament: React.FC = () => {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setPairCaptain('player1')}
-                                    className={`flex-1 p-3 rounded-xl border transition-all ${pairCaptain === 'player1'
+                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center justify-center ${pairCaptain === 'player1'
                                         ? 'bg-yellow-600 border-yellow-400 text-white'
                                         : 'bg-black/40 border-white/10 text-gray-400'
                                         }`}
                                 >
-                                    <span className="text-xl">👑</span>
+                                    <Crown className="w-6 h-6 text-yellow-400" />
                                     <div className="font-bold text-sm mt-1">{pairPlayer1?.minecraftUsername || 'Player 1'}</div>
                                 </button>
                                 <button
                                     onClick={() => setPairCaptain('player2')}
-                                    className={`flex-1 p-3 rounded-xl border transition-all ${pairCaptain === 'player2'
+                                    className={`flex-1 p-3 rounded-xl border transition-all flex flex-col items-center justify-center ${pairCaptain === 'player2'
                                         ? 'bg-yellow-600 border-yellow-400 text-white'
                                         : 'bg-black/40 border-white/10 text-gray-400'
                                         }`}
                                 >
-                                    <span className="text-xl">👑</span>
+                                    <Crown className="w-6 h-6 text-yellow-400" />
                                     <div className="font-bold text-sm mt-1">{pairPlayer2?.minecraftUsername || 'Player 2'}</div>
                                 </button>
                             </div>
@@ -1162,7 +1572,9 @@ const AdminTournament: React.FC = () => {
             {showEndModal && (
                 <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
                     <div className="bg-[#1a0b0e] p-8 rounded-2xl border border-white/10 w-full max-w-md space-y-6">
-                        <h3 className="text-2xl font-black text-yellow-400 text-center uppercase">🏆 End Tournament</h3>
+                        <h3 className="text-2xl font-black text-yellow-400 text-center uppercase flex items-center justify-center gap-2">
+                            <Trophy className="w-6 h-6 text-yellow-400" /> End Tournament
+                        </h3>
                         <p className="text-gray-400 text-center text-sm">Enter the final placements to end {activeSeason?.name}</p>
 
                         <div className="space-y-4">
@@ -1176,8 +1588,9 @@ const AdminTournament: React.FC = () => {
                                                 rank === 2 ? 'bg-gray-400 text-gray-900' :
                                                     'bg-orange-700 text-orange-200'
                                                 }`}>{rank}</span>
-                                            <span className="text-white font-bold text-sm">
-                                                {rank === 1 ? '🥇 1st Place' : rank === 2 ? '🥈 2nd Place' : '🥉 3rd Place'}
+                                            <span className="text-white font-bold text-sm flex items-center gap-1.5">
+                                                {rank === 1 && <Crown className="w-4 h-4 text-yellow-400" />}
+                                                {rank === 1 ? '1st Place' : rank === 2 ? '2nd Place' : '3rd Place'}
                                             </span>
                                         </div>
                                         {isDuos ? (
@@ -1268,8 +1681,18 @@ const AdminTournament: React.FC = () => {
                                 />
                                 <div>
                                     <h3 className="text-2xl font-black text-white">{selectedPlayer.minecraftUsername}</h3>
-                                    <div className={`text-sm font-bold ${selectedPlayer.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
-                                        {selectedPlayer.isLocked ? '✓ Team Locked' : '⏳ Still Drafting'}
+                                    <div className="text-sm font-bold uppercase">
+                                        {selectedPlayer.isLocked ? (
+                                            <span className="text-green-400 flex items-center gap-1">
+                                                <Lock className="w-4 h-4 text-green-400" />
+                                                <span>Team Locked</span>
+                                            </span>
+                                        ) : (
+                                            <span className="text-amber-400 flex items-center gap-1">
+                                                <Hourglass className="w-4 h-4 text-amber-400 animate-pulse" />
+                                                <span>Still Drafting</span>
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1323,8 +1746,8 @@ const AdminTournament: React.FC = () => {
             {showLogModal && (
                 <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
                     <div className="bg-[#0a1a0f] p-8 rounded-2xl border border-green-500/30 w-full max-w-2xl space-y-6">
-                        <h3 className="text-2xl font-black text-green-400 text-center uppercase">
-                            📋 Parse Server Logs
+                        <h3 className="text-2xl font-black text-green-400 text-center uppercase flex items-center justify-center gap-2">
+                            <ClipboardList className="w-6 h-6" /> Parse Server Logs
                         </h3>
 
                         {selectedDuoForParty && (
