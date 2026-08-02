@@ -652,6 +652,57 @@ const TournamentBACK: React.FC = () => {
         return playersList.find(p => p.discordId === user?.id);
     }, [playersList, user?.id]);
 
+    const resolveMinecraftName = (name: string | undefined): string => {
+        if (!name) return '';
+        const trimmed = name.trim();
+        if (!trimmed) return '';
+        const match = playersList.find(p => 
+            p.minecraftUsername?.toLowerCase() === trimmed.toLowerCase() ||
+            p.discordUsername?.toLowerCase() === trimmed.toLowerCase()
+        );
+        return match ? match.minecraftUsername : trimmed;
+    };
+
+    const getChallongeEmbedUrl = (url: string | undefined): string => {
+        if (!url) return "https://challonge.com/nisamon1/module";
+        let cleaned = url.trim();
+        if (!cleaned) return "https://challonge.com/nisamon1/module";
+
+        // Try to extract src from an iframe if the user pasted the raw embed code
+        if (cleaned.toLowerCase().includes('<iframe')) {
+            const srcMatch = cleaned.match(/src=["']([^"']+)["']/i);
+            if (srcMatch && srcMatch[1]) {
+                cleaned = srcMatch[1].trim();
+            }
+        }
+
+        // Ensure protocol
+        if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) {
+            cleaned = 'https://' + cleaned;
+        }
+
+        try {
+            // Parse to isolate query params and hash correctly
+            const parsed = new URL(cleaned);
+            let baseUrl = parsed.origin + parsed.pathname;
+            
+            if (baseUrl.endsWith('/')) {
+                baseUrl = baseUrl.slice(0, -1);
+            }
+
+            if (baseUrl.endsWith('/module')) {
+                return baseUrl + parsed.search;
+            }
+
+            return `${baseUrl}/module${parsed.search}`;
+        } catch (e) {
+            // Fallback safe append if URL is not standard
+            if (cleaned.endsWith('/')) cleaned = cleaned.slice(0, -1);
+            if (cleaned.endsWith('/module')) return cleaned;
+            return `${cleaned}/module`;
+        }
+    };
+
     const getPlayerStats = (username: string) => {
         // Prefer API Score
         const apiWinner = apiWinners.find(w => w.username === username);
@@ -1049,7 +1100,7 @@ const TournamentBACK: React.FC = () => {
     }, [selectedTeam, activeSeason]);
 
     const handleInitialRegister = async () => {
-        if (!user || tournamentStatus === 'ONGOING') return;
+        if (!user || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
         setLoadingTeam(true);
         try {
             const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {
@@ -1077,7 +1128,7 @@ const TournamentBACK: React.FC = () => {
     };
 
     const handleSaveDraft = async () => {
-        if (!user || hasBannedPokemon || exceedsLimitToken || tournamentStatus === 'ONGOING') return;
+        if (!user || hasBannedPokemon || exceedsLimitToken || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
 
         // For Duos: Check if user is captain and duo exists
         if (activeSeason.format.includes('Duos') && myDuo) {
@@ -1711,7 +1762,7 @@ const TournamentBACK: React.FC = () => {
                                         // Show Challonge iframe for ONGOING/ENDED seasons
                                         <div className="flex-1 w-full bg-white rounded-3xl overflow-hidden shadow-inner border-[6px] border-[#120507] min-h-[800px]">
                                             <iframe
-                                                src={activeSeason.challongeUrl ? `${activeSeason.challongeUrl}/module` : "https://challonge.com/nisamon1/module"}
+                                                src={getChallongeEmbedUrl(activeSeason.challongeUrl)}
                                                 width="100%"
                                                 height="100%"
                                                 frameBorder="0"
@@ -1741,6 +1792,8 @@ const TournamentBACK: React.FC = () => {
                                                 {/* 2ND PLACE - DUOS */}
                                                 {apiWinners.find(w => w.rank === 2) && (() => {
                                                     const winner = apiWinners.find(w => w.rank === 2)!;
+                                                    const rP1 = resolveMinecraftName(winner.player1);
+                                                    const rP2 = resolveMinecraftName(winner.player2);
                                                     return (
                                                         <div className="order-2 md:order-1 flex flex-col w-full md:w-1/3">
                                                             <div className="bg-[#2a2a2a] border-t-4 border-slate-300 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-8">
@@ -1756,20 +1809,20 @@ const TournamentBACK: React.FC = () => {
                                                                             </div>
                                                                         </div>
                                                                         <div className="min-w-0 flex-1">
-                                                                            <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${winner.player1} & ${winner.player2}`}</h3>
+                                                                            <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${rP1} & ${rP2}`}</h3>
                                                                             <p className="text-slate-400 font-mono font-bold text-sm">{winner.score}</p>
                                                                         </div>
                                                                     </div>
                                                                     <div className="text-xs text-slate-400 font-bold">
-                                                                        <span className="text-yellow-400">{winner.player1}</span> & <span className="text-purple-400">{winner.player2}</span>
+                                                                        <span className="text-yellow-400">{rP1}</span> & <span className="text-purple-400">{rP2}</span>
                                                                     </div>
                                                                 </div>
                                                                 <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
                                                                 <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
                                                             </div>
                                                             <div className="mt-4 flex justify-center gap-2">
-                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={winner.player1} />
-                                                                <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={winner.player2} />
+                                                                <img src={`https://mc-heads.net/body/${rP1}/right`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={rP1} />
+                                                                <img src={`https://mc-heads.net/body/${rP2}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={rP2} />
                                                             </div>
                                                         </div>
                                                     );
@@ -1778,13 +1831,15 @@ const TournamentBACK: React.FC = () => {
                                                 {/* 1ST PLACE - DUOS */}
                                                 {apiWinners.find(w => w.rank === 1) && (() => {
                                                     const winner = apiWinners.find(w => w.rank === 1)!;
+                                                    const rP1 = resolveMinecraftName(winner.player1);
+                                                    const rP2 = resolveMinecraftName(winner.player2);
                                                     return (
                                                         <div className="order-1 md:order-2 flex flex-col w-full md:w-1/3 -mt-12 z-10">
                                                             <div className="relative flex justify-center mb-6">
                                                                 <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
                                                                 <div className="flex gap-2 relative">
-                                                                    <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)]" alt={winner.player1} />
-                                                                    <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(168,85,247,0.4)]" alt={winner.player2} />
+                                                                    <img src={`https://mc-heads.net/body/${rP1}/right`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)]" alt={rP1} />
+                                                                    <img src={`https://mc-heads.net/body/${rP2}/left`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(168,85,247,0.4)]" alt={rP2} />
                                                                 </div>
                                                                 <div className="absolute -top-16 animate-bounce">
                                                                     <Crown className="w-16 h-16 text-yellow-400 filter drop-shadow-lg" strokeWidth={1.5} />
@@ -1803,12 +1858,12 @@ const TournamentBACK: React.FC = () => {
                                                                             </div>
                                                                         </div>
                                                                         <div className="min-w-0 flex-1">
-                                                                            <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter truncate leading-none">{winner.teamName || `${winner.player1} & ${winner.player2}`}</h3>
+                                                                            <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter truncate leading-none">{winner.teamName || `${rP1} & ${rP2}`}</h3>
                                                                             <p className="text-yellow-400 font-mono font-bold text-lg">{winner.score}</p>
                                                                         </div>
                                                                     </div>
                                                                     <div className="text-sm font-bold mt-2">
-                                                                        <span className="text-yellow-400">{winner.player1}</span> <span className="text-white/50">&</span> <span className="text-purple-400">{winner.player2}</span>
+                                                                        <span className="text-yellow-400">{rP1}</span> <span className="text-white/50">&</span> <span className="text-purple-400">{rP2}</span>
                                                                     </div>
                                                                 </div>
                                                                 <div className="w-full h-3 bg-yellow-900/50 rounded-full overflow-hidden mt-4"><div className="w-full h-full bg-gradient-to-r from-yellow-500 to-yellow-200 animate-pulse"></div></div>
@@ -1821,6 +1876,8 @@ const TournamentBACK: React.FC = () => {
                                                 {/* 3RD PLACE - DUOS */}
                                                 {apiWinners.find(w => w.rank === 3) && (() => {
                                                     const winner = apiWinners.find(w => w.rank === 3)!;
+                                                    const rP1 = resolveMinecraftName(winner.player1);
+                                                    const rP2 = resolveMinecraftName(winner.player2);
                                                     return (
                                                         <div className="order-3 flex flex-col w-full md:w-1/3">
                                                             <div className="bg-[#2a2a2a] border-t-4 border-orange-700/80 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-16">
@@ -1836,20 +1893,20 @@ const TournamentBACK: React.FC = () => {
                                                                             </div>
                                                                         </div>
                                                                         <div className="min-w-0 flex-1">
-                                                                            <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${winner.player1} & ${winner.player2}`}</h3>
+                                                                            <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${rP1} & ${rP2}`}</h3>
                                                                             <p className="text-orange-500 font-mono font-bold text-sm">{winner.score}</p>
                                                                         </div>
                                                                     </div>
                                                                     <div className="text-xs text-orange-300/70 font-bold">
-                                                                        <span className="text-yellow-400">{winner.player1}</span> & <span className="text-purple-400">{winner.player2}</span>
+                                                                        <span className="text-yellow-400">{rP1}</span> & <span className="text-purple-400">{rP2}</span>
                                                                     </div>
                                                                 </div>
                                                                 <div className="w-full h-2 bg-orange-900/30 rounded-full overflow-hidden"><div className="w-1/2 h-full bg-orange-600"></div></div>
                                                             </div>
                                                             <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
                                                             <div className="mt-4 flex justify-center gap-2">
-                                                                <img src={`https://mc-heads.net/body/${winner.player1}/right`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5]" alt={winner.player1} />
-                                                                <img src={`https://mc-heads.net/body/${winner.player2}/left`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5]" alt={winner.player2} />
+                                                                <img src={`https://mc-heads.net/body/${rP1}/right`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5]" alt={rP1} />
+                                                                <img src={`https://mc-heads.net/body/${rP2}/left`} className="h-36 md:h-48 object-contain filter drop-shadow-2xl grayscale-[0.5]" alt={rP2} />
                                                             </div>
                                                         </div>
                                                     );
@@ -1860,95 +1917,104 @@ const TournamentBACK: React.FC = () => {
                                             <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-5xl mx-auto px-4 justify-center">
 
                                                 {/* 2ND PLACE */}
-                                                {winners[1] && (
-                                                    <div className="order-2 md:order-1 flex flex-col w-full md:w-1/3">
-                                                        <div className="bg-[#2a2a2a] border-t-4 border-slate-300 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-8">
-                                                            <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-slate-300">2</div>
-                                                            <div className="flex items-center gap-4 mb-4 relative z-10">
-                                                                 <div className="relative">
-                                                                     <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
-                                                                         <span className="font-black text-slate-300 text-xl">2ND</span>
+                                                {winners[1] && (() => {
+                                                    const rW1 = resolveMinecraftName(winners[1]);
+                                                    return (
+                                                        <div className="order-2 md:order-1 flex flex-col w-full md:w-1/3">
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-slate-300 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-8">
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-slate-300">2</div>
+                                                                <div className="flex items-center gap-4 mb-4 relative z-10">
+                                                                     <div className="relative">
+                                                                         <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
+                                                                             <span className="font-black text-slate-300 text-xl">2ND</span>
+                                                                         </div>
+                                                                         <div className="absolute -bottom-2 -right-2 bg-[#1a1a1a] rounded-full p-1.5 border border-slate-400 shadow-md text-slate-300">
+                                                                             <Trophy className="w-5 h-5" />
+                                                                         </div>
                                                                      </div>
-                                                                     <div className="absolute -bottom-2 -right-2 bg-[#1a1a1a] rounded-full p-1.5 border border-slate-400 shadow-md text-slate-300">
-                                                                         <Trophy className="w-5 h-5" />
+                                                                     <div className="min-w-0">
+                                                                         <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{rW1}</h3>
+                                                                         <p className="text-slate-400 font-mono font-bold">{getPlayerStats(winners[1])}</p>
                                                                      </div>
-                                                                 </div>
-                                                                 <div className="min-w-0">
-                                                                     <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{winners[1]}</h3>
-                                                                     <p className="text-slate-400 font-mono font-bold">{getPlayerStats(winners[1])}</p>
-                                                                 </div>
+                                                                </div>
+                                                                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
                                                             </div>
-                                                            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
-                                                        </div>
-                                                        <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
+                                                            <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
 
-                                                        <div className="mt-4 flex justify-center">
-                                                            <img src={`https://mc-heads.net/body/${winners[1]}/right`} className="h-48 md:h-64 object-contain filter drop-shadow-2xl grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" alt={winners[1]} />
+                                                            <div className="mt-4 flex justify-center">
+                                                                <img src={`https://mc-heads.net/body/${rW1}/right`} className="h-48 md:h-64 object-contain filter drop-shadow-2xl grayscale-[0.3] group-hover:grayscale-0 transition-all duration-500" alt={rW1} />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
 
                                                 {/* 1ST PLACE */}
-                                                {winners[0] && (
-                                                    <div className="order-1 md:order-2 flex flex-col w-full md:w-1/3 -mt-12 z-10">
-                                                        <div className="relative flex justify-center mb-6">
-                                                            <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
-                                                            <img src={`https://mc-heads.net/body/${winners[0]}`} className="h-64 md:h-80 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)] scale-110" alt={winners[0]} />
-                                                            <div className="absolute -top-16 animate-bounce">
-                                                                <Crown className="w-16 h-16 text-yellow-400 filter drop-shadow-lg" strokeWidth={1.5} />
+                                                {winners[0] && (() => {
+                                                    const rW0 = resolveMinecraftName(winners[0]);
+                                                    return (
+                                                        <div className="order-1 md:order-2 flex flex-col w-full md:w-1/3 -mt-12 z-10">
+                                                            <div className="relative flex justify-center mb-6">
+                                                                <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
+                                                                <img src={`https://mc-heads.net/body/${rW0}`} className="h-64 md:h-80 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)] scale-110" alt={rW0} />
+                                                                <div className="absolute -top-16 animate-bounce">
+                                                                    <Crown className="w-16 h-16 text-yellow-400 filter drop-shadow-lg" strokeWidth={1.5} />
+                                                                </div>
                                                             </div>
-                                                        </div>
 
-                                                        <div className="bg-[#2a2a2a] border-t-4 border-yellow-400 rounded-t-2xl p-8 relative group overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)] ring-1 ring-yellow-500/30">
-                                                            <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/10 to-transparent opacity-50"></div>
-                                                            <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl font-black text-yellow-400">1</div>
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-yellow-400 rounded-t-2xl p-8 relative group overflow-hidden shadow-[0_0_50px_rgba(234,179,8,0.15)] ring-1 ring-yellow-500/30">
+                                                                <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/10 to-transparent opacity-50"></div>
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl font-black text-yellow-400">1</div>
 
-                                                            <div className="flex items-center gap-5 mb-2 relative z-10">
-                                                                <div className="w-20 h-20 rounded-full bg-yellow-900/50 flex items-center justify-center border-2 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] shrink-0">
-                                                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 flex items-center justify-center">
-                                                                        <span className="font-black text-yellow-900 text-3xl">1ST</span>
+                                                                <div className="flex items-center gap-5 mb-2 relative z-10">
+                                                                    <div className="w-20 h-20 rounded-full bg-yellow-900/50 flex items-center justify-center border-2 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] shrink-0">
+                                                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 flex items-center justify-center">
+                                                                            <span className="font-black text-yellow-900 text-3xl">1ST</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <h3 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter truncate leading-none mb-1">{rW0}</h3>
+                                                                        <p className="text-yellow-400 font-mono font-bold text-xl">{getPlayerStats(winners[0])}</p>
                                                                     </div>
                                                                 </div>
-                                                                <div className="min-w-0">
-                                                                    <h3 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter truncate leading-none mb-1">{winners[0]}</h3>
-                                                                    <p className="text-yellow-400 font-mono font-bold text-xl">{getPlayerStats(winners[0])}</p>
-                                                                </div>
+                                                                <div className="w-full h-3 bg-yellow-900/50 rounded-full overflow-hidden mt-4"><div className="w-full h-full bg-gradient-to-r from-yellow-500 to-yellow-200 animate-pulse"></div></div>
                                                             </div>
-                                                            <div className="w-full h-3 bg-yellow-900/50 rounded-full overflow-hidden mt-4"><div className="w-full h-full bg-gradient-to-r from-yellow-500 to-yellow-200 animate-pulse"></div></div>
+                                                            <div className="h-6 bg-[#1a1a1a] mx-4 rounded-b-xl opacity-50 border-t border-white/5"></div>
                                                         </div>
-                                                        <div className="h-6 bg-[#1a1a1a] mx-4 rounded-b-xl opacity-50 border-t border-white/5"></div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
 
                                                 {/* 3RD PLACE */}
-                                                {winners[2] && (
-                                                    <div className="order-3 flex flex-col w-full md:w-1/3">
-                                                        <div className="bg-[#2a2a2a] border-t-4 border-orange-700/80 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-16">
-                                                            <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-orange-700">3</div>
-                                                            <div className="flex items-center gap-4 mb-4 relative z-10">
-                                                                <div className="relative">
-                                                                    <div className="w-16 h-16 rounded-full bg-orange-900/30 flex items-center justify-center border-2 border-orange-700 shadow-[0_0_15px_rgba(194,65,12,0.3)]">
-                                                                        <span className="font-black text-orange-500 text-xl">3RD</span>
+                                                {winners[2] && (() => {
+                                                    const rW2 = resolveMinecraftName(winners[2]);
+                                                    return (
+                                                        <div className="order-3 flex flex-col w-full md:w-1/3">
+                                                            <div className="bg-[#2a2a2a] border-t-4 border-orange-700/80 rounded-t-2xl p-6 relative group overflow-hidden shadow-2xl mt-16">
+                                                                <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl font-black text-orange-700">3</div>
+                                                                <div className="flex items-center gap-4 mb-4 relative z-10">
+                                                                    <div className="relative">
+                                                                        <div className="w-16 h-16 rounded-full bg-orange-900/30 flex items-center justify-center border-2 border-orange-700 shadow-[0_0_15px_rgba(194,65,12,0.3)]">
+                                                                            <span className="font-black text-orange-500 text-xl">3RD</span>
+                                                                        </div>
+                                                                        <div className="absolute -bottom-2 -right-2 bg-[#1a1a1a] rounded-full p-1.5 border border-orange-700 shadow-md text-orange-500">
+                                                                            <Trophy className="w-5 h-5" />
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="absolute -bottom-2 -right-2 bg-[#1a1a1a] rounded-full p-1.5 border border-orange-700 shadow-md text-orange-500">
-                                                                        <Trophy className="w-5 h-5" />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{winners[2]}</h3>
+                                                                    <div className="min-w-0">
+                                                                        <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{rW2}</h3>
 
-                                                                    <p className="text-orange-500 font-mono font-bold">{getPlayerStats(winners[2])}</p>
+                                                                        <p className="text-orange-500 font-mono font-bold">{getPlayerStats(winners[2])}</p>
+                                                                    </div>
                                                                 </div>
+                                                                <div className="w-full h-2 bg-orange-900/30 rounded-full overflow-hidden"><div className="w-1/2 h-full bg-orange-600"></div></div>
                                                             </div>
-                                                            <div className="w-full h-2 bg-orange-900/30 rounded-full overflow-hidden"><div className="w-1/2 h-full bg-orange-600"></div></div>
-                                                        </div>
-                                                        <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
+                                                            <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
 
-                                                        <div className="mt-4 flex justify-center">
-                                                            <img src={`https://mc-heads.net/body/${winners[2]}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" alt={winners[2]} />
+                                                            <div className="mt-4 flex justify-center">
+                                                                <img src={`https://mc-heads.net/body/${rW2}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.5] group-hover:grayscale-0 transition-all duration-500" alt={rW2} />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
 
                                             </div>
                                         )}

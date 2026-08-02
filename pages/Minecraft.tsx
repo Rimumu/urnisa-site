@@ -155,12 +155,12 @@ const Minecraft: React.FC = () => {
             const data = await response.json();
 
             if (response.ok) {
-                setWhitelistStatus({ type: 'success', msg: "Application Sent! Please wait for admin approval." });
+                setWhitelistStatus({ type: 'success', msg: data.message || "Application Sent! Please wait for admin approval." });
             } else if (response.status === 403) {
                 // Explicitly show Modal for Role Failure
                 setShowSubAlert(true);
             } else if (response.status === 409) {
-                setWhitelistStatus({ type: 'pending', msg: "Application already pending!" });
+                setWhitelistStatus({ type: 'pending', msg: data.error || data.message || "Application already pending!" });
             } else {
                 setWhitelistStatus({ type: 'error', msg: data.error || "Application Failed" });
             }

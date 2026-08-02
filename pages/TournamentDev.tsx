@@ -518,7 +518,7 @@ const TournamentDev: React.FC = () => {
   }, [selectedTeam]);
 
   const handleInitialRegister = async () => {
-      if (!user || tournamentStatus === 'ONGOING') return;
+      if (!user || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
       setLoadingTeam(true);
       try {
           const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {

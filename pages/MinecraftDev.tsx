@@ -233,6 +233,20 @@ const MinecraftDev: React.FC = () => {
         setWhitelistStatus(null);
 
         try {
+            // Sync with backend to ensure the Minecraft and Twitch credentials are fully saved in the DB
+            await fetch(`${DISCORD_API_URL}/api/minecraft/link`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    discordId: user.id,
+                    discordUsername: user.global_name || user.username,
+                    discordAvatar: user.avatar,
+                    minecraftUsername: user.minecraftUsername,
+                    twitchUsername: user.twitchUsername,
+                    twitchAvatar: user.twitchAvatar
+                })
+            });
+
             const response = await fetch(`${DISCORD_API_URL}/api/whitelist/apply`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -242,12 +256,12 @@ const MinecraftDev: React.FC = () => {
             const data = await response.json();
 
             if (response.ok) {
-                setWhitelistStatus({ type: 'success', msg: "Application Sent! Please wait for admin approval." });
+                setWhitelistStatus({ type: 'success', msg: data.message || "Application Sent! Please wait for admin approval." });
             } else if (response.status === 403) {
                 // Explicitly show Modal for Role Failure
                 setShowSubAlert(true);
             } else if (response.status === 409) {
-                setWhitelistStatus({ type: 'pending', msg: "Application already pending!" });
+                setWhitelistStatus({ type: 'pending', msg: data.error || data.message || "Application already pending!" });
             } else {
                 setWhitelistStatus({ type: 'error', msg: data.error || "Application Failed" });
             }
