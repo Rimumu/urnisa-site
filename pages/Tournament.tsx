@@ -842,20 +842,11 @@ const TournamentBACK: React.FC = () => {
             .then(res => res.json())
             .then(seasons => {
                 if (Array.isArray(seasons) && seasons.length > 0) {
-                    // Filter out archived seasons for the main production Tournament page
-                    const activeSeasons = seasons.filter((s: any) => !s.isArchived);
-                    if (activeSeasons.length > 0) {
-                        setAllSeasons(activeSeasons);
-                        const active = activeSeasons[0];
-                        setActiveSeason(active);
-                        setTournamentStatus(active.status || 'DRAFTING');
-                    } else {
-                        // Fall back to a clean active Season 1
-                        const fallbackSeason = { seasonId: 1, name: 'Season 1', format: 'Singles 4v4', status: 'DRAFTING', isArchived: false, challongeUrl: '' };
-                        setAllSeasons([fallbackSeason]);
-                        setActiveSeason(fallbackSeason);
-                        setTournamentStatus('DRAFTING');
-                    }
+                    setAllSeasons(seasons);
+                    // Find active (unarchived) season, or fallback to the latest season (e.g. if ended/archived)
+                    const active = seasons.find((s: any) => !s.isArchived) || seasons[0];
+                    setActiveSeason(active);
+                    setTournamentStatus(active.status || 'DRAFTING');
                 } else {
                     const fallbackSeason = { seasonId: 1, name: 'Season 1', format: 'Singles 4v4', status: 'DRAFTING', isArchived: false, challongeUrl: '' };
                     setAllSeasons([fallbackSeason]);
