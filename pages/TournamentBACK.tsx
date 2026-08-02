@@ -1149,7 +1149,7 @@ const TournamentBACK: React.FC = () => {
                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Mega Rayquaza</li>
                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Zacian Crowned</li>
                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Ultra Necrozma</li>
-                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternatus</li>
+                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternamax Eternatus</li>
                                             </ul>
                                         </RuleCard>
                                         <RuleCard title="Match Banning System" icon="🎯" color="border-cyan-500/40 bg-cyan-900/10">
