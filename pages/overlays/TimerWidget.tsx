@@ -161,27 +161,31 @@ const TimerWidget: React.FC = () => {
                                 2x Timer Event
                             </div>
                         )}
-                        {stats.isPaused && (
+                        {stats.isEnded ? (
+                            <div className="bg-red-600 text-white px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-white shadow-[0_0_15px_rgba(220,38,38,0.8)] animate-pulse whitespace-nowrap">
+                                NISATHON ENDED
+                            </div>
+                        ) : stats.isPaused ? (
                             <div className="bg-amber-500 text-white px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-white shadow-[0_0_15px_rgba(245,158,11,0.6)] animate-pulse whitespace-nowrap">
                                 TIMER PAUSED
                             </div>
-                        )}
+                        ) : null}
                     </div>
                     
                     <div className="text-center w-full">
                         <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-white gold-text-shadow' : 'text-rose-100'}`}>
-                            Time Remaining
+                            {stats.isEnded ? "Status" : "Time Remaining"}
                         </div>
                         {/* ANIMATED DIGITS: Scale up and flash green when time is added */}
                         <div 
                             className={`
                                 text-8xl font-black tabular-nums bubbly-text tracking-tight transition-all duration-500 ease-out transform
                                 ${timerBump ? 'scale-105 text-[#4ade80] drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'scale-100 text-white'}
-                                ${stats.isPaused && !timerBump ? 'animate-pulse' : ''} 
+                                ${stats.isPaused && !stats.isEnded && !timerBump ? 'animate-pulse' : ''} 
                                 ${isDoubleTimer && !timerBump ? 'gold-text-shadow' : ''}
                             `}
                         >
-                            {timeLeft}
+                            {stats.isEnded ? "ENDED" : timeLeft}
                         </div>
                     </div>
                 </div>
