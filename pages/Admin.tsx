@@ -2190,6 +2190,11 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                         <div className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mt-0.5 whitespace-normal sm:whitespace-nowrap">
                                                             {evt.type} • {new Date(evt.createdAt).toLocaleString()}
                                                         </div>
+                                                        {evt.adminNote && (
+                                                            <div className="text-[10px] text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded mt-1 inline-block border border-yellow-500/20 font-bold self-start">
+                                                                {evt.adminNote}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0">

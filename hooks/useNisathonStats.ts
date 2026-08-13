@@ -32,6 +32,7 @@ export interface ContributorEvent {
     message: string;
     createdAt: string;
     nisaballAmount: number;
+    adminNote?: string;
 }
 
 // Accept pollInterval to allow components like Overlay to update faster (default 5s)

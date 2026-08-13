@@ -18,7 +18,6 @@ import Gacha from './pages/Gacha';
 import GachaDev from './pages/GachaDev'; // Import Dev Page
 import TournamentDev from './pages/TournamentDev'; // New Import
 import Tournament from './pages/Tournament'; // Prod Tournament Page
-import TournamentBACK from './pages/TournamentBACK';
 import AdminTournamentDev from './pages/AdminTournamentDev'; // New Admin Tournament Dev Page
 import AdminTournament from './pages/AdminTournament'; // New Admin Tournament Production Page
 import SnakesLadder from './pages/SnakesLadder'; // Snakes and Ladders Game
@@ -26,10 +25,6 @@ import Bingo from './pages/Bingo';
 import BingoDashboard from './pages/BingoDashboard';
 import Inventory from './pages/Inventory';
 import Redeem from './pages/Redeem';
-import BingoBACK from './pages/BingoBACK';
-import BingoDashboardBACK from './pages/BingoDashboardBACK';
-import InventoryBACK from './pages/InventoryBACK';
-import RedeemBACK from './pages/RedeemBACK';
 import TwitchCallback from './pages/TwitchCallback';
 import About from './pages/About';
 import Gallery from './pages/Gallery';
@@ -121,13 +116,8 @@ const App: React.FC = () => {
 
           <Route path="/minecraft/bingo" element={<BingoDashboard />} />
           <Route path="/minecraft/bingo/card" element={<Bingo />} />
-          <Route path="/minecraft/bingoBACK" element={<BingoDashboardBACK />} />
-          <Route path="/minecraft/bingo/cardBACK" element={<BingoBACK />} />
-          <Route path="/minecraft/tournamentBACK" element={<TournamentBACK />} />
           <Route path="/inventory" element={<Inventory />} />
-          <Route path="/inventoryBACK" element={<InventoryBACK />} />
           <Route path="/redeem" element={<Redeem />} />
-          <Route path="/redeemBACK" element={<RedeemBACK />} />
           <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/archive" element={<Archive />} />

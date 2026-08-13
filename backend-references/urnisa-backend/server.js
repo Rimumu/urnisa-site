@@ -169,7 +169,8 @@ const NisathonEvent = mongoose.model('NisathonEvent', new mongoose.Schema({
     nisaballAmount: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
     hidden: { type: Boolean, default: false },
-    isNisathon: { type: Boolean, default: true }
+    isNisathon: { type: Boolean, default: true },
+    adminNote: { type: String, default: "" }
 }));
 
 const SpinQueue = mongoose.model('SpinQueue', new mongoose.Schema({
@@ -187,7 +188,8 @@ const BingoCard = mongoose.model('BingoCard', new mongoose.Schema({
     cardId: { type: String, required: true }, // The seed ID
     gridData: { type: Array, required: true }, // Snapshot of cells to ensure consistency
     marked: { type: [Boolean], required: true }, // Array of booleans
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    syncCode: { type: String, unique: true, sparse: true } // Mod integration code
 }));
 
 // NEW: Bingo Card DEFINITION Schema (Ensures ID -> Same Grid Always)
@@ -222,7 +224,8 @@ const TournamentEntry = mongoose.model('TournamentEntry', new mongoose.Schema({
     // Season 3 Gimmick Selection
     gimmickType: { type: String, default: null }, // 'tera', 'dynamax', 'mega', 'zmove', or null
     gimmickPokemonId: { type: Number, default: null }, // ID of Pokemon using the gimmick
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    syncCode: { type: String, unique: true, sparse: true } // Mod integration code
 }));
 
 // Compound unique key: one registration per user per season
@@ -248,7 +251,8 @@ const TournamentBracket = mongoose.model('TournamentBracket', new mongoose.Schem
     seasonId: { type: Number, default: 1 },
     type: { type: String, default: 'SINGLE_ELIMINATION' },
     matches: [TournamentMatchSchema],
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    syncCode: { type: String, unique: true, sparse: true } // Mod integration code
 }));
 
 // NEW: Tournament Season Schema
@@ -413,7 +417,7 @@ const processBufferedGift = async (sender, data) => {
 // CORE LOGIC
 // ==========================================
 
-const processEvent = async (stats, type, user, amount, message, providerId, tier = '1000', isManual = false) => {
+const processEvent = async (stats, type, user, amount, message, providerId, tier = '1000', isManual = false, adminNote = "", myrAmount = 0) => {
     // If Nisathon is ended, ignore incoming auto events
     if (stats.isEnded && !isManual) {
         return 0;
@@ -466,6 +470,14 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         amountDisplay = `$${amount.toFixed(2)}`;
         eventType = 'donation';
         if (isNewEvent) stats.currentDonations += amount;
+    }
+    else if (type === 'tip-myr') {
+        earnedNisaballs = myrAmount / 9; // 9 MYR = 1 Nisaball
+        amountDisplay = `$${amount.toFixed(2)}`; // Show as USD on website
+        eventType = 'donation'; // Keep 'donation' so frontend icons work properly
+        if (isNewEvent) {
+            stats.currentDonations += amount; // Track as USD
+        }
     }
     else if (['nisall', 'nisaball', 'nisaballs', 'code', 'redeem'].includes(type)) {
         earnedNisaballs = amount;
@@ -520,6 +532,7 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
         nisaballAmount: earnedNisaballs,
         hidden: !isNisathonEvent ? true : false,
         isNisathon: isNisathonEvent,
+        adminNote: adminNote,
         createdAt: isNewEvent ? new Date() : undefined
     };
     Object.keys(eventData).forEach(k => eventData[k] === undefined && delete eventData[k]);
@@ -912,9 +925,19 @@ const repairNisathonEvents = async () => {
                 const bits = match ? parseInt(match[1]) : 0;
                 amount = bits / bitsRate;
             } else if (t === 'donation' || t === 'tip') {
-                const match = display.match(/[\$]?([\d\.]+)/);
-                const don = match ? parseFloat(match[1]) : 0;
-                amount = don / donationRate;
+                if (ev.adminNote && ev.adminNote.includes('RM')) {
+                    const match = ev.adminNote.match(/RM([\d\.]+)/);
+                    const don = match ? parseFloat(match[1]) : 0;
+                    amount = don / 9;
+                } else if (display.includes('RM')) {
+                    const match = display.match(/RM([\d\.]+)/);
+                    const don = match ? parseFloat(match[1]) : 0;
+                    amount = don / 9;
+                } else {
+                    const match = display.match(/[\$]?([\d\.]+)/);
+                    const don = match ? parseFloat(match[1]) : 0;
+                    amount = don / donationRate;
+                }
             } else if (t === 'nisaball' || t === 'nisaballs') {
                 const match = display.match(/([\d\.]+)/);
                 amount = match ? parseFloat(match[1]) : 0;
@@ -1048,17 +1071,31 @@ app.post('/api/webhooks/sociabuzz', async (req, res) => {
         const providerId = payload.id || payload.transaction_id || payload.order_id || `sociabuzz-${Date.now()}-${Math.random()}`;
 
         if (stats) {
-            await processEvent(stats, 'tip', name, usdAmount, message, providerId);
-            await stats.save();
-            console.log(`✅ [SociaBuzz Webhook] Processed Nisathon donation: ${name} | $${usdAmount.toFixed(2)} USD | msg: ${message}`);
+            const isMYR = currency === 'MYR' || currency === 'RM';
+            if (isMYR) {
+                const adminNote = `Converted from RM${amount.toFixed(2)}`;
+                await processEvent(stats, 'tip-myr', name, usdAmount, message, providerId, '1000', false, adminNote, amount);
+                await stats.save();
+                console.log(`✅ [SociaBuzz Webhook] Processed Nisathon donation: ${name} | RM${amount.toFixed(2)} MYR | msg: ${message}`);
+            } else {
+                await processEvent(stats, 'tip', name, usdAmount, message, providerId);
+                await stats.save();
+                console.log(`✅ [SociaBuzz Webhook] Processed Nisathon donation: ${name} | $${usdAmount.toFixed(2)} USD | msg: ${message}`);
+            }
         } else {
             console.log("⚠️ [SociaBuzz Webhook] Nisathon stats not found in database.");
         }
 
         // Process Snakes (Always try, just like StreamElements socket.on('event'))
         try {
-            await processSnakesEvent('tip', name, usdAmount, providerId, '1000', false, '');
-            console.log(`✅ [SociaBuzz Webhook] Routed to Snakes event queue for ${name}`);
+            const isMYR = currency === 'MYR' || currency === 'RM';
+            // Calculate a fair USD equivalent based on the Nisaball ratio (9 MYR = 1 Nisaball = $5 USD)
+            // So if donationRate is 5, 9 MYR = 5 USD equivalent for rolling logic.
+            const statsRate = stats ? (stats.donationRate || 5) : 5;
+            const snakeUsdAmount = isMYR ? (amount / 9) * statsRate : usdAmount;
+            
+            await processSnakesEvent('tip', name, snakeUsdAmount, providerId, '1000', false, '');
+            console.log(`✅ [SociaBuzz Webhook] Routed to Snakes event queue for ${name} using scaled amount ${snakeUsdAmount}`);
         } catch (snakesErr) {
             console.error("❌ [SociaBuzz Webhook] Error routing to Snakes:", snakesErr.message);
         }
@@ -1990,18 +2027,25 @@ app.post('/api/bingo/save', async (req, res) => {
     }
 
     try {
-        // Check if updating existing by name for this user, or create new
-        const result = await BingoCard.findOneAndUpdate(
-            { discordId, name },
-            {
-                cardId,
-                gridData,
-                marked,
-                updatedAt: new Date()
-            },
-            { upsert: true, new: true }
-        );
-        res.json({ success: true, message: "Card saved successfully!" });
+        let card = await BingoCard.findOne({ discordId, name });
+        if (!card) {
+            const crypto = require('crypto');
+            let syncCode;
+            let isUnique = false;
+            while (!isUnique) {
+                syncCode = crypto.randomBytes(3).toString('hex').toUpperCase();
+                const existing = await BingoCard.findOne({ syncCode });
+                if (!existing) isUnique = true;
+            }
+            card = await BingoCard.create({ discordId, name, cardId, gridData, marked, syncCode });
+        } else {
+            card = await BingoCard.findOneAndUpdate(
+                { discordId, name },
+                { cardId, gridData, marked, updatedAt: new Date() },
+                { new: true }
+            );
+        }
+        res.json({ success: true, message: "Card saved successfully!", syncCode: card.syncCode });
     } catch (e) {
         console.error("Bingo Save Error:", e);
         res.status(500).json({ error: "Failed to save card" });
@@ -2022,6 +2066,87 @@ app.get('/api/bingo/list', async (req, res) => {
 });
 
 // Delete a Saved Card
+// --- MOD INTEGRATION ENDPOINTS ---
+
+// Fetch lightweight card by sync code
+app.get('/api/mod/bingo/:syncCode', async (req, res) => {
+    try {
+        const { syncCode } = req.params;
+        const card = await BingoCard.findOne({ syncCode: syncCode.toUpperCase() });
+        if (!card) return res.status(404).json({ error: "Card not found. Invalid Sync Code." });
+
+        // Map gridData to a lightweight array for the mod
+        const cells = card.gridData.map((cell, index) => ({
+            index,
+            id: cell.id,
+            name: cell.name,
+            marked: card.marked[index]
+        }));
+
+        res.json({
+            discordId: card.discordId,
+            name: card.name,
+            cardId: card.cardId,
+            cells
+        });
+    } catch (e) {
+        console.error("Mod Bingo Fetch Error:", e);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// Mark a cell as caught
+app.post('/api/mod/bingo/:syncCode/mark', async (req, res) => {
+    try {
+        const { syncCode } = req.params;
+        const { index } = req.body; // Provide the index to mark
+
+        const card = await BingoCard.findOne({ syncCode: syncCode.toUpperCase() });
+        if (!card) return res.status(404).json({ error: "Card not found." });
+
+        if (index < 0 || index > 24) return res.status(400).json({ error: "Invalid index." });
+
+        // Mark it
+        const newMarked = [...card.marked];
+        newMarked[index] = true;
+
+        await BingoCard.findOneAndUpdate(
+            { syncCode: syncCode.toUpperCase() },
+            { marked: newMarked, updatedAt: new Date() }
+        );
+
+        res.json({ success: true, message: `Cell ${index} marked.` });
+    } catch (e) {
+        console.error("Mod Bingo Mark Error:", e);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// Unmark a cell
+app.post('/api/mod/bingo/:syncCode/unmark', async (req, res) => {
+    try {
+        const { syncCode } = req.params;
+        const { index } = req.body;
+
+        const card = await BingoCard.findOne({ syncCode: syncCode.toUpperCase() });
+        if (!card) return res.status(404).json({ error: "Card not found." });
+
+        if (index < 0 || index > 24) return res.status(400).json({ error: "Invalid index." });
+
+        const newMarked = [...card.marked];
+        newMarked[index] = false;
+
+        await BingoCard.findOneAndUpdate(
+            { syncCode: syncCode.toUpperCase() },
+            { marked: newMarked, updatedAt: new Date() }
+        );
+
+        res.json({ success: true, message: `Cell ${index} unmarked.` });
+    } catch (e) {
+        console.error("Mod Bingo Unmark Error:", e);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
 app.post('/api/bingo/delete', async (req, res) => {
     const { discordId, name } = req.body;
     if (!discordId || !name) return res.status(400).json({ error: "Missing data" });
@@ -2173,7 +2298,8 @@ const ArchiveSnapshot = mongoose.model('ArchiveSnapshot', new mongoose.Schema({
         amountDisplay: String,
         message: String,
         createdAt: Date,
-        nisaballAmount: Number
+        nisaballAmount: Number,
+        adminNote: String
     }],
     goalsAchieved: [{
         count: Number,
@@ -2291,7 +2417,8 @@ app.post('/api/admin/archive/nisathon/create', auth, async (req, res) => {
                 amountDisplay: e.amountDisplay,
                 message: e.message,
                 createdAt: e.createdAt,
-                nisaballAmount: e.nisaballAmount
+                nisaballAmount: e.nisaballAmount,
+                adminNote: e.adminNote
             })),
             goalsAchieved: goalsAchieved || []
         });
@@ -3993,7 +4120,8 @@ const RankedPlayer = mongoose.model('RankedPlayer', new mongoose.Schema({
 
     lastMatchAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    updatedAt: { type: Date, default: Date.now },
+    syncCode: { type: String, unique: true, sparse: true } // Mod integration code
 }));
 
 
