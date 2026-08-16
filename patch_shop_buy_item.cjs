@@ -16,7 +16,7 @@ app.post('/api/shop/buy-item', async (req, res) => {
             return res.status(400).json({ error: "No Twitch account linked!" });
         }
 
-        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-21ls.onrender.com';
+        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-3b3m.onrender.com';
         
         let currentNisaballs = 0;
         try {

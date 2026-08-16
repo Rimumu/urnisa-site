@@ -2,13 +2,13 @@ import fs from "fs";
 
 async function run() {
     try {
-        const statsRes = await fetch("https://urnisa-backend-21ls.onrender.com/api/nisathon/stats");
+        const statsRes = await fetch("https://urnisa-backend-3b3m.onrender.com/api/nisathon/stats");
         const stats = await statsRes.json();
 
-        const leaderboardRes = await fetch("https://urnisa-backend-21ls.onrender.com/api/nisathon/leaderboard");
+        const leaderboardRes = await fetch("https://urnisa-backend-3b3m.onrender.com/api/nisathon/leaderboard");
         const leaderboard = await leaderboardRes.json();
 
-        const eventsRes = await fetch("https://urnisa-backend-21ls.onrender.com/api/nisathon/recent?limit=500");
+        const eventsRes = await fetch("https://urnisa-backend-3b3m.onrender.com/api/nisathon/recent?limit=500");
         const events = await eventsRes.json();
         
         if (!fs.existsSync('data')) {

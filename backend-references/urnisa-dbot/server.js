@@ -1057,7 +1057,7 @@ app.post('/api/codes/redeem', async (req, res) => {
             // Hit backend to add nisaballs
             const link = await MinecraftLink.findOne({ discordId });
             if (link && link.twitchUsername) {
-                const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-21ls.onrender.com';
+                const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-3b3m.onrender.com';
                 await axios.post(`${backendUrl}/api/nisathon/test-event`, {
                     type: 'nisaball',
                     user: link.twitchUsername,
@@ -1421,7 +1421,7 @@ app.post('/api/shop/buy-item', async (req, res) => {
     try {
         const link = await MinecraftLink.findOne({ discordId });
         if (!link || !link.twitchUsername) return res.status(400).json({ error: "No Twitch account linked!" });
-        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-21ls.onrender.com';
+        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-3b3m.onrender.com';
         
         const balanceRes = await axios.get(`${backendUrl}/api/nisathon/user/${encodeURIComponent(link.twitchUsername.trim())}`);
         const currentNisaballs = balanceRes.data.totalNisaballs || 0;
@@ -1450,7 +1450,7 @@ app.post('/api/shop/spin', async (req, res) => {
     try {
         const link = await MinecraftLink.findOne({ discordId });
         if (!link || !link.twitchUsername) return res.status(400).json({ error: "No Twitch account linked!" });
-        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-21ls.onrender.com';
+        const backendUrl = process.env.BACKEND_URL || 'https://urnisa-backend-3b3m.onrender.com';
         
         const balanceRes = await axios.get(`${backendUrl}/api/nisathon/user/${encodeURIComponent(link.twitchUsername.trim())}`);
         const currentNisaballs = balanceRes.data.totalNisaballs || 0;
