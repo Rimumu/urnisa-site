@@ -970,6 +970,8 @@ const AdminTournament: React.FC = () => {
                                 className="w-full bg-black/40 border border-white/10 p-2 rounded text-white text-sm"
                             >
                                 <option value="Singles 4v4">Singles 4v4</option>
+                                <option value="Singles 6v6">Singles 6v6</option>
+                                <option value="Doubles 6v6">Doubles 6v6</option>
                                 <option value="Duos 2v2">Duos 2v2</option>
                             </select>
                             <input

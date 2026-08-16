@@ -196,7 +196,7 @@ const PARADOX_IDS = new Set([
 
 // Specific restricted Pokemon (Banned even if their category is allowed)
 const RESTRICTED_IDS = new Set([
-    964  // Palafin
+    
 ]);
 
 // Legendary Pokemon (Only 1 allowed per team in Season 2)
@@ -255,8 +255,7 @@ const isBannedForSeason = (id: number, seasonFormat: string, seasonName?: string
     if (dynamicBannedIds && Array.isArray(dynamicBannedIds) && dynamicBannedIds.includes(id)) {
         return true;
     }
-    // Only Palafin is globally banned
-    return id === 964;
+    return false;
 };
 
 // Check if Pokemon is a legendary (for the 1-per-team limit)
@@ -1447,7 +1446,7 @@ const TournamentBACK: React.FC = () => {
                                             ) : activeSeason.name.includes('Season 3') ? (
                                                 <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> ALL-OUT showdown! Pick a roster of 6 Pokemon, choose 4 each battle. <span className="text-brand-accent font-black">Level 50 cap</span>. <span className="text-yellow-400 font-black">All Gimmicks Allowed!</span></>
                                             ) : (
-                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">{activeSeason.format}</span>{activeSeason.format.includes('Doubles') ? '' : ' showdown'} with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
                                             )}
                                         </p>
                                     </div>
@@ -1489,20 +1488,29 @@ const TournamentBACK: React.FC = () => {
                                                         <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternamax Eternatus</li>
                                                     </ul>
                                                 </RuleCard>
-                                                <RuleCard title="Match Banning System" icon={<Target />} color="border-cyan-500/40 bg-cyan-900/10">
-                                                    <div className="space-y-3">
-                                                        <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-2">
-                                                            <span className="text-cyan-400 font-black text-xs uppercase tracking-wider">Pre-Match Ban Phase</span>
+                                                {activeSeason.format.includes('6v6') ? (
+                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-gray-500/40 bg-gray-900/40 opacity-50 grayscale">
+                                                        <div className="space-y-3 flex flex-col items-center justify-center py-6">
+                                                            <span className="text-gray-400 font-black text-3xl uppercase tracking-widest drop-shadow-md">DISABLED</span>
+                                                            <span className="text-gray-500 text-xs text-center font-bold">There is no banning system for 6v6 formats.</span>
                                                         </div>
-                                                        <p className="text-gray-200 text-xs md:text-sm leading-relaxed font-medium bg-black/30 border border-cyan-500/20 p-3.5 rounded-xl">
-                                                            Before the match starts players will have 5 minutes to check out each others team. Then when the match starts during the team preview, they will be able to ban the pokemon and pick the 4 they will send out!
-                                                        </p>
-                                                        <p className="text-gray-400 text-xs border-t border-white/10 pt-2 flex items-center gap-1.5 font-medium">
-                                                            <RosterSVG />
-                                                            <span>Rosters visible 5-10 minutes before tournament starts after lock-ins!</span>
-                                                        </p>
-                                                    </div>
-                                                </RuleCard>
+                                                    </RuleCard>
+                                                ) : (
+                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-cyan-500/40 bg-cyan-900/10">
+                                                        <div className="space-y-3">
+                                                            <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-2">
+                                                                <span className="text-cyan-400 font-black text-xs uppercase tracking-wider">Pre-Match Ban Phase</span>
+                                                            </div>
+                                                            <p className="text-gray-200 text-xs md:text-sm leading-relaxed font-medium bg-black/30 border border-cyan-500/20 p-3.5 rounded-xl">
+                                                                Before the match starts players will have 5 minutes to check out each others team. Then when the match starts during the team preview, they will be able to ban the pokemon and pick the 4 they will send out!
+                                                            </p>
+                                                            <p className="text-gray-400 text-xs border-t border-white/10 pt-2 flex items-center gap-1.5 font-medium">
+                                                                <RosterSVG />
+                                                                <span>Rosters visible 5-10 minutes before tournament starts after lock-ins!</span>
+                                                            </p>
+                                                        </div>
+                                                    </RuleCard>
+                                                )}
                                                 <RuleCard title="Clauses" icon={<Scroll />} color="border-blue-500/40 bg-blue-900/10">
                                                     <ul className="space-y-2">
                                                         <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
@@ -1551,7 +1559,8 @@ const TournamentBACK: React.FC = () => {
                                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Mega Rayquaza</li>
                                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Zacian Crowned</li>
                                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Ultra Necrozma</li>
-                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Palafin</li>
+                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Primal Groudon</li>
+                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Primal Kyogre</li>
                                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternamax Eternatus</li>
                                                             </ul>
                                                         </div>
@@ -1578,20 +1587,29 @@ const TournamentBACK: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </RuleCard>
-                                                <RuleCard title="Match Banning System" icon={<Target />} color="border-cyan-500/40 bg-cyan-900/10">
-                                                    <div className="space-y-3">
-                                                        <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-2">
-                                                            <span className="text-cyan-400 font-black text-xs uppercase tracking-wider">Pre-Match Ban Phase</span>
+                                                {activeSeason.format.includes('6v6') ? (
+                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-gray-500/40 bg-gray-900/40 opacity-50 grayscale">
+                                                        <div className="space-y-3 flex flex-col items-center justify-center py-6">
+                                                            <span className="text-gray-400 font-black text-3xl uppercase tracking-widest drop-shadow-md">DISABLED</span>
+                                                            <span className="text-gray-500 text-xs text-center font-bold">There is no banning system for 6v6 formats.</span>
                                                         </div>
-                                                        <p className="text-gray-200 text-xs md:text-sm leading-relaxed font-medium bg-black/30 border border-cyan-500/20 p-3.5 rounded-xl">
-                                                            Before the match starts players will have 5 minutes to check out each others team. Then when the match starts during the team preview, they will be able to ban the pokemon and pick the 4 they will send out!
-                                                        </p>
-                                                        <p className="text-gray-400 text-xs border-t border-white/10 pt-2 flex items-center gap-1.5 font-medium">
-                                                            <RosterSVG />
-                                                            <span>Rosters visible 5-10 minutes before tournament starts after lock-ins!</span>
-                                                        </p>
-                                                    </div>
-                                                </RuleCard>
+                                                    </RuleCard>
+                                                ) : (
+                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-cyan-500/40 bg-cyan-900/10">
+                                                        <div className="space-y-3">
+                                                            <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-2">
+                                                                <span className="text-cyan-400 font-black text-xs uppercase tracking-wider">Pre-Match Ban Phase</span>
+                                                            </div>
+                                                            <p className="text-gray-200 text-xs md:text-sm leading-relaxed font-medium bg-black/30 border border-cyan-500/20 p-3.5 rounded-xl">
+                                                                Before the match starts players will have 5 minutes to check out each others team. Then when the match starts during the team preview, they will be able to ban the pokemon and pick the 4 they will send out!
+                                                            </p>
+                                                            <p className="text-gray-400 text-xs border-t border-white/10 pt-2 flex items-center gap-1.5 font-medium">
+                                                                <RosterSVG />
+                                                                <span>Rosters visible 5-10 minutes before tournament starts after lock-ins!</span>
+                                                            </p>
+                                                        </div>
+                                                    </RuleCard>
+                                                )}
                                                 <RuleCard title="Clauses" icon={<Scroll />} color="border-blue-500/40 bg-blue-900/10">
                                                     <ul className="space-y-2">
                                                         <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
@@ -1605,7 +1623,7 @@ const TournamentBACK: React.FC = () => {
                                                         <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
                                                         <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
                                                         <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
+                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Dark Void, Commander, Sand Veil, Snow Cloak, Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
                                                     </div>
                                                 </RuleCard>
                                                 <RuleCard title="Item Bans" icon={<Briefcase />} color="border-pink-500/40 bg-pink-900/10">
@@ -1618,6 +1636,17 @@ const TournamentBACK: React.FC = () => {
                                                                     <span>{item}</span>
                                                                 </div>
                                                             ))}
+                                                        </div>
+                                                        <div className="mt-4 pt-3 border-t border-pink-500/20">
+                                                            <strong className="text-pink-400 block mb-2 text-sm uppercase tracking-wide">Z-Crystals Bans</strong>
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                {['Kommonium Z', 'Eevium Z'].map((item) => (
+                                                                    <div key={item} className="bg-pink-950/40 border border-pink-500/20 p-2.5 rounded-xl text-pink-200 text-xs font-bold flex items-center gap-2 shadow-sm">
+                                                                        <span className="text-red-400 font-extrabold text-sm">✕</span>
+                                                                        <span>{item}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </RuleCard>

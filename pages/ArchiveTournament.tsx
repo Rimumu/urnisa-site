@@ -163,7 +163,7 @@ const PARADOX_IDS = new Set([
 
 // Specific restricted Pokemon (Banned even if their category is allowed)
 const RESTRICTED_IDS = new Set([
-    964 // Palafin
+    
 ]);
 
 // Legendary Pokemon (Only 1 allowed per team in Season 2)
@@ -222,8 +222,7 @@ const isBannedForSeason = (id: number, seasonFormat: string, seasonName?: string
     if (dynamicBannedIds && Array.isArray(dynamicBannedIds) && dynamicBannedIds.includes(id)) {
         return true;
     }
-    // Only Palafin is globally banned
-    return id === 964;
+    return false;
 };
 
 // Check if Pokemon is a legendary (for the 1-per-team limit)
@@ -872,7 +871,7 @@ const ArchiveTournament: React.FC = () => {
                                             ) : activeSeason.name.includes('Season 3') ? (
                                                 <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> ALL-OUT showdown! Pick a roster of 6 Pokemon, choose 4 each battle. <span className="text-brand-accent font-black">Level 50 cap</span>. <span className="text-yellow-400 font-black">All Gimmicks Allowed!</span></>
                                             ) : (
-                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> showdown where you pick a roster of 6 Pokemon but pick 4 each battle with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">{activeSeason.format}</span>{activeSeason.format.includes('Doubles') ? '' : ' showdown'} with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
                                             )}
                                         </p>
                                     </div>
@@ -914,20 +913,29 @@ const ArchiveTournament: React.FC = () => {
                                                 <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternamax Eternatus</li>
                                             </ul>
                                         </RuleCard>
-                                        <RuleCard title="Match Banning System" icon="🎯" color="border-cyan-500/40 bg-cyan-900/10">
-                                            <div className="space-y-3">
-                                                <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-3">
-                                                    <span className="text-cyan-400 font-black text-sm uppercase tracking-wider">Pre-Match Ban Phase</span>
+                                        {activeSeason.format.includes('6v6') ? (
+                                            <RuleCard title="Match Banning System" icon="🎯" color="border-gray-500/40 bg-gray-900/40 opacity-50 grayscale">
+                                                <div className="space-y-3 flex flex-col items-center justify-center py-6">
+                                                    <span className="text-gray-400 font-black text-3xl uppercase tracking-widest drop-shadow-md">DISABLED</span>
+                                                    <span className="text-gray-500 text-xs text-center font-bold">There is no banning system for 6v6 formats.</span>
                                                 </div>
-                                                <ul className="space-y-2 text-sm">
-                                                    <li className="flex gap-2"><span className="text-cyan-400">1.</span><span>Players call <strong className="text-white">heads or tails</strong> (coin flip)</span></li>
-                                                    <li className="flex gap-2"><span className="text-cyan-400">2.</span><span>Winner picks <strong className="text-white">ban order</strong> (first/second)</span></li>
-                                                    <li className="flex gap-2"><span className="text-cyan-400">3.</span><span>Each player gets <strong className="text-yellow-400">1 ban</strong> per match</span></li>
-                                                    <li className="flex gap-2"><span className="text-cyan-400">4.</span><span>Bans are made from opponent's visible roster</span></li>
-                                                </ul>
-                                                <p className="text-gray-400 text-xs mt-2 border-t border-white/10 pt-2">📋 Rosters visible 5-10 minutes before tournament starts after lock-ins!</p>
-                                            </div>
-                                        </RuleCard>
+                                            </RuleCard>
+                                        ) : (
+                                            <RuleCard title="Match Banning System" icon="🎯" color="border-cyan-500/40 bg-cyan-900/10">
+                                                <div className="space-y-3">
+                                                    <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-3">
+                                                        <span className="text-cyan-400 font-black text-sm uppercase tracking-wider">Pre-Match Ban Phase</span>
+                                                    </div>
+                                                    <ul className="space-y-2 text-sm">
+                                                        <li className="flex gap-2"><span className="text-cyan-400">1.</span><span>Players call <strong className="text-white">heads or tails</strong> (coin flip)</span></li>
+                                                        <li className="flex gap-2"><span className="text-cyan-400">2.</span><span>Winner picks <strong className="text-white">ban order</strong> (first/second)</span></li>
+                                                        <li className="flex gap-2"><span className="text-cyan-400">3.</span><span>Each player gets <strong className="text-yellow-400">1 ban</strong> per match</span></li>
+                                                        <li className="flex gap-2"><span className="text-cyan-400">4.</span><span>Bans are made from opponent's visible roster</span></li>
+                                                    </ul>
+                                                    <p className="text-gray-400 text-xs mt-2 border-t border-white/10 pt-2">📋 Rosters visible 5-10 minutes before tournament starts after lock-ins!</p>
+                                                </div>
+                                            </RuleCard>
+                                        )}
                                         <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
                                             <ul className="space-y-2">
                                                 <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
@@ -951,7 +959,7 @@ const ArchiveTournament: React.FC = () => {
                                         <RuleCard title="Restrictions" icon="🚫" color="border-red-500/40 bg-red-900/10">
                                             <div className="space-y-4">
                                                 <div><strong className="text-red-300 block mb-1 uppercase text-xs tracking-wider">Banned Gimmicks</strong><ul className="space-y-1 list-disc list-inside text-gray-300 font-bold"><li>Tera</li><li>Z-Move</li><li>Dynamax</li><li>Mega-Evolution</li></ul></div>
-                                                <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Paradox Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Eternatus</li><li className="flex items-center gap-2"><span className="text-yellow-500">⭐</span> Only 1 Legendary per team</li></ul></div>
+                                                <div><strong className="text-orange-300 block mb-1 uppercase text-xs tracking-wider">Pokémon Bans</strong><ul className="space-y-1 font-bold text-orange-200"><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Mythical Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Paradox Pokémon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Ultra Beasts</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Eternatus</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Primal Groudon</li><li className="flex items-center gap-2"><span className="text-red-500">✕</span> No Primal Kyogre</li><li className="flex items-center gap-2"><span className="text-yellow-500">⭐</span> Only 1 Legendary per team</li></ul></div>
                                             </div>
                                         </RuleCard>
                                         <RuleCard title="Clauses" icon="📜" color="border-blue-500/40 bg-blue-900/10">
@@ -967,11 +975,18 @@ const ArchiveTournament: React.FC = () => {
                                                 <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
                                                 <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
                                                 <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
-                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Dark Void, Commander, Sand Veil, Snow Cloak, Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
                                             </div>
                                         </RuleCard>
                                         <RuleCard title="Item Bans" icon="🎒" color="border-pink-500/40 bg-pink-900/10">
                                             <ul className="space-y-1 list-disc list-inside font-bold text-pink-200"><li>Bright Powder</li><li>Lax Incense</li><li>King's Rock</li><li>Razor Fang</li><li>Quick Claw</li></ul>
+                                            <div className="mt-4 pt-3 border-t border-pink-500/20">
+                                                <strong className="text-pink-400 block mb-2 text-sm uppercase tracking-wide">Z-Crystals Bans</strong>
+                                                <ul className="space-y-1 list-disc list-inside font-bold text-pink-200">
+                                                    <li>Kommonium Z</li>
+                                                    <li>Eevium Z</li>
+                                                </ul>
+                                            </div>
                                         </RuleCard>
                                     </>
                                 )}
