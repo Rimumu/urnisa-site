@@ -849,7 +849,7 @@ const TournamentBACK: React.FC = () => {
                     setAllSeasons(seasons);
                     // Find active (unarchived) season, or fallback to the latest season (e.g. if ended/archived)
                     // We do strictly filter by isHidden here so it defaults safely for non-admins
-                    const active = seasons.find((s: any) => !s.isArchived && !s.isHidden) || seasons.find((s: any) => !s.isHidden) || seasons[0];
+                    const active = seasons.find((s: any) => !s.isArchived && !isSeasonHidden(s)) || seasons.find((s: any) => !isSeasonHidden(s)) || seasons[0];
                     setActiveSeason(active);
                     setTournamentStatus(active.status || 'DRAFTING');
                 } else {
@@ -874,9 +874,9 @@ const TournamentBACK: React.FC = () => {
     useEffect(() => {
         if (allSeasons.length > 0 && activeSeason) {
             const isAdmin = user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null;
-            if (activeSeason.isHidden && !isAdmin) {
+            if (isSeasonHidden(activeSeason) && !isAdmin) {
                 // Find a fallback season that they CAN see
-                const visibleSeasons = allSeasons.filter(s => !s.isHidden);
+                const visibleSeasons = allSeasons.filter(s => !isSeasonHidden(s));
                 if (visibleSeasons.length > 0) {
                     const active = visibleSeasons.find(s => !s.isArchived) || visibleSeasons[0];
                     setActiveSeason(active);
@@ -1466,10 +1466,10 @@ const TournamentBACK: React.FC = () => {
                                         className="bg-brand-primary/20 text-brand-primary border border-brand-primary/40 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-brand-primary/30 transition-all outline-none"
                                     >
                                         {allSeasons
-                                            .filter(s => !s.isHidden || user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null)
+                                            .filter(s => !isSeasonHidden(s) || user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null)
                                             .map(s => (
                                             <option key={s.seasonId} value={s.seasonId} className="bg-[#120507] text-white">
-                                                {s.name} {s.isArchived ? '(Archived)' : ''} {s.isHidden ? '(Hidden)' : ''}
+                                                {s.name} {s.isArchived ? '(Archived)' : ''} {isSeasonHidden(s) ? '(Hidden)' : ''}
                                             </option>
                                         ))}
                                     </select>
@@ -1527,7 +1527,7 @@ const TournamentBACK: React.FC = () => {
                                         <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Official Format</h2>
                                         <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
                                             {activeSeason.description ? (
-                                                <span dangerouslySetInnerHTML={{ __html: activeSeason.description.replace(/\n/g, '<br />') }} />
+                                                <span dangerouslySetInnerHTML={{ __html: activeSeason.description.replace(/<!--HIDDEN-->/g, '').replace(/\[HIDDEN\]/g, '').replace(/\n/g, '<br />') }} />
                                             ) : activeSeason.format.includes('Doubles Duos') || activeSeason.name.includes('Season 2') ? (
                                                 <>Double-elimination bracket of a <span className="text-brand-primary font-black">Doubles Duos</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
                                             ) : activeSeason.name.includes('Season 3') ? (

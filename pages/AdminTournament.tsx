@@ -483,7 +483,7 @@ const AdminTournament: React.FC = () => {
             setEditingChallongeUrl(activeSeason.challongeUrl || '');
             setRuleGeneralName(activeSeason.name || '');
             setRuleGeneralFormat(activeSeason.format || '');
-            setRuleGeneralDesc(activeSeason.description || '');
+            setRuleGeneralDesc((activeSeason.description || '').replaceAll('<!--HIDDEN-->', '').replaceAll('[HIDDEN]', ''));
             setRuleCards(activeSeason.rules || []);
             setRuleBannedIds(activeSeason.bannedPokemonIds || []);
         }
@@ -564,12 +564,18 @@ const AdminTournament: React.FC = () => {
     const handleSaveRulesOverhaul = async () => {
         if (!activeSeason) return;
         try {
+            const isHiddenNow = isSeasonHidden(activeSeason);
+            let finalDesc = ruleGeneralDesc;
+            if (isHiddenNow && !finalDesc.includes('<!--HIDDEN-->')) {
+                finalDesc = '<!--HIDDEN-->' + finalDesc;
+            }
             const data = await apiCall(`/api/admin/tournament/season/${activeSeason.seasonId}/update`, {
                 name: ruleGeneralName,
                 format: ruleGeneralFormat,
-                description: ruleGeneralDesc,
+                description: finalDesc,
                 rules: ruleCards,
-                bannedPokemonIds: ruleBannedIds
+                bannedPokemonIds: ruleBannedIds,
+                isHidden: isHiddenNow
             });
             if (data && data.success) {
                 setStatusMsg('Rules & bans updated!');
@@ -893,7 +899,7 @@ const AdminTournament: React.FC = () => {
                         >
                             {allSeasons.map(s => (
                                 <option key={s.seasonId} value={s.seasonId}>
-                                    {s.name} {s.isArchived ? '(Archived)' : ''} {s.isHidden ? '(Hidden)' : ''}
+                                    {s.name} {s.isArchived ? '(Archived)' : ''} {isSeasonHidden(s) ? '(Hidden)' : ''}
                                 </option>
                             ))}
                         </select>
@@ -1020,11 +1026,21 @@ const AdminTournament: React.FC = () => {
                             <button
                                 onClick={async () => {
                                     if (!activeSeason) return;
-                                    const newHidden = !activeSeason.isHidden;
+                                    const currentlyHidden = isSeasonHidden(activeSeason);
+                                    const newHidden = !currentlyHidden;
+                                    let updatedDesc = activeSeason.description || '';
+                                    if (newHidden) {
+                                        if (!updatedDesc.includes('<!--HIDDEN-->')) {
+                                            updatedDesc = '<!--HIDDEN-->' + updatedDesc;
+                                        }
+                                    } else {
+                                        updatedDesc = updatedDesc.replaceAll('<!--HIDDEN-->', '').replaceAll('[HIDDEN]', '');
+                                    }
                                     setLoading(true);
                                     try {
                                         await apiCall(`/api/admin/tournament/season/${activeSeason.seasonId}/update`, {
-                                            isHidden: newHidden
+                                            isHidden: newHidden,
+                                            description: updatedDesc
                                         });
                                         setStatusMsg(`Season ${newHidden ? 'hidden' : 'unhidden'} successfully`);
                                         fetchSeasons();
@@ -1037,7 +1053,7 @@ const AdminTournament: React.FC = () => {
                                 disabled={loading}
                                 className="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2"
                             >
-                                <Eye className="w-4 h-4" /> {activeSeason?.isHidden ? 'Unhide Season' : 'Hide Season'}
+                                <Eye className="w-4 h-4" /> {isSeasonHidden(activeSeason) ? 'Unhide Season' : 'Hide Season'}
                             </button>
                             <button
                                 onClick={handleClearWinners}
