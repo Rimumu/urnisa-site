@@ -867,7 +867,7 @@ const ArchiveTournament: React.FC = () => {
                                         <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Official Format</h2>
                                         <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
                                             {activeSeason.format.includes('Duos') || activeSeason.name.includes('Season 2') ? (
-                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Duos 2v2</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Doubles Duos</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
                                             ) : activeSeason.name.includes('Season 3') ? (
                                                 <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> ALL-OUT showdown! Pick a roster of 6 Pokemon, choose 4 each battle. <span className="text-brand-accent font-black">Level 50 cap</span>. <span className="text-yellow-400 font-black">All Gimmicks Allowed!</span></>
                                             ) : (

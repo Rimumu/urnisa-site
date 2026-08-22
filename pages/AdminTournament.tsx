@@ -62,6 +62,7 @@ interface Season {
     format: string;
     status: string;
     isArchived?: boolean;
+    isHidden?: boolean;
     challongeUrl?: string;
     description?: string;
     bannedPokemonIds?: number[];
@@ -892,7 +893,7 @@ const AdminTournament: React.FC = () => {
                         >
                             {allSeasons.map(s => (
                                 <option key={s.seasonId} value={s.seasonId}>
-                                    {s.name} {s.isArchived ? '(Archived)' : ''}
+                                    {s.name} {s.isArchived ? '(Archived)' : ''} {s.isHidden ? '(Hidden)' : ''}
                                 </option>
                             ))}
                         </select>
@@ -972,7 +973,7 @@ const AdminTournament: React.FC = () => {
                                 <option value="Singles 4v4">Singles 4v4</option>
                                 <option value="Singles 6v6">Singles 6v6</option>
                                 <option value="Doubles 6v6">Doubles 6v6</option>
-                                <option value="Duos 2v2">Duos 2v2</option>
+                                <option value="Doubles Duos">Doubles Duos</option>
                             </select>
                             <input
                                 type="text"
@@ -1015,6 +1016,28 @@ const AdminTournament: React.FC = () => {
                                 className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
                             >
                                 <Archive className="w-4 h-4" /> Archive Season
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!activeSeason) return;
+                                    const newHidden = !activeSeason.isHidden;
+                                    setLoading(true);
+                                    try {
+                                        await apiCall(`/api/admin/tournament/season/${activeSeason.seasonId}/update`, {
+                                            isHidden: newHidden
+                                        });
+                                        setStatusMsg(`Season ${newHidden ? 'hidden' : 'unhidden'} successfully`);
+                                        fetchSeasons();
+                                    } catch (e) {
+                                        setStatusMsg('Failed to update season visibility');
+                                    } finally {
+                                        setLoading(false);
+                                    }
+                                }}
+                                disabled={loading}
+                                className="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2"
+                            >
+                                <Eye className="w-4 h-4" /> {activeSeason?.isHidden ? 'Unhide Season' : 'Hide Season'}
                             </button>
                             <button
                                 onClick={handleClearWinners}
@@ -1077,13 +1100,30 @@ const AdminTournament: React.FC = () => {
                                 placeholder="Search..."
                                 className="bg-black/40 border border-white/10 px-4 py-2 rounded-xl text-sm text-white w-48"
                             />
-                            {activeSeason?.format.includes('Duos') && (
+                            {activeSeason?.format.includes('Doubles Duos') && (
+                                <div className="flex gap-2">
                                 <button
                                     onClick={() => setShowPairModal(true)}
                                     className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl text-sm"
                                 >
                                     + Pair Players
                                 </button>
+                                <button
+                                    onClick={async () => {
+                                        const dummyId = 'dummy-' + Math.floor(Math.random() * 10000);
+                                        await apiCall('/api/tournament/register', {
+                                            discordId: dummyId,
+                                            minecraftUsername: 'Dummy_' + dummyId.slice(-4),
+                                            team: new Array(6).fill(null),
+                                            seasonId: activeSeason.seasonId
+                                        });
+                                        fetchPlayers();
+                                    }}
+                                    className="bg-gray-600 hover:bg-gray-500 text-white font-bold px-4 py-2 rounded-xl text-sm"
+                                >
+                                    + Dummy Player
+                                </button>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -1174,6 +1214,12 @@ const AdminTournament: React.FC = () => {
                                                     className="flex-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs font-bold py-1.5 rounded transition-colors"
                                                 >
                                                     View
+                                                </button>
+                                                <button
+                                                    onClick={() => window.open(`/tournament?adminDummyId=${player.discordId}`, '_blank')}
+                                                    className="flex-1 bg-green-600/20 hover:bg-green-600/40 text-green-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                                >
+                                                    Edit Team
                                                 </button>
                                                 <button
                                                     onClick={() => handleUnlockTeam(player)}
@@ -1296,6 +1342,12 @@ const AdminTournament: React.FC = () => {
                                                 Unlock
                                             </button>
                                         )}
+                                        <button
+                                            onClick={() => window.open(`/tournament?adminDummyId=${duo.player1DiscordId}`, '_blank')}
+                                            className="flex-1 bg-green-600/20 hover:bg-green-600/40 text-green-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                        >
+                                            Edit Team
+                                        </button>
                                         <button
                                             onClick={() => handleChangeCaptain(duo)}
                                             disabled={loading}

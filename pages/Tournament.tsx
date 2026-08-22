@@ -576,6 +576,8 @@ const TournamentBACK: React.FC = () => {
     const [loadingPokemon, setLoadingPokemon] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [dbCategoryFilter, setDbCategoryFilter] = useState<'ALL' | 'STANDARD' | 'LIMIT_TOKEN' | 'LEGENDARY' | 'MYTHICAL' | 'PARADOX' | 'ULTRA_BEAST'>('ALL');
+    const queryParams = new URLSearchParams(window.location.search);
+    const adminDummyId = queryParams.get('adminDummyId');
     const [visibleCount, setVisibleCount] = useState<number>(48);
 
     // Reset visible count on filter or search query change for lazy loading
@@ -608,6 +610,8 @@ const TournamentBACK: React.FC = () => {
         status: string;
         challongeUrl?: string;
         isArchived?: boolean;
+        isHidden?: boolean;
+        isHidden?: boolean;
         description?: string;
         rules?: { title: string; icon: string; color: string; content: string }[];
         bannedPokemonIds?: number[];
@@ -634,6 +638,7 @@ const TournamentBACK: React.FC = () => {
     const [viewMode, setViewMode] = useState<'players' | 'duos'>('players');
     const [selectedDuo, setSelectedDuo] = useState<Duo | null>(null);
     const [teamName, setTeamName] = useState('');
+    const isTypingNameRef = useRef(false);
 
     // Bracket & Winners State
     const [matches, setMatches] = useState<TournamentMatch[]>([]);
@@ -761,7 +766,7 @@ const TournamentBACK: React.FC = () => {
     const hasCategoryViolations = exceedsLimitToken || (isSeason3 && (exceedsLegendaryLimit || exceedsMythicalLimit || exceedsParadoxLimit || exceedsUltraBeastLimit));
     const hasBannedMons = selectedTeam.some(p => p && isBannedForSeason(p.id, activeSeason.format, activeSeason.name, activeSeason.bannedPokemonIds));
 
-    const isEntryLocked = activeSeason.format.includes('Duos') ? myDuo?.isLocked : (myEntry?.isLocked || false);
+    const isEntryLocked = activeSeason.format.includes('Doubles Duos') ? myDuo?.isLocked : (myEntry?.isLocked || false);
     const canLockIn = selectedTeam.filter(Boolean).length === 6 && !isEntryLocked && !exceedsLimitToken && !hasCategoryViolations && !hasBannedMons && isGimmickValid;
 
     useEffect(() => {
@@ -843,7 +848,8 @@ const TournamentBACK: React.FC = () => {
                 if (Array.isArray(seasons) && seasons.length > 0) {
                     setAllSeasons(seasons);
                     // Find active (unarchived) season, or fallback to the latest season (e.g. if ended/archived)
-                    const active = seasons.find((s: any) => !s.isArchived) || seasons[0];
+                    // We do strictly filter by isHidden here so it defaults safely for non-admins
+                    const active = seasons.find((s: any) => !s.isArchived && !s.isHidden) || seasons.find((s: any) => !s.isHidden) || seasons[0];
                     setActiveSeason(active);
                     setTournamentStatus(active.status || 'DRAFTING');
                 } else {
@@ -863,6 +869,22 @@ const TournamentBACK: React.FC = () => {
 
         // Initial player fetch deferred until season is known
     }, []);
+
+    // Effect to enforce season visibility when user state changes
+    useEffect(() => {
+        if (allSeasons.length > 0 && activeSeason) {
+            const isAdmin = user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null;
+            if (activeSeason.isHidden && !isAdmin) {
+                // Find a fallback season that they CAN see
+                const visibleSeasons = allSeasons.filter(s => !s.isHidden);
+                if (visibleSeasons.length > 0) {
+                    const active = visibleSeasons.find(s => !s.isArchived) || visibleSeasons[0];
+                    setActiveSeason(active);
+                    setTournamentStatus(active.status || 'DRAFTING');
+                }
+            }
+        }
+    }, [user, activeSeason, allSeasons, adminDummyId]);
 
     // Refetch data when season changes
     useEffect(() => {
@@ -899,6 +921,17 @@ const TournamentBACK: React.FC = () => {
         }
     }, [activeSeason.seasonId]);
 
+    // Auto-polling for Doubles Duos
+    useEffect(() => {
+        if (!user || !activeSeason?.format?.includes('Doubles Duos') || !myDuo || myDuo.isLocked || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
+        
+        const interval = setInterval(() => {
+            fetchMyDuo();
+        }, 1000);
+        
+        return () => clearInterval(interval);
+    }, [user, activeSeason, myDuo, tournamentStatus]);
+
     useEffect(() => {
         if (user?.id) {
             fetchMyTeam();
@@ -919,7 +952,7 @@ const TournamentBACK: React.FC = () => {
             }
         } else if (activeTab === 'players') {
             fetchPlayersForSeason(activeSeason.seasonId);
-            if (activeSeason.format.includes('Duos')) fetchDuosForSeason(activeSeason.seasonId);
+            if (activeSeason.format.includes('Doubles Duos')) fetchDuosForSeason(activeSeason.seasonId);
         } else if (activeTab === 'duos') {
             fetchDuosForSeason(activeSeason.seasonId);
         }
@@ -931,12 +964,12 @@ const TournamentBACK: React.FC = () => {
             // Always refresh players and duos when on Players tab
             if (activeTab === 'players' && activeSeason.seasonId) {
                 fetchPlayersForSeason(activeSeason.seasonId);
-                if (activeSeason.format.includes('Duos')) {
+                if (activeSeason.format.includes('Doubles Duos')) {
                     fetchDuosForSeason(activeSeason.seasonId);
                 }
             }
             // Refresh myDuo for captains waiting for pairing or drafting
-            if (user?.id && activeSeason.format.includes('Duos')) {
+            if (user?.id && activeSeason.format.includes('Doubles Duos')) {
                 fetchMyDuo();
             }
         }, 15000); // 15 seconds
@@ -948,7 +981,8 @@ const TournamentBACK: React.FC = () => {
         if (!user?.id) return;
         setLoadingTeam(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${user.id}&seasonId=${activeSeason.seasonId}`);
+            const targetId = (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user.id;
+            const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${targetId}&seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data && data.registered) {
@@ -1003,19 +1037,20 @@ const TournamentBACK: React.FC = () => {
     const fetchMyDuo = async () => {
         if (!user?.id) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/api/tournament/my-duo?discordId=${user.id}&seasonId=${activeSeason.seasonId}`);
+            const targetId = (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user.id;
+            const res = await fetch(`${API_BASE_URL}/api/tournament/my-duo?discordId=${targetId}&seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
                 setMyDuo(data);
 
-                // If user is captain and duo has a team, populate selectedTeam
-                if (data && data.captainDiscordId === user.id && data.team) {
+                // For Doubles Duos, populate team for both players
+                if (data && data.team) {
                     const filledTeam = [...(data.team || [])];
                     while (filledTeam.length < 6) filledTeam.push(null);
                     setSelectedTeam(filledTeam);
                     setIsLocked(data.isLocked || false);
                     setHasStartedRegistration(true);
-                    setTeamName(data.teamName || '');
+                    if (!isTypingNameRef.current) setTeamName(data.teamName || '');
                 }
             }
         } catch (e) { console.error(e); }
@@ -1069,19 +1104,72 @@ const TournamentBACK: React.FC = () => {
             return;
         }
 
-        const emptySlot = selectedTeam.indexOf(null);
-        if (emptySlot !== -1) {
+        let validIndices = [0, 1, 2, 3, 4, 5];
+        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
+            if (user?.minecraftUsername === 'GreatRimu') {
+                validIndices = [0, 1, 2, 3, 4, 5];
+            } else if (myDuo.player1DiscordId === user?.id) {
+                validIndices = [0, 1, 2];
+            } else if (myDuo.player2DiscordId === user?.id) {
+                validIndices = [3, 4, 5];
+            }
+        }
+        
+        const emptySlot = validIndices.find(idx => selectedTeam[idx] === null);
+        if (emptySlot !== undefined) {
             const newTeam = [...selectedTeam];
             newTeam[emptySlot] = pokemon;
             setSelectedTeam(newTeam);
+            
+            // Auto-save when picking (for sync) if Doubles Duos
+            if (activeSeason.format.includes('Doubles Duos') && myDuo) {
+                saveDuoDraft(newTeam);
+            }
         }
     };
 
     const handleRemovePokemon = (index: number) => {
         if (isLocked || tournamentStatus === 'ONGOING') return;
+        
+        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
+            if (user?.minecraftUsername !== 'GreatRimu') {
+                if (myDuo.player1DiscordId === user?.id && index >= 3) return;
+                if (myDuo.player2DiscordId === user?.id && index < 3) return;
+            }
+        }
+
         const newTeam = [...selectedTeam];
         newTeam[index] = null;
         setSelectedTeam(newTeam);
+        
+        // Auto-save when removing (for sync) if Doubles Duos
+        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
+            saveDuoDraft(newTeam);
+        }
+    };
+
+    const saveDuoDraft = async (teamToSave: (Pokemon|null)[], nameToSave?: string) => {
+        if (!user || !myDuo) return;
+        setSaving(true);
+        try {
+            await fetch(`${API_BASE_URL}/api/tournament/duo/save-team`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(user?.minecraftUsername === 'GreatRimu' && adminDummyId ? { 'x-admin-override': 'GreatRimu_Override_True' } : {})
+                },
+                body: JSON.stringify({
+                    discordId: (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user.id,
+                    duoId: myDuo.duoId,
+                    team: teamToSave,
+                    teamName: nameToSave !== undefined ? nameToSave : teamName
+                })
+            });
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSaving(false);
+        }
     };
 
     // Check if team has any banned Pokemon (season-specific)
@@ -1121,8 +1209,7 @@ const TournamentBACK: React.FC = () => {
         if (!user || hasBannedPokemon || exceedsLimitToken || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
 
         // For Duos: Check if user is captain and duo exists
-        if (activeSeason.format.includes('Duos') && myDuo) {
-            if (myDuo.captainDiscordId !== user.id && user.minecraftUsername !== 'GreatRimu') return; // Only captain can save (unless admin)
+        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
             if (myDuo.isLocked) return; // Can't edit locked team
 
             setSaving(true);
@@ -1190,8 +1277,7 @@ const TournamentBACK: React.FC = () => {
         if (tournamentStatus !== 'LOCK_IN') return;
 
         // Validation pre-checks
-        if (activeSeason.format.includes('Duos') && myDuo) {
-            if (myDuo.captainDiscordId !== user?.id) return; // Only captain
+        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
             if (selectedTeam.filter(p => p !== null).length < 6) {
                 alert("Team must have 6 Pokemon to lock!");
                 return;
@@ -1211,8 +1297,7 @@ const TournamentBACK: React.FC = () => {
         if (tournamentStatus !== 'LOCK_IN') return;
 
         // For Duos mode
-        if (activeSeason.format.includes('Duos') && myDuo) {
-            if (myDuo.captainDiscordId !== user?.id) return;
+        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
             if (selectedTeam.filter(p => p !== null).length < 6) return;
 
             await handleSaveDraft(); // Save first
@@ -1222,7 +1307,7 @@ const TournamentBACK: React.FC = () => {
                 const res = await fetch(`${API_BASE_URL}/api/tournament/duo/lock`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ discordId: user?.id, duoId: myDuo.duoId })
+                    body: JSON.stringify({ discordId: (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user?.id, duoId: myDuo.duoId })
                 });
                 if (res.ok) {
                     setIsLocked(true);
@@ -1247,7 +1332,7 @@ const TournamentBACK: React.FC = () => {
             const res = await fetch(`${API_BASE_URL}/api/tournament/lock`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ discordId: user?.id, seasonId: activeSeason.seasonId })
+                body: JSON.stringify({ discordId: (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user?.id, seasonId: activeSeason.seasonId })
             });
             if (res.ok) {
                 setIsLocked(true);
@@ -1380,9 +1465,11 @@ const TournamentBACK: React.FC = () => {
                                         }}
                                         className="bg-brand-primary/20 text-brand-primary border border-brand-primary/40 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-brand-primary/30 transition-all outline-none"
                                     >
-                                        {allSeasons.map(s => (
+                                        {allSeasons
+                                            .filter(s => !s.isHidden || user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null)
+                                            .map(s => (
                                             <option key={s.seasonId} value={s.seasonId} className="bg-[#120507] text-white">
-                                                {s.name} {s.isArchived ? '(Archived)' : ''}
+                                                {s.name} {s.isArchived ? '(Archived)' : ''} {s.isHidden ? '(Hidden)' : ''}
                                             </option>
                                         ))}
                                     </select>
@@ -1441,8 +1528,8 @@ const TournamentBACK: React.FC = () => {
                                         <p className="text-lg text-gray-200 leading-relaxed max-w-4xl">
                                             {activeSeason.description ? (
                                                 <span dangerouslySetInnerHTML={{ __html: activeSeason.description.replace(/\n/g, '<br />') }} />
-                                            ) : activeSeason.format.includes('Duos') || activeSeason.name.includes('Season 2') ? (
-                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Duos 2v2</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
+                                            ) : activeSeason.format.includes('Doubles Duos') || activeSeason.name.includes('Season 2') ? (
+                                                <>Double-elimination bracket of a <span className="text-brand-primary font-black">Doubles Duos</span> showdown where you get picked a DUO with someone else and each pick 3 Pokemon to form a full team of 6 Pokemon with a <span className="text-brand-accent font-black">level 50 cap</span>!</>
                                             ) : activeSeason.name.includes('Season 3') ? (
                                                 <>Double-elimination bracket of a <span className="text-brand-primary font-black">Singles 4v4</span> ALL-OUT showdown! Pick a roster of 6 Pokemon, choose 4 each battle. <span className="text-brand-accent font-black">Level 50 cap</span>. <span className="text-yellow-400 font-black">All Gimmicks Allowed!</span></>
                                             ) : (
@@ -2059,14 +2146,14 @@ const TournamentBACK: React.FC = () => {
                                         {playersList.map((entry, idx) => (
                                             <button
                                                 key={idx}
-                                                onClick={() => !activeSeason.format.includes('Duos') && setSelectedPlayer(entry)}
-                                                className={`bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left transition-all shadow-md ${!activeSeason.format.includes('Duos') ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer hover:shadow-xl hover:scale-[1.02]' : 'cursor-default opacity-80'}`}
+                                                onClick={() => !activeSeason.format.includes('Doubles Duos') && setSelectedPlayer(entry)}
+                                                className={`bg-white/5 border border-white/10 rounded-3xl p-6 group flex flex-col gap-5 text-left transition-all shadow-md ${!activeSeason.format.includes('Doubles Duos') ? 'hover:bg-white/10 hover:border-white/20 cursor-pointer hover:shadow-xl hover:scale-[1.02]' : 'cursor-default opacity-80'}`}
                                             >
-                                                <div className={`flex items-center gap-4 ${!activeSeason.format.includes('Duos') ? 'border-b border-white/5 pb-4' : ''} w-full`}>
+                                                <div className={`flex items-center gap-4 ${!activeSeason.format.includes('Doubles Duos') ? 'border-b border-white/5 pb-4' : ''} w-full`}>
                                                     <img src={`https://mc-heads.net/avatar/${entry.minecraftUsername}/48`} className="w-14 h-14 rounded-2xl border-2 border-white/10" alt={entry.minecraftUsername} />
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-black text-white text-xl truncate">{entry.minecraftUsername}</div>
-                                                        {activeSeason.format.includes('Duos') ? (() => {
+                                                        {activeSeason.format.includes('Doubles Duos') ? (() => {
                                                             const userDuo = duos.find(d => d.player1DiscordId === entry.discordId || d.player2DiscordId === entry.discordId);
                                                             let statusLabel = 'Signed Up';
                                                             let statusColor = 'text-blue-400';
@@ -2094,7 +2181,7 @@ const TournamentBACK: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 {/* Only show team placeholders for Singles */}
-                                                {!activeSeason.format.includes('Duos') && (
+                                                {!activeSeason.format.includes('Doubles Duos') && (
                                                     <div className="grid grid-cols-6 gap-2 w-full">
                                                         {entry.isLocked ? entry.team.map((p, pIdx) => {
                                                             if (!p) return <div key={pIdx} className="aspect-square bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center text-gray-700 font-black text-xl opacity-40">?</div>;
@@ -2129,7 +2216,7 @@ const TournamentBACK: React.FC = () => {
                                 )}
 
                                 {/* Duos Section - Only for Duos format */}
-                                {activeSeason.format.includes('Duos') && duos.length > 0 && (
+                                {activeSeason.format.includes('Doubles Duos') && duos.length > 0 && (
                                     <div className="mt-12 space-y-6">
                                         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                                             <div className="flex items-center gap-3">
@@ -2148,8 +2235,8 @@ const TournamentBACK: React.FC = () => {
                                                     <div className="flex items-center gap-4 mb-4">
                                                         <div className="flex -space-x-3">
                                                             {/* Captain avatar first */}
-                                                            <img src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player1Username : duo.player2Username}/40`} className="w-10 h-10 rounded-xl border-2 border-yellow-500" />
-                                                            <img src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player2Username : duo.player1Username}/40`} className="w-10 h-10 rounded-xl border-2 border-purple-500/50" />
+                                                            <img src={`https://mc-heads.net/avatar/${duo.player1Username}/40`} className="w-10 h-10 rounded-xl border-2 border-yellow-500" />
+                                                            <img src={`https://mc-heads.net/avatar/${duo.player2Username}/40`} className="w-10 h-10 rounded-xl border-2 border-purple-500/50" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             {/* Team Name (if set) */}
@@ -2157,16 +2244,12 @@ const TournamentBACK: React.FC = () => {
                                                                 <>
                                                                     <div className="font-black text-purple-400 text-sm truncate">{duo.teamName}</div>
                                                                     <div className="text-[10px] text-gray-400 truncate">
-                                                                        {duo.captainDiscordId === duo.player1DiscordId
-                                                                            ? `${duo.player1Username} & ${duo.player2Username}`
-                                                                            : `${duo.player2Username} & ${duo.player1Username}`}
+                                                                        {duo.player1Username} & {duo.player2Username}
                                                                     </div>
                                                                 </>
                                                             ) : (
                                                                 <div className="font-bold text-white text-sm truncate">
-                                                                    {duo.captainDiscordId === duo.player1DiscordId
-                                                                        ? `${duo.player1Username} & ${duo.player2Username}`
-                                                                        : `${duo.player2Username} & ${duo.player1Username}`}
+                                                                    {duo.player1Username} & {duo.player2Username}
                                                                 </div>
                                                             )}
                                                             <div className={`text-[10px] font-black uppercase flex items-center gap-1 mt-1 ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
@@ -2226,7 +2309,7 @@ const TournamentBACK: React.FC = () => {
                                         ) : (
                                             <>
                                                 <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
-                                                <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">{activeSeason.format.includes('Duos') ? "Click below to register and wait for your duo to be picked!" : "Click below to register and begin drafting your team!"}</p></div>
+                                                <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">{activeSeason.format.includes('Doubles Duos') ? "Click below to register and wait for your duo to be picked!" : "Click below to register and begin drafting your team!"}</p></div>
                                                 <button onClick={handleInitialRegister} className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-[2rem] shadow-xl transition-all transform hover:scale-105 uppercase tracking-widest border-b-4 border-red-800">JOIN TOURNAMENT</button>
                                             </>
                                         )}
@@ -2234,45 +2317,17 @@ const TournamentBACK: React.FC = () => {
                                 ) : (
                                     <div className="space-y-10">
                                         {/* Duos Logic Check */}
-                                        {activeSeason.format.includes('Duos') && (!myDuo || (myDuo.captainDiscordId !== user?.id)) && user?.minecraftUsername !== 'GreatRimu' ? (
+                                        {activeSeason.format.includes('Doubles Duos') && !myDuo ? (
                                             <div className="bg-black/40 p-12 rounded-[2.5rem] border border-white/5 mb-8 text-center flex flex-col items-center justify-center min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-                                                {myDuo ? (
-                                                    <div className="space-y-6">
-                                                        <div className="w-24 h-24 bg-purple-900/30 rounded-full flex items-center justify-center border-2 border-purple-500/30 mx-auto animate-pulse shadow-[0_0_30px_rgba(168,85,247,0.2)]">
-                                                            <span className="text-5xl">👑</span>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Team Captain Only</h3>
-                                                            <p className="text-gray-400 max-w-md mx-auto leading-relaxed">
-                                                                Your partner <span className="font-bold text-white bg-white/10 px-2 py-0.5 rounded">{myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}</span> is the Team Captain.
-                                                                <br />They are responsible for selecting and locking in the team.
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="mt-12 p-6 bg-black/60 rounded-3xl border border-white/10">
-                                                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-6">Current Selection</h4>
-                                                            <div className="flex gap-3 justify-center flex-wrap">
-                                                                {selectedTeam?.map((poke, i) => (
-                                                                    <div key={i} className="w-14 h-14 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center relative">
-                                                                        {poke ? (
-                                                                            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} className="w-10 h-10 pixelated scale-125" />
-                                                                        ) : <div className="w-2 h-2 bg-white/10 rounded-full" />}
-                                                                        <div className="absolute -bottom-2 text-[8px] font-mono text-gray-600">{i + 1}</div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
                                                     <div className="space-y-6">
                                                         <div className="w-24 h-24 bg-yellow-900/20 rounded-full flex items-center justify-center border-2 border-yellow-500/20 mx-auto shadow-[0_0_30px_rgba(234,179,8,0.1)]">
-                                                            <span className="text-5xl">⏳</span>
+                                                            <Hourglass className="w-16 h-16 text-yellow-500 animate-pulse" />
                                                         </div>
                                                         <div className="space-y-2">
                                                             <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Awaiting Duo Pairing</h3>
                                                             <p className="text-gray-400 max-w-md mx-auto leading-relaxed">
                                                                 You are signed up! Admins will pair you with a partner soon.
-                                                                <br />Once paired, the Captain will select the team.
+                                                                <br />Once paired, both of you can start drafting your team!
                                                             </p>
                                                         </div>
                                                         <div className="pt-8">
@@ -2282,7 +2337,6 @@ const TournamentBACK: React.FC = () => {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                )}
                                             </div>
                                         ) : (
                                             <>
@@ -2295,7 +2349,7 @@ const TournamentBACK: React.FC = () => {
                                                     </div>
                                                 )}
                                                 {/* Player/Duo Header */}
-                                                {activeSeason.format.includes('Duos') && myDuo ? (
+                                                {activeSeason.format.includes('Doubles Duos') && myDuo ? (
                                                     /* Duos Mode: Show both players with captain indicator */
                                                     <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
                                                         <div className="flex -space-x-4">
@@ -2343,21 +2397,37 @@ const TournamentBACK: React.FC = () => {
                                                     </div>
 
                                                     {/* Team Name Input for Duos */}
-                                                    {activeSeason.format.includes('Duos') && myDuo && myDuo.captainDiscordId === user?.id && !myDuo.isLocked && (
+                                                    {activeSeason.format.includes('Doubles Duos') && myDuo && !myDuo.isLocked && (
                                                         <div className="px-4">
                                                             <label className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Team Name</label>
-                                                            <input
-                                                                type="text"
-                                                                value={teamName}
-                                                                onChange={(e) => setTeamName(e.target.value)}
-                                                                placeholder="Enter your team name..."
-                                                                maxLength={30}
-                                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none"
-                                                            />
+                                                            <div className="flex gap-2">
+                                                                <input
+                                                                    type="text"
+                                                                    value={teamName}
+                                                                    onFocus={() => { isTypingNameRef.current = true; }}
+                                                                    onBlur={() => { 
+                                                                        isTypingNameRef.current = false; 
+                                                                        saveDuoDraft(selectedTeam, teamName);
+                                                                    }}
+                                                                    onChange={(e) => setTeamName(e.target.value)}
+                                                                    placeholder="Enter your team name..."
+                                                                    maxLength={30}
+                                                                    className="flex-1 bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-sm font-bold text-white focus:border-brand-primary outline-none"
+                                                                />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        isTypingNameRef.current = false;
+                                                                        saveDuoDraft(selectedTeam, teamName);
+                                                                    }}
+                                                                    className="bg-brand-primary/20 text-brand-primary hover:bg-brand-primary/40 px-6 font-bold rounded-2xl transition-colors border border-brand-primary/50"
+                                                                >
+                                                                    Save
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                     {/* Display locked team name */}
-                                                    {activeSeason.format.includes('Duos') && myDuo && myDuo.teamName && (
+                                                    {activeSeason.format.includes('Doubles Duos') && myDuo && myDuo.isLocked && myDuo.teamName && (
                                                         <div className="px-4 text-center">
                                                             <span className="text-xs font-black uppercase tracking-widest text-gray-500">Team:</span>
                                                             <span className="ml-2 text-lg font-black text-purple-400">{myDuo.teamName}</span>
@@ -2543,7 +2613,7 @@ const TournamentBACK: React.FC = () => {
                                                         )}
 
                                                     {/* Season 2: Legendary Limit Warning (Legacy) */}
-                                                    {!activeSeason.name.includes('Season 3') && activeSeason.format.includes('Duos') && legendaryCount > 0 && (
+                                                    {!activeSeason.name.includes('Season 3') && activeSeason.format.includes('Doubles Duos') && legendaryCount > 0 && (
                                                         <div className={`px-4 py-3 rounded-2xl border ${exceedsLegendaryLimit ? 'bg-red-900/30 border-red-500/50' : 'bg-yellow-900/20 border-yellow-500/30'}`}>
                                                             <div className="flex items-center gap-3">
                                                                 {exceedsLegendaryLimit ? <Ban className="w-6 h-6 text-red-500 shrink-0" /> : <Star className="w-6 h-6 text-yellow-500 shrink-0" strokeWidth={2} />}
@@ -2563,13 +2633,13 @@ const TournamentBACK: React.FC = () => {
                                                     )}
 
                                                     {/* Duos Mode: 3+3 Split with Owner Labels */}
-                                                    {activeSeason.format.includes('Duos') && myDuo ? (
+                                                    {activeSeason.format.includes('Doubles Duos') && myDuo ? (
                                                         <div className="space-y-8">
                                                             {/* Captain's Pokemon (Slots 0-2) */}
                                                             <div className="space-y-4">
                                                                 <div className="flex items-center gap-3 px-2">
-                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}/32`} className="w-8 h-8 rounded-xl border-2 border-yellow-500 shadow-md" />
-                                                                    <span className="text-sm font-black uppercase tracking-widest text-yellow-400">Captain's Roster (Slots 1-3)</span>
+                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.player1Username}/32`} className="w-8 h-8 rounded-xl border-2 border-yellow-500 shadow-md" />
+                                                                    <span className="text-sm font-black uppercase tracking-widest text-yellow-400">{myDuo.player1Username}'s Roster (Slots 1-3)</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(0, 3).map((p, idx) => {
@@ -2625,7 +2695,7 @@ const TournamentBACK: React.FC = () => {
                                                                                         <div className="absolute bottom-2.5 left-2 right-2 z-20">
                                                                                             <div className={`text-[9px] font-black uppercase text-center truncate py-1.5 px-2 rounded-xl backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-red-400' : 'bg-black/80 text-white border-white/15'}`}>{p.name}</div>
                                                                                         </div>
-                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (
+                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || myDuo.player1DiscordId === user?.id) && (
                                                                                             <button onClick={() => handleRemovePokemon(idx)} className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white scale-90 hover:scale-100" title={`Remove ${p.name}`}>
                                                                                                 <X className="w-3.5 h-3.5" />
                                                                                             </button>
@@ -2646,8 +2716,8 @@ const TournamentBACK: React.FC = () => {
                                                             {/* Partner's Pokemon (Slots 3-5) */}
                                                             <div className="space-y-4">
                                                                 <div className="flex items-center gap-3 px-2">
-                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player2Username : myDuo.player1Username}/32`} className="w-8 h-8 rounded-xl border-2 border-purple-500 shadow-md" />
-                                                                    <span className="text-sm font-black uppercase tracking-widest text-purple-400">Partner's Roster (Slots 4-6)</span>
+                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.player2Username}/32`} className="w-8 h-8 rounded-xl border-2 border-purple-500 shadow-md" />
+                                                                    <span className="text-sm font-black uppercase tracking-widest text-purple-400">{myDuo.player2Username}'s Roster (Slots 4-6)</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(3, 6).map((p, idx) => {
@@ -2704,7 +2774,7 @@ const TournamentBACK: React.FC = () => {
                                                                                         <div className="absolute bottom-2.5 left-2 right-2 z-20">
                                                                                             <div className={`text-[9px] font-black uppercase text-center truncate py-1.5 px-2 rounded-xl backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-red-400' : 'bg-black/80 text-white border-white/15'}`}>{p.name}</div>
                                                                                         </div>
-                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (
+                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || myDuo.player2DiscordId === user?.id) && (
                                                                                             <button onClick={() => handleRemovePokemon(actualIdx)} className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white scale-90 hover:scale-100" title={`Remove ${p.name}`}>
                                                                                                 <X className="w-3.5 h-3.5" />
                                                                                             </button>
@@ -2807,7 +2877,7 @@ const TournamentBACK: React.FC = () => {
                                                         </div>
                                                     )}
                                                 {/* Overhauled Pokémon Database Explorer */}
-                                                {!isLocked && !(activeSeason.format.includes('Duos') && myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (
+                                                {!isLocked && !(activeSeason.format.includes('Doubles Duos') && myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (
                                                     <div className="bg-black/60 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 p-6 md:p-8 space-y-6 shadow-2xl relative">
                                                         {/* Header & Search Bar */}
                                                         <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center border-b border-white/10 pb-6">
@@ -2984,7 +3054,7 @@ const TournamentBACK: React.FC = () => {
                                                     </div>
                                                 )}
                                                 {/* Save/Lock Buttons - Check both solo isLocked and duo isLocked */}
-                                                {!(activeSeason.format.includes('Duos') ? myDuo?.isLocked : isLocked) && tournamentStatus !== 'ONGOING' && (
+                                                {!(activeSeason.format.includes('Doubles Duos') ? myDuo?.isLocked : isLocked) && tournamentStatus !== 'ONGOING' && (
                                                     <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
                                                         <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1 transition-all">
                                                             {saveStatus === 'success' ? (
@@ -3093,11 +3163,11 @@ const TournamentBACK: React.FC = () => {
                                 {/* Player Avatars - Captain first */}
                                 <div className="flex -space-x-4">
                                     <img
-                                        src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player1Username : selectedDuo.player2Username}/80`}
+                                        src={`https://mc-heads.net/avatar/${selectedDuo.player1Username}/80`}
                                         className="w-20 h-20 rounded-2xl border-4 border-yellow-500 shadow-xl"
                                     />
                                     <img
-                                        src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player2Username : selectedDuo.player1Username}/80`}
+                                        src={`https://mc-heads.net/avatar/${selectedDuo.player2Username}/80`}
                                         className="w-20 h-20 rounded-2xl border-4 border-purple-500 shadow-xl"
                                     />
                                 </div>
@@ -3106,10 +3176,7 @@ const TournamentBACK: React.FC = () => {
                                         <h2 className="text-3xl md:text-4xl font-black text-purple-400 uppercase tracking-tighter mb-1">{selectedDuo.teamName}</h2>
                                     )}
                                     <div className={`${selectedDuo.teamName ? 'text-lg text-gray-400' : 'text-3xl md:text-4xl text-white'} font-black uppercase tracking-tighter`}>
-                                        {selectedDuo.captainDiscordId === selectedDuo.player1DiscordId
-                                            ? <>{selectedDuo.player1Username}<span className="text-purple-400"> & </span>{selectedDuo.player2Username}</>
-                                            : <>{selectedDuo.player2Username}<span className="text-purple-400"> & </span>{selectedDuo.player1Username}</>
-                                        }
+                                        <>{selectedDuo.player1Username}<span className="text-purple-400"> & </span>{selectedDuo.player2Username}</>
                                     </div>
                                     <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mt-2 ${selectedDuo.isLocked ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
                                         <span className={`w-2 h-2 rounded-full ${selectedDuo.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
@@ -3125,8 +3192,8 @@ const TournamentBACK: React.FC = () => {
                             {/* Captain's Pokemon */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <img src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player1Username : selectedDuo.player2Username}/32`} className="w-8 h-8 rounded-lg border-2 border-yellow-500" />
-                                    <h3 className="text-lg font-black uppercase tracking-widest text-yellow-400">Captain's Pokemon</h3>
+                                    <img src={`https://mc-heads.net/avatar/${selectedDuo.player1Username}/32`} className="w-8 h-8 rounded-lg border-2 border-yellow-500" />
+                                    <h3 className="text-lg font-black uppercase tracking-widest text-yellow-400">{selectedDuo.player1Username}'s Pokémon</h3>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
                                     {(selectedDuo.team?.slice(0, 3) || [null, null, null]).map((pokemon, idx) => (
@@ -3138,8 +3205,8 @@ const TournamentBACK: React.FC = () => {
                             {/* Partner's Pokemon */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <img src={`https://mc-heads.net/avatar/${selectedDuo.captainDiscordId === selectedDuo.player1DiscordId ? selectedDuo.player2Username : selectedDuo.player1Username}/32`} className="w-8 h-8 rounded-lg border-2 border-purple-500" />
-                                    <h3 className="text-lg font-black uppercase tracking-widest text-purple-400">Partner's Pokemon</h3>
+                                    <img src={`https://mc-heads.net/avatar/${selectedDuo.player2Username}/32`} className="w-8 h-8 rounded-lg border-2 border-purple-500" />
+                                    <h3 className="text-lg font-black uppercase tracking-widest text-purple-400">{selectedDuo.player2Username}'s Pokémon</h3>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
                                     {(selectedDuo.team?.slice(3, 6) || [null, null, null]).map((pokemon, idx) => (
