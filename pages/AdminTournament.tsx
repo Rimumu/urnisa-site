@@ -9,6 +9,10 @@ import {
     Crown,
     ClipboardList,
     Eye,
+    EyeOff,
+    Globe,
+    CheckCircle2,
+    ShieldAlert,
     CornerDownLeft,
     Trash2,
     Archive,
@@ -355,7 +359,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
 export const isSeasonHidden = (s: any) => {
     if (!s) return false;
     if (s.isHidden === true || s.isHidden === 'true') return true;
-    if (s.status === 'DRAFTING') return true;
     if (typeof s.description === 'string' && (s.description.includes('<!--HIDDEN-->') || s.description.includes('[HIDDEN]'))) return true;
     return false;
 };
@@ -371,6 +374,7 @@ const AdminTournament: React.FC = () => {
     const [newSeasonName, setNewSeasonName] = useState('');
     const [newSeasonFormat, setNewSeasonFormat] = useState('Singles 4v4');
     const [newSeasonChallongeUrl, setNewSeasonChallongeUrl] = useState('');
+    const [newSeasonIsHidden, setNewSeasonIsHidden] = useState(false);
     const [editingChallongeUrl, setEditingChallongeUrl] = useState('');
 
     // Player State
@@ -385,6 +389,71 @@ const AdminTournament: React.FC = () => {
     const [pairPlayer1, setPairPlayer1] = useState<TournamentPlayer | null>(null);
     const [pairPlayer2, setPairPlayer2] = useState<TournamentPlayer | null>(null);
     const [pairCaptain, setPairCaptain] = useState<'player1' | 'player2'>('player1');
+
+    // Admin Team Picker State
+    const [allPokemonList, setAllPokemonList] = useState<{ id: number; name: string }[]>([]);
+    const [editingTeamTarget, setEditingTeamTarget] = useState<{ type: 'solo'; player: TournamentPlayer } | { type: 'duo'; duo: Duo } | null>(null);
+    const [editingTeamList, setEditingTeamList] = useState<({ id: number; name: string } | null)[]>(new Array(6).fill(null));
+    const [teamSearchQuery, setTeamSearchQuery] = useState('');
+
+    const fetchAllPokemon = async () => {
+        if (allPokemonList.length > 0) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/pokemon`);
+            if (res.ok) {
+                const data = await res.json();
+                setAllPokemonList(data);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const handleSaveAdminTeam = async () => {
+        if (!editingTeamTarget) return;
+        setLoading(true);
+        try {
+            if (editingTeamTarget.type === 'solo') {
+                await fetch(`${API_BASE_URL}/api/tournament/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-override': 'GreatRimu_Override_True'
+                    },
+                    body: JSON.stringify({
+                        discordId: editingTeamTarget.player.discordId,
+                        minecraftUsername: editingTeamTarget.player.minecraftUsername,
+                        team: editingTeamList,
+                        seasonId: activeSeason!.seasonId
+                    })
+                });
+                setStatusMsg(`Team updated for ${editingTeamTarget.player.minecraftUsername}!`);
+            } else {
+                await fetch(`${API_BASE_URL}/api/tournament/duo/save-team`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-override': 'GreatRimu_Override_True'
+                    },
+                    body: JSON.stringify({
+                        discordId: editingTeamTarget.duo.player1DiscordId,
+                        duoId: editingTeamTarget.duo.duoId,
+                        team: editingTeamList,
+                        teamName: editingTeamTarget.duo.teamName
+                    })
+                });
+                setStatusMsg(`Team updated for Duo ${editingTeamTarget.duo.player1Username} & ${editingTeamTarget.duo.player2Username}!`);
+            }
+            setEditingTeamTarget(null);
+            fetchPlayers(activeSeason!.seasonId);
+            fetchDuos(activeSeason!.seasonId);
+        } catch (e: any) {
+            setStatusMsg(e.message || 'Failed to save team');
+        } finally {
+            setLoading(false);
+        }
+        setTimeout(() => setStatusMsg(''), 3000);
+    };
 
     // Rules Editor Overhaul States
     const [ruleGeneralName, setRuleGeneralName] = useState('');
@@ -444,9 +513,18 @@ const AdminTournament: React.FC = () => {
             const seasons = await res.json();
             if (Array.isArray(seasons) && seasons.length > 0) {
                 setAllSeasons(seasons);
-                const active = seasons.find((s: Season) => !s.isArchived) || seasons[0];
-                setActiveSeason(active);
-                setEditingChallongeUrl(active.challongeUrl || '');
+                setActiveSeason(prev => {
+                    if (prev) {
+                        const matching = seasons.find((s: Season) => s.seasonId === prev.seasonId);
+                        if (matching) {
+                            setEditingChallongeUrl(matching.challongeUrl || '');
+                            return matching;
+                        }
+                    }
+                    const active = seasons.find((s: Season) => !s.isArchived) || seasons[0];
+                    setEditingChallongeUrl(active.challongeUrl || '');
+                    return active;
+                });
             }
         } catch (e) {
             console.error('Failed to fetch seasons', e);
@@ -530,6 +608,47 @@ const AdminTournament: React.FC = () => {
     };
 
     // --- SEASON HANDLERS ---
+    const handleToggleVisibility = async (seasonToToggle?: Season) => {
+        const targetSeason = seasonToToggle || activeSeason;
+        if (!targetSeason) return;
+        const currentlyHidden = isSeasonHidden(targetSeason);
+        const newHidden = !currentlyHidden;
+        let updatedDesc = targetSeason.description || '';
+        if (newHidden) {
+            if (!updatedDesc.includes('<!--HIDDEN-->')) {
+                updatedDesc = '<!--HIDDEN-->' + updatedDesc;
+            }
+        } else {
+            updatedDesc = updatedDesc.replaceAll('<!--HIDDEN-->', '').replaceAll('[HIDDEN]', '').trim();
+        }
+        setLoading(true);
+        try {
+            await apiCall(`/api/admin/tournament/season/${targetSeason.seasonId}/update`, {
+                isHidden: newHidden,
+                description: updatedDesc
+            });
+            setStatusMsg(`Season "${targetSeason.name}" is now ${newHidden ? 'HIDDEN (Admin only)' : 'PUBLIC (Visible to everyone)'}!`);
+            
+            // Immediate local state update for instant UI feedback
+            setActiveSeason(prev => (prev && prev.seasonId === targetSeason.seasonId) ? {
+                ...prev,
+                isHidden: newHidden,
+                description: updatedDesc
+            } : prev);
+            setAllSeasons(prev => prev.map(s => s.seasonId === targetSeason.seasonId ? {
+                ...s,
+                isHidden: newHidden,
+                description: updatedDesc
+            } : s));
+            await fetchSeasons();
+        } catch (e: any) {
+            setStatusMsg(e?.message || 'Failed to update visibility');
+        } finally {
+            setLoading(false);
+            setTimeout(() => setStatusMsg(''), 4000);
+        }
+    };
+
     const handleCreateSeason = async () => {
         if (!newSeasonName.trim()) {
             setStatusMsg('Please enter a season name');
@@ -539,17 +658,20 @@ const AdminTournament: React.FC = () => {
             await apiCall('/api/admin/tournament/season/create', {
                 name: newSeasonName,
                 format: newSeasonFormat || 'Singles 4v4',
-                challongeUrl: newSeasonChallongeUrl
+                challongeUrl: newSeasonChallongeUrl,
+                isHidden: newSeasonIsHidden,
+                description: newSeasonIsHidden ? '<!--HIDDEN-->' : ''
             });
-            setStatusMsg('Season created!');
+            setStatusMsg(`Season "${newSeasonName}" created successfully (${newSeasonIsHidden ? 'Hidden' : 'Public'})!`);
             setNewSeasonName('');
             setNewSeasonFormat('Singles 4v4');
             setNewSeasonChallongeUrl('');
+            setNewSeasonIsHidden(false);
             fetchSeasons();
         } catch (e: any) {
             setStatusMsg(e.message);
         }
-        setTimeout(() => setStatusMsg(''), 3000);
+        setTimeout(() => setStatusMsg(''), 4000);
     };
 
     const handleUpdateSeason = async () => {
@@ -573,8 +695,8 @@ const AdminTournament: React.FC = () => {
         if (!activeSeason) return;
         try {
             const isHiddenNow = isSeasonHidden(activeSeason);
-            let finalDesc = ruleGeneralDesc;
-            if (isHiddenNow && !finalDesc.includes('<!--HIDDEN-->')) {
+            let finalDesc = ruleGeneralDesc.replaceAll('<!--HIDDEN-->', '').replaceAll('[HIDDEN]', '').trim();
+            if (isHiddenNow) {
                 finalDesc = '<!--HIDDEN-->' + finalDesc;
             }
             const data = await apiCall(`/api/admin/tournament/season/${activeSeason.seasonId}/update`, {
@@ -594,7 +716,8 @@ const AdminTournament: React.FC = () => {
                     format: ruleGeneralFormat,
                     description: ruleGeneralDesc,
                     rules: ruleCards,
-                    bannedPokemonIds: ruleBannedIds
+                    bannedPokemonIds: ruleBannedIds,
+                    isHidden: isHiddenNow
                 } : null);
                 fetchSeasons();
             }
@@ -607,8 +730,7 @@ const AdminTournament: React.FC = () => {
     const handleInitializeDefaultRules = () => {
         const defaultRules = [
             { title: "Party Limits", icon: "⚡", color: "border-yellow-500/40 bg-yellow-900/10", content: "• 1 Legendary allowed per party\n• 1 Mythical allowed per party\n• 1 Paradox allowed per party\n• 1 Ultra Beast allowed per party" },
-            { title: "Gimmick Rules", icon: "💥", color: "border-orange-500/40 bg-orange-900/10", content: "• One Gimmick Per Roster: You can only use ONE type of gimmick in your entire party (Mega, Z-Move, Dynamax, or Tera).\n• Dynamax Restriction: Only standard Pokémon can Dynamax (Legendaries, Mythicals, Paradox, Ultra Beasts are banned from Dynamax).\n• Shedinja Tera Ban: Shedinja is banned from using Tera." },
-            { title: "Clauses", icon: "📜", color: "border-blue-500/40 bg-blue-900/10", content: "• Species Clause: No two Pokémon of the same National Dex number.\n• Item Clause: No two Pokémon may hold the same item.\n• Sleep Clause: Cannot put more than one opponent Pokémon to sleep simultaneously.\n• Endless Battle Clause: No infinite battle situations." },
+                        { title: "Clauses", icon: "📜", color: "border-blue-500/40 bg-blue-900/10", content: "• Species Clause: No two Pokémon of the same National Dex number.\n• Item Clause: No two Pokémon may hold the same item.\n• Sleep Clause: Cannot put more than one opponent Pokémon to sleep simultaneously.\n• Endless Battle Clause: No infinite battle situations." },
             { title: "Move & Ability Bans", icon: "⛔", color: "border-purple-500/40 bg-purple-900/10", content: "• Evasion Clause: Double Team, Minimize are banned.\n• OHKO Clause: Fissure, Sheer Cold, Horn Drill, Guillotine are banned.\n• Moody Ability is banned.\n• Other banned moves/abilities: Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail." },
             { title: "Item Bans", icon: "🎒", color: "border-pink-500/40 bg-pink-900/10", content: "The following items are completely banned from tournament use:\n• Bright Powder\n• Lax Incense\n• King's Rock\n• Razor Fang\n• Quick Claw" },
             { title: "General Rules", icon: "⚖️", color: "border-white/10", content: "• Breaking any rule results in instant disqualification.\n• No intentional stalling or disconnect abuse.\n• Report matches within 10 minutes of completion.\n• Admin decisions are final." }
@@ -682,19 +804,26 @@ const AdminTournament: React.FC = () => {
             return;
         }
         try {
+            const capDiscordId = pairCaptain === 'player2' ? pairPlayer2.discordId : pairPlayer1.discordId;
             await apiCall('/api/admin/tournament/duo/create', {
                 seasonId: activeSeason!.seasonId,
+                player1DiscordId: pairPlayer1.discordId,
+                player1Username: pairPlayer1.minecraftUsername,
+                player2DiscordId: pairPlayer2.discordId,
+                player2Username: pairPlayer2.minecraftUsername,
+                captainDiscordId: capDiscordId,
                 player1: { discordId: pairPlayer1.discordId, username: pairPlayer1.minecraftUsername },
                 player2: { discordId: pairPlayer2.discordId, username: pairPlayer2.minecraftUsername },
                 captain: pairCaptain
             });
-            setStatusMsg('Duo created!');
+            setStatusMsg('Duo created successfully!');
             setShowPairModal(false);
             setPairPlayer1(null);
             setPairPlayer2(null);
+            fetchPlayers(activeSeason!.seasonId);
             fetchDuos(activeSeason!.seasonId);
         } catch (e: any) {
-            setStatusMsg(e.message);
+            setStatusMsg(e.message || 'Failed to create duo');
         }
         setTimeout(() => setStatusMsg(''), 3000);
     };
@@ -705,6 +834,7 @@ const AdminTournament: React.FC = () => {
             await apiCall('/api/admin/tournament/duo/delete', { duoId: duo.duoId });
             setStatusMsg('Duo removed!');
             fetchDuos(activeSeason!.seasonId);
+            fetchPlayers(activeSeason!.seasonId);
         } catch (e: any) {
             setStatusMsg(e.message);
         }
@@ -720,6 +850,7 @@ const AdminTournament: React.FC = () => {
         try {
             await apiCall('/api/admin/tournament/duo/update-captain', {
                 duoId: duo.duoId,
+                captainDiscordId: newCaptainDiscordId,
                 newCaptainDiscordId
             });
             setStatusMsg(`Captain changed to ${newCaptainName}!`);
@@ -896,20 +1027,33 @@ const AdminTournament: React.FC = () => {
                 <div className="space-y-6">
                     {/* Season Selector */}
                     <div className="bg-black/40 p-6 rounded-2xl border border-white/10">
-                        <h3 className="font-bold text-lg border-b border-white/10 pb-2 mb-4">Season</h3>
+                        <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
+                            <h3 className="font-bold text-lg">Season</h3>
+                            {activeSeason && (
+                                <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full border ${isSeasonHidden(activeSeason)
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    }`}>
+                                    {isSeasonHidden(activeSeason) ? 'Hidden' : 'Public'}
+                                </span>
+                            )}
+                        </div>
                         <select
                             value={activeSeason?.seasonId || ''}
                             onChange={e => {
                                 const s = allSeasons.find(s => s.seasonId === parseInt(e.target.value));
                                 if (s) setActiveSeason(s);
                             }}
-                            className="w-full bg-black/40 border border-white/10 p-2 rounded text-white mb-4"
+                            className="w-full bg-black/60 border border-white/20 p-2.5 rounded-xl text-white text-sm mb-4 focus:border-brand-primary outline-none"
                         >
-                            {allSeasons.map(s => (
-                                <option key={s.seasonId} value={s.seasonId}>
-                                    {s.name} {s.isArchived ? '(Archived)' : ''} {isSeasonHidden(s) ? '(Hidden)' : ''}
-                                </option>
-                            ))}
+                            {allSeasons.map(s => {
+                                const hidden = isSeasonHidden(s);
+                                return (
+                                    <option key={s.seasonId} value={s.seasonId} className="bg-[#120507] text-white">
+                                        {s.name} {s.isArchived ? '[Archived]' : ''} {hidden ? '[🔒 HIDDEN]' : '[🌐 PUBLIC]'}
+                                    </option>
+                                );
+                            })}
                         </select>
 
                         {activeSeason && (
@@ -925,9 +1069,66 @@ const AdminTournament: React.FC = () => {
                                             activeSeason.status === 'LOCK_IN' ? 'text-orange-400' : 'text-red-400'
                                         }`}>{activeSeason.status}</span>
                                 </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                                    <span className="text-gray-500">Visibility:</span>
+                                    <span className={`text-xs font-black uppercase px-2 py-0.5 rounded ${isSeasonHidden(activeSeason)
+                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                        }`}>
+                                        {isSeasonHidden(activeSeason) ? 'Admin Only' : 'Everyone'}
+                                    </span>
+                                </div>
                             </div>
                         )}
                     </div>
+
+                    {/* Dedicated Tournament Visibility & Public Access Card */}
+                    {activeSeason && (
+                        <div className={`p-6 rounded-2xl border transition-all ${isSeasonHidden(activeSeason)
+                            ? 'bg-amber-950/20 border-amber-500/40 shadow-lg shadow-amber-950/30'
+                            : 'bg-emerald-950/20 border-emerald-500/40 shadow-lg shadow-emerald-950/30'
+                            }`}>
+                            <div className="flex items-center gap-2 mb-3">
+                                {isSeasonHidden(activeSeason) ? (
+                                    <Lock className="w-5 h-5 text-amber-400" />
+                                ) : (
+                                    <Globe className="w-5 h-5 text-emerald-400" />
+                                )}
+                                <h3 className="font-bold text-base text-white">Public Visibility</h3>
+                            </div>
+
+                            <p className="text-xs text-gray-300 mb-4 leading-relaxed">
+                                {isSeasonHidden(activeSeason) ? (
+                                    <span className="text-amber-200/90 font-medium">
+                                        ⚠️ This tournament is currently <strong className="text-amber-300">HIDDEN</strong>. Only admins can see it. Regular visitors cannot view or register.
+                                    </span>
+                                ) : (
+                                    <span className="text-emerald-200/90 font-medium">
+                                        ✨ This tournament is <strong className="text-emerald-300">PUBLIC</strong>. All visitors and players can see the tournament and sign up!
+                                    </span>
+                                )}
+                            </p>
+
+                            <button
+                                onClick={() => handleToggleVisibility(activeSeason)}
+                                disabled={loading}
+                                className={`w-full py-3 px-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50 ${isSeasonHidden(activeSeason)
+                                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/40 border border-emerald-400/30 hover:scale-[1.02] active:scale-95'
+                                    : 'bg-amber-700/80 hover:bg-amber-600 text-amber-100 border border-amber-500/30 hover:scale-[1.02] active:scale-95'
+                                    }`}
+                            >
+                                {isSeasonHidden(activeSeason) ? (
+                                    <>
+                                        <Eye className="w-4 h-4" /> Unhide Tournament (Make Public)
+                                    </>
+                                ) : (
+                                    <>
+                                        <EyeOff className="w-4 h-4" /> Hide Tournament (Admin Only)
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Status Controls */}
                     <div className="bg-black/40 p-6 rounded-2xl border border-white/10">
@@ -996,6 +1197,15 @@ const AdminTournament: React.FC = () => {
                                 placeholder="Challonge URL (optional)"
                                 className="w-full bg-black/40 border border-white/10 p-2 rounded text-white text-sm"
                             />
+                            <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer pt-1">
+                                <input
+                                    type="checkbox"
+                                    checked={newSeasonIsHidden}
+                                    onChange={e => setNewSeasonIsHidden(e.target.checked)}
+                                    className="rounded bg-black/50 border-white/20 text-brand-primary focus:ring-0"
+                                />
+                                <span>Start as Hidden (Admin preview only)</span>
+                            </label>
                             <button
                                 onClick={handleCreateSeason}
                                 disabled={loading}
@@ -1030,38 +1240,6 @@ const AdminTournament: React.FC = () => {
                                 className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
                             >
                                 <Archive className="w-4 h-4" /> Archive Season
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    if (!activeSeason) return;
-                                    const currentlyHidden = isSeasonHidden(activeSeason);
-                                    const newHidden = !currentlyHidden;
-                                    let updatedDesc = activeSeason.description || '';
-                                    if (newHidden) {
-                                        if (!updatedDesc.includes('<!--HIDDEN-->')) {
-                                            updatedDesc = '<!--HIDDEN-->' + updatedDesc;
-                                        }
-                                    } else {
-                                        updatedDesc = updatedDesc.replaceAll('<!--HIDDEN-->', '').replaceAll('[HIDDEN]', '');
-                                    }
-                                    setLoading(true);
-                                    try {
-                                        await apiCall(`/api/admin/tournament/season/${activeSeason.seasonId}/update`, {
-                                            isHidden: newHidden,
-                                            description: updatedDesc
-                                        });
-                                        setStatusMsg(`Season ${newHidden ? 'hidden' : 'unhidden'} successfully`);
-                                        fetchSeasons();
-                                    } catch (e) {
-                                        setStatusMsg('Failed to update season visibility');
-                                    } finally {
-                                        setLoading(false);
-                                    }
-                                }}
-                                disabled={loading}
-                                className="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded text-sm disabled:opacity-50 flex items-center justify-center gap-1.5 mt-2"
-                            >
-                                <Eye className="w-4 h-4" /> {isSeasonHidden(activeSeason) ? 'Unhide Season' : 'Hide Season'}
                             </button>
                             <button
                                 onClick={handleClearWinners}
@@ -1240,7 +1418,13 @@ const AdminTournament: React.FC = () => {
                                                     View
                                                 </button>
                                                 <button
-                                                    onClick={() => window.open(`/tournament?adminDummyId=${player.discordId}`, '_blank')}
+                                                    onClick={() => {
+                                                        fetchAllPokemon();
+                                                        setEditingTeamTarget({ type: 'solo', player });
+                                                        const filled = [...(player.team || [])];
+                                                        while (filled.length < 6) filled.push(null);
+                                                        setEditingTeamList(filled);
+                                                    }}
                                                     className="flex-1 bg-green-600/20 hover:bg-green-600/40 text-green-400 text-xs font-bold py-1.5 rounded transition-colors"
                                                 >
                                                     Edit Team
@@ -1367,7 +1551,13 @@ const AdminTournament: React.FC = () => {
                                             </button>
                                         )}
                                         <button
-                                            onClick={() => window.open(`/tournament?adminDummyId=${duo.player1DiscordId}`, '_blank')}
+                                            onClick={() => {
+                                                fetchAllPokemon();
+                                                setEditingTeamTarget({ type: 'duo', duo });
+                                                const filled = [...(duo.team || [])];
+                                                while (filled.length < 6) filled.push(null);
+                                                setEditingTeamList(filled);
+                                            }}
                                             className="flex-1 bg-green-600/20 hover:bg-green-600/40 text-green-400 text-xs font-bold py-1.5 rounded transition-colors"
                                         >
                                             Edit Team
@@ -1898,6 +2088,162 @@ const AdminTournament: React.FC = () => {
                             >
                                 Parse & Save
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ADMIN TEAM PICKER MODAL */}
+            {editingTeamTarget && (
+                <div className="fixed inset-0 z-[110] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-[#18090c] p-6 rounded-2xl border border-yellow-500/30 w-full max-w-4xl space-y-6 max-h-[90vh] flex flex-col">
+                        <div className="flex justify-between items-center border-b border-white/10 pb-4 shrink-0">
+                            <div>
+                                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                                    <Gamepad2 className="w-5 h-5 text-yellow-400" />
+                                    Edit Team: {editingTeamTarget.type === 'solo' 
+                                        ? editingTeamTarget.player.minecraftUsername 
+                                        : `${editingTeamTarget.duo.player1Username} & ${editingTeamTarget.duo.player2Username}`}
+                                </h3>
+                                <p className="text-xs text-gray-400 mt-0.5">Select Pokémon for each slot or click to remove.</p>
+                            </div>
+                            <button
+                                onClick={() => setEditingTeamTarget(null)}
+                                className="p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Team Grid */}
+                        <div className="shrink-0 bg-black/40 p-4 rounded-xl border border-white/10">
+                            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Selected Roster (6 Slots)</div>
+                            <div className="grid grid-cols-6 gap-2">
+                                {editingTeamList.map((poke, idx) => {
+                                    const isCapSlot = editingTeamTarget.type === 'duo' && idx < 3;
+                                    return (
+                                        <div 
+                                            key={idx} 
+                                            className={`relative aspect-square rounded-xl border p-1 flex flex-col items-center justify-center transition-all ${
+                                                poke ? 'bg-black/60 border-yellow-500/50 hover:border-red-500' : 'bg-black/20 border-white/10 border-dashed'
+                                            }`}
+                                        >
+                                            {editingTeamTarget.type === 'duo' && (
+                                                <span className={`absolute top-1 left-1 text-[8px] font-black uppercase px-1 rounded ${
+                                                    isCapSlot ? 'bg-yellow-500/20 text-yellow-400' : 'bg-purple-500/20 text-purple-400'
+                                                }`}>
+                                                    {isCapSlot ? 'Cap' : 'Partner'}
+                                                </span>
+                                            )}
+                                            {poke ? (
+                                                <>
+                                                    <img
+                                                        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${poke.id}.png`}
+                                                        alt={poke.name}
+                                                        className="w-14 h-14 object-contain"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`;
+                                                        }}
+                                                    />
+                                                    <div className="text-[10px] font-bold text-white truncate max-w-full px-1">{poke.name}</div>
+                                                    <button
+                                                        onClick={() => {
+                                                            const next = [...editingTeamList];
+                                                            next[idx] = null;
+                                                            setEditingTeamList(next);
+                                                        }}
+                                                        className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-0.5 hover:bg-red-500 shadow"
+                                                        title="Remove Pokemon"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <div className="text-gray-600 font-bold text-sm">Slot {idx + 1}</div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Pokemon Selector */}
+                        <div className="flex-1 min-h-0 flex flex-col space-y-3">
+                            <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                                <div className="relative flex-1">
+                                    <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search Pokémon name or ID..."
+                                        value={teamSearchQuery}
+                                        onChange={(e) => setTeamSearchQuery(e.target.value)}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500/50"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Grid */}
+                            <div className="flex-1 overflow-y-auto min-h-[220px] max-h-[320px] bg-black/40 rounded-xl p-3 border border-white/10 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                                {allPokemonList
+                                    .filter(p => !teamSearchQuery || p.name.toLowerCase().includes(teamSearchQuery.toLowerCase()) || p.id.toString() === teamSearchQuery)
+                                    .slice(0, 96)
+                                    .map(p => (
+                                        <button
+                                            key={p.id}
+                                            onClick={() => {
+                                                const firstEmpty = editingTeamList.findIndex(slot => slot === null);
+                                                if (firstEmpty !== -1) {
+                                                    const next = [...editingTeamList];
+                                                    next[firstEmpty] = { id: p.id, name: p.name };
+                                                    setEditingTeamList(next);
+                                                } else {
+                                                    alert("Roster is full (6 Pokémon)! Remove one first.");
+                                                }
+                                            }}
+                                            className="bg-black/40 hover:bg-yellow-500/20 border border-white/10 hover:border-yellow-500/50 rounded-xl p-1.5 flex flex-col items-center transition-all group"
+                                        >
+                                            <img
+                                                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${p.id}.png`}
+                                                alt={p.name}
+                                                className="w-12 h-12 object-contain group-hover:scale-110 transition-transform"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`;
+                                                }}
+                                            />
+                                            <span className="text-[10px] font-bold text-gray-300 truncate max-w-full mt-1 group-hover:text-yellow-400">{p.name}</span>
+                                        </button>
+                                    ))}
+                            </div>
+                        </div>
+
+                        {/* Action Bar */}
+                        <div className="flex flex-wrap gap-3 shrink-0 pt-2 border-t border-white/10">
+                            <button
+                                onClick={() => {
+                                    const targetId = editingTeamTarget.type === 'solo' 
+                                        ? editingTeamTarget.player.discordId 
+                                        : editingTeamTarget.duo.player1DiscordId;
+                                    window.open(`/minecraft/tournament?adminDummyId=${targetId}`, '_blank');
+                                }}
+                                className="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 border border-blue-500/30"
+                            >
+                                <Eye className="w-4 h-4" /> Open in Draft Page (New Window)
+                            </button>
+                            <div className="flex-1 flex justify-end gap-2">
+                                <button
+                                    onClick={() => setEditingTeamTarget(null)}
+                                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-xl text-xs"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveAdminTeam}
+                                    disabled={loading}
+                                    className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-6 py-2 rounded-xl text-xs shadow-lg flex items-center gap-1.5"
+                                >
+                                    <Save className="w-4 h-4" /> Save Team
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

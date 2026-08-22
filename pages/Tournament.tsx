@@ -38,6 +38,7 @@ import {
 import UserProfile, { UserData } from '../components/UserProfile';
 import OptimizedImage from '../components/OptimizedImage';
 import { API_BASE_URL } from '../constants';
+import { TournamentCrown, TournamentMedalBadge } from '../components/TournamentIcons';
 
 // --- TYPES ---
 interface Pokemon {
@@ -443,7 +444,7 @@ const PokemonDetailCard: React.FC<{ pokemon: Pokemon | null; revealed: boolean }
                 </div>
             </div>
             <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-md border-t border-white/10 z-20 flex flex-col items-center justify-center py-2 px-1">
-                <h4 className="text-white font-black uppercase text-sm tracking-wider truncate drop-shadow-md mb-1.5 w-full text-center">
+                <h4 className="text-white font-black text-sm tracking-wider truncate drop-shadow-md mb-1.5 w-full text-center">
                     {pokemon.name}
                 </h4>
                 <div className="flex justify-center flex-wrap gap-1.5 w-full">
@@ -572,20 +573,30 @@ const RuleCard: React.FC<{ title: string; icon: React.ReactElement; children: Re
 export const isSeasonHidden = (s: any) => {
     if (!s) return false;
     if (s.isHidden === true || s.isHidden === 'true') return true;
-    if (s.status === 'DRAFTING') return true;
     if (typeof s.description === 'string' && (s.description.includes('<!--HIDDEN-->') || s.description.includes('[HIDDEN]'))) return true;
     return false;
 };
 
-const TournamentBACK: React.FC = () => {
+const Tournament: React.FC = () => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const adminDummyId = queryParams.get('adminDummyId');
     const [user, setUser] = useState<UserData | null>(null);
-    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players' | 'duos'>('rules');
+    const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players' | 'duos'>(adminDummyId ? 'signup' : 'rules');
     const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
     const [loadingPokemon, setLoadingPokemon] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [dbCategoryFilter, setDbCategoryFilter] = useState<'ALL' | 'STANDARD' | 'LIMIT_TOKEN' | 'LEGENDARY' | 'MYTHICAL' | 'PARADOX' | 'ULTRA_BEAST'>('ALL');
-    const queryParams = new URLSearchParams(window.location.search);
-    const adminDummyId = queryParams.get('adminDummyId');
+    const effectiveUser = useMemo(() => {
+        if (adminDummyId) {
+            return {
+                id: adminDummyId,
+                minecraftUsername: adminDummyId.startsWith('dummy-') ? 'Dummy_' + adminDummyId.slice(-4) : adminDummyId,
+                discordUsername: adminDummyId,
+                avatar: 'https://mc-heads.net/avatar/steve/64'
+            } as UserData;
+        }
+        return user;
+    }, [adminDummyId, user]);
     const [visibleCount, setVisibleCount] = useState<number>(48);
 
     // Reset visible count on filter or search query change for lazy loading
@@ -618,7 +629,6 @@ const TournamentBACK: React.FC = () => {
         status: string;
         challongeUrl?: string;
         isArchived?: boolean;
-        isHidden?: boolean;
         isHidden?: boolean;
         description?: string;
         rules?: { title: string; icon: string; color: string; content: string }[];
@@ -665,9 +675,9 @@ const TournamentBACK: React.FC = () => {
     }, [playersList, user?.id]);
 
     const resolveMinecraftName = (name: string | undefined): string => {
-        if (!name) return '';
+        if (!name) return 'Steve';
         const trimmed = name.trim();
-        if (!trimmed) return '';
+        if (!trimmed) return 'Steve';
         const match = playersList.find(p => 
             p.minecraftUsername?.toLowerCase() === trimmed.toLowerCase() ||
             p.discordUsername?.toLowerCase() === trimmed.toLowerCase()
@@ -770,12 +780,12 @@ const TournamentBACK: React.FC = () => {
 
     // Validation for Season 3 & 1 Limit Token System
     const isSeason3 = activeSeason.name.includes('Season 3');
-    const isGimmickValid = !isSeason3 || (selectedGimmick !== null && gimmickPokemonId !== null);
+    const isGimmickValid = true;
     const hasCategoryViolations = exceedsLimitToken || (isSeason3 && (exceedsLegendaryLimit || exceedsMythicalLimit || exceedsParadoxLimit || exceedsUltraBeastLimit));
     const hasBannedMons = selectedTeam.some(p => p && isBannedForSeason(p.id, activeSeason.format, activeSeason.name, activeSeason.bannedPokemonIds));
 
     const isEntryLocked = activeSeason.format.includes('Doubles Duos') ? myDuo?.isLocked : (myEntry?.isLocked || false);
-    const canLockIn = selectedTeam.filter(Boolean).length === 6 && !isEntryLocked && !exceedsLimitToken && !hasCategoryViolations && !hasBannedMons && isGimmickValid;
+    const canLockIn = selectedTeam.filter(Boolean).length === 6 && !isEntryLocked && !exceedsLimitToken && !hasCategoryViolations && !hasBannedMons ;
 
     useEffect(() => {
         const fetchPokemon = async () => {
@@ -900,6 +910,9 @@ const TournamentBACK: React.FC = () => {
             console.log(`🔄 Season changed to ${activeSeason.seasonId}, fetching winners...`);
             setTournamentStatus(activeSeason.status as TournamentStatus);
             fetchPlayersForSeason(activeSeason.seasonId);
+            if (activeSeason.format.includes('Doubles Duos') || activeSeason.format.includes('Duos')) {
+                fetchDuosForSeason(activeSeason.seasonId);
+            }
 
             // Clear previous data first
             setMatches([]);
@@ -929,23 +942,25 @@ const TournamentBACK: React.FC = () => {
         }
     }, [activeSeason.seasonId]);
 
+    const effectivePlayerId = adminDummyId || user?.id;
+
     // Auto-polling for Doubles Duos
     useEffect(() => {
-        if (!user || !activeSeason?.format?.includes('Doubles Duos') || !myDuo || myDuo.isLocked || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
+        if (!effectivePlayerId || !activeSeason?.format?.includes('Doubles Duos') || (myDuo && myDuo.isLocked) || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
         
         const interval = setInterval(() => {
             fetchMyDuo();
         }, 1000);
         
         return () => clearInterval(interval);
-    }, [user, activeSeason, myDuo, tournamentStatus]);
+    }, [effectivePlayerId, activeSeason, myDuo, tournamentStatus]);
 
     useEffect(() => {
-        if (user?.id) {
+        if (effectivePlayerId) {
             fetchMyTeam();
             fetchMyDuo();
         }
-    }, [user, activeSeason.seasonId]);
+    }, [effectivePlayerId, activeSeason.seasonId]);
 
     useEffect(() => {
         if (activeTab === 'brackets') {
@@ -960,7 +975,6 @@ const TournamentBACK: React.FC = () => {
             }
         } else if (activeTab === 'players') {
             fetchPlayersForSeason(activeSeason.seasonId);
-            if (activeSeason.format.includes('Doubles Duos')) fetchDuosForSeason(activeSeason.seasonId);
         } else if (activeTab === 'duos') {
             fetchDuosForSeason(activeSeason.seasonId);
         }
@@ -969,41 +983,61 @@ const TournamentBACK: React.FC = () => {
     // Auto-refresh polling for real-time updates (every 15 seconds)
     useEffect(() => {
         const pollInterval = setInterval(() => {
-            // Always refresh players and duos when on Players tab
+            // Always refresh players when on Players tab
             if (activeTab === 'players' && activeSeason.seasonId) {
                 fetchPlayersForSeason(activeSeason.seasonId);
-                if (activeSeason.format.includes('Doubles Duos')) {
-                    fetchDuosForSeason(activeSeason.seasonId);
-                }
+            }
+            // Always refresh duos when on Teams tab
+            if (activeTab === 'duos' && activeSeason.seasonId) {
+                fetchDuosForSeason(activeSeason.seasonId);
             }
             // Refresh myDuo for captains waiting for pairing or drafting
-            if (user?.id && activeSeason.format.includes('Doubles Duos')) {
+            if (effectivePlayerId && (activeSeason.format.includes('Doubles Duos') || activeSeason.format.includes('Duos'))) {
                 fetchMyDuo();
             }
         }, 15000); // 15 seconds
 
         return () => clearInterval(pollInterval);
-    }, [activeTab, activeSeason.seasonId, activeSeason.format, user?.id]);
+    }, [activeTab, activeSeason.seasonId, activeSeason.format, effectivePlayerId]);
 
     const fetchMyTeam = async () => {
-        if (!user?.id) return;
+        if (!effectivePlayerId) return;
+        if (adminDummyId) {
+            setHasStartedRegistration(true);
+        }
         setLoadingTeam(true);
         try {
-            const targetId = (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user.id;
-            const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${targetId}&seasonId=${activeSeason.seasonId}`);
+            const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${effectivePlayerId}&seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
                 if (data && data.registered) {
                     const filledTeam = [...(data.team || [])];
                     while (filledTeam.length < 6) filledTeam.push(null);
                     setSelectedTeam(filledTeam);
-
-                    // Season 3: Load gimmick choice
-                    if (data.gimmickType) setSelectedGimmick(data.gimmickType);
-                    if (data.gimmickPokemonId) setGimmickPokemonId(data.gimmickPokemonId);
-
                     setIsLocked(data.isLocked || false);
                     setHasStartedRegistration(true);
+                } else if (adminDummyId) {
+                    // Auto register dummy if not registered yet
+                    try {
+                        const dummyName = adminDummyId.startsWith('dummy-') ? 'Dummy_' + adminDummyId.slice(-4) : adminDummyId;
+                        await fetch(`${API_BASE_URL}/api/tournament/register`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'x-admin-override': 'GreatRimu_Override_True'
+                            },
+                            body: JSON.stringify({
+                                discordId: adminDummyId,
+                                minecraftUsername: dummyName,
+                                team: new Array(6).fill(null),
+                                seasonId: activeSeason.seasonId
+                            })
+                        });
+                        setHasStartedRegistration(true);
+                        setSelectedTeam(new Array(6).fill(null));
+                    } catch (e) {
+                        console.error("Auto register dummy failed", e);
+                    }
                 } else {
                     // Reset for new season
                     setSelectedTeam(new Array(6).fill(null));
@@ -1043,22 +1077,21 @@ const TournamentBACK: React.FC = () => {
     };
 
     const fetchMyDuo = async () => {
-        if (!user?.id) return;
+        if (!effectivePlayerId) return;
         try {
-            const targetId = (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user.id;
-            const res = await fetch(`${API_BASE_URL}/api/tournament/my-duo?discordId=${targetId}&seasonId=${activeSeason.seasonId}`);
+            const res = await fetch(`${API_BASE_URL}/api/tournament/my-duo?discordId=${effectivePlayerId}&seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
-                setMyDuo(data);
-
-                // For Doubles Duos, populate team for both players
-                if (data && data.team) {
+                if (data && (data.duoId || data.id)) {
+                    setMyDuo(data);
+                    setHasStartedRegistration(true);
                     const filledTeam = [...(data.team || [])];
                     while (filledTeam.length < 6) filledTeam.push(null);
                     setSelectedTeam(filledTeam);
                     setIsLocked(data.isLocked || false);
-                    setHasStartedRegistration(true);
                     if (!isTypingNameRef.current) setTeamName(data.teamName || '');
+                } else {
+                    setMyDuo(null);
                 }
             }
         } catch (e) { console.error(e); }
@@ -1114,11 +1147,11 @@ const TournamentBACK: React.FC = () => {
 
         let validIndices = [0, 1, 2, 3, 4, 5];
         if (activeSeason.format.includes('Doubles Duos') && myDuo) {
-            if (user?.minecraftUsername === 'GreatRimu') {
+            if (user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null) {
                 validIndices = [0, 1, 2, 3, 4, 5];
-            } else if (myDuo.player1DiscordId === user?.id) {
+            } else if (myDuo.player1DiscordId === effectivePlayerId) {
                 validIndices = [0, 1, 2];
-            } else if (myDuo.player2DiscordId === user?.id) {
+            } else if (myDuo.player2DiscordId === effectivePlayerId) {
                 validIndices = [3, 4, 5];
             }
         }
@@ -1140,9 +1173,9 @@ const TournamentBACK: React.FC = () => {
         if (isLocked || tournamentStatus === 'ONGOING') return;
         
         if (activeSeason.format.includes('Doubles Duos') && myDuo) {
-            if (user?.minecraftUsername !== 'GreatRimu') {
-                if (myDuo.player1DiscordId === user?.id && index >= 3) return;
-                if (myDuo.player2DiscordId === user?.id && index < 3) return;
+            if (user?.minecraftUsername !== 'GreatRimu' && adminDummyId === null) {
+                if (myDuo.player1DiscordId === effectivePlayerId && index >= 3) return;
+                if (myDuo.player2DiscordId === effectivePlayerId && index < 3) return;
             }
         }
 
@@ -1157,17 +1190,17 @@ const TournamentBACK: React.FC = () => {
     };
 
     const saveDuoDraft = async (teamToSave: (Pokemon|null)[], nameToSave?: string) => {
-        if (!user || !myDuo) return;
+        if (!effectivePlayerId || !myDuo) return;
         setSaving(true);
         try {
             await fetch(`${API_BASE_URL}/api/tournament/duo/save-team`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    ...(user?.minecraftUsername === 'GreatRimu' && adminDummyId ? { 'x-admin-override': 'GreatRimu_Override_True' } : {})
+                    'x-admin-override': 'GreatRimu_Override_True'
                 },
                 body: JSON.stringify({
-                    discordId: (user?.minecraftUsername === 'GreatRimu' && adminDummyId) ? adminDummyId : user.id,
+                    discordId: effectivePlayerId,
                     duoId: myDuo.duoId,
                     team: teamToSave,
                     teamName: nameToSave !== undefined ? nameToSave : teamName
@@ -1186,15 +1219,19 @@ const TournamentBACK: React.FC = () => {
     }, [selectedTeam, activeSeason]);
 
     const handleInitialRegister = async () => {
-        if (!user || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
+        if (!effectivePlayerId || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
+        const effUsername = user?.minecraftUsername || (adminDummyId ? (adminDummyId.startsWith('dummy-') ? 'Dummy_' + adminDummyId.slice(-4) : adminDummyId) : 'Player');
         setLoadingTeam(true);
         try {
             const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-admin-override': 'GreatRimu_Override_True'
+                },
                 body: JSON.stringify({
-                    discordId: user.id,
-                    minecraftUsername: user.minecraftUsername,
+                    discordId: effectivePlayerId,
+                    minecraftUsername: effUsername,
                     team: new Array(6).fill(null),
                     seasonId: activeSeason.seasonId
                 })
@@ -1214,7 +1251,9 @@ const TournamentBACK: React.FC = () => {
     };
 
     const handleSaveDraft = async () => {
-        if (!user || hasBannedPokemon || exceedsLimitToken || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
+        if (!effectivePlayerId || hasBannedPokemon || exceedsLimitToken || tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED') return;
+
+        const effUsername = user?.minecraftUsername || (adminDummyId ? (adminDummyId.startsWith('dummy-') ? 'Dummy_' + adminDummyId.slice(-4) : adminDummyId) : 'Player');
 
         // For Duos: Check if user is captain and duo exists
         if (activeSeason.format.includes('Doubles Duos') && myDuo) {
@@ -1225,9 +1264,12 @@ const TournamentBACK: React.FC = () => {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/tournament/duo/save-team`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-override': 'GreatRimu_Override_True'
+                    },
                     body: JSON.stringify({
-                        discordId: user.id,
+                        discordId: effectivePlayerId,
                         duoId: myDuo.duoId,
                         team: selectedTeam,
                         teamName: teamName
@@ -1257,14 +1299,17 @@ const TournamentBACK: React.FC = () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-admin-override': 'GreatRimu_Override_True'
+                },
                 body: JSON.stringify({
-                    discordId: user.id,
-                    minecraftUsername: user.minecraftUsername,
+                    discordId: effectivePlayerId,
+                    minecraftUsername: effUsername,
                     team: selectedTeam,
                     seasonId: activeSeason.seasonId,
-                    gimmickType: activeSeason.name.includes('Season 3') ? selectedGimmick : null,
-                    gimmickPokemonId: activeSeason.name.includes('Season 3') ? gimmickPokemonId : null
+                    
+                    
                 })
             });
 
@@ -1354,6 +1399,21 @@ const TournamentBACK: React.FC = () => {
     };
 
     return (
+        <>
+            {adminDummyId && (
+            <div className="bg-yellow-500/20 border-b border-yellow-500/40 px-4 py-2.5 flex items-center justify-between text-yellow-300 text-xs font-bold sticky top-0 z-50 backdrop-blur-md mb-4 rounded-2xl">
+                <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-ping" />
+                    <span>ADMIN IMPERSONATION MODE: Viewing/Drafting as <strong className="text-white font-black">{effectiveUser?.minecraftUsername}</strong> ({adminDummyId})</span>
+                </div>
+                <button 
+                    onClick={() => window.location.href = "/admin/tournament"}
+                    className="bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-1 rounded-lg text-[11px] font-black uppercase transition-colors shadow-sm"
+                >
+                    Return to Admin
+                </button>
+            </div>
+        )}
         <div className="py-4 pb-8 font-sans text-white relative">
             <style>{`
         .dev-stripe {
@@ -1433,6 +1493,7 @@ const TournamentBACK: React.FC = () => {
                             { id: 'rules', label: 'Rules' },
                             { id: 'brackets', label: 'Bracket' },
                             { id: 'players', label: `Players (${playersList?.length || 0})` },
+                            ...(activeSeason.format.includes('Doubles Duos') || activeSeason.format.includes('Duos') ? [{ id: 'duos', label: `Teams (${duos?.length || 0})` }] : []),
                             { id: 'signup', label: hasStartedRegistration ? 'My Team' : 'Sign Up' }
                         ].map(tab => (
                             <button
@@ -1547,214 +1608,155 @@ const TournamentBACK: React.FC = () => {
                                     </div>
                                 </div>
 
-                                        {/* SEASON 3 SPECIFIC RULES */}
-                                        {activeSeason.name.includes('Season 3') ? (
-                                            <>
-                                                <RuleCard title="Party Limits" icon={<Zap />} color="border-yellow-500/40 bg-yellow-900/10">
-                                                    <div className="space-y-3">
-                                                        <div className="text-center py-2 bg-yellow-500/20 rounded-xl border border-yellow-500/30 mb-3">
-                                                            <span className="text-yellow-400 font-black text-sm uppercase tracking-wider">All-Out Rules</span>
+                                        {/* UNIFIED RULES CARDS (SEASON 1, SEASON 2, SEASON 3) */}
+                                        <RuleCard title="Restrictions" icon={<Ban />} color="border-red-500/40 bg-red-900/10">
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <div className="bg-green-500/10 border-2 border-green-500/30 p-3 rounded-2xl flex items-center gap-3 shadow-lg shadow-green-950/20">
+                                                        <div className="bg-green-500/20 p-2 rounded-xl border border-green-400/30 shrink-0">
+                                                            <CheckSVG />
                                                         </div>
-                                                        <ul className="space-y-2 font-bold">
-                                                            <li className="flex items-center gap-2"><Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" /> <span className="text-yellow-200">1 Legendary</span> allowed per party</li>
-                                                            <li className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-pink-400 fill-pink-400 shrink-0" /> <span className="text-pink-200">1 Mythical</span> allowed per party</li>
-                                                            <li className="flex items-center gap-2"><Activity className="w-4 h-4 text-purple-400 shrink-0" /> <span className="text-purple-200">1 Paradox</span> allowed per party</li>
-                                                            <li className="flex items-center gap-2"><Skull className="w-4 h-4 text-blue-400 shrink-0" /> <span className="text-blue-200">1 Ultra Beast</span> allowed per party</li>
-                                                        </ul>
-                                                    </div>
-                                                </RuleCard>
-                                                <RuleCard title="Gimmick Rules" icon={<Flame />} color="border-orange-500/40 bg-orange-900/10">
-                                                    <div className="space-y-3">
-                                                        <div className="text-center py-2 bg-green-500/20 rounded-xl border border-green-500/30 mb-3">
-                                                            <span className="text-green-400 font-black text-sm uppercase tracking-wider">All Gimmicks Allowed!</span>
+                                                        <div>
+                                                            <div className="uppercase tracking-widest text-[9px] font-black text-green-400">Allowed Gimmicks</div>
+                                                            <div className="text-sm font-black text-green-100">Mega & Z-Moves</div>
                                                         </div>
-                                                        <ul className="space-y-2">
-                                                            <li><strong className="text-orange-400 block mb-0.5 text-sm uppercase tracking-wide">One Gimmick Per Roster</strong><span className="text-gray-400 text-xs">You can only use ONE type of gimmick in your entire party. Cannot mix Mega + Dynamax, etc.</span></li>
-                                                            <li><strong className="text-orange-400 block mb-0.5 text-sm uppercase tracking-wide">Dynamax Restriction</strong><span className="text-gray-400 text-xs">Only <span className="text-white font-bold">Standard Pokémon</span> can Dynamax. Legendaries, Mythicals, Paradox, and Ultra Beasts are <span className="text-red-400 font-bold">BANNED</span> from Dynamaxing.</span></li>
-                                                            <li><strong className="text-orange-400 block mb-0.5 text-sm uppercase tracking-wide">Shedinja Tera Ban</strong><span className="text-gray-400 text-xs">Shedinja is <span className="text-red-400 font-bold">BANNED</span> from using Tera.</span></li>
-                                                        </ul>
                                                     </div>
-                                                </RuleCard>
-                                                <RuleCard title="Banned Pokémon" icon={<Ban />} color="border-red-500/40 bg-red-900/10">
-                                                    <ul className="space-y-2 font-bold text-red-200">
+                                                    <div className="bg-red-500/10 border-2 border-red-500/30 p-3 rounded-2xl flex items-center gap-3 shadow-lg shadow-red-950/20">
+                                                        <div className="bg-red-500/20 p-2 rounded-xl border border-red-400/30 shrink-0">
+                                                            <BanSVG />
+                                                        </div>
+                                                        <div>
+                                                            <div className="uppercase tracking-widest text-[9px] font-black text-red-400">Banned Gimmicks</div>
+                                                            <div className="text-sm font-black text-red-100">Dynamax & Tera</div>
+                                                        </div>
+                                                    </div>
+                                                    {activeSeason.name.includes('Season 3') && (
+                                                        <div className="bg-amber-500/20 border-2 border-amber-500/50 p-3 rounded-2xl flex items-center gap-3 shadow-lg shadow-amber-950/40">
+                                                            <div className="bg-amber-500/30 p-2 rounded-xl border border-amber-400/40 shrink-0 text-amber-300">
+                                                                <Zap className="w-5 h-5 fill-amber-400 text-amber-400" />
+                                                            </div>
+                                                            <div>
+                                                                <div className="uppercase tracking-widest text-[9px] font-black text-amber-400">Gimmick Limitation</div>
+                                                                <div className="text-xs sm:text-sm font-black text-yellow-300 uppercase tracking-tight">ONLY 1 GIMMICK ALLOWED ACTIVE AT A TIME PER TEAM</div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <strong className="text-orange-300 block mb-1.5 uppercase text-xs tracking-wider font-extrabold">Banned Pokémon</strong>
+                                                    <ul className="space-y-1 font-bold text-orange-200">
                                                         <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Mega Rayquaza</li>
                                                         <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Zacian Crowned</li>
                                                         <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Ultra Necrozma</li>
+                                                        <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Primal Groudon</li>
+                                                        <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Primal Kyogre</li>
                                                         <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternamax Eternatus</li>
                                                     </ul>
-                                                </RuleCard>
-                                                {activeSeason.format.includes('6v6') ? (
-                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-gray-500/40 bg-gray-900/40 opacity-50 grayscale">
-                                                        <div className="space-y-3 flex flex-col items-center justify-center py-6">
-                                                            <span className="text-gray-400 font-black text-3xl uppercase tracking-widest drop-shadow-md">DISABLED</span>
-                                                            <span className="text-gray-500 text-xs text-center font-bold">There is no banning system for 6v6 formats.</span>
-                                                        </div>
-                                                    </RuleCard>
-                                                ) : (
-                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-cyan-500/40 bg-cyan-900/10">
-                                                        <div className="space-y-3">
-                                                            <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-2">
-                                                                <span className="text-cyan-400 font-black text-xs uppercase tracking-wider">Pre-Match Ban Phase</span>
-                                                            </div>
-                                                            <p className="text-gray-200 text-xs md:text-sm leading-relaxed font-medium bg-black/30 border border-cyan-500/20 p-3.5 rounded-xl">
-                                                                Before the match starts players will have 5 minutes to check out each others team. Then when the match starts during the team preview, they will be able to ban the pokemon and pick the 4 they will send out!
-                                                            </p>
-                                                            <p className="text-gray-400 text-xs border-t border-white/10 pt-2 flex items-center gap-1.5 font-medium">
-                                                                <RosterSVG />
-                                                                <span>Rosters visible 5-10 minutes before tournament starts after lock-ins!</span>
-                                                            </p>
-                                                        </div>
-                                                    </RuleCard>
-                                                )}
-                                                <RuleCard title="Clauses" icon={<Scroll />} color="border-blue-500/40 bg-blue-900/10">
-                                                    <ul className="space-y-2">
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item on the same team.</span></li>
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
-                                                    </ul>
-                                                </RuleCard>
-                                                <RuleCard title="Move & Ability Bans" icon={<CircleSlash />} color="border-purple-500/40 bg-purple-900/10">
-                                                    <div className="space-y-3">
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (Double Team, Minimize) are banned.</span></div>
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">One-Hit KO moves (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned.</span></div>
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Bans</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
-                                                    </div>
-                                                </RuleCard>
-                                            </>
+                                                </div>
+                                            </div>
+                                        </RuleCard>
+
+                                        <RuleCard title="Party Limits" icon={<Zap className="text-yellow-400" />} color="border-yellow-500/40 bg-yellow-900/10">
+                                            <div className="space-y-3">
+                                                <div className="text-center py-2 bg-yellow-500/15 rounded-xl border border-yellow-500/30 mb-2">
+                                                    <span className="text-yellow-400 font-black text-xs uppercase tracking-wider">ONLY 1 ALLOWED IN PARTY FROM:</span>
+                                                </div>
+                                                <ul className="space-y-2 font-bold">
+                                                    <li className="flex items-center gap-2"><LegendarySVG /> <span className="text-yellow-200">Legendary</span></li>
+                                                    <li className="flex items-center gap-2"><MythicalSVG /> <span className="text-pink-200">Mythical</span></li>
+                                                    <li className="flex items-center gap-2"><ParadoxSVG /> <span className="text-purple-200">Paradox</span></li>
+                                                    <li className="flex items-center gap-2"><UltraBeastSVG /> <span className="text-blue-200">Ultra Beast</span></li>
+                                                </ul>
+                                                <div className="mt-3 pt-3 border-t border-yellow-500/20 text-xs text-yellow-100 bg-yellow-950/20 p-2.5 rounded-xl border border-yellow-500/10 flex gap-2">
+                                                    <svg className="w-5 h-5 text-yellow-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <line x1="12" y1="16" x2="12" y2="12" />
+                                                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                                                    </svg>
+                                                    <span>You will get <strong>1 Limit Token</strong> when you sign up your team that will allow you to put in 1 legendary, mythical, paradox or ultra beast pokemon!</span>
+                                                </div>
+                                            </div>
+                                        </RuleCard>
+
+                                        {/* Match Banning System: Disabled for Season 2, Season 3, and 6v6/Duos formats; Enabled for Season 1 */}
+                                        {(!activeSeason.name.includes('Season 1') || activeSeason.name.includes('Season 2') || activeSeason.name.includes('Season 3') || activeSeason.format.includes('6v6') || activeSeason.format.includes('Duos')) ? (
+                                            <RuleCard title="Match Banning System" icon={<Target />} color="border-gray-500/40 bg-gray-900/40 opacity-50 grayscale">
+                                                <div className="space-y-3 flex flex-col items-center justify-center py-6">
+                                                    <span className="text-gray-400 font-black text-3xl uppercase tracking-widest drop-shadow-md">DISABLED</span>
+                                                    <span className="text-gray-500 text-xs text-center font-bold">There is no banning system for this format.</span>
+                                                </div>
+                                            </RuleCard>
                                         ) : (
-                                            /* SEASON 1 & 2 ORIGINAL RULES */
-                                            <>
-                                                <RuleCard title="Restrictions" icon={<Ban />} color="border-red-500/40 bg-red-900/10">
-                                                    <div className="space-y-4">
-                                                        <div className="space-y-2">
-                                                            <div className="bg-green-500/10 border-2 border-green-500/30 p-3 rounded-2xl flex items-center gap-3 shadow-lg shadow-green-950/20">
-                                                                <div className="bg-green-500/20 p-2 rounded-xl border border-green-400/30 shrink-0">
-                                                                    <CheckSVG />
-                                                                </div>
-                                                                <div>
-                                                                    <div className="uppercase tracking-widest text-[9px] font-black text-green-400">Allowed Gimmicks</div>
-                                                                    <div className="text-sm font-black text-green-100">Mega & Z-Moves</div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="bg-red-500/10 border-2 border-red-500/30 p-3 rounded-2xl flex items-center gap-3 shadow-lg shadow-red-950/20">
-                                                                <div className="bg-red-500/20 p-2 rounded-xl border border-red-400/30 shrink-0">
-                                                                    <BanSVG />
-                                                                </div>
-                                                                <div>
-                                                                    <div className="uppercase tracking-widest text-[9px] font-black text-red-400">Banned Gimmicks</div>
-                                                                    <div className="text-sm font-black text-red-100">Dynamax & Tera</div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <strong className="text-orange-300 block mb-1.5 uppercase text-xs tracking-wider font-extrabold">Banned Pokémon</strong>
-                                                            <ul className="space-y-1 font-bold text-orange-200">
-                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Mega Rayquaza</li>
-                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Zacian Crowned</li>
-                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Ultra Necrozma</li>
-                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Primal Groudon</li>
-                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Primal Kyogre</li>
-                                                                <li className="flex items-center gap-2"><span className="text-red-500">✕</span> Eternamax Eternatus</li>
-                                                            </ul>
-                                                        </div>
+                                            <RuleCard title="Match Banning System" icon={<Target />} color="border-cyan-500/40 bg-cyan-900/10">
+                                                <div className="space-y-3">
+                                                    <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-2">
+                                                        <span className="text-cyan-400 font-black text-xs uppercase tracking-wider">Pre-Match Ban Phase</span>
                                                     </div>
-                                                </RuleCard>
-                                                <RuleCard title="Party Limits" icon={<Zap className="text-yellow-400" />} color="border-yellow-500/40 bg-yellow-900/10">
-                                                    <div className="space-y-3">
-                                                        <div className="text-center py-2 bg-yellow-500/15 rounded-xl border border-yellow-500/30 mb-2">
-                                                            <span className="text-yellow-400 font-black text-xs uppercase tracking-wider">ONLY 1 ALLOWED IN PARTY FROM:</span>
-                                                        </div>
-                                                        <ul className="space-y-2 font-bold">
-                                                            <li className="flex items-center gap-2"><LegendarySVG /> <span className="text-yellow-200">Legendary</span></li>
-                                                            <li className="flex items-center gap-2"><MythicalSVG /> <span className="text-pink-200">Mythical</span></li>
-                                                            <li className="flex items-center gap-2"><ParadoxSVG /> <span className="text-purple-200">Paradox</span></li>
-                                                            <li className="flex items-center gap-2"><UltraBeastSVG /> <span className="text-blue-200">Ultra Beast</span></li>
-                                                        </ul>
-                                                        <div className="mt-3 pt-3 border-t border-yellow-500/20 text-xs text-yellow-100 bg-yellow-950/20 p-2.5 rounded-xl border border-yellow-500/10 flex gap-2">
-                                                            <svg className="w-5 h-5 text-yellow-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                                <circle cx="12" cy="12" r="10" />
-                                                                <line x1="12" y1="16" x2="12" y2="12" />
-                                                                <line x1="12" y1="8" x2="12.01" y2="8" />
-                                                            </svg>
-                                                            <span>You will get <strong>1 Limit Token</strong> when you sign up your team that will allow you to put in 1 legendary, mythical, paradox or ultra beast pokemon!</span>
-                                                        </div>
-                                                    </div>
-                                                </RuleCard>
-                                                {activeSeason.format.includes('6v6') ? (
-                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-gray-500/40 bg-gray-900/40 opacity-50 grayscale">
-                                                        <div className="space-y-3 flex flex-col items-center justify-center py-6">
-                                                            <span className="text-gray-400 font-black text-3xl uppercase tracking-widest drop-shadow-md">DISABLED</span>
-                                                            <span className="text-gray-500 text-xs text-center font-bold">There is no banning system for 6v6 formats.</span>
-                                                        </div>
-                                                    </RuleCard>
-                                                ) : (
-                                                    <RuleCard title="Match Banning System" icon={<Target />} color="border-cyan-500/40 bg-cyan-900/10">
-                                                        <div className="space-y-3">
-                                                            <div className="text-center py-2 bg-cyan-500/20 rounded-xl border border-cyan-500/30 mb-2">
-                                                                <span className="text-cyan-400 font-black text-xs uppercase tracking-wider">Pre-Match Ban Phase</span>
-                                                            </div>
-                                                            <p className="text-gray-200 text-xs md:text-sm leading-relaxed font-medium bg-black/30 border border-cyan-500/20 p-3.5 rounded-xl">
-                                                                Before the match starts players will have 5 minutes to check out each others team. Then when the match starts during the team preview, they will be able to ban the pokemon and pick the 4 they will send out!
-                                                            </p>
-                                                            <p className="text-gray-400 text-xs border-t border-white/10 pt-2 flex items-center gap-1.5 font-medium">
-                                                                <RosterSVG />
-                                                                <span>Rosters visible 5-10 minutes before tournament starts after lock-ins!</span>
-                                                            </p>
-                                                        </div>
-                                                    </RuleCard>
-                                                )}
-                                                <RuleCard title="Clauses" icon={<Scroll />} color="border-blue-500/40 bg-blue-900/10">
-                                                    <ul className="space-y-2">
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item on the same team.</span></li>
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
-                                                        <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
-                                                    </ul>
-                                                </RuleCard>
-                                                <RuleCard title="Move Bans" icon={<CircleSlash />} color="border-purple-500/40 bg-purple-900/10">
-                                                    <div className="space-y-3">
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
-                                                        <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Dark Void, Commander, Sand Veil, Snow Cloak, Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
-                                                    </div>
-                                                </RuleCard>
-                                                <RuleCard title="Item Bans" icon={<Briefcase />} color="border-pink-500/40 bg-pink-900/10">
-                                                    <div className="space-y-3">
-                                                        <p className="text-xs text-pink-300/80 font-medium">Items banned from competitive play:</p>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                            {['Bright Powder', 'Lax Incense', "King's Rock", 'Razor Fang', 'Quick Claw'].map((item) => (
-                                                                <div key={item} className="bg-pink-950/40 border border-pink-500/20 p-2.5 rounded-xl text-pink-200 text-xs font-bold flex items-center gap-2 shadow-sm">
-                                                                    <span className="text-red-400 font-extrabold text-sm">✕</span>
-                                                                    <span>{item}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <div className="mt-4 pt-3 border-t border-pink-500/20">
-                                                            <strong className="text-pink-400 block mb-2 text-sm uppercase tracking-wide">Z-Crystals Bans</strong>
-                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                                {['Kommonium Z', 'Eevium Z'].map((item) => (
-                                                                    <div key={item} className="bg-pink-950/40 border border-pink-500/20 p-2.5 rounded-xl text-pink-200 text-xs font-bold flex items-center gap-2 shadow-sm">
-                                                                        <span className="text-red-400 font-extrabold text-sm">✕</span>
-                                                                        <span>{item}</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </RuleCard>
-                                            </>
+                                                    <p className="text-gray-200 text-xs md:text-sm leading-relaxed font-medium bg-black/30 border border-cyan-500/20 p-3.5 rounded-xl">
+                                                        Before the match starts players will have 5 minutes to check out each others team. Then when the match starts during the team preview, they will be able to ban the pokemon and pick the 4 they will send out!
+                                                    </p>
+                                                    <p className="text-gray-400 text-xs border-t border-white/10 pt-2 flex items-center gap-1.5 font-medium">
+                                                        <RosterSVG />
+                                                        <span>Rosters visible 5-10 minutes before tournament starts after lock-ins!</span>
+                                                    </p>
+                                                </div>
+                                            </RuleCard>
                                         )}
 
-                                        {/* COMMON RULES FOR ALL SEASONS */}
-                                        {activeSeason.name.includes('Season 3') && (
-                                            <RuleCard title="Item Bans" icon={<Briefcase />} color="border-pink-500/40 bg-pink-900/10">
-                                                <div className="space-y-3">
-                                                    <p className="text-xs text-pink-300/80 font-medium">Items banned from competitive play:</p>
+                                        <RuleCard title="Clauses" icon={<Scroll />} color="border-blue-500/40 bg-blue-900/10">
+                                            {activeSeason.name.includes('Season 3') ? (
+                                                <ul className="space-y-2.5">
+                                                    <li>
+                                                        <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Combined Species Clause</strong>
+                                                        <span className="text-gray-200 text-xs leading-relaxed block">Player 1 and Player 2 cannot bring the same Pokémon. If Player 1 brings Amoonguss, Player 2 cannot have an Amoonguss.</span>
+                                                    </li>
+                                                    <li>
+                                                        <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Combined Item Clause</strong>
+                                                        <span className="text-gray-200 text-xs leading-relaxed block">They share a single pool of unique items. If Player 1 puts an Assault Vest on a Pokémon, Player 2 cannot use an Assault Vest on any of their 3 Pokémon.</span>
+                                                    </li>
+                                                    <li>
+                                                        <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong>
+                                                        <span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span>
+                                                    </li>
+                                                    <li>
+                                                        <strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong>
+                                                        <span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span>
+                                                    </li>
+                                                </ul>
+                                            ) : (
+                                                <ul className="space-y-2">
+                                                    <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Species Clause</strong><span className="text-gray-400 text-xs">A team cannot have two Pokémon of the same National Pokédex number.</span></li>
+                                                    <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Item Clause</strong><span className="text-gray-400 text-xs">No two Pokémon may hold the same item on the same team.</span></li>
+                                                    <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Sleep Clause</strong><span className="text-gray-400 text-xs">A team cannot put more than one of the opponent's Pokémon to sleep at the same time.</span></li>
+                                                    <li><strong className="text-blue-400 block mb-0.5 text-sm uppercase tracking-wide">Endless Battle Clause</strong><span className="text-gray-400 text-xs">Players cannot intentionally create a situation where the battle cannot end.</span></li>
+                                                </ul>
+                                            )}
+                                        </RuleCard>
+
+                                        <RuleCard title="Move Bans" icon={<CircleSlash />} color="border-purple-500/40 bg-purple-900/10">
+                                            <div className="space-y-3">
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Evasion Clause</strong><span className="text-gray-400 text-xs">Moves that specifically raise evasion (like Double Team or Minimize) are banned.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">OHKO Clause</strong><span className="text-gray-400 text-xs">Moves that cause a "One-Hit Knockout" regardless of HP (Guillotine, Horn Drill, Sheer Cold, Fissure) are banned.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Moody Ability</strong><span className="text-gray-400 text-xs">This ability is banned. Its random stat boosts are too RNG-dependent.</span></div>
+                                                <div><strong className="text-purple-400 block mb-0.5 text-sm uppercase tracking-wide">Other Restrictions</strong><span className="text-gray-400 text-xs font-mono text-purple-200">Dark Void, Commander, Sand Veil, Snow Cloak, Revival Blessing, Arena Trap, Power Construct, Shadow Tag, Baton Pass, Assist, Last Respects, Shed Tail</span></div>
+                                            </div>
+                                        </RuleCard>
+
+                                        <RuleCard title="Item Bans" icon={<Briefcase />} color="border-pink-500/40 bg-pink-900/10">
+                                            <div className="space-y-3">
+                                                <p className="text-xs text-pink-300/80 font-medium">Items banned from competitive play:</p>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    {['Bright Powder', 'Lax Incense', "King's Rock", 'Razor Fang', 'Quick Claw'].map((item) => (
+                                                        <div key={item} className="bg-pink-950/40 border border-pink-500/20 p-2.5 rounded-xl text-pink-200 text-xs font-bold flex items-center gap-2 shadow-sm">
+                                                            <span className="text-red-400 font-extrabold text-sm">✕</span>
+                                                            <span>{item}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="mt-4 pt-3 border-t border-pink-500/20">
+                                                    <strong className="text-pink-400 block mb-2 text-sm uppercase tracking-wide">Z-Crystals Bans</strong>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                        {['Bright Powder', 'Lax Incense', "King's Rock", 'Razor Fang', 'Quick Claw'].map((item) => (
+                                                        {['Kommonium Z', 'Eevium Z'].map((item) => (
                                                             <div key={item} className="bg-pink-950/40 border border-pink-500/20 p-2.5 rounded-xl text-pink-200 text-xs font-bold flex items-center gap-2 shadow-sm">
                                                                 <span className="text-red-400 font-extrabold text-sm">✕</span>
                                                                 <span>{item}</span>
@@ -1762,9 +1764,11 @@ const TournamentBACK: React.FC = () => {
                                                         ))}
                                                     </div>
                                                 </div>
-                                            </RuleCard>
-                                        )}
-                                        <RuleCard title="General Rules" icon={<Scale />} className={!activeSeason.name.includes('Season 3') ? "lg:col-span-2" : ""}>
+                                            </div>
+                                        </RuleCard>
+
+                                        {/* COMMON RULES FOR ALL SEASONS */}
+                                        <RuleCard title="General Rules" icon={<Scale />} className="lg:col-span-2">
                                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs md:text-sm">
                                                 <li className="flex gap-2.5 items-start bg-black/20 p-2.5 rounded-xl border border-white/5"><span className="text-red-500 font-bold text-lg leading-none shrink-0">•</span><span>Break any rule = <span className="text-red-400 font-bold">Instant Disqualification</span>.</span></li>
                                                 <li className="flex gap-2.5 items-start bg-black/20 p-2.5 rounded-xl border border-white/5"><span className="text-brand-primary font-bold text-lg leading-none shrink-0">•</span><span>No intentional stalling or disconnect abuse.</span></li>
@@ -1780,69 +1784,6 @@ const TournamentBACK: React.FC = () => {
                                                 <li className="flex gap-2"><span className="text-green-400">•</span> Keep your pokemon on your shoulders or in your balls.</li>
                                             </ul>
                                         </RuleCard>
-                            </div>
-                        )}
-
-                        {activeTab === 'duos' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {duos.length === 0 ? (
-                                    <div className="col-span-full flex flex-col items-center justify-center p-12 text-center bg-black/40 rounded-2xl border border-white/5">
-                                        <Users className="w-12 h-12 text-[#ff007f] mb-4 opacity-80 animate-pulse" strokeWidth={1.5} />
-                                        <h3 className="text-xl font-bold text-white mb-2">No Duos Yet</h3>
-                                        <p className="text-gray-400">Admins will pair signed-up players into duos soon!</p>
-                                    </div>
-                                ) : duos.map(duo => (
-                                    <div key={duo.duoId} className="bg-gradient-to-br from-purple-900/30 to-black/80 border border-purple-500/20 p-6 rounded-2xl relative overflow-hidden group hover:scale-[1.02] transition-all">
-                                        <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none group-hover:scale-110 transition-transform text-white">
-                                            <Users className="w-16 h-16" strokeWidth={1} />
-                                        </div>
-
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div className="flex -space-x-3">
-                                                <img src={`https://mc-heads.net/avatar/${duo.player1Username}/48`} className={`w-12 h-12 rounded-xl border-2 ${duo.captainDiscordId === duo.player1DiscordId ? 'border-yellow-500 z-10' : 'border-white/10'}`} />
-                                                <img src={`https://mc-heads.net/avatar/${duo.player2Username}/48`} className={`w-12 h-12 rounded-xl border-2 ${duo.captainDiscordId === duo.player2DiscordId ? 'border-yellow-500 z-10' : 'border-white/10'}`} />
-                                            </div>
-                                            <div>
-                                                <div className="text-white font-bold flex items-center gap-2 text-sm">
-                                                    {duo.player1Username} & {duo.player2Username}
-                                                </div>
-                                                <div className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
-                                                    {duo.isLocked ? (
-                                                        <><Check className="w-3.5 h-3.5" /> Ready for Battle</>
-                                                    ) : (
-                                                        <><Hourglass className="w-3.5 h-3.5 animate-spin-slow" /> Drafting Team</>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Team Grid */}
-                                        <div className="grid grid-cols-6 gap-2">
-                                            {duo.team.map((poke, i) => (
-                                                <div key={i} className="aspect-square bg-black/40 rounded-lg flex items-center justify-center border border-white/5 relative group/poke">
-                                                    {poke ? (
-                                                        <>
-                                                            <img
-                                                                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`}
-                                                                alt={poke.name}
-                                                                className="w-10 h-10 object-contain pixelated rendering-pixelated"
-                                                            />
-                                                            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/poke:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none border border-white/10">
-                                                                {poke.name}
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-white/10 text-lg font-bold">?</span>
-                                                    )}
-                                                </div>
-                                            ))}
-                                            {/* Fill remaining slots */}
-                                            {Array.from({ length: 6 - duo.team.length }).map((_, i) => (
-                                                <div key={`empty-${i}`} className="aspect-square bg-black/20 rounded-lg border border-white/5"></div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
                             </div>
                         )}
 
@@ -1902,8 +1843,8 @@ const TournamentBACK: React.FC = () => {
                                                     <p className="text-gray-400 max-w-md mx-auto">The tournament has not ended yet. Check back later to see who takes the crown!</p>
                                                 </div>
                                             </div>
-                                        ) : apiWinners[0]?.player2 ? (
-                                            /* DUOS WINNERS DISPLAY - only if data has player2 field */
+                                        ) : (apiWinners.length > 0 && (apiWinners.some(w => !!w.player2) || activeSeason.format.includes('Doubles Duos') || activeSeason.format.includes('Duos'))) ? (
+                                            /* DUOS WINNERS DISPLAY - only if data has player2 field or Duos format */
                                             <div className="flex flex-col md:flex-row items-end gap-4 md:gap-8 w-full max-w-6xl mx-auto px-4 justify-center">
                                                 {/* 2ND PLACE - DUOS */}
                                                 {apiWinners.find(w => w.rank === 2) && (() => {
@@ -1920,9 +1861,7 @@ const TournamentBACK: React.FC = () => {
                                                                             <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
                                                                                 <span className="font-black text-slate-300 text-lg">2ND</span>
                                                                             </div>
-                                                                            <div className="absolute -bottom-1 -right-1 bg-[#1a1a1a] rounded-full p-1 border border-slate-400 shadow-md text-slate-300">
-                                                                                <Trophy className="w-4 h-4" />
-                                                                            </div>
+                                                                            <TournamentMedalBadge rank={2} size="md" />
                                                                         </div>
                                                                         <div className="min-w-0 flex-1">
                                                                             <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${rP1} & ${rP2}`}</h3>
@@ -1934,8 +1873,8 @@ const TournamentBACK: React.FC = () => {
                                                                     </div>
                                                                 </div>
                                                                 <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden"><div className="w-3/4 h-full bg-slate-400"></div></div>
-                                                                <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
                                                             </div>
+                                                            <div className="h-4 bg-slate-900 mx-4 rounded-b-xl opacity-50"></div>
                                                             <div className="mt-4 flex justify-center gap-2">
                                                                 <img src={`https://mc-heads.net/body/${rP1}/right`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={rP1} />
                                                                 <img src={`https://mc-heads.net/body/${rP2}/left`} className="h-40 md:h-56 object-contain filter drop-shadow-2xl grayscale-[0.3]" alt={rP2} />
@@ -1958,7 +1897,7 @@ const TournamentBACK: React.FC = () => {
                                                                     <img src={`https://mc-heads.net/body/${rP2}/left`} className="h-56 md:h-72 object-contain filter drop-shadow-[0_0_30px_rgba(168,85,247,0.4)]" alt={rP2} />
                                                                 </div>
                                                                 <div className="absolute -top-16 animate-bounce">
-                                                                    <Crown className="w-16 h-16 text-yellow-400 filter drop-shadow-lg" strokeWidth={1.5} />
+                                                                    <TournamentCrown />
                                                                 </div>
                                                             </div>
 
@@ -2004,9 +1943,7 @@ const TournamentBACK: React.FC = () => {
                                                                             <div className="w-14 h-14 rounded-full bg-orange-900/30 flex items-center justify-center border-2 border-orange-700 shadow-[0_0_15px_rgba(194,65,12,0.3)]">
                                                                                 <span className="font-black text-orange-500 text-lg">3RD</span>
                                                                             </div>
-                                                                            <div className="absolute -bottom-1 -right-1 bg-[#1a1a1a] rounded-full p-1 border border-orange-700 shadow-md text-orange-500">
-                                                                                <Trophy className="w-4 h-4" />
-                                                                            </div>
+                                                                            <TournamentMedalBadge rank={3} size="md" />
                                                                         </div>
                                                                         <div className="min-w-0 flex-1">
                                                                             <h3 className="text-xl font-black text-white italic tracking-tighter truncate">{winner.teamName || `${rP1} & ${rP2}`}</h3>
@@ -2044,9 +1981,7 @@ const TournamentBACK: React.FC = () => {
                                                                          <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.3)]">
                                                                              <span className="font-black text-slate-300 text-xl">2ND</span>
                                                                          </div>
-                                                                         <div className="absolute -bottom-2 -right-2 bg-[#1a1a1a] rounded-full p-1.5 border border-slate-400 shadow-md text-slate-300">
-                                                                             <Trophy className="w-5 h-5" />
-                                                                         </div>
+                                                                         <TournamentMedalBadge rank={2} size="md" />
                                                                      </div>
                                                                      <div className="min-w-0">
                                                                          <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{rW1}</h3>
@@ -2073,7 +2008,7 @@ const TournamentBACK: React.FC = () => {
                                                                 <div className="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full"></div>
                                                                 <img src={`https://mc-heads.net/body/${rW0}`} className="h-64 md:h-80 object-contain filter drop-shadow-[0_0_30px_rgba(234,179,8,0.4)] scale-110" alt={rW0} />
                                                                 <div className="absolute -top-16 animate-bounce">
-                                                                    <Crown className="w-16 h-16 text-yellow-400 filter drop-shadow-lg" strokeWidth={1.5} />
+                                                                    <TournamentCrown />
                                                                 </div>
                                                             </div>
 
@@ -2111,9 +2046,7 @@ const TournamentBACK: React.FC = () => {
                                                                         <div className="w-16 h-16 rounded-full bg-orange-900/30 flex items-center justify-center border-2 border-orange-700 shadow-[0_0_15px_rgba(194,65,12,0.3)]">
                                                                             <span className="font-black text-orange-500 text-xl">3RD</span>
                                                                         </div>
-                                                                        <div className="absolute -bottom-2 -right-2 bg-[#1a1a1a] rounded-full p-1.5 border border-orange-700 shadow-md text-orange-500">
-                                                                            <Trophy className="w-5 h-5" />
-                                                                        </div>
+                                                                        <TournamentMedalBadge rank={3} size="md" />
                                                                     </div>
                                                                     <div className="min-w-0">
                                                                         <h3 className="text-2xl font-black text-white italic tracking-tighter truncate">{rW2}</h3>
@@ -2222,73 +2155,124 @@ const TournamentBACK: React.FC = () => {
                                         ))}
                                     </div>
                                 )}
+                            </div>
+                        )}
 
-                                {/* Duos Section - Only for Duos format */}
-                                {activeSeason.format.includes('Doubles Duos') && duos.length > 0 && (
-                                    <div className="mt-12 space-y-6">
-                                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <Users className="w-6 h-6 text-purple-400" />
-                                                <h3 className="text-2xl font-black text-purple-400 uppercase tracking-tighter">Duos Teams</h3>
-                                            </div>
-                                            <div className="text-[10px] bg-purple-500/20 text-purple-400 border border-purple-500/30 px-4 py-1.5 rounded-full font-black uppercase tracking-widest">{duos.length} Teams</div>
+                        {/* Dedicated Teams Tab for Duos Format */}
+                        {activeTab === 'duos' && (
+                            <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <Users className="w-8 h-8 text-purple-400" />
+                                        <div>
+                                            <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">Duos Teams</h2>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {duos.map(duo => (
-                                                <button
-                                                    key={duo.duoId}
-                                                    onClick={() => setSelectedDuo(duo)}
-                                                    className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-2xl p-5 text-left hover:border-purple-400/50 hover:scale-[1.02] transition-all cursor-pointer group"
-                                                >
-                                                    <div className="flex items-center gap-4 mb-4">
-                                                        <div className="flex -space-x-3">
-                                                            {/* Captain avatar first */}
-                                                            <img src={`https://mc-heads.net/avatar/${duo.player1Username}/40`} className="w-10 h-10 rounded-xl border-2 border-yellow-500" />
-                                                            <img src={`https://mc-heads.net/avatar/${duo.player2Username}/40`} className="w-10 h-10 rounded-xl border-2 border-purple-500/50" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            {/* Team Name (if set) */}
-                                                            {duo.teamName ? (
-                                                                <>
-                                                                    <div className="font-black text-purple-400 text-sm truncate">{duo.teamName}</div>
-                                                                    <div className="text-[10px] text-gray-400 truncate">
-                                                                        {duo.player1Username} & {duo.player2Username}
-                                                                    </div>
-                                                                </>
-                                                            ) : (
-                                                                <div className="font-bold text-white text-sm truncate">
+                                    </div>
+                                    <div className="text-xs bg-purple-500/20 text-purple-400 border border-purple-500/30 px-5 py-2 rounded-full font-black uppercase tracking-widest">{duos.length} {duos.length === 1 ? 'Team' : 'Teams'}</div>
+                                </div>
+
+                                {duos.length === 0 ? (
+                                    <div className="col-span-full flex flex-col items-center justify-center py-24 text-center bg-black/20 rounded-3xl border border-white/5 space-y-4">
+                                        <Users className="w-16 h-16 text-purple-400 opacity-60 animate-pulse" strokeWidth={1.5} />
+                                        <div className="space-y-1">
+                                            <h3 className="text-2xl font-black text-white uppercase tracking-tight">No Duos Paired Yet</h3>
+                                            <p className="text-gray-400 text-sm max-w-md mx-auto">Admins are currently pairing registered players into duo teams. Check back soon!</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {duos.map(duo => (
+                                            <button
+                                                key={duo.duoId}
+                                                onClick={() => setSelectedDuo(duo)}
+                                                className="bg-gradient-to-br from-purple-900/25 via-black/80 to-black border border-purple-500/30 rounded-3xl p-6 text-left hover:border-purple-400/60 hover:scale-[1.01] hover:shadow-xl hover:shadow-purple-950/40 transition-all cursor-pointer group"
+                                            >
+                                                <div className="flex items-center gap-4 mb-5">
+                                                    <div className="flex -space-x-3 shrink-0">
+                                                        {/* Captain avatar first */}
+                                                        <img
+                                                            src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player1Username : duo.player2Username}/48`}
+                                                            className="w-12 h-12 rounded-2xl border-2 border-yellow-500 shadow-md shadow-yellow-500/20 bg-black/60 object-cover"
+                                                            alt="Captain"
+                                                        />
+                                                        <img
+                                                            src={`https://mc-heads.net/avatar/${duo.captainDiscordId === duo.player1DiscordId ? duo.player2Username : duo.player1Username}/48`}
+                                                            className="w-12 h-12 rounded-2xl border-2 border-purple-500/60 shadow-md bg-black/60 object-cover"
+                                                            alt="Teammate"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        {/* Team Name */}
+                                                        {duo.teamName ? (
+                                                            <>
+                                                                <div className="font-black text-purple-300 text-base md:text-lg truncate group-hover:text-purple-200 transition-colors">{duo.teamName}</div>
+                                                                <div className="text-xs text-gray-400 truncate font-medium">
                                                                     {duo.player1Username} & {duo.player2Username}
                                                                 </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="font-black text-white text-base md:text-lg truncate group-hover:text-purple-200 transition-colors">
+                                                                {duo.player1Username} & {duo.player2Username}
+                                                            </div>
+                                                        )}
+                                                        <div className={`text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 mt-1 ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
+                                                            {duo.isLocked ? (
+                                                                <>
+                                                                    <Check className="w-3.5 h-3.5 text-green-400 shrink-0" /> READY FOR BATTLE
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Hourglass className="w-3.5 h-3.5 text-amber-400 animate-spin shrink-0" /> DRAFTING ROSTER
+                                                                </>
                                                             )}
-                                                            <div className={`text-[10px] font-black uppercase flex items-center gap-1 mt-1 ${duo.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
-                                                                {duo.isLocked ? (
-                                                                    <>
-                                                                        <Check className="w-3.5 h-3.5 text-green-400" /> Locked
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <Hourglass className="w-3.5 h-3.5 text-amber-400 animate-spin" /> Drafting
-                                                                    </>
-                                                                )}
-                                                            </div>
                                                         </div>
-                                                        <div className="text-white/30 group-hover:text-purple-400 transition-colors text-xl">→</div>
                                                     </div>
-                                                    {/* Mini Team Preview - Only show actual Pokemon when locked */}
-                                                    <div className="flex gap-1">
-                                                        {Array(6).fill(null).map((_, idx) => (
-                                                            <div key={idx} className={`w-8 h-8 rounded-lg border ${idx < 3 ? 'border-yellow-500/30' : 'border-purple-500/30'} bg-black/40 flex items-center justify-center`}>
-                                                                {duo.isLocked && duo.team && duo.team[idx] ? (
-                                                                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${duo.team[idx]!.id}.png`} className="w-6 h-6 pixelated" />
+                                                    <div className="text-white/20 group-hover:text-purple-300 group-hover:translate-x-1 transition-all text-2xl font-bold pr-1">→</div>
+                                                </div>
+
+                                                {/* Mini Team Preview Grid (6 slots) */}
+                                                <div className="grid grid-cols-6 gap-2 bg-black/40 p-2.5 rounded-2xl border border-white/5">
+                                                    {Array(6).fill(null).map((_, idx) => {
+                                                        const mon = duo.isLocked && duo.team ? duo.team[idx] : null;
+                                                        const category = mon ? getLimitTokenCategory(mon.id) : null;
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                className={`aspect-square rounded-xl border ${idx < 3 ? 'border-yellow-500/30 bg-yellow-950/20' : 'border-purple-500/30 bg-purple-950/20'} bg-black/60 flex items-center justify-center relative group/slot overflow-visible`}
+                                                                title={mon ? `${mon.name}${category ? ` (${category})` : ''}` : `Slot ${idx + 1}`}
+                                                            >
+                                                                {mon ? (
+                                                                    <>
+                                                                        <img
+                                                                            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${mon.id}.png`}
+                                                                            className="w-8 h-8 object-contain pixelated rendering-pixelated drop-shadow group-hover/slot:scale-110 transition-transform"
+                                                                            alt={mon.name}
+                                                                        />
+                                                                        {category && (
+                                                                            <div className="absolute -top-1.5 -right-1.5 z-10 pointer-events-none">
+                                                                                <span className={`text-[8px] font-black p-0.5 rounded-full flex items-center justify-center border shadow-md ${
+                                                                                    category === 'Legendary' ? 'text-yellow-300 bg-yellow-500/90 border-yellow-300' :
+                                                                                    category === 'Mythical' ? 'text-pink-200 bg-pink-500/90 border-pink-300' :
+                                                                                    category === 'Paradox' ? 'text-purple-200 bg-purple-500/90 border-purple-300' :
+                                                                                    'text-cyan-200 bg-cyan-500/90 border-cyan-300'
+                                                                                }`}>
+                                                                                    {category === 'Legendary' && <LegendarySVG className="w-2.5 h-2.5 text-yellow-200 fill-yellow-200 shrink-0" />}
+                                                                                    {category === 'Mythical' && <MythicalSVG className="w-2.5 h-2.5 text-pink-100 shrink-0" />}
+                                                                                    {category === 'Paradox' && <ParadoxSVG className="w-2.5 h-2.5 text-purple-100 shrink-0" />}
+                                                                                    {category === 'Ultra Beast' && <UltraBeastSVG className="w-2.5 h-2.5 text-cyan-100 shrink-0" />}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    </>
                                                                 ) : (
-                                                                    <span className="text-gray-600 text-xs font-black">?</span>
+                                                                    <span className="text-gray-600 text-xs font-black select-none">?</span>
                                                                 )}
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </button>
+                                        ))}
                                     </div>
                                 )}
                             </div>
@@ -2296,13 +2280,13 @@ const TournamentBACK: React.FC = () => {
 
                         {activeTab === 'signup' && (
                             <div className="relative z-10 bg-black/40 backdrop-blur-xl rounded-[3rem] border border-white/10 p-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                {!user ? (
+                                {!effectiveUser ? (
                                     <div className="flex flex-col items-center justify-center py-16 text-center space-y-8">
                                         <div className="w-20 h-20 bg-red-900/20 rounded-full flex items-center justify-center text-5xl opacity-40">🔒</div>
                                         <div className="space-y-2"><h2 className="text-3xl font-black text-white uppercase tracking-tighter">Login Required</h2><p className="text-gray-400 max-w-sm mx-auto text-sm">Discord identification required.</p></div>
                                         <UserProfile className="scale-110" />
                                     </div>
-                                ) : loadingTeam ? (<div className="text-center py-20">Retrieving...</div>) : !hasStartedRegistration && !isLocked ? (
+                                ) : loadingTeam ? (<div className="text-center py-20">Retrieving...</div>) : !hasStartedRegistration && !isLocked && !adminDummyId ? (
                                     <div className="flex flex-col items-center justify-center py-10 text-center space-y-8">
                                         {tournamentStatus === 'ONGOING' || tournamentStatus === 'ENDED' ? (
                                             <div className="bg-red-900/20 border-2 border-red-500/30 p-12 rounded-[2.5rem] flex flex-col items-center gap-4">
@@ -2316,8 +2300,8 @@ const TournamentBACK: React.FC = () => {
                                             </div>
                                         ) : (
                                             <>
-                                                <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
-                                                <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{user.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">{activeSeason.format.includes('Doubles Duos') ? "Click below to register and wait for your duo to be picked!" : "Click below to register and begin drafting your team!"}</p></div>
+                                                <img src={`https://mc-heads.net/avatar/${effectiveUser?.minecraftUsername}/128`} alt="MC" className="relative w-36 h-36 rounded-[2.5rem] border-4 border-brand-primary bg-black shadow-2xl" />
+                                                <div className="space-y-3"><h2 className="text-4xl font-black text-white uppercase tracking-tighter">Hello, <span className="text-brand-primary">{effectiveUser?.minecraftUsername}</span>!</h2><p className="text-gray-400 max-w-lg mx-auto text-base">{activeSeason.format.includes('Doubles Duos') ? "Click below to register and wait for your duo to be picked!" : "Click below to register and begin drafting your team!"}</p></div>
                                                 <button onClick={handleInitialRegister} className="bg-brand-primary hover:bg-red-600 text-white font-black text-xl py-5 px-12 rounded-[2rem] shadow-xl transition-all transform hover:scale-105 uppercase tracking-widest border-b-4 border-red-800">JOIN TOURNAMENT</button>
                                             </>
                                         )}
@@ -2392,8 +2376,8 @@ const TournamentBACK: React.FC = () => {
                                                 ) : (
                                                     /* Singles Mode: Show single player */
                                                     <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
-                                                        <img src={`https://mc-heads.net/avatar/${user.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
-                                                        <div className="text-left"><h3 className="text-2xl font-black text-white tracking-tight">{user.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
+                                                        <img src={`https://mc-heads.net/avatar/${effectiveUser?.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
+                                                        <div className="text-left"><h3 className="text-2xl font-black text-white tracking-tight">{effectiveUser?.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
                                                     </div>
                                                 )}
                                                 <div className="space-y-6">
@@ -2542,120 +2526,23 @@ const TournamentBACK: React.FC = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* Season 3: Gimmick Selection */}
-                                                    {activeSeason.name.includes('Season 3') && (
-                                                        <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-2xl border border-white/10">
-                                                                <div className="flex items-center gap-3 mb-6">
-                                                                    <Flame className="w-6 h-6 text-orange-500 animate-pulse" />
-                                                                    <div>
-                                                                        <h4 className="text-sm font-black uppercase tracking-widest text-white">Gimmick Selection</h4>
-                                                                        <p className="text-xs text-gray-400">Choose ONE gimmick and which Pokemon will use it.</p>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="space-y-4">
-                                                                    {/* 1. Select Gimmick Type */}
-                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                                        {[
-                                                                            { id: 'tera', label: 'Tera', color: 'border-blue-500 text-blue-400' },
-                                                                            { id: 'dynamax', label: 'Dynamax', color: 'border-red-500 text-red-500' },
-                                                                            { id: 'mega', label: 'Mega', color: 'border-pink-500 text-pink-400' },
-                                                                            { id: 'zmove', label: 'Z-Move', color: 'border-yellow-400 text-yellow-400' }
-                                                                        ].map(g => (
-                                                                            <button
-                                                                                key={g.id}
-                                                                                onClick={() => setSelectedGimmick(g.id as any)}
-                                                                                disabled={isLocked || tournamentStatus === 'ONGOING'}
-                                                                                className={`py-3 px-2 rounded-xl text-xs font-black uppercase tracking-wider border-2 transition-all ${selectedGimmick === g.id
-                                                                                    ? `${g.color} bg-white/10 shadow-lg scale-105`
-                                                                                    : 'border-white/5 text-gray-500 hover:bg-white/5 hover:text-white'
-                                                                                    } ${isLocked || tournamentStatus === 'ONGOING' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                                            >
-                                                                                {g.label}
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-
-                                                                    {/* 2. Select Pokemon for Gimmick */}
-                                                                    {selectedGimmick && (
-                                                                        <div className="pt-4 border-t border-white/10">
-                                                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3 block">Who uses {selectedGimmick}?</label>
-                                                                            <div className="flex gap-2 justify-center flex-wrap">
-                                                                                {selectedTeam.map((p, idx) => p && (
-                                                                                    <button
-                                                                                        key={idx}
-                                                                                        onClick={() => {
-                                                                                            // Validation: Dynamax restriction
-                                                                                            if (selectedGimmick === 'dynamax' && (isLegendary(p.id) || isMythical(p.id) || isParadox(p.id) || isUltraBeast(p.id))) {
-                                                                                                alert("Restricted Pokémon cannot Dynamax!");
-                                                                                                return;
-                                                                                            }
-                                                                                            // Validation: Shedinja Tera
-                                                                                            if (selectedGimmick === 'tera' && p.name.includes('Shedinja')) {
-                                                                                                alert("Shedinja cannot use Tera!");
-                                                                                                return;
-                                                                                            }
-                                                                                            setGimmickPokemonId(p.id);
-                                                                                        }}
-                                                                                        disabled={isLocked || tournamentStatus === 'ONGOING'}
-                                                                                        className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center relative transition-all ${gimmickPokemonId === p.id
-                                                                                            ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] scale-110 z-10'
-                                                                                            : 'border-white/10 hover:border-white/30 grayscale hover:grayscale-0'
-                                                                                            } ${isLocked || tournamentStatus === 'ONGOING' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                                                    >
-                                                                                        <div className="w-10 h-10 relative">
-                                                                                            <PokemonTeamImage pokemon={p} />
-                                                                                        </div>
-                                                                                        {gimmickPokemonId === p.id && (
-                                                                                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-black">
-                                                                                                <Check className="w-3 h-3 stroke-[3]" />
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </button>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                    {/* Season 2: Legendary Limit Warning (Legacy) */}
-                                                    {!activeSeason.name.includes('Season 3') && activeSeason.format.includes('Doubles Duos') && legendaryCount > 0 && (
-                                                        <div className={`px-4 py-3 rounded-2xl border ${exceedsLegendaryLimit ? 'bg-red-900/30 border-red-500/50' : 'bg-yellow-900/20 border-yellow-500/30'}`}>
-                                                            <div className="flex items-center gap-3">
-                                                                {exceedsLegendaryLimit ? <Ban className="w-6 h-6 text-red-500 shrink-0" /> : <Star className="w-6 h-6 text-yellow-500 shrink-0" strokeWidth={2} />}
-                                                                <div>
-                                                                    <div className={`text-sm font-black uppercase ${exceedsLegendaryLimit ? 'text-red-400' : 'text-yellow-400'}`}>
-                                                                        {exceedsLegendaryLimit ? 'TOO MANY LEGENDARIES!' : 'Legendary Slot Used'}
-                                                                    </div>
-                                                                    <div className="text-xs text-gray-400">
-                                                                        {exceedsLegendaryLimit
-                                                                            ? `You have ${legendaryCount} legendaries. Only 1 is allowed per team.`
-                                                                            : `${legendaryCount}/1 legendary selected. No Mythical, Paradox, or Ultra Beasts allowed.`
-                                                                        }
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Duos Mode: 3+3 Split with Owner Labels */}
                                                     {activeSeason.format.includes('Doubles Duos') && myDuo ? (
-                                                        <div className="space-y-8">
-                                                            {/* Captain's Pokemon (Slots 0-2) */}
+                                                        /* Doubles Duos Mode: Split into Player 1 & Player 2 Rosters */
+                                                        <div className="space-y-6">
+                                                            {/* Player 1 / Captain's Pokemon (Slots 1-3) */}
                                                             <div className="space-y-4">
                                                                 <div className="flex items-center gap-3 px-2">
-                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.player1Username}/32`} className="w-8 h-8 rounded-xl border-2 border-yellow-500 shadow-md" />
-                                                                    <span className="text-sm font-black uppercase tracking-widest text-yellow-400">{myDuo.player1Username}'s Roster (Slots 1-3)</span>
+                                                                    <img src={`https://mc-heads.net/avatar/${myDuo?.player1Username || 'steve'}/32`} className="w-8 h-8 rounded-xl border-2 border-yellow-500 shadow-md" />
+                                                                    <span className="text-sm font-black tracking-widest text-yellow-400">{(myDuo?.player1Username || 'Player 1')}'s Roster (Slots 1-3)</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(0, 3).map((p, idx) => {
+                                                                        const actualIdx = idx;
                                                                         const banned = p !== null && isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name, activeSeason?.bannedPokemonIds);
                                                                         const isTokenMon = p !== null && isLimitTokenPokemon(p.id);
                                                                         const category = p !== null ? getLimitTokenCategory(p.id) : null;
                                                                         return (
-                                                                            <div key={idx} className={`aspect-square rounded-[2rem] border-2 flex flex-col items-center justify-center relative group transition-all duration-300 p-3 overflow-hidden ${
+                                                                            <div key={actualIdx} className={`aspect-square rounded-[2rem] border-2 flex flex-col items-center justify-center relative group transition-all duration-300 p-3 overflow-hidden ${
                                                                                 p
                                                                                     ? (banned
                                                                                         ? 'bg-red-950/30 border-red-500 shadow-xl shadow-red-950/30'
@@ -2667,7 +2554,7 @@ const TournamentBACK: React.FC = () => {
                                                                                 {/* Slot Label Badge */}
                                                                                 <div className="absolute top-2.5 left-2.5 z-20">
                                                                                     <span className="text-[9px] font-black uppercase font-mono px-2 py-0.5 rounded-md bg-black/80 text-yellow-400 border border-yellow-500/30">
-                                                                                        SLOT {idx + 1}
+                                                                                        SLOT {actualIdx + 1}
                                                                                     </span>
                                                                                 </div>
 
@@ -2703,8 +2590,8 @@ const TournamentBACK: React.FC = () => {
                                                                                         <div className="absolute bottom-2.5 left-2 right-2 z-20">
                                                                                             <div className={`text-[9px] font-black uppercase text-center truncate py-1.5 px-2 rounded-xl backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-red-400' : 'bg-black/80 text-white border-white/15'}`}>{p.name}</div>
                                                                                         </div>
-                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || myDuo.player1DiscordId === user?.id) && (
-                                                                                            <button onClick={() => handleRemovePokemon(idx)} className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white scale-90 hover:scale-100" title={`Remove ${p.name}`}>
+                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null || myDuo?.player1DiscordId === effectivePlayerId) && (
+                                                                                            <button onClick={() => handleRemovePokemon(actualIdx)} className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white scale-90 hover:scale-100" title={`Remove ${p.name}`}>
                                                                                                 <X className="w-3.5 h-3.5" />
                                                                                             </button>
                                                                                         )}
@@ -2721,11 +2608,11 @@ const TournamentBACK: React.FC = () => {
                                                                 </div>
                                                             </div>
 
-                                                            {/* Partner's Pokemon (Slots 3-5) */}
+                                                            {/* Partner / Player 2's Pokemon (Slots 4-6) */}
                                                             <div className="space-y-4">
                                                                 <div className="flex items-center gap-3 px-2">
-                                                                    <img src={`https://mc-heads.net/avatar/${myDuo.player2Username}/32`} className="w-8 h-8 rounded-xl border-2 border-purple-500 shadow-md" />
-                                                                    <span className="text-sm font-black uppercase tracking-widest text-purple-400">{myDuo.player2Username}'s Roster (Slots 4-6)</span>
+                                                                    <img src={`https://mc-heads.net/avatar/${myDuo?.player2Username || 'steve'}/32`} className="w-8 h-8 rounded-xl border-2 border-purple-500 shadow-md" />
+                                                                    <span className="text-sm font-black tracking-widest text-purple-400">{(myDuo?.player2Username || 'Player 2')}'s Roster (Slots 4-6)</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(3, 6).map((p, idx) => {
@@ -2782,7 +2669,7 @@ const TournamentBACK: React.FC = () => {
                                                                                         <div className="absolute bottom-2.5 left-2 right-2 z-20">
                                                                                             <div className={`text-[9px] font-black uppercase text-center truncate py-1.5 px-2 rounded-xl backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-red-400' : 'bg-black/80 text-white border-white/15'}`}>{p.name}</div>
                                                                                         </div>
-                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || myDuo.player2DiscordId === user?.id) && (
+                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null || myDuo?.player2DiscordId === effectivePlayerId) && (
                                                                                             <button onClick={() => handleRemovePokemon(actualIdx)} className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white scale-90 hover:scale-100" title={`Remove ${p.name}`}>
                                                                                                 <X className="w-3.5 h-3.5" />
                                                                                             </button>
@@ -3087,7 +2974,7 @@ const TournamentBACK: React.FC = () => {
                                                         <p className="text-gray-400">The tournament has already begun. Drafting is closed, and unfinalized teams have been disqualified.</p>
                                                     </div>
                                                 )}
-                                                </div>
+                                            </div>
                                             </>
                                         )}
                                     </div>
@@ -3181,14 +3068,14 @@ const TournamentBACK: React.FC = () => {
                                 </div>
                                 <div>
                                     {selectedDuo.teamName && (
-                                        <h2 className="text-3xl md:text-4xl font-black text-purple-400 uppercase tracking-tighter mb-1">{selectedDuo.teamName}</h2>
+                                        <h2 className="text-3xl md:text-4xl font-black text-purple-400 tracking-tighter mb-1">{selectedDuo.teamName}</h2>
                                     )}
-                                    <div className={`${selectedDuo.teamName ? 'text-lg text-gray-400' : 'text-3xl md:text-4xl text-white'} font-black uppercase tracking-tighter`}>
+                                    <div className={`${selectedDuo.teamName ? 'text-lg text-gray-400' : 'text-3xl md:text-4xl text-white'} font-black tracking-tighter`}>
                                         <>{selectedDuo.player1Username}<span className="text-purple-400"> & </span>{selectedDuo.player2Username}</>
                                     </div>
                                     <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mt-2 ${selectedDuo.isLocked ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}>
                                         <span className={`w-2 h-2 rounded-full ${selectedDuo.isLocked ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
-                                        <span className="text-xs font-black uppercase tracking-widest">{selectedDuo.isLocked ? 'Roster Finalized' : 'Drafting Phase'}</span>
+                                        <span className="text-xs font-black uppercase tracking-widest">{selectedDuo.isLocked ? 'READY FOR BATTLE' : 'Drafting Phase'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -3201,7 +3088,7 @@ const TournamentBACK: React.FC = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <img src={`https://mc-heads.net/avatar/${selectedDuo.player1Username}/32`} className="w-8 h-8 rounded-lg border-2 border-yellow-500" />
-                                    <h3 className="text-lg font-black uppercase tracking-widest text-yellow-400">{selectedDuo.player1Username}'s Pokémon</h3>
+                                    <h3 className="text-lg font-black tracking-widest text-yellow-400">{selectedDuo.player1Username}'s Pokémon</h3>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
                                     {(selectedDuo.team?.slice(0, 3) || [null, null, null]).map((pokemon, idx) => (
@@ -3214,7 +3101,7 @@ const TournamentBACK: React.FC = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <img src={`https://mc-heads.net/avatar/${selectedDuo.player2Username}/32`} className="w-8 h-8 rounded-lg border-2 border-purple-500" />
-                                    <h3 className="text-lg font-black uppercase tracking-widest text-purple-400">{selectedDuo.player2Username}'s Pokémon</h3>
+                                    <h3 className="text-lg font-black tracking-widest text-purple-400">{selectedDuo.player2Username}'s Pokémon</h3>
                                 </div>
                                 <div className="grid grid-cols-3 gap-4">
                                     {(selectedDuo.team?.slice(3, 6) || [null, null, null]).map((pokemon, idx) => (
@@ -3295,8 +3182,9 @@ const TournamentBACK: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div >
+        </div>
+        </>
     );
 };
 
-export default TournamentBACK;
+export default Tournament;
