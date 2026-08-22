@@ -569,6 +569,14 @@ const RuleCard: React.FC<{ title: string; icon: React.ReactElement; children: Re
     );
 };
 
+export const isSeasonHidden = (s: any) => {
+    if (!s) return false;
+    if (s.isHidden === true || s.isHidden === 'true') return true;
+    if (s.status === 'DRAFTING') return true;
+    if (typeof s.description === 'string' && (s.description.includes('<!--HIDDEN-->') || s.description.includes('[HIDDEN]'))) return true;
+    return false;
+};
+
 const TournamentBACK: React.FC = () => {
     const [user, setUser] = useState<UserData | null>(null);
     const [activeTab, setActiveTab] = useState<'rules' | 'brackets' | 'signup' | 'players' | 'duos'>('rules');

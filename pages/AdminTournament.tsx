@@ -352,6 +352,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     );
 };
 
+export const isSeasonHidden = (s: any) => {
+    if (!s) return false;
+    if (s.isHidden === true || s.isHidden === 'true') return true;
+    if (s.status === 'DRAFTING') return true;
+    if (typeof s.description === 'string' && (s.description.includes('<!--HIDDEN-->') || s.description.includes('[HIDDEN]'))) return true;
+    return false;
+};
+
 // --- MAIN COMPONENT ---
 const AdminTournament: React.FC = () => {
     const [password, setPassword] = useState('');
