@@ -762,13 +762,27 @@ const Tournament: React.FC = () => {
         return [w1, w2, null] as (string | null)[];
     }, [apiWinners, matches]);
 
-    // Team Validation Counts
+    // Team & Duo Mode Variables
+    const isDuoSeason = activeSeason.format.includes('Doubles Duos') || activeSeason.format.includes('Duos');
+    const isDuoMode = isDuoSeason && !!myDuo;
+    const isPlayer1 = isDuoMode && myDuo?.player1DiscordId === effectivePlayerId;
+    const isPlayer2 = isDuoMode && myDuo?.player2DiscordId === effectivePlayerId;
+
+    // Allowed slots for the current user (Player 1: 0-2, Player 2: 3-5, Singles: 0-5)
+    const myAllowedSlots = useMemo(() => {
+        if (!isDuoMode) return [0, 1, 2, 3, 4, 5];
+        if (isPlayer1) return [0, 1, 2];
+        if (isPlayer2) return [3, 4, 5];
+        return [];
+    }, [isDuoMode, isPlayer1, isPlayer2]);
+
+    // Team Validation Counts across the whole team (1 Limit Token per entire team)
     const legendaryCount = selectedTeam.filter(p => p && isLegendary(p.id)).length;
     const mythicalCount = selectedTeam.filter(p => p && isMythical(p.id)).length;
     const paradoxCount = selectedTeam.filter(p => p && isParadox(p.id)).length;
     const ultraBeastCount = selectedTeam.filter(p => p && isUltraBeast(p.id)).length;
 
-    // 1 Limit Token System Counts
+    // 1 Limit Token System Counts (1 Token per entire Duo team / Solo team)
     const limitTokenCount = selectedTeam.filter(p => p && isLimitTokenPokemon(p.id)).length;
     const limitTokenPokemon = selectedTeam.find(p => p && isLimitTokenPokemon(p.id));
     const exceedsLimitToken = limitTokenCount > 1;
@@ -784,8 +798,8 @@ const Tournament: React.FC = () => {
     const hasCategoryViolations = exceedsLimitToken || (isSeason3 && (exceedsLegendaryLimit || exceedsMythicalLimit || exceedsParadoxLimit || exceedsUltraBeastLimit));
     const hasBannedMons = selectedTeam.some(p => p && isBannedForSeason(p.id, activeSeason.format, activeSeason.name, activeSeason.bannedPokemonIds));
 
-    const isEntryLocked = activeSeason.format.includes('Doubles Duos') ? myDuo?.isLocked : (myEntry?.isLocked || false);
-    const canLockIn = selectedTeam.filter(Boolean).length === 6 && !isEntryLocked && !exceedsLimitToken && !hasCategoryViolations && !hasBannedMons ;
+    const isEntryLocked = isDuoSeason ? myDuo?.isLocked : (myEntry?.isLocked || false);
+    const canLockIn = selectedTeam.filter(Boolean).length === 6 && !isEntryLocked && !exceedsLimitToken && !hasCategoryViolations && !hasBannedMons;
 
     useEffect(() => {
         const fetchPokemon = async () => {
@@ -1136,46 +1150,53 @@ const Tournament: React.FC = () => {
     };
 
     const handleSelectPokemon = (pokemon: Pokemon) => {
-        if (isLocked || tournamentStatus === 'ONGOING') return;
+        if (isLocked || (isDuoMode && myDuo?.isLocked) || tournamentStatus === 'ONGOING') return;
 
-        // Check 1 Limit Token rule
-        if (isLimitTokenPokemon(pokemon.id) && limitTokenCount >= 1) {
-            const currentCat = getLimitTokenCategory(limitTokenPokemon?.id || 0) || 'Restricted';
-            alert(`🚫 1 Limit Token Limit Reached!\n\nYou already have ${limitTokenPokemon?.name} (${currentCat}) in your roster. Remove it first to draft another restricted Pokémon.`);
+        // If viewing in Duos mode but not one of the duo participants
+        if (isDuoMode && !isPlayer1 && !isPlayer2) {
+            alert("You are viewing this duo team and cannot draft for them.");
             return;
         }
 
-        let validIndices = [0, 1, 2, 3, 4, 5];
-        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
-            if (user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null) {
-                validIndices = [0, 1, 2, 3, 4, 5];
-            } else if (myDuo.player1DiscordId === effectivePlayerId) {
-                validIndices = [0, 1, 2];
-            } else if (myDuo.player2DiscordId === effectivePlayerId) {
-                validIndices = [3, 4, 5];
+        // Check 1 Limit Token rule (1 token per entire team)
+        if (isLimitTokenPokemon(pokemon.id) && limitTokenCount >= 1) {
+            const currentCat = getLimitTokenCategory(limitTokenPokemon?.id || 0) || 'Restricted';
+            if (isDuoMode) {
+                alert(`🚫 1 Limit Token Limit Reached for Duo Team!\n\nYour team already has ${limitTokenPokemon?.name} (${currentCat}) in the team roster. Only 1 restricted Pokémon is allowed per entire duo team.`);
+            } else {
+                alert(`🚫 1 Limit Token Limit Reached!\n\nYou already have ${limitTokenPokemon?.name} (${currentCat}) in your roster. Remove it first to draft another restricted Pokémon.`);
             }
+            return;
         }
-        
-        const emptySlot = validIndices.find(idx => selectedTeam[idx] === null);
-        if (emptySlot !== undefined) {
-            const newTeam = [...selectedTeam];
-            newTeam[emptySlot] = pokemon;
-            setSelectedTeam(newTeam);
-            
-            // Auto-save when picking (for sync) if Doubles Duos
-            if (activeSeason.format.includes('Doubles Duos') && myDuo) {
-                saveDuoDraft(newTeam);
+
+        // Find empty slot strictly among this player's assigned slots
+        const emptySlot = myAllowedSlots.find(idx => selectedTeam[idx] === null);
+        if (emptySlot === undefined) {
+            if (isDuoMode) {
+                alert(`Your 3 Pokémon slots (${isPlayer1 ? 'Slots 1-3' : 'Slots 4-6'}) are full! Remove a Pokémon from your slots before adding a new one.`);
+            } else {
+                alert("Your team is already full (6/6 slots)! Remove a Pokémon before adding a new one.");
             }
+            return;
+        }
+
+        const newTeam = [...selectedTeam];
+        newTeam[emptySlot] = pokemon;
+        setSelectedTeam(newTeam);
+        
+        // Auto-save when picking (for sync) if Duos
+        if (isDuoSeason && myDuo) {
+            saveDuoDraft(newTeam);
         }
     };
 
     const handleRemovePokemon = (index: number) => {
-        if (isLocked || tournamentStatus === 'ONGOING') return;
+        if (isLocked || (isDuoMode && myDuo?.isLocked) || tournamentStatus === 'ONGOING') return;
         
-        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
-            if (user?.minecraftUsername !== 'GreatRimu' && adminDummyId === null) {
-                if (myDuo.player1DiscordId === effectivePlayerId && index >= 3) return;
-                if (myDuo.player2DiscordId === effectivePlayerId && index < 3) return;
+        // In Duos mode, strictly enforce that a player can only remove Pokémon from their own slots
+        if (isDuoMode) {
+            if (!myAllowedSlots.includes(index)) {
+                return;
             }
         }
 
@@ -1183,8 +1204,8 @@ const Tournament: React.FC = () => {
         newTeam[index] = null;
         setSelectedTeam(newTeam);
         
-        // Auto-save when removing (for sync) if Doubles Duos
-        if (activeSeason.format.includes('Doubles Duos') && myDuo) {
+        // Auto-save when removing (for sync) if Duos
+        if (isDuoSeason && myDuo) {
             saveDuoDraft(newTeam);
         }
     };
@@ -2442,7 +2463,11 @@ const Tournament: React.FC = () => {
                                                                         <span className="text-[10px] font-black uppercase px-3 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 tracking-wider">Roster Rule</span>
                                                                     </div>
                                                                     <p className="text-xs text-gray-300 leading-relaxed max-w-2xl">
-                                                                        You get <strong className="text-yellow-400 font-bold">1 Limit Token</strong> when signing up to draft <strong className="text-white">1 Legendary, Mythical, Paradox, or Ultra Beast</strong> Pokémon.
+                                                                        {isDuoMode ? (
+                                                                            <>Your duo team gets <strong className="text-yellow-400 font-bold">1 Limit Token combined</strong> to draft <strong className="text-white">1 Legendary, Mythical, Paradox, or Ultra Beast</strong> across all 6 slots.</>
+                                                                        ) : (
+                                                                            <>You get <strong className="text-yellow-400 font-bold">1 Limit Token</strong> when signing up to draft <strong className="text-white">1 Legendary, Mythical, Paradox, or Ultra Beast</strong> Pokémon.</>
+                                                                        )}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -2530,10 +2555,22 @@ const Tournament: React.FC = () => {
                                                         /* Doubles Duos Mode: Split into Player 1 & Player 2 Rosters */
                                                         <div className="space-y-6">
                                                             {/* Player 1 / Captain's Pokemon (Slots 1-3) */}
-                                                            <div className="space-y-4">
-                                                                <div className="flex items-center gap-3 px-2">
-                                                                    <img src={`https://mc-heads.net/avatar/${myDuo?.player1Username || 'steve'}/32`} className="w-8 h-8 rounded-xl border-2 border-yellow-500 shadow-md" />
-                                                                    <span className="text-sm font-black tracking-widest text-yellow-400">{(myDuo?.player1Username || 'Player 1')}'s Roster (Slots 1-3)</span>
+                                                            <div className={`space-y-4 p-4 md:p-5 rounded-3xl transition-all ${isPlayer1 ? 'bg-yellow-500/5 border-2 border-yellow-500/30 shadow-lg shadow-yellow-950/20' : 'bg-black/20 border border-white/5 opacity-90'}`}>
+                                                                <div className="flex items-center justify-between px-2">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <img src={`https://mc-heads.net/avatar/${myDuo?.player1Username || 'steve'}/32`} className="w-8 h-8 rounded-xl border-2 border-yellow-500 shadow-md" />
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <span className="text-sm font-black tracking-widest text-yellow-400">{(myDuo?.player1Username || 'Player 1')}'s Roster (Slots 1-3)</span>
+                                                                            {isPlayer1 ? (
+                                                                                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 tracking-wider">Your Slots</span>
+                                                                            ) : isPlayer2 ? (
+                                                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-white/10 tracking-wider">Partner</span>
+                                                                            ) : null}
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="text-xs font-bold font-mono text-yellow-400/80 bg-black/40 px-3 py-1 rounded-xl border border-yellow-500/20">
+                                                                        {selectedTeam.slice(0, 3).filter(Boolean).length} / 3
+                                                                    </span>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(0, 3).map((p, idx) => {
@@ -2549,7 +2586,9 @@ const Tournament: React.FC = () => {
                                                                                         : isTokenMon
                                                                                         ? 'bg-gradient-to-br from-yellow-950/40 via-black to-yellow-900/20 border-yellow-500 shadow-xl shadow-yellow-950/40 scale-[1.02]'
                                                                                         : 'bg-gradient-to-br from-yellow-900/20 via-black to-black border-yellow-500 shadow-2xl scale-[1.02]')
-                                                                                    : 'bg-black/40 border-yellow-500/30 border-dashed hover:border-yellow-400 hover:bg-yellow-500/5'
+                                                                                    : isPlayer1
+                                                                                    ? 'bg-black/40 border-yellow-500/40 border-dashed hover:border-yellow-400 hover:bg-yellow-500/10'
+                                                                                    : 'bg-black/20 border-yellow-500/20 border-dashed opacity-60'
                                                                             }`}>
                                                                                 {/* Slot Label Badge */}
                                                                                 <div className="absolute top-2.5 left-2.5 z-20">
@@ -2590,7 +2629,7 @@ const Tournament: React.FC = () => {
                                                                                         <div className="absolute bottom-2.5 left-2 right-2 z-20">
                                                                                             <div className={`text-[9px] font-black uppercase text-center truncate py-1.5 px-2 rounded-xl backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-red-400' : 'bg-black/80 text-white border-white/15'}`}>{p.name}</div>
                                                                                         </div>
-                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null || myDuo?.player1DiscordId === effectivePlayerId) && (
+                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && isPlayer1 && (
                                                                                             <button onClick={() => handleRemovePokemon(actualIdx)} className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white scale-90 hover:scale-100" title={`Remove ${p.name}`}>
                                                                                                 <X className="w-3.5 h-3.5" />
                                                                                             </button>
@@ -2599,7 +2638,9 @@ const Tournament: React.FC = () => {
                                                                                 ) : (
                                                                                     <div className="flex flex-col items-center justify-center gap-1 text-yellow-900/80 group-hover:text-yellow-400 transition-colors">
                                                                                         <Plus className="w-8 h-8 stroke-[2.5]" />
-                                                                                        <span className="text-[9px] font-black uppercase tracking-wider text-yellow-600/80 group-hover:text-yellow-300">Empty Slot</span>
+                                                                                        <span className="text-[9px] font-black uppercase tracking-wider text-yellow-600/80 group-hover:text-yellow-300">
+                                                                                            {isPlayer1 ? 'Empty Slot' : 'Partner Slot'}
+                                                                                        </span>
                                                                                     </div>
                                                                                 )}
                                                                             </div>
@@ -2609,10 +2650,22 @@ const Tournament: React.FC = () => {
                                                             </div>
 
                                                             {/* Partner / Player 2's Pokemon (Slots 4-6) */}
-                                                            <div className="space-y-4">
-                                                                <div className="flex items-center gap-3 px-2">
-                                                                    <img src={`https://mc-heads.net/avatar/${myDuo?.player2Username || 'steve'}/32`} className="w-8 h-8 rounded-xl border-2 border-purple-500 shadow-md" />
-                                                                    <span className="text-sm font-black tracking-widest text-purple-400">{(myDuo?.player2Username || 'Player 2')}'s Roster (Slots 4-6)</span>
+                                                            <div className={`space-y-4 p-4 md:p-5 rounded-3xl transition-all ${isPlayer2 ? 'bg-purple-500/5 border-2 border-purple-500/30 shadow-lg shadow-purple-950/20' : 'bg-black/20 border border-white/5 opacity-90'}`}>
+                                                                <div className="flex items-center justify-between px-2">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <img src={`https://mc-heads.net/avatar/${myDuo?.player2Username || 'steve'}/32`} className="w-8 h-8 rounded-xl border-2 border-purple-500 shadow-md" />
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <span className="text-sm font-black tracking-widest text-purple-400">{(myDuo?.player2Username || 'Player 2')}'s Roster (Slots 4-6)</span>
+                                                                            {isPlayer2 ? (
+                                                                                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 tracking-wider">Your Slots</span>
+                                                                            ) : isPlayer1 ? (
+                                                                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-white/5 text-gray-400 border border-white/10 tracking-wider">Partner</span>
+                                                                            ) : null}
+                                                                        </div>
+                                                                    </div>
+                                                                    <span className="text-xs font-bold font-mono text-purple-400/80 bg-black/40 px-3 py-1 rounded-xl border border-purple-500/20">
+                                                                        {selectedTeam.slice(3, 6).filter(Boolean).length} / 3
+                                                                    </span>
                                                                 </div>
                                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-2">
                                                                     {selectedTeam.slice(3, 6).map((p, idx) => {
@@ -2628,7 +2681,9 @@ const Tournament: React.FC = () => {
                                                                                         : isTokenMon
                                                                                         ? 'bg-gradient-to-br from-purple-950/40 via-black to-purple-900/20 border-purple-500 shadow-xl shadow-purple-950/40 scale-[1.02]'
                                                                                         : 'bg-gradient-to-br from-purple-900/20 via-black to-black border-purple-500 shadow-2xl scale-[1.02]')
-                                                                                    : 'bg-black/40 border-purple-500/30 border-dashed hover:border-purple-400 hover:bg-purple-500/5'
+                                                                                    : isPlayer2
+                                                                                    ? 'bg-black/40 border-purple-500/40 border-dashed hover:border-purple-400 hover:bg-purple-500/10'
+                                                                                    : 'bg-black/20 border-purple-500/20 border-dashed opacity-60'
                                                                             }`}>
                                                                                 {/* Slot Label Badge */}
                                                                                 <div className="absolute top-2.5 left-2.5 z-20">
@@ -2669,7 +2724,7 @@ const Tournament: React.FC = () => {
                                                                                         <div className="absolute bottom-2.5 left-2 right-2 z-20">
                                                                                             <div className={`text-[9px] font-black uppercase text-center truncate py-1.5 px-2 rounded-xl backdrop-blur-md border ${banned ? 'bg-red-600 text-white border-red-400' : 'bg-black/80 text-white border-white/15'}`}>{p.name}</div>
                                                                                         </div>
-                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && (user?.minecraftUsername === 'GreatRimu' || adminDummyId !== null || myDuo?.player2DiscordId === effectivePlayerId) && (
+                                                                                        {!isLocked && !(myDuo?.isLocked) && tournamentStatus !== 'ONGOING' && isPlayer2 && (
                                                                                             <button onClick={() => handleRemovePokemon(actualIdx)} className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 transition-all z-30 border-2 border-white scale-90 hover:scale-100" title={`Remove ${p.name}`}>
                                                                                                 <X className="w-3.5 h-3.5" />
                                                                                             </button>
@@ -2678,7 +2733,9 @@ const Tournament: React.FC = () => {
                                                                                 ) : (
                                                                                     <div className="flex flex-col items-center justify-center gap-1 text-purple-900/80 group-hover:text-purple-400 transition-colors">
                                                                                         <Plus className="w-8 h-8 stroke-[2.5]" />
-                                                                                        <span className="text-[9px] font-black uppercase tracking-wider text-purple-600/80 group-hover:text-purple-300">Empty Slot</span>
+                                                                                        <span className="text-[9px] font-black uppercase tracking-wider text-purple-600/80 group-hover:text-purple-300">
+                                                                                            {isPlayer2 ? 'Empty Slot' : 'Partner Slot'}
+                                                                                        </span>
                                                                                     </div>
                                                                                 )}
                                                                             </div>
@@ -2851,16 +2908,17 @@ const Tournament: React.FC = () => {
                                                                 <>
                                                                     {displayedPokemon.map(p => {
                                                                         const isSelected = selectedTeam.some(sp => sp?.id === p.id);
-                                                                        const isFull = !selectedTeam.includes(null);
+                                                                        const isFull = isDuoMode ? !myAllowedSlots.some(idx => selectedTeam[idx] === null) : !selectedTeam.includes(null);
                                                                         const banned = isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name, activeSeason?.bannedPokemonIds);
                                                                         const isTokenMon = isLimitTokenPokemon(p.id);
                                                                         const category = getLimitTokenCategory(p.id);
                                                                         const tokenLocked = isTokenMon && limitTokenCount >= 1 && !isSelected;
+                                                                        const notParticipant = isDuoMode && !isPlayer1 && !isPlayer2;
 
                                                                         return (
                                                                             <button
                                                                                 key={p.id}
-                                                                                disabled={isSelected || isFull || banned || tokenLocked}
+                                                                                disabled={isSelected || isFull || banned || tokenLocked || notParticipant}
                                                                                 onClick={() => handleSelectPokemon(p)}
                                                                                 className={`aspect-square rounded-2xl flex flex-col items-center justify-between p-2.5 transition-all relative group overflow-hidden border-2 text-left ${
                                                                                     isSelected
@@ -2869,6 +2927,8 @@ const Tournament: React.FC = () => {
                                                                                         ? 'bg-red-950/20 border-red-500/50 opacity-40 grayscale cursor-not-allowed'
                                                                                         : tokenLocked
                                                                                         ? 'bg-amber-950/20 border-amber-500/40 opacity-50 cursor-not-allowed'
+                                                                                        : notParticipant
+                                                                                        ? 'bg-gray-900/40 border-white/5 opacity-40 cursor-not-allowed'
                                                                                         : isFull
                                                                                         ? 'bg-gray-900/40 border-white/5 opacity-40 grayscale cursor-not-allowed'
                                                                                         : isTokenMon

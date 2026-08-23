@@ -91,6 +91,8 @@ const App: React.FC = () => {
         <Route path="/overlay/spin" element={<SpinWidget />} />
         <Route path="/overlay/countdown" element={<CountdownWidget />} />
         <Route path="/duo-card" element={<DuoCard />} />
+        <Route path="/minecraft/duo-card" element={<DuoCard />} />
+        <Route path="/minecraft/duo-cards" element={<DuoCard />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/twitch/callback" element={<TwitchCallback />} />
 
