@@ -763,10 +763,10 @@ const Tournament: React.FC = () => {
     }, [apiWinners, matches]);
 
     // Team & Duo Mode Variables
-    const isDuoSeason = activeSeason.format.includes('Doubles Duos') || activeSeason.format.includes('Duos');
-    const isDuoMode = isDuoSeason && !!myDuo;
-    const isPlayer1 = isDuoMode && myDuo?.player1DiscordId === effectivePlayerId;
-    const isPlayer2 = isDuoMode && myDuo?.player2DiscordId === effectivePlayerId;
+    const isDuoSeason = Boolean(activeSeason?.format?.includes('Doubles Duos') || activeSeason?.format?.includes('Duos'));
+    const isDuoMode = isDuoSeason && Boolean(myDuo);
+    const isPlayer1 = isDuoMode && (myDuo?.player1DiscordId === effectivePlayerId || myDuo?.player1?.discordId === effectivePlayerId);
+    const isPlayer2 = isDuoMode && (myDuo?.player2DiscordId === effectivePlayerId || myDuo?.player2?.discordId === effectivePlayerId);
 
     // Allowed slots for the current user (Player 1: 0-2, Player 2: 3-5, Singles: 0-5)
     const myAllowedSlots = useMemo(() => {
@@ -777,14 +777,14 @@ const Tournament: React.FC = () => {
     }, [isDuoMode, isPlayer1, isPlayer2]);
 
     // Team Validation Counts across the whole team (1 Limit Token per entire team)
-    const legendaryCount = selectedTeam.filter(p => p && isLegendary(p.id)).length;
-    const mythicalCount = selectedTeam.filter(p => p && isMythical(p.id)).length;
-    const paradoxCount = selectedTeam.filter(p => p && isParadox(p.id)).length;
-    const ultraBeastCount = selectedTeam.filter(p => p && isUltraBeast(p.id)).length;
+    const legendaryCount = (selectedTeam || []).filter(p => p && p.id && isLegendary(p.id)).length;
+    const mythicalCount = (selectedTeam || []).filter(p => p && p.id && isMythical(p.id)).length;
+    const paradoxCount = (selectedTeam || []).filter(p => p && p.id && isParadox(p.id)).length;
+    const ultraBeastCount = (selectedTeam || []).filter(p => p && p.id && isUltraBeast(p.id)).length;
 
     // 1 Limit Token System Counts (1 Token per entire Duo team / Solo team)
-    const limitTokenCount = selectedTeam.filter(p => p && isLimitTokenPokemon(p.id)).length;
-    const limitTokenPokemon = selectedTeam.find(p => p && isLimitTokenPokemon(p.id));
+    const limitTokenCount = (selectedTeam || []).filter(p => p && p.id && isLimitTokenPokemon(p.id)).length;
+    const limitTokenPokemon = (selectedTeam || []).find(p => p && p.id && isLimitTokenPokemon(p.id));
     const exceedsLimitToken = limitTokenCount > 1;
 
     const exceedsLegendaryLimit = legendaryCount > 1;
@@ -793,13 +793,13 @@ const Tournament: React.FC = () => {
     const exceedsUltraBeastLimit = ultraBeastCount > 1;
 
     // Validation for Season 3 & 1 Limit Token System
-    const isSeason3 = activeSeason.name.includes('Season 3');
+    const isSeason3 = Boolean((activeSeason?.name || '').includes('Season 3'));
     const isGimmickValid = true;
     const hasCategoryViolations = exceedsLimitToken || (isSeason3 && (exceedsLegendaryLimit || exceedsMythicalLimit || exceedsParadoxLimit || exceedsUltraBeastLimit));
-    const hasBannedMons = selectedTeam.some(p => p && isBannedForSeason(p.id, activeSeason.format, activeSeason.name, activeSeason.bannedPokemonIds));
+    const hasBannedMons = (selectedTeam || []).some(p => p && p.id && isBannedForSeason(p.id, activeSeason?.format || '', activeSeason?.name, activeSeason?.bannedPokemonIds));
 
-    const isEntryLocked = isDuoSeason ? myDuo?.isLocked : (myEntry?.isLocked || false);
-    const canLockIn = selectedTeam.filter(Boolean).length === 6 && !isEntryLocked && !exceedsLimitToken && !hasCategoryViolations && !hasBannedMons;
+    const isEntryLocked = isDuoSeason ? Boolean(myDuo?.isLocked) : Boolean(myEntry?.isLocked);
+    const canLockIn = (selectedTeam || []).filter(Boolean).length === 6 && !isEntryLocked && !exceedsLimitToken && !hasCategoryViolations && !hasBannedMons;
 
     useEffect(() => {
         const fetchPokemon = async () => {
@@ -1024,11 +1024,14 @@ const Tournament: React.FC = () => {
             const res = await fetch(`${API_BASE_URL}/api/tournament/my-team?discordId=${effectivePlayerId}&seasonId=${activeSeason.seasonId}`);
             if (res.ok) {
                 const data = await res.json();
+                const isDuoFormat = Boolean(activeSeason?.format?.includes('Doubles Duos') || activeSeason?.format?.includes('Duos'));
                 if (data && data.registered) {
                     const filledTeam = [...(data.team || [])];
                     while (filledTeam.length < 6) filledTeam.push(null);
-                    setSelectedTeam(filledTeam);
-                    setIsLocked(data.isLocked || false);
+                    if (!isDuoFormat) {
+                        setSelectedTeam(filledTeam);
+                        setIsLocked(data.isLocked || false);
+                    }
                     setHasStartedRegistration(true);
                 } else if (adminDummyId) {
                     // Auto register dummy if not registered yet
@@ -1048,15 +1051,19 @@ const Tournament: React.FC = () => {
                             })
                         });
                         setHasStartedRegistration(true);
-                        setSelectedTeam(new Array(6).fill(null));
+                        if (!isDuoFormat) {
+                            setSelectedTeam(new Array(6).fill(null));
+                        }
                     } catch (e) {
                         console.error("Auto register dummy failed", e);
                     }
                 } else {
-                    // Reset for new season
-                    setSelectedTeam(new Array(6).fill(null));
-                    setIsLocked(false);
-                    setHasStartedRegistration(false);
+                    // Reset for new season if not in duo format
+                    if (!isDuoFormat) {
+                        setSelectedTeam(new Array(6).fill(null));
+                        setIsLocked(false);
+                        setHasStartedRegistration(false);
+                    }
                 }
             }
         } catch (e) {
@@ -2362,31 +2369,33 @@ const Tournament: React.FC = () => {
                                                     </div>
                                                 )}
                                                 {/* Player/Duo Header */}
-                                                {activeSeason.format.includes('Doubles Duos') && myDuo ? (
+                                                {activeSeason?.format?.includes('Doubles Duos') && myDuo ? (
                                                     /* Duos Mode: Show both players with captain indicator */
                                                     <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
                                                         <div className="flex -space-x-4">
                                                             {/* Captain avatar first */}
                                                             <img
-                                                                src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}/64`}
+                                                                src={`https://mc-heads.net/avatar/${(myDuo.captainDiscordId === myDuo.player1DiscordId || !myDuo.captainDiscordId) ? (myDuo.player1Username || 'Steve') : (myDuo.player2Username || 'Steve')}/64`}
                                                                 className="w-16 h-16 rounded-2xl border-4 border-yellow-500 bg-black shadow-lg z-10"
+                                                                alt="Captain"
                                                             />
                                                             <img
-                                                                src={`https://mc-heads.net/avatar/${myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player2Username : myDuo.player1Username}/64`}
+                                                                src={`https://mc-heads.net/avatar/${(myDuo.captainDiscordId === myDuo.player1DiscordId || !myDuo.captainDiscordId) ? (myDuo.player2Username || 'Steve') : (myDuo.player1Username || 'Steve')}/64`}
                                                                 className="w-16 h-16 rounded-2xl border-4 border-purple-500 bg-black shadow-lg"
+                                                                alt="Partner"
                                                             />
                                                         </div>
                                                         <div className="text-left">
                                                             <h3 className="text-2xl font-black text-white tracking-tight">
-                                                                {myDuo.captainDiscordId === myDuo.player1DiscordId
-                                                                    ? <><span className="text-yellow-400">{myDuo.player1Username}</span> <span className="text-purple-400">&</span> <span className="text-purple-300">{myDuo.player2Username}</span></>
-                                                                    : <><span className="text-yellow-400">{myDuo.player2Username}</span> <span className="text-purple-400">&</span> <span className="text-purple-300">{myDuo.player1Username}</span></>
+                                                                {myDuo.captainDiscordId === myDuo.player1DiscordId || !myDuo.captainDiscordId
+                                                                    ? <><span className="text-yellow-400">{myDuo.player1Username || 'Player 1'}</span> <span className="text-purple-400">&</span> <span className="text-purple-300">{myDuo.player2Username || 'Player 2'}</span></>
+                                                                    : <><span className="text-yellow-400">{myDuo.player2Username || 'Player 2'}</span> <span className="text-purple-400">&</span> <span className="text-purple-300">{myDuo.player1Username || 'Player 1'}</span></>
                                                                 }
                                                             </h3>
                                                             <div className="flex items-center gap-2 mt-1">
                                                                 <span className="text-[10px] font-black uppercase text-gray-500">Captain:</span>
                                                                 <span className="text-xs font-bold text-yellow-400">
-                                                                    {myDuo.captainDiscordId === myDuo.player1DiscordId ? myDuo.player1Username : myDuo.player2Username}
+                                                                    {(myDuo.captainDiscordId === myDuo.player1DiscordId || !myDuo.captainDiscordId) ? (myDuo.player1Username || 'Player 1') : (myDuo.player2Username || 'Player 2')}
                                                                 </span>
                                                             </div>
                                                             <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${myDuo.isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
@@ -2397,8 +2406,8 @@ const Tournament: React.FC = () => {
                                                 ) : (
                                                     /* Singles Mode: Show single player */
                                                     <div className="flex items-center gap-6 p-6 bg-white/5 rounded-[2.5rem] border border-white/10 w-fit mx-auto md:mx-0 shadow-xl">
-                                                        <img src={`https://mc-heads.net/avatar/${effectiveUser?.minecraftUsername}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
-                                                        <div className="text-left"><h3 className="text-2xl font-black text-white tracking-tight">{effectiveUser?.minecraftUsername}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
+                                                        <img src={`https://mc-heads.net/avatar/${effectiveUser?.minecraftUsername || 'Steve'}/64`} alt="Head" className="w-16 h-16 rounded-2xl border-2 border-brand-primary bg-black shadow-lg" />
+                                                        <div className="text-left"><h3 className="text-2xl font-black text-white tracking-tight">{effectiveUser?.minecraftUsername || 'Player'}</h3><span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${isLocked || tournamentStatus === 'ONGOING' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{isLocked || tournamentStatus === 'ONGOING' ? 'Ready' : 'Drafting'}</span></div>
                                                     </div>
                                                 )}
                                                 <div className="space-y-6">
