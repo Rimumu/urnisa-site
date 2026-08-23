@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, DISCORD_API_URL } from '../constants';
 import { Link } from 'react-router-dom';
 import {
     Trophy,
@@ -43,7 +43,17 @@ import {
     Scale,
     Gem,
     RefreshCw,
-    Zap
+    Zap,
+    Layers,
+    UserPlus,
+    UserCheck,
+    Link2,
+    Hash,
+    HelpCircle,
+    User,
+    ExternalLink,
+    Check,
+    Copy
 } from 'lucide-react';
 
 // --- TYPES ---
@@ -472,6 +482,18 @@ const AdminTournament: React.FC = () => {
     const [statusMsg, setStatusMsg] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // Manual Add Player State
+    const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
+    const [manualMcName, setManualMcName] = useState('');
+    const [manualDiscordId, setManualDiscordId] = useState('');
+    const [manualDiscordTag, setManualDiscordTag] = useState('');
+    const [manualIsLocked, setManualIsLocked] = useState(false);
+    const [approvedWhitelist, setApprovedWhitelist] = useState<any[]>([]);
+    const [whitelistSearch, setWhitelistSearch] = useState('');
+    const [loadingWhitelist, setLoadingWhitelist] = useState(false);
+    const [addPlayerError, setAddPlayerError] = useState('');
+    const [addPlayerSuccess, setAddPlayerSuccess] = useState('');
+
     // End Tournament Modal
     const [showEndModal, setShowEndModal] = useState(false);
     const [finalWinners, setFinalWinners] = useState({
@@ -791,6 +813,86 @@ const AdminTournament: React.FC = () => {
             setStatusMsg(e.message);
         }
         setTimeout(() => setStatusMsg(''), 3000);
+    };
+
+    const fetchApprovedWhitelist = async () => {
+        setLoadingWhitelist(true);
+        try {
+            const res = await fetch(`${DISCORD_API_URL}/api/whitelist/approved`);
+            if (res.ok) {
+                const data = await res.json();
+                setApprovedWhitelist(Array.isArray(data) ? data : []);
+            }
+        } catch (e) {
+            console.error("Failed to fetch approved whitelist", e);
+        } finally {
+            setLoadingWhitelist(false);
+        }
+    };
+
+    const handleManualAddPlayer = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        const mc = manualMcName.trim();
+        const discord = manualDiscordId.trim();
+
+        if (!mc) {
+            setAddPlayerError('Please enter a Minecraft username.');
+            return;
+        }
+        if (!discord) {
+            setAddPlayerError('Please enter a Discord User ID.');
+            return;
+        }
+        if (!activeSeason) {
+            setAddPlayerError('No active tournament season selected.');
+            return;
+        }
+
+        setLoading(true);
+        setAddPlayerError('');
+        setAddPlayerSuccess('');
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/tournament/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-override': 'GreatRimu_Override_True',
+                    'Authorization': password
+                },
+                body: JSON.stringify({
+                    discordId: discord,
+                    minecraftUsername: mc,
+                    team: new Array(6).fill(null),
+                    seasonId: activeSeason.seasonId
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to register player');
+            }
+
+            if (manualIsLocked) {
+                await fetch(`${API_BASE_URL}/api/tournament/lock`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-override': 'GreatRimu_Override_True' },
+                    body: JSON.stringify({ discordId: discord, seasonId: activeSeason.seasonId })
+                });
+            }
+
+            const succMsg = `Successfully registered ${mc} (Discord ID: ${discord}) into ${activeSeason.name}! When they log in with Discord, they can draft their team.`;
+            setAddPlayerSuccess(succMsg);
+            setStatusMsg(`Added ${mc} to ${activeSeason.name}!`);
+            fetchPlayers(activeSeason.seasonId);
+            if (activeSeason.format.includes('Duos')) {
+                fetchDuos(activeSeason.seasonId);
+            }
+        } catch (err: any) {
+            setAddPlayerError(err.message || 'Failed to register player');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // --- DUO HANDLERS ---
@@ -1294,16 +1396,35 @@ const AdminTournament: React.FC = () => {
                                 <ClipboardList className="w-4 h-4 inline mr-2" /> Format Desc
                             </button>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <input
                                 type="text"
                                 value={playerSearch}
                                 onChange={e => setPlayerSearch(e.target.value)}
-                                placeholder="Search..."
-                                className="bg-black/40 border border-white/10 px-4 py-2 rounded-xl text-sm text-white w-48"
+                                placeholder="Search players / ID..."
+                                className="bg-black/40 border border-white/10 px-3 py-2 rounded-xl text-sm text-white w-44 focus:border-emerald-500 focus:outline-none"
                             />
+                            <button
+                                onClick={() => {
+                                    setShowAddPlayerModal(true);
+                                    setAddPlayerError('');
+                                    setAddPlayerSuccess('');
+                                    fetchApprovedWhitelist();
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-sm flex items-center gap-1.5 shadow-lg shadow-emerald-900/30 transition-all hover:scale-105"
+                                title="Manually register a player with their Minecraft and Discord accounts"
+                            >
+                                <UserPlus className="w-4 h-4" /> + Add Player
+                            </button>
                             {activeSeason?.format.includes('Doubles Duos') && (
                                 <div className="flex gap-2">
+                                <button
+                                    onClick={() => window.open(`/minecraft/duo-cards?seasonId=${activeSeason.seasonId}`, '_blank')}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 shadow-lg shadow-indigo-900/30"
+                                    title="Generate and download graphic cards for all duos"
+                                >
+                                    <Layers className="w-4 h-4" /> Duo Cards
+                                </button>
                                 <button
                                     onClick={() => setShowPairModal(true)}
                                     className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-2 rounded-xl text-sm"
@@ -1333,64 +1454,93 @@ const AdminTournament: React.FC = () => {
                     {/* Solo Players Tab */}
                     {playerListTab === 'solo' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2">
-                            {filteredPlayers.filter(p => !isPlayerInDuo(p.discordId)).map(player => (
+                            {filteredPlayers.filter(p => !isPlayerInDuo(p.discordId)).length === 0 ? (
+                                <div className="col-span-full text-center py-12 bg-white/5 border border-white/10 rounded-2xl p-6">
+                                    <Users className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                                    <div className="text-gray-300 font-bold text-base mb-1">No solo players found</div>
+                                    <p className="text-gray-500 text-xs mb-4">You can manually add players with their Minecraft & Discord IDs to let them draft their teams.</p>
+                                    <button
+                                        onClick={() => {
+                                            setShowAddPlayerModal(true);
+                                            setAddPlayerError('');
+                                            setAddPlayerSuccess('');
+                                            fetchApprovedWhitelist();
+                                        }}
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-sm inline-flex items-center gap-1.5 shadow-lg shadow-emerald-900/30"
+                                    >
+                                        <UserPlus className="w-4 h-4" /> Manually Add Player
+                                    </button>
+                                </div>
+                            ) : filteredPlayers.filter(p => !isPlayerInDuo(p.discordId)).map(player => (
                                 <div
                                     key={player._id}
-                                    className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all"
+                                    className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all flex flex-col justify-between"
                                 >
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <img
-                                            src={`https://mc-heads.net/avatar/${player.minecraftUsername}/40`}
-                                            alt={player.minecraftUsername}
-                                            className="w-10 h-10 rounded-lg"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-bold text-white truncate">{player.minecraftUsername}</div>
-                                            <div className="text-[10px] font-bold uppercase">
-                                                {activeSeason?.format.includes('Duos') ? (
-                                                    <span className="text-blue-400 flex items-center gap-1">
-                                                        {isPlayerInDuo(player.discordId) ? (
-                                                            <>
-                                                                <Lock className="w-3 h-3 text-blue-400" />
-                                                                <span>In Duo</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Hourglass className="w-3 h-3 text-blue-400 animate-pulse" />
-                                                                <span>Awaiting Partner</span>
-                                                            </>
-                                                        )}
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <img
+                                                src={`https://mc-heads.net/avatar/${player.minecraftUsername}/40`}
+                                                alt={player.minecraftUsername}
+                                                className="w-10 h-10 rounded-lg shrink-0 border border-white/10 bg-black/40"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-bold text-white truncate flex items-center justify-between gap-1">
+                                                    <span className="truncate">{player.minecraftUsername}</span>
+                                                    <span
+                                                        className="text-[10px] text-gray-400 font-mono bg-black/40 px-1.5 py-0.5 rounded border border-white/5 flex items-center gap-1 shrink-0 cursor-pointer hover:text-white hover:border-emerald-500/40 transition-colors"
+                                                        title={`Discord ID: ${player.discordId} (Click to draft as player)`}
+                                                        onClick={() => window.open(`/minecraft/tournament?adminDummyId=${player.discordId}`, '_blank')}
+                                                    >
+                                                        <Hash className="w-2.5 h-2.5 text-emerald-400" />
+                                                        {player.discordId.length > 10 ? `${player.discordId.slice(0, 5)}...` : player.discordId}
                                                     </span>
-                                                ) : (
-                                                    <span className={`flex items-center gap-1 ${player.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
-                                                        {player.isLocked ? (
-                                                            <>
-                                                                <Lock className="w-3 h-3 text-green-400" />
-                                                                <span>Team Locked</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Hourglass className="w-3 h-3 text-amber-400 animate-pulse" />
-                                                                <span>Drafting</span>
-                                                            </>
-                                                        )}
-                                                    </span>
-                                                )}
+                                                </div>
+                                                <div className="text-[10px] font-bold uppercase mt-0.5">
+                                                    {activeSeason?.format.includes('Duos') ? (
+                                                        <span className="text-blue-400 flex items-center gap-1">
+                                                            {isPlayerInDuo(player.discordId) ? (
+                                                                <>
+                                                                    <Lock className="w-3 h-3 text-blue-400" />
+                                                                    <span>In Duo</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Hourglass className="w-3 h-3 text-blue-400 animate-pulse" />
+                                                                    <span>Awaiting Partner</span>
+                                                                </>
+                                                            )}
+                                                        </span>
+                                                    ) : (
+                                                        <span className={`flex items-center gap-1 ${player.isLocked ? 'text-green-400' : 'text-amber-400'}`}>
+                                                            {player.isLocked ? (
+                                                                <>
+                                                                    <Lock className="w-3 h-3 text-green-400" />
+                                                                    <span>Team Locked</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Hourglass className="w-3 h-3 text-amber-400 animate-pulse" />
+                                                                    <span>Drafting</span>
+                                                                </>
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Show Pokemon grid only for Singles format */}
+                                        {!activeSeason?.format.includes('Duos') && (
+                                            <div className="grid grid-cols-6 gap-1 mb-3">
+                                                {player.team.map((poke, idx) => (
+                                                    <PokemonImage key={idx} pokemon={poke} />
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Show Pokemon grid only for Singles format */}
-                                    {!activeSeason?.format.includes('Duos') && (
-                                        <div className="grid grid-cols-6 gap-1 mb-3">
-                                            {player.team.map((poke, idx) => (
-                                                <PokemonImage key={idx} pokemon={poke} />
-                                            ))}
-                                        </div>
-                                    )}
-
                                     {/* Actions */}
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/5 mt-2">
                                         {activeSeason?.format.includes('Duos') ? (
                                             <button
                                                 onClick={() => {
@@ -1439,9 +1589,17 @@ const AdminTournament: React.FC = () => {
                                             </>
                                         )}
                                         <button
+                                            onClick={() => window.open(`/minecraft/tournament?adminDummyId=${player.discordId}`, '_blank')}
+                                            className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-xs font-bold py-1.5 px-2 rounded transition-colors flex items-center gap-1"
+                                            title="Open draft view for this player in a new tab"
+                                        >
+                                            <ExternalLink className="w-3 h-3" /> Draft
+                                        </button>
+                                        <button
                                             onClick={() => handleRevokeRegistration(player)}
                                             disabled={loading}
-                                            className="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold py-1.5 rounded transition-colors"
+                                            className="bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold py-1.5 px-2 rounded transition-colors"
+                                            title="Revoke and remove player"
                                         >
                                             Revoke
                                         </button>
@@ -2244,6 +2402,313 @@ const AdminTournament: React.FC = () => {
                                     <Save className="w-4 h-4" /> Save Team
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MANUAL ADD PLAYER MODAL */}
+            {showAddPlayerModal && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-[#18090c] border border-emerald-500/30 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-fade-in my-8">
+                        {/* Modal Header */}
+                        <div className="bg-gradient-to-r from-emerald-950/60 via-black to-emerald-950/60 p-5 border-b border-emerald-500/20 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+                                    <UserPlus className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black text-white flex items-center gap-2">
+                                        Manually Register Player
+                                    </h3>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        Adding to <span className="text-emerald-400 font-bold">{activeSeason?.name || 'Tournament'}</span> (Season {activeSeason?.seasonId})
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowAddPlayerModal(false);
+                                    setAddPlayerError('');
+                                    setAddPlayerSuccess('');
+                                }}
+                                className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                            {/* Feedback Banners */}
+                            {addPlayerError && (
+                                <div className="p-4 rounded-xl bg-red-900/30 border border-red-500/40 text-red-300 text-sm flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                        <div className="font-bold">Registration Failed</div>
+                                        <div className="text-xs text-red-200 mt-0.5">{addPlayerError}</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {addPlayerSuccess && (
+                                <div className="p-4 rounded-xl bg-emerald-900/30 border border-emerald-500/40 text-emerald-200 text-sm space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                                        <div className="flex-1">
+                                            <div className="font-bold text-emerald-300">Player Successfully Registered!</div>
+                                            <div className="text-xs text-emerald-100 mt-1">{addPlayerSuccess}</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-500/20">
+                                        {manualDiscordId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => window.open(`/minecraft/tournament?adminDummyId=${manualDiscordId}`, '_blank')}
+                                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow"
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" /> Draft on their behalf in New Tab
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setAddPlayerSuccess('');
+                                                setManualMcName('');
+                                                setManualDiscordId('');
+                                                setManualDiscordTag('');
+                                            }}
+                                            className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg"
+                                        >
+                                            + Add Another Player
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Section 1: Quick Pick from Whitelist */}
+                            <div className="bg-black/40 border border-white/10 rounded-xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-sm font-bold text-white">
+                                        <UserCheck className="w-4 h-4 text-emerald-400" />
+                                        <span>Quick Fill from Approved Whitelist ({approvedWhitelist.length})</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={fetchApprovedWhitelist}
+                                        disabled={loadingWhitelist}
+                                        className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium disabled:opacity-50"
+                                    >
+                                        <RefreshCw className={`w-3 h-3 ${loadingWhitelist ? 'animate-spin' : ''}`} />
+                                        Refresh
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-400">
+                                    Click any Discord-linked whitelist member to automatically fill in their exact Minecraft username & Discord ID:
+                                </p>
+                                <div className="space-y-2">
+                                    <input
+                                        type="text"
+                                        value={whitelistSearch}
+                                        onChange={e => setWhitelistSearch(e.target.value)}
+                                        placeholder="Search whitelist by IGN or Discord..."
+                                        className="w-full bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
+                                    />
+                                    <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 divide-y divide-white/5">
+                                        {approvedWhitelist
+                                            .filter(u => {
+                                                const q = whitelistSearch.toLowerCase();
+                                                const ign = (u.minecraftUsername || u.ign || '').toLowerCase();
+                                                const discord = (u.discordUsername || u.username || u.discordId || '').toLowerCase();
+                                                return !q || ign.includes(q) || discord.includes(q);
+                                            })
+                                            .slice(0, 20)
+                                            .map((u, idx) => {
+                                                const ign = u.minecraftUsername || u.ign || '';
+                                                const dId = u.discordId || u.userId || '';
+                                                const dName = u.discordUsername || u.username || '';
+                                                const isSelected = manualDiscordId === dId && manualMcName === ign;
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setManualMcName(ign);
+                                                            setManualDiscordId(dId);
+                                                            setManualDiscordTag(dName);
+                                                            setAddPlayerError('');
+                                                        }}
+                                                        className={`w-full flex items-center justify-between p-2 rounded-lg text-left transition-all ${
+                                                            isSelected
+                                                                ? 'bg-emerald-950/70 border border-emerald-500/50 text-white'
+                                                                : 'bg-white/5 hover:bg-white/10 text-gray-300'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                            <img
+                                                                src={`https://mc-heads.net/avatar/${ign || 'steve'}/28`}
+                                                                alt={ign}
+                                                                className="w-6 h-6 rounded shrink-0 border border-white/10"
+                                                            />
+                                                            <div className="min-w-0">
+                                                                <div className="text-xs font-bold text-white truncate">{ign || 'Unknown IGN'}</div>
+                                                                <div className="text-[10px] text-gray-400 truncate flex items-center gap-1">
+                                                                    <span>@{dName || 'Discord User'}</span>
+                                                                    <span className="text-gray-500 font-mono">({dId})</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 ml-2">
+                                                            {isSelected ? '✓ Selected' : 'Select'}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        {approvedWhitelist.length === 0 && !loadingWhitelist && (
+                                            <div className="text-xs text-gray-500 text-center py-3">
+                                                No whitelist members loaded. You can still type details manually below!
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Manual Registration Fields */}
+                            <form onSubmit={handleManualAddPlayer} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Minecraft Username */}
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-bold text-gray-300">
+                                            Minecraft Username <span className="text-emerald-400">*</span>
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative flex-1">
+                                                <input
+                                                    type="text"
+                                                    value={manualMcName}
+                                                    onChange={e => setManualMcName(e.target.value.replace(/\s+/g, ''))}
+                                                    placeholder="e.g. GreatRimu"
+                                                    required
+                                                    className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                                                />
+                                            </div>
+                                            <img
+                                                src={`https://mc-heads.net/avatar/${manualMcName || 'steve'}/38`}
+                                                alt="Skin preview"
+                                                className="w-10 h-10 rounded-xl border border-white/10 bg-black/40 shrink-0"
+                                                title="Skin avatar preview"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Discord User ID */}
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-bold text-gray-300 flex items-center justify-between">
+                                            <span>Discord User ID (Snowflake) <span className="text-emerald-400">*</span></span>
+                                            <span className="text-[10px] text-gray-400 font-normal">17-19 digits</span>
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={manualDiscordId}
+                                                onChange={e => setManualDiscordId(e.target.value.trim())}
+                                                placeholder="e.g. 433262414759198720"
+                                                required
+                                                className="w-full bg-black/60 border border-white/10 rounded-xl pl-8 pr-3 py-2.5 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none"
+                                            />
+                                            <Hash className="w-4 h-4 text-gray-400 absolute left-2.5 top-3" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Discord Tag & Status row */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-bold text-gray-300">
+                                            Discord Username / Handle (Optional)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={manualDiscordTag}
+                                            onChange={e => setManualDiscordTag(e.target.value)}
+                                            placeholder="e.g. rimu or rimu#0001"
+                                            className="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-bold text-gray-300">
+                                            Initial Draft Status
+                                        </label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setManualIsLocked(false)}
+                                                className={`p-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                                                    !manualIsLocked
+                                                        ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
+                                                        : 'bg-black/40 border-white/10 text-gray-400 hover:text-white'
+                                                }`}
+                                            >
+                                                <Hourglass className="w-3.5 h-3.5" />
+                                                Drafting (Unlocked)
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setManualIsLocked(true)}
+                                                className={`p-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
+                                                    manualIsLocked
+                                                        ? 'bg-green-500/20 border-green-500/60 text-green-300'
+                                                        : 'bg-black/40 border-white/10 text-gray-400 hover:text-white'
+                                                }`}
+                                            >
+                                                <Lock className="w-3.5 h-3.5" />
+                                                Locked
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Helper Info Callout */}
+                                <div className="p-3 bg-blue-950/30 border border-blue-500/30 rounded-xl text-xs text-blue-200 flex items-start gap-2.5">
+                                    <HelpCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <span className="font-bold text-blue-300">How Discord Connection Works:</span> When this player logs into the website with this Discord account, they will automatically be recognized as registered for <span className="font-bold text-white">{activeSeason?.name}</span> and will be able to draft and lock their tournament team on the Tournament page.
+                                    </div>
+                                </div>
+
+                                {/* Modal Actions */}
+                                <div className="flex gap-3 pt-3 border-t border-white/10">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowAddPlayerModal(false);
+                                            setAddPlayerError('');
+                                            setAddPlayerSuccess('');
+                                        }}
+                                        className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl text-sm transition-colors"
+                                    >
+                                        Close
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={loading || !manualMcName.trim() || !manualDiscordId.trim()}
+                                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 disabled:opacity-50 transition-all"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                                Registering...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <UserPlus className="w-4 h-4" />
+                                                Add Player to Tournament
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
