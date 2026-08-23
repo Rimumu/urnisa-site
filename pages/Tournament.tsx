@@ -597,6 +597,7 @@ const Tournament: React.FC = () => {
         }
         return user;
     }, [adminDummyId, user]);
+    const effectivePlayerId = adminDummyId || user?.id;
     const [visibleCount, setVisibleCount] = useState<number>(48);
 
     // Reset visible count on filter or search query change for lazy loading
@@ -955,8 +956,6 @@ const Tournament: React.FC = () => {
                 .catch(console.error);
         }
     }, [activeSeason.seasonId]);
-
-    const effectivePlayerId = adminDummyId || user?.id;
 
     // Auto-polling for Doubles Duos
     useEffect(() => {
