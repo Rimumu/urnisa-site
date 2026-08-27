@@ -606,9 +606,10 @@ const Nisathon: React.FC = () => {
     const totalNisaballs = stats.totalNisaballs;
 
     // --- BREAKDOWN CALCULATIONS ---
-    const nbFromSubs = currentSubs / (stats.subsRate || 2);
-    const nbFromBits = currentBits / (stats.bitsRate || 500);
-    const nbFromDonations = currentDonations / (stats.donationRate || 5);
+    // Preserves recorded Nisaballs from each category; does not retroactively recalculate when rate settings are changed
+    const nbFromSubs = stats.nbFromSubs !== undefined ? stats.nbFromSubs : (currentSubs / (stats.subsRate || 2));
+    const nbFromBits = stats.nbFromBits !== undefined ? stats.nbFromBits : (currentBits / (stats.bitsRate || 500));
+    const nbFromDonations = stats.nbFromDonations !== undefined ? stats.nbFromDonations : (currentDonations / (stats.donationRate || 5));
 
     // --- SYNC MILESTONE LOGIC ---
     let nextActiveFound = false;

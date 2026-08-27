@@ -595,8 +595,11 @@ const Admin: React.FC = () => {
                 body: JSON.stringify(currencySettings)
             });
             if (response.ok) {
-                setManagerStatus({ type: 'success', message: 'Settings saved successfully!' });
-                setTimeout(() => setManagerStatus(null), 3000);
+                setManagerStatus({ 
+                    type: 'success', 
+                    message: `Settings saved successfully! New rates (${currencySettings.timePerNb}m/NB) apply exclusively to future incoming events without altering existing timer or stats.` 
+                });
+                setTimeout(() => setManagerStatus(null), 4000);
                 refetchStats();
             } else {
                 setManagerStatus({ type: 'error', message: 'Failed to save settings: Unauthorized or invalid password.' });
@@ -2133,7 +2136,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={handleSaveCurrencySettings} className="mt-6 bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-6 rounded-xl transition-all self-start shadow-lg">Save Settings</button>
+                                <div className="mt-4 p-3.5 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-xs text-gray-300 flex items-start gap-2.5">
+                                    <span className="text-brand-primary font-bold text-sm">💡</span>
+                                    <span>
+                                        <strong className="text-white">Note:</strong> Rate changes apply <em>exclusively to future incoming events</em>. Modifying these settings (e.g. changing to 1NB = 5 minutes) ensures newly earned Nisaballs add 5 minutes to the timer without altering or recalculating existing live stats, historical events, or the current timer duration.
+                                    </span>
+                                </div>
+                                <button onClick={handleSaveCurrencySettings} className="mt-5 bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-6 rounded-xl transition-all self-start shadow-lg">Save Settings</button>
                             </div>
 
                             {/* Revamped Event Log */}

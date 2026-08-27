@@ -16,6 +16,9 @@ export interface NisathonStatsData {
     bitsRate?: number;
     donationRate?: number;
     timePerNb?: number;
+    nbFromSubs?: number;
+    nbFromBits?: number;
+    nbFromDonations?: number;
 }
 
 export interface TopContributor {
