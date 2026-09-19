@@ -1911,22 +1911,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <div className={`text-4xl md:text-5xl font-black font-mono tracking-tighter flex flex-col justify-center h-full -mt-2 ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300 drop-shadow-lg`}>
                                         <div>{timeLeftString}</div>
                                         <div className="flex flex-wrap items-center gap-2 mt-2 font-sans tracking-normal">
-                                            {stats.eventListenerActive === false ? (
-                                                <span className="text-[10px] text-red-400 bg-red-500/10 border border-red-500/30 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-red-500/10">
-                                                    🔇 Listener OFF
-                                                </span>
-                                            ) : (
-                                                <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-emerald-500/10">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                    🎧 Listener ON
-                                                </span>
-                                            )}
                                             {stats.isPaused && <span className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-amber-500/10 animate-pulse"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Paused</span>}
                                             {stats.isEnded && <span className="text-[10px] text-red-500 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-red-500/10"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Ended</span>}
-                                            <a href="/nisathon/timer" target="_blank" rel="noopener noreferrer" className="text-[10px] text-amber-400 hover:text-white bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider font-bold transition-all flex items-center gap-1">
-                                                <span>Return Timer Page</span>
-                                                <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -2087,10 +2073,8 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             </div>
                                             <p className="text-xs text-gray-300 mt-1 leading-relaxed">
                                                 {stats.eventListenerActive !== false 
-                                                    ? stats.isEnded 
-                                                        ? "Active: Stream events (subs, donations, bits, gifts) are listened to and displayed on the Activity Widget overlay. Time is added to the 'Nisathon Will Return' Timer based on Currency Settings, without awarding Nisaballs to user accounts."
-                                                        : "Active: All incoming stream events are processed live, crediting Nisaballs, updating overlays, and driving the Nisathon timer."
-                                                    : "Muted: Incoming stream events are completely ignored and will not update the Return Timer or appear in the Activity Widget."
+                                                    ? "Active: All incoming stream events are processed live, crediting Nisaballs, updating overlays, and driving the Nisathon timer."
+                                                    : "Muted: Incoming stream events are completely ignored and will not update overlays."
                                                 }
                                             </p>
                                         </div>
@@ -2223,12 +2207,6 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="mt-4 p-3.5 bg-brand-primary/10 border border-brand-primary/20 rounded-xl text-xs text-gray-300 flex items-start gap-2.5">
-                                    <span className="text-brand-primary font-bold text-sm">💡</span>
-                                    <span>
-                                        <strong className="text-white">Note:</strong> Rate changes apply <em>exclusively to future incoming events</em>. Modifying these settings (e.g. changing to 1NB = 5 minutes) ensures newly earned Nisaballs add 5 minutes to the timer without altering or recalculating existing live stats, historical events, or the current timer duration.
-                                    </span>
                                 </div>
                                 <button onClick={handleSaveCurrencySettings} className="mt-5 bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-6 rounded-xl transition-all self-start shadow-lg">Save Settings</button>
                             </div>
