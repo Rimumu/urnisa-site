@@ -1511,7 +1511,7 @@ const Tournament: React.FC = () => {
             <div className="relative z-20 container mx-auto px-4 pt-12">
                 {/* Top Utility Bar */}
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-start items-center mb-6 gap-4">
-                    <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md h-10 shrink-0">
+                    <Link to="/arch/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md h-10 shrink-0">
                         <span>←</span> Back to Dashboard
                     </Link>
                     {/* TABS */}

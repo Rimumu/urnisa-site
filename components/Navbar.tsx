@@ -3,105 +3,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTwitchStatus } from '../hooks/useTwitchStatus';
 
-// Helper for Dropdown Logic
-const EventsDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => (
-  <div className="relative group">
-    <NavLink
-      to="/nisathon"
-      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-      onClick={(e) => { if (window.innerWidth < 768) { e.preventDefault(); } }} // Prevent nav on click on mobile to allow dropdown to open if logic requires
-    >
-      <span>Nisathon</span>
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-      </svg>
-    </NavLink>
-
-    {/* Dropdown Menu */}
-    <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
-      <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10">
-        <NavLink
-          to="/nisathon"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Dashboard
-        </NavLink>
-        <NavLink
-          to="/nisathon/wheel"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Wheel
-        </NavLink>
-        <NavLink
-          to="/snakesladder"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-3 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          S & L
-        </NavLink>
-      </div>
-    </div>
-  </div>
-);
-
-const MinecraftDropdown: React.FC<{ closeMenu?: () => void }> = ({ closeMenu }) => (
-  <div className="relative group">
-    <NavLink
-      to="/minecraft"
-      className={({ isActive }) => `px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 flex items-center gap-1 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-      onClick={(e) => { if (window.innerWidth < 768) { e.preventDefault(); } }}
-    >
-      <span>Nisamon</span>
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-      </svg>
-    </NavLink>
-
-    {/* Dropdown Menu */}
-    <div className="absolute left-0 pt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left z-50">
-      <div className="rounded-xl shadow-lg bg-brand-surface ring-1 ring-black ring-opacity-5 overflow-hidden border border-white/10 py-1">
-        <NavLink
-          to="/minecraft"
-          end
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Dashboard
-        </NavLink>
-        <NavLink
-          to="/minecraft/shop"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Shop
-        </NavLink>
-        <NavLink
-          to="/minecraft/gacha"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Gacha
-        </NavLink>
-        <NavLink
-          to="/minecraft/tournament"
-          onClick={closeMenu}
-          className={({ isActive }) => `block px-4 py-2.5 text-sm transition-colors ${isActive ? 'bg-brand-primary/20 text-brand-primary font-bold' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-        >
-          Tournament
-        </NavLink>
-      </div>
-    </div>
-  </div>
-);
-
-// This component is now only for the desktop view.
+// NavLinks for desktop view
 const NavLinks: React.FC = () => (
   <>
     <NavLink to="/" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
-    <EventsDropdown />
-    <MinecraftDropdown />
+    <NavLink to="/nisathon" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Nisathon</NavLink>
     <NavLink to="/gallery" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Art Gallery</NavLink>
     <NavLink to="/archive" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Archive</NavLink>
   </>
@@ -232,28 +138,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
       >
         <div className="flex flex-col px-8 py-8 h-full overflow-y-auto space-y-8 custom-scrollbar">
           <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Home</NavLink>
-
-          {/* Mobile Sub-menu for Events */}
-          <div className="flex flex-col space-y-3">
-            <span className="text-gray-500 uppercase text-xs font-bold tracking-widest">Nisathon</span>
-            <div className="flex flex-col space-y-4 pl-4 border-l-2 border-white/10">
-              <NavLink to="/nisathon" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Dashboard</NavLink>
-              <NavLink to="/nisathon/wheel" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Wheel</NavLink>
-              <NavLink to="/snakesladder" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>S & L</NavLink>
-            </div>
-          </div>
-
-          {/* Mobile Sub-menu for Minecraft */}
-          <div className="flex flex-col space-y-3">
-            <span className="text-gray-500 uppercase text-xs font-bold tracking-widest">Nisamon</span>
-            <div className="flex flex-col space-y-4 pl-4 border-l-2 border-white/10">
-              <NavLink to="/minecraft" onClick={closeMenu} end className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Dashboard</NavLink>
-              <NavLink to="/minecraft/shop" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Shop</NavLink>
-              <NavLink to="/minecraft/gacha" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Gacha</NavLink>
-              <NavLink to="/minecraft/tournament" onClick={closeMenu} className={({ isActive }) => `text-xl font-bold transition-all duration-200 ${isActive ? 'text-brand-primary translate-x-1' : 'text-gray-300 hover:text-white hover:translate-x-1'}`}>Tournament</NavLink>
-            </div>
-          </div>
-
+          <NavLink to="/nisathon" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Nisathon</NavLink>
           <NavLink to="/gallery" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Art Gallery</NavLink>
           <NavLink to="/archive" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Archive</NavLink>
         </div>

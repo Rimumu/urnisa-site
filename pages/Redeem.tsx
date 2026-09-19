@@ -79,7 +79,7 @@ const Redeem: React.FC = () => {
             <UserProfile className="!absolute top-4 right-4" />
             
             <div className="max-w-xl mx-auto flex flex-col items-center">
-                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md mb-8 self-start group">
+                <Link to="/arch/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md mb-8 self-start group">
                     <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" /> Back to Dashboard
                 </Link>
 

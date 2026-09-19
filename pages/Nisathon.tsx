@@ -1,10 +1,154 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import OptimizedImage from '../components/OptimizedImage';
 import { useNisathonGoals } from '../hooks/useNisathonGoals';
 import { useNisathonStats } from '../hooks/useNisathonStats';
 
 // --- DATA CONSTANTS ---
+
+// Finalized Top Contributors as of the conclusion of Nisathon on August 28, 2026
+const FINAL_TOP_CONTRIBUTORS = [
+    { rank: 1, user: "nbhlol", totalNisaballs: 372 },
+    { rank: 2, user: "happysoul7", totalNisaballs: 100 },
+    { rank: 3, user: "tashawaaaa", totalNisaballs: 100 },
+    { rank: 4, user: "momorail", totalNisaballs: 81.2 },
+    { rank: 5, user: "kulinger", totalNisaballs: 55 },
+    { rank: 6, user: "eizri", totalNisaballs: 38 },
+    { rank: 7, user: "itzjonnny__", totalNisaballs: 31 },
+    { rank: 8, user: "toastedferris", totalNisaballs: 27 },
+    { rank: 9, user: "grayygrayson", totalNisaballs: 20 },
+    { rank: 10, user: "ChongADingDong", totalNisaballs: 18 },
+    { rank: 11, user: "sneakyplater", totalNisaballs: 17 },
+    { rank: 12, user: "themrmerlion", totalNisaballs: 15 },
+    { rank: 13, user: "monkeyomasis", totalNisaballs: 13 },
+    { rank: 14, user: "chongadingdong", totalNisaballs: 13 },
+    { rank: 15, user: "CaLiXa123_", totalNisaballs: 13 }
+];
+
+// Cutoff timestamp for Nisathon event contributions: August 28, 2026 (end of day UTC)
+const NISATHON_CUTOFF_DATE = new Date('2026-08-28T23:59:59.999Z').getTime();
+
+// Verified historical snapshot of events concluding on August 28, 2026
+export const FALLBACK_FROZEN_EVENTS = [
+    {
+        _id: "6a91a83078a4abe251d9ab89",
+        user: "monkeyomasis",
+        type: "sub",
+        amountDisplay: "Tier 1 Sub",
+        message: "",
+        createdAt: "2026-08-28T15:24:32.477Z",
+        nisaballAmount: 1
+    },
+    {
+        _id: "6a91a75578a4abe251d9ab87",
+        user: "oldmanwindbreaker",
+        type: "bits",
+        amountDisplay: "40 Bits",
+        message: "Good luck & good bye for now, Nisa & chat. urnisaHii urnisaHii urnisaHug urnisaHug cheer40",
+        createdAt: "2026-08-28T15:20:53.238Z",
+        nisaballAmount: 0.08
+    },
+    {
+        _id: "6a91a6cf78a4abe251d9ab80",
+        user: "fourzeschaeffer",
+        type: "gift",
+        amountDisplay: "1 Gift Sub",
+        message: "Gifted 1 subs",
+        createdAt: "2026-08-28T15:18:39.860Z",
+        nisaballAmount: 1
+    },
+    {
+        _id: "6a91a6a178a4abe251d9ab77",
+        user: "chongadingdong",
+        type: "gift",
+        amountDisplay: "1 Gift Sub",
+        message: "Gifted 1 subs",
+        createdAt: "2026-08-28T15:17:53.643Z",
+        nisaballAmount: 1
+    },
+    {
+        _id: "6a91a61d78a4abe251d9ab6f",
+        user: "nbhlol",
+        type: "gift",
+        amountDisplay: "10 Gift Subs",
+        message: "Gifted 10 subs",
+        createdAt: "2026-08-28T15:15:41.563Z",
+        nisaballAmount: 10
+    },
+    {
+        _id: "6a91a47878a4abe251d9ab63",
+        user: "LilyyyLilo",
+        type: "donation",
+        amountDisplay: "$3.33",
+        message: "Goodluck Nisa in UK!!! Thank you for being youuuuu. I had fun being in your community. We will miss youuu <3",
+        createdAt: "2026-08-28T15:08:40.117Z",
+        nisaballAmount: 0.666
+    },
+    {
+        _id: "6a91a45078a4abe251d9ab62",
+        user: "elmenquejueg",
+        type: "follower",
+        amountDisplay: "New Follower",
+        message: "",
+        createdAt: "2026-08-28T15:08:00.134Z",
+        nisaballAmount: 0
+    },
+    {
+        _id: "6a91a34d78a4abe251d9ab5f",
+        user: "momorail",
+        type: "bits",
+        amountDisplay: "100 Bits",
+        message: "Cheer100 thank you for being my Nakama i hope you find your One Piece over there",
+        createdAt: "2026-08-28T15:03:41.833Z",
+        nisaballAmount: 0.2
+    },
+    {
+        _id: "6a91a32278a4abe251d9ab5e",
+        user: "Putra \"Pr0digy\"",
+        type: "donation",
+        amountDisplay: "$25.00",
+        message: "Yow Nisa,I know I haven't been around for a while, but I'm proud of your achievements. I've been reading your announcements and all from DC and pop in a few mins of your stream. So in a way I've been keeping up a bit la.Anyways good luck out there",
+        createdAt: "2026-08-28T15:02:58.323Z",
+        nisaballAmount: 5
+    },
+    {
+        _id: "6a91a30478a4abe251d9ab5d",
+        user: "cleancutegg",
+        type: "bits",
+        amountDisplay: "500 Bits",
+        message: "ShowLove100 ShowLove100 ShowLove100 ShowLove100 ShowLove100",
+        createdAt: "2026-08-28T15:02:27.966Z",
+        nisaballAmount: 1
+    },
+    {
+        _id: "6a919fd078a4abe251d9ab5b",
+        user: "ChongADingDong",
+        type: "bits",
+        amountDisplay: "100 Bits",
+        message: "cheer100",
+        createdAt: "2026-08-28T14:48:47.458Z",
+        nisaballAmount: 0.2
+    },
+    {
+        _id: "6a9194ec78a4abe251d9ab51",
+        user: "nbhlol",
+        type: "gift",
+        amountDisplay: "5 Gift Subs",
+        message: "Gifted 5 subs",
+        createdAt: "2026-08-28T14:02:20.170Z",
+        nisaballAmount: 5
+    },
+    {
+        _id: "6a91924178a4abe251d9ab48",
+        user: "happy_soul7",
+        type: "sub",
+        amountDisplay: "Tier 1 Sub",
+        message: "",
+        createdAt: "2026-08-28T13:51:00.120Z",
+        nisaballAmount: 1
+    }
+];
 
 const TOP_REWARDS = [
     "Exclusive VIP Badge",
@@ -98,16 +242,9 @@ const getEventColor = (type: string) => {
 };
 
 const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
     const date = new Date(dateString);
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (seconds < 60) return "Just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return date.toLocaleDateString();
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 const CheckIcon = () => (
@@ -259,6 +396,9 @@ interface ContributionStatProps {
 
 const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, rawUnit, nbAmount, totalNb, color, icon, rate }) => {
     const contributionPercent = totalNb > 0 ? (nbAmount / totalNb) * 100 : 0;
+    const impactText = contributionPercent >= 10
+        ? `${contributionPercent.toFixed(0)}% Impact`
+        : `${contributionPercent.toFixed(1)}% Impact`;
     
     return (
         <div className="bg-white/5 p-5 rounded-3xl border border-white/5 flex flex-col h-full relative overflow-hidden group hover:bg-white/10 transition-colors">
@@ -280,7 +420,7 @@ const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, ra
             {/* Converted Value */}
             <div className="text-sm font-medium text-brand-accent mb-4 flex justify-between items-center bg-black/20 rounded-lg px-2 py-1">
                 <span>{nbAmount.toFixed(1)} NB</span>
-                <span className="text-[10px] text-gray-500 font-sans font-semibold">{contributionPercent.toFixed(0)}% Impact</span>
+                <span className="text-[10px] text-gray-500 font-sans font-semibold">{impactText}</span>
             </div>
 
             {/* Contribution Bar */}
@@ -597,7 +737,19 @@ const Nisathon: React.FC = () => {
     const [showTopContributorsModal, setShowTopContributorsModal] = useState(false);
     const [showDonatePopup, setShowDonatePopup] = useState(false);
     const { goals } = useNisathonGoals();
-    const { stats, leaderboard, recentEvents } = useNisathonStats();
+    const { stats, recentEvents } = useNisathonStats(0);
+
+    // Finalized Top Contributors that will not change
+    const leaderboard = FINAL_TOP_CONTRIBUTORS;
+
+    // Filter events strictly up to August 28, 2026 (inclusive)
+    const frozenRecentEvents = useMemo(() => {
+        const valid = (recentEvents || []).filter(e => {
+            const t = new Date(e.createdAt).getTime();
+            return !isNaN(t) && t <= NISATHON_CUTOFF_DATE;
+        });
+        return valid.length > 0 ? valid : FALLBACK_FROZEN_EVENTS;
+    }, [recentEvents]);
 
     // --- CENTRAL STATE ---
     const currentSubs = stats.currentSubs;
@@ -606,10 +758,21 @@ const Nisathon: React.FC = () => {
     const totalNisaballs = stats.totalNisaballs;
 
     // --- BREAKDOWN CALCULATIONS ---
-    // Preserves recorded Nisaballs from each category; does not retroactively recalculate when rate settings are changed
-    const nbFromSubs = stats.nbFromSubs !== undefined ? stats.nbFromSubs : (currentSubs / (stats.subsRate || 2));
-    const nbFromBits = stats.nbFromBits !== undefined ? stats.nbFromBits : (currentBits / (stats.bitsRate || 500));
-    const nbFromDonations = stats.nbFromDonations !== undefined ? stats.nbFromDonations : (currentDonations / (stats.donationRate || 5));
+    // Accurate category contribution for current stats based on actual event totals and rates
+    // (Resolves legacy partial counters that had only recorded a tiny fraction of the event, showing ~1% Impact)
+    const subsRate = stats.subsRate || 1;
+    const bitsRate = stats.bitsRate || 500;
+    const donationRate = stats.donationRate || 5;
+
+    const nbFromSubs = (stats.nbFromSubs && stats.nbFromSubs >= currentSubs * 0.5)
+        ? stats.nbFromSubs
+        : (currentSubs > 0 ? (currentSubs / subsRate) : 0);
+    const nbFromBits = (stats.nbFromBits && stats.nbFromBits >= (currentBits / bitsRate) * 0.5)
+        ? stats.nbFromBits
+        : (currentBits > 0 ? (currentBits / bitsRate) : 0);
+    const nbFromDonations = (stats.nbFromDonations && stats.nbFromDonations >= (currentDonations / donationRate) * 0.5)
+        ? stats.nbFromDonations
+        : (currentDonations > 0 ? (currentDonations / donationRate) : 0);
 
     // --- SYNC MILESTONE LOGIC ---
     let nextActiveFound = false;
@@ -649,7 +812,7 @@ const Nisathon: React.FC = () => {
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-accent/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-            {showContributorsModal && <ContributorsModal onClose={() => setShowContributorsModal(false)} events={recentEvents} />}
+            {showContributorsModal && <ContributorsModal onClose={() => setShowContributorsModal(false)} events={frozenRecentEvents} />}
             {showTopContributorsModal && <TopContributorsModal onClose={() => setShowTopContributorsModal(false)} contributors={leaderboard} />}
 
             <div className="max-w-7xl mx-auto px-4 relative z-10 space-y-12 animate-in fade-in duration-700">
@@ -660,21 +823,25 @@ const Nisathon: React.FC = () => {
                         <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter drop-shadow-2xl">
                             <span className="text-brand-primary">FAREWELL</span> NISATHON 
                         </h1>
-                        <div className="inline-flex items-center gap-2 bg-brand-accent/10 px-6 py-2 rounded-full border border-brand-accent/20">
-                             <h2 className="text-lg md:text-xl font-bold text-brand-accent tracking-widest uppercase">Nisathon Dashboard</h2>
+                    </div>
+                    {/* Nisathon Has Ended / Frozen State */}
+                    <div className="bg-gradient-to-r from-brand-primary to-brand-secondary p-8 rounded-3xl border-4 border-white/20 shadow-[0_0_50px_rgba(229,56,59,0.5)] text-center animate-in zoom-in duration-500 max-w-2xl w-full">
+                        <h2 className="text-4xl md:text-6xl font-black text-white drop-shadow-lg tracking-tighter">
+                            NISATHON HAS ENDED!
+                        </h2>
+                        <p className="text-white/80 font-bold uppercase tracking-widest mt-2 text-lg">Thank you for all the support!</p>
+                        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <Link 
+                                to="/nisathon/timer" 
+                                className="inline-flex items-center gap-2 bg-white text-black hover:bg-amber-300 font-extrabold px-6 py-3 rounded-full text-sm uppercase tracking-wider transition-all duration-300 shadow-xl hover:scale-105"
+                            >
+                                <span>Nisathon Will Return • View Timer</span>
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </Link>
                         </div>
                     </div>
-                    {/* Use Live Timer from Backend OR Show ENDED card */}
-                    {stats.isEnded ? (
-                        <div className="bg-gradient-to-r from-brand-primary to-brand-secondary p-8 rounded-3xl border-4 border-white/20 shadow-[0_0_50px_rgba(229,56,59,0.5)] text-center animate-in zoom-in duration-500 max-w-2xl w-full">
-                            <h2 className="text-4xl md:text-6xl font-black text-white drop-shadow-lg tracking-tighter">
-                                NISATHON HAS ENDED!
-                            </h2>
-                            <p className="text-white/80 font-bold uppercase tracking-widest mt-2 text-lg">Thank you for all the support!</p>
-                        </div>
-                    ) : (
-                        <Timer endTime={stats.timerEndTime} isPaused={stats.isPaused} remainingTimeMs={stats.remainingTimeMs} />
-                    )}
                 </div>
 
                 <div className="space-y-16">
@@ -762,10 +929,10 @@ const Nisathon: React.FC = () => {
                                 onClick={() => setShowContributorsModal(true)}
                              >
                                 <div className="space-y-3 relative">
-                                    {recentEvents.length === 0 ? (
+                                    {frozenRecentEvents.length === 0 ? (
                                         <div className="text-center text-sm text-gray-500 py-2">No recent events</div>
                                     ) : (
-                                        recentEvents.slice(0, 1).map((event) => (
+                                        frozenRecentEvents.slice(0, 1).map((event) => (
                                             <div key={event._id} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${getEventColor(event.type)}`}>
                                                     {getEventIcon(event.type, "w-4 h-4")}
@@ -773,7 +940,7 @@ const Nisathon: React.FC = () => {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex justify-between items-baseline">
                                                         <span className="text-xs font-bold text-white truncate">{event.user}</span>
-                                                        <span className="text-[10px] text-gray-500">{formatTimeAgo(event.createdAt)}</span>
+                                                        <span className="text-[10px] text-gray-400 font-medium">{formatTimeAgo(event.createdAt)}</span>
                                                     </div>
                                                     <div className="text-[10px] font-bold text-brand-primary">{event.amountDisplay}</div>
                                                 </div>
@@ -810,7 +977,7 @@ const Nisathon: React.FC = () => {
                                 </ul>
                                 <div className="mt-6 p-4 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-center">
                                     <div className="text-brand-primary font-bold text-xs uppercase tracking-wider mb-2">Timer Add</div>
-                                    <div className="text-white font-black text-lg">1 Nisaball = {stats.timePerNb || 10} Minutes</div>
+                                    <div className="text-white font-black text-lg">1 Nisaball = 10 Minutes</div>
                                 </div>
                             </InfoCard>
 

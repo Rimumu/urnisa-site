@@ -612,7 +612,7 @@ const BingoDashboard: React.FC = () => {
             />
 
             <div className="container mx-auto px-4 pt-4 pb-2">
-                <Link to="/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm">
+                <Link to="/arch/minecraft" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm">
                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                 </Link>
             </div>
@@ -645,7 +645,7 @@ const BingoDashboard: React.FC = () => {
 
                         <div className="flex flex-col gap-4">
                             <Link 
-                                to={`/minecraft/bingo/card?id=${config.cardId || "WEEK1"}`}
+                                to={`/arch/minecraft/bingo/card?id=${config.cardId || "WEEK1"}`}
                                 className="bg-brand-primary hover:bg-red-600 text-white font-bold text-xl py-4 px-8 rounded-2xl shadow-[0_0_30px_rgba(229,56,59,0.4)] transition-transform hover:scale-105 flex items-center justify-center gap-3 group"
                             >
                                 <Rocket className="w-5 h-5 inline-block" />
@@ -654,13 +654,13 @@ const BingoDashboard: React.FC = () => {
                             
                             <div className="flex gap-4">
                                 <Link 
-                                    to="/minecraft/bingo/card"
+                                    to="/arch/minecraft/bingo/card"
                                     className="flex-1 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2"
                                 >
                                     <Dices className="w-4 h-4" /> Random Card
                                 </Link>
                                 <Link 
-                                    to="/minecraft/bingo/card?view=saved"
+                                    to="/arch/minecraft/bingo/card?view=saved"
                                     className="flex-1 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2"
                                 >
                                     <Save className="w-4 h-4" /> Saved Cards

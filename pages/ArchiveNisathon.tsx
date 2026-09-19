@@ -205,6 +205,9 @@ interface ContributionStatProps {
 
 const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, rawUnit, nbAmount, totalNb, color, icon, rate }) => {
     const contributionPercent = totalNb > 0 ? (nbAmount / totalNb) * 100 : 0;
+    const impactText = contributionPercent >= 10
+        ? `${contributionPercent.toFixed(0)}% Impact`
+        : `${contributionPercent.toFixed(1)}% Impact`;
 
     return (
         <div className="bg-white/5 p-5 rounded-3xl border border-white/5 flex flex-col h-full relative overflow-hidden group hover:bg-white/10 transition-colors">
@@ -226,7 +229,7 @@ const ContributionStat: React.FC<ContributionStatProps> = ({ label, rawCount, ra
             {/* Converted Value */}
             <div className="text-sm font-medium text-brand-accent mb-4 flex justify-between items-center bg-black/20 rounded-lg px-2 py-1">
                 <span>{nbAmount.toFixed(1)} NB</span>
-                <span className="text-[10px] text-gray-500 font-sans font-semibold">{contributionPercent.toFixed(0)}% Impact</span>
+                <span className="text-[10px] text-gray-500 font-sans font-semibold">{impactText}</span>
             </div>
 
             {/* Contribution Bar */}
@@ -628,9 +631,15 @@ const ArchiveNisathon: React.FC = () => {
     const currentDonations = archivedStats?.currentDonations ?? 0;
     const totalNisaballs = archivedStats?.totalNisaballs ?? 0;
 
-    const nbFromSubs = currentSubs * 0.5;
-    const nbFromBits = currentBits * 0.002;
-    const nbFromDonations = currentDonations * 0.2;
+    const nbFromSubs = (archivedStats?.nbFromSubs && archivedStats.nbFromSubs >= currentSubs * 0.5) 
+        ? archivedStats.nbFromSubs 
+        : (currentSubs / (archivedStats?.subsRate || 1));
+    const nbFromBits = (archivedStats?.nbFromBits && archivedStats.nbFromBits >= (currentBits / (archivedStats?.bitsRate || 500)) * 0.5) 
+        ? archivedStats.nbFromBits 
+        : (currentBits / (archivedStats?.bitsRate || 500));
+    const nbFromDonations = (archivedStats?.nbFromDonations && archivedStats.nbFromDonations >= (currentDonations / (archivedStats?.donationRate || 5)) * 0.5) 
+        ? archivedStats.nbFromDonations 
+        : (currentDonations / (archivedStats?.donationRate || 5));
 
     // Processed milestones with completed/active states based on archived final totals
     let nextActiveFound = false;

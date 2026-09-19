@@ -380,7 +380,7 @@ const InventoryBACK: React.FC = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
                     <div className="flex flex-col items-start gap-4">
-                        <Link to="/minecraft/gacha" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
+                        <Link to="/arch/minecraft/gacha" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md">
                             <span>←</span> Back to Gacha
                         </Link>
                         <div>
@@ -411,7 +411,7 @@ const InventoryBACK: React.FC = () => {
                 ) : filteredItems.length === 0 ? (
                     <div className="text-center py-20 bg-black/20 rounded-3xl border border-white/5 backdrop-blur-sm">
                         <p className="text-2xl text-gray-600 font-bold mb-4">No items found</p>
-                        <Link to="/minecraft/gacha" className="bg-brand-primary/20 text-brand-primary px-6 py-3 rounded-full font-bold hover:bg-brand-primary hover:text-white transition-colors">
+                        <Link to="/arch/minecraft/gacha" className="bg-brand-primary/20 text-brand-primary px-6 py-3 rounded-full font-bold hover:bg-brand-primary hover:text-white transition-colors">
                             Go Open Crates!
                         </Link>
                     </div>

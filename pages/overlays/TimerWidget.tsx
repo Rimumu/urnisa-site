@@ -56,14 +56,25 @@ const TimerWidget: React.FC = () => {
         let frameId: number;
 
         const animate = () => {
-            // 1. Calculate the Real Target Time in MS
+            // 1. Calculate the Real Target Time in MS (reflecting Nisathon Return Timer value)
             let targetMs = 0;
-            if (stats.isPaused) {
-                targetMs = stats.remainingTimeMs || 0;
+            if (stats.isPaused || stats.isEnded) {
+                if (typeof stats.remainingTimeMs === 'number' && stats.remainingTimeMs > 0) {
+                    targetMs = stats.remainingTimeMs;
+                } else {
+                    const cached = typeof window !== 'undefined' ? localStorage.getItem('nisathon_preserved_timer_ms') : null;
+                    targetMs = cached ? Math.max(0, Number(cached)) : (stats.remainingTimeMs || 0);
+                }
             } else {
                 const now = Date.now();
                 const end = new Date(stats.timerEndTime).getTime();
                 targetMs = Math.max(0, end - now);
+            }
+
+            if (targetMs > 0) {
+                try {
+                    localStorage.setItem('nisathon_preserved_timer_ms', targetMs.toString());
+                } catch (_) {}
             }
 
             // 2. Initial Snap (on mount)
@@ -109,9 +120,10 @@ const TimerWidget: React.FC = () => {
 
         frameId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(frameId);
-    }, [stats.timerEndTime, stats.isPaused, stats.remainingTimeMs]);
+    }, [stats.timerEndTime, stats.isPaused, stats.isEnded, stats.remainingTimeMs]);
 
     const isDoubleTimer = stats.activeEvent === 'DOUBLE_TIMER';
+    const [hStr = "00", mStr = "00", sStr = "00"] = (timeLeft || "00:00:00").split(':');
 
     return (
         <div className="w-full h-full flex items-start justify-center bg-transparent overflow-visible pt-28 font-sans">
@@ -150,7 +162,7 @@ const TimerWidget: React.FC = () => {
 
                 {/* Main Timer Box */}
                 <div className={`
-                    relative w-[640px] h-[160px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center
+                    relative w-[650px] h-[165px] rounded-[50px] border-[4px] shadow-2xl transition-all duration-500 z-20 flex flex-col justify-center items-center px-4
                     ${isDoubleTimer 
                         ? 'bg-gradient-to-br from-[#FFD700] via-[#E6C200] to-[#B8860B] border-[#FFF8DC] shadow-[0_0_60px_rgba(255,215,0,0.6)]' 
                         : 'bg-gradient-to-br from-[#9f1239] to-[#4c0519] border-[#fda4af] shadow-[0_0_30px_rgba(251,113,133,0.4)]'}
@@ -161,31 +173,31 @@ const TimerWidget: React.FC = () => {
                                 2x Timer Event
                             </div>
                         )}
-                        {stats.isEnded ? (
-                            <div className="bg-red-600 text-white px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-white shadow-[0_0_15px_rgba(220,38,38,0.8)] animate-pulse whitespace-nowrap">
-                                NISATHON ENDED
-                            </div>
-                        ) : stats.isPaused ? (
+                        {stats.isPaused ? (
                             <div className="bg-amber-500 text-white px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-white shadow-[0_0_15px_rgba(245,158,11,0.6)] animate-pulse whitespace-nowrap">
                                 TIMER PAUSED
                             </div>
                         ) : null}
                     </div>
                     
-                    <div className="text-center w-full">
-                        <div className={`text-xs font-black uppercase tracking-[0.3em] mb-1 ${isDoubleTimer ? 'text-white gold-text-shadow' : 'text-rose-100'}`}>
-                            {stats.isEnded ? "Status" : "Time Remaining"}
+                    <div className="text-center w-full flex flex-col items-center justify-center -translate-y-1">
+                        <div className={`text-xs font-black uppercase tracking-[0.25em] pl-[0.25em] mb-0.5 ${isDoubleTimer ? 'text-white gold-text-shadow' : 'text-rose-100'}`}>
+                            NEXT NISATHON TIMER
                         </div>
-                        {/* ANIMATED DIGITS: Scale up and flash green when time is added */}
+                        {/* ANIMATED DIGITS: Perfectly centered flexbox layout */}
                         <div 
                             className={`
-                                text-8xl font-black tabular-nums bubbly-text tracking-tight transition-all duration-500 ease-out transform
+                                flex items-center justify-center leading-none text-8xl font-black tabular-nums bubbly-text transition-all duration-500 ease-out transform -translate-y-1.5
                                 ${timerBump ? 'scale-105 text-[#4ade80] drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]' : 'scale-100 text-white'}
-                                ${stats.isPaused && !stats.isEnded && !timerBump ? 'animate-pulse' : ''} 
+                                ${stats.isPaused && !timerBump ? 'animate-pulse' : ''} 
                                 ${isDoubleTimer && !timerBump ? 'gold-text-shadow' : ''}
                             `}
                         >
-                            {stats.isEnded ? "ENDED" : timeLeft}
+                            <span className="inline-block text-center">{hStr}</span>
+                            <span className="inline-block mx-1 opacity-80 -translate-y-1 select-none">:</span>
+                            <span className="inline-block text-center">{mStr}</span>
+                            <span className="inline-block mx-1 opacity-80 -translate-y-1 select-none">:</span>
+                            <span className="inline-block text-center">{sStr}</span>
                         </div>
                     </div>
                 </div>

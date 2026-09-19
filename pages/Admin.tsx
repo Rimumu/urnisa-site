@@ -1404,12 +1404,35 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
     const handleRemoveTimer = () => apiCall('nisathon/timer/add', { minutes: -Math.abs(addM) });
     const handlePauseTimer = () => apiCall('nisathon/timer/pause', {});
     const handleSimulateEvent = () => apiCall('nisathon/test-event', { type: testType, user: testUser, amount: testAmount, tier: testTier });
+    const handleToggleEventListener = () => apiCall('nisathon/toggle-listener', { active: stats.eventListenerActive === false ? true : false });
     const handleToggleDoubleTimer = () => apiCall('nisathon/event', { activeEvent: stats.activeEvent === 'DOUBLE_TIMER' ? null : 'DOUBLE_TIMER' });
 
-    // NEW: End Nisathon Handler
-    const handleEndNisathon = () => {
+    // NEW: End Nisathon Handler (Ensures current remaining timer is preserved and never reset to 0)
+    const handleEndNisathon = async () => {
         if (confirmEnd) {
-            apiCall('nisathon/end', {});
+            const now = Date.now();
+            let currentRemainingMs = 0;
+            if (stats.isPaused) {
+                currentRemainingMs = stats.remainingTimeMs || 0;
+            } else {
+                const end = new Date(stats.timerEndTime).getTime();
+                currentRemainingMs = Math.max(0, end - now);
+            }
+            if (currentRemainingMs <= 0 && (stats.remainingTimeMs || 0) > 0) {
+                currentRemainingMs = stats.remainingTimeMs || 0;
+            }
+
+            // Always store in localStorage as safeguard
+            if (currentRemainingMs > 0) {
+                try { localStorage.setItem('nisathon_preserved_timer_ms', currentRemainingMs.toString()); } catch (_) {}
+            }
+
+            // If active and running, pause first to freeze remainingTimeMs in DB before ending
+            if (!stats.isPaused) {
+                await apiCall('nisathon/timer/pause', {});
+            }
+
+            await apiCall('nisathon/end', { remainingTimeMs: currentRemainingMs });
             setConfirmEnd(false);
         } else {
             setConfirmEnd(true);
@@ -1887,12 +1910,24 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     </div>
                                     <div className={`text-4xl md:text-5xl font-black font-mono tracking-tighter flex flex-col justify-center h-full -mt-2 ${timeBump ? 'text-green-400 scale-105' : 'text-white'} transition-all duration-300 drop-shadow-lg`}>
                                         <div>{timeLeftString}</div>
-                                        {(stats.isPaused || stats.isEnded) && (
-                                            <div className="flex flex-wrap items-center gap-2 mt-2 font-sans tracking-normal">
-                                                {stats.isPaused && <span className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-amber-500/10 animate-pulse"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Paused</span>}
-                                                {stats.isEnded && <span className="text-[10px] text-red-500 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-red-500/10"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Ended</span>}
-                                            </div>
-                                        )}
+                                        <div className="flex flex-wrap items-center gap-2 mt-2 font-sans tracking-normal">
+                                            {stats.eventListenerActive === false ? (
+                                                <span className="text-[10px] text-red-400 bg-red-500/10 border border-red-500/30 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-red-500/10">
+                                                    🔇 Listener OFF
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-emerald-500/10">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                                    🎧 Listener ON
+                                                </span>
+                                            )}
+                                            {stats.isPaused && <span className="text-[10px] text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-amber-500/10 animate-pulse"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> Paused</span>}
+                                            {stats.isEnded && <span className="text-[10px] text-red-500 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest font-black flex items-center gap-1 shadow-lg shadow-red-500/10"><svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Ended</span>}
+                                            <a href="/nisathon/timer" target="_blank" rel="noopener noreferrer" className="text-[10px] text-amber-400 hover:text-white bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 px-2.5 py-1 rounded-full uppercase tracking-wider font-bold transition-all flex items-center gap-1">
+                                                <span>Return Timer Page</span>
+                                                <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="bg-white/5 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden group flex flex-col justify-between">
@@ -2023,6 +2058,59 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 </div>
                             </div>
                             
+                            
+                            {/* Stream Event Listener (Return Timer / Activity Overlay) Toggle */}
+                            <div className={`p-6 rounded-3xl border transition-all duration-300 shadow-2xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 ${
+                                stats.eventListenerActive !== false 
+                                    ? 'bg-gradient-to-r from-emerald-950/40 via-black/50 to-emerald-950/20 border-emerald-500/40 shadow-[0_0_35px_rgba(16,185,129,0.15)]' 
+                                    : 'bg-gradient-to-r from-red-950/40 via-black/50 to-red-950/20 border-red-500/30 shadow-[0_0_25px_rgba(239,68,68,0.1)]'
+                            }`}>
+                                <div className="space-y-2 max-w-2xl">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-3 rounded-2xl ${stats.eventListenerActive !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                                <line x1="12" y1="19" x2="12" y2="22"></line>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2.5 flex-wrap">
+                                                <h3 className="text-xl font-black text-white">Stream Event Listener</h3>
+                                                <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                                                    stats.eventListenerActive !== false 
+                                                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm shadow-emerald-500/20' 
+                                                        : 'bg-red-500/20 text-red-300 border border-red-500/40 shadow-sm shadow-red-500/20'
+                                                }`}>
+                                                    {stats.eventListenerActive !== false ? '● LISTENING (ACTIVE)' : '○ MUTED (OFF)'}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-300 mt-1 leading-relaxed">
+                                                {stats.eventListenerActive !== false 
+                                                    ? stats.isEnded 
+                                                        ? "Active: Stream events (subs, donations, bits, gifts) are listened to and displayed on the Activity Widget overlay. Time is added to the 'Nisathon Will Return' Timer based on Currency Settings, without awarding Nisaballs to user accounts."
+                                                        : "Active: All incoming stream events are processed live, crediting Nisaballs, updating overlays, and driving the Nisathon timer."
+                                                    : "Muted: Incoming stream events are completely ignored and will not update the Return Timer or appear in the Activity Widget."
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 shrink-0">
+                                    <button
+                                        onClick={handleToggleEventListener}
+                                        className={`w-full md:w-auto px-7 py-3.5 rounded-2xl font-black text-xs md:text-sm uppercase tracking-wider transition-all duration-300 shadow-xl flex items-center justify-center gap-2.5 ${
+                                            stats.eventListenerActive !== false
+                                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30 hover:scale-[1.02]'
+                                                : 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30 hover:scale-[1.02]'
+                                        }`}
+                                    >
+                                        <span className={`w-2.5 h-2.5 rounded-full ${stats.eventListenerActive !== false ? 'bg-white animate-pulse' : 'bg-white/70'}`}></span>
+                                        <span>{stats.eventListenerActive !== false ? 'Listener: ON (Click to Turn OFF)' : 'Listener: OFF (Click to Turn ON)'}</span>
+                                    </button>
+                                </div>
+                            </div>
                             
                             {/* Nisaball Currency Settings */}
                             <div className="bg-white/5 backdrop-blur-3xl p-6 rounded-3xl border border-white/10 shadow-2xl mb-8 flex flex-col">

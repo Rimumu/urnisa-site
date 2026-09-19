@@ -995,7 +995,7 @@ const Shop: React.FC = () => {
         {/* Navigation & Header */}
         <div className="mb-8">
           <Link 
-            to="/minecraft" 
+            to="/arch/minecraft" 
             className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-bold tracking-wide bg-black/40 px-4 py-2 rounded-full border border-white/5 hover:border-white/20 text-sm backdrop-blur-md mb-4"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard

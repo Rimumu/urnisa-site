@@ -4,22 +4,30 @@ import GoalWidget from './overlays/GoalWidget';
 import ActivityWidget from './overlays/ActivityWidget';
 import SpinWidget from './overlays/SpinWidget';
 import CountdownWidget from './overlays/CountdownWidget'; // NEW
+import ClockWidget from './overlays/ClockWidget';
 
 const Overlay: React.FC = () => {
     return (
-        <div className="w-screen h-screen bg-black/80 font-sans text-white p-10 flex flex-col items-center justify-center gap-10 overflow-auto">
-            <h1 className="text-2xl font-bold uppercase tracking-widest text-gray-500 mb-4">OBS Overlay Preview Dashboard</h1>
+        <div className="w-screen h-screen bg-black/80 font-sans text-white p-10 flex flex-col items-center justify-start gap-10 overflow-auto">
+            <h1 className="text-2xl font-bold uppercase tracking-widest text-gray-400 mb-2">OBS Overlay Preview Dashboard</h1>
             
             <div className="flex flex-wrap items-start justify-center gap-10">
                 <div className="border border-dashed border-gray-600 p-2 relative">
-                    <div className="absolute -top-6 left-0 text-xs text-gray-400">Subathon Timer (680x400)</div>
+                    <div className="absolute -top-6 left-0 text-xs text-gray-400">Subathon Timer (680x400) — /overlay/timer</div>
                     <div style={{ width: 680, height: 400 }} className="bg-black/20">
                         <TimerWidget />
                     </div>
                 </div>
 
                 <div className="border border-dashed border-gray-600 p-2 relative">
-                    <div className="absolute -top-6 left-0 text-xs text-gray-400">Basic Countdown (680x200)</div>
+                    <div className="absolute -top-6 left-0 text-xs text-gray-400">Clock (London Time) (540x220) — /overlay/clock</div>
+                    <div style={{ width: 540, height: 220 }} className="bg-black/20">
+                        <ClockWidget />
+                    </div>
+                </div>
+
+                <div className="border border-dashed border-gray-600 p-2 relative">
+                    <div className="absolute -top-6 left-0 text-xs text-gray-400">Basic Countdown (680x200) — /overlay/countdown</div>
                     <div style={{ width: 680, height: 200 }} className="bg-black/20">
                         <CountdownWidget />
                     </div>

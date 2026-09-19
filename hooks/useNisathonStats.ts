@@ -12,6 +12,7 @@ export interface NisathonStatsData {
     remainingTimeMs?: number;
     activeEvent?: string | null; // e.g. "DOUBLE_TIMER"
     isEnded?: boolean;
+    eventListenerActive?: boolean;
     subsRate?: number;
     bitsRate?: number;
     donationRate?: number;
@@ -48,7 +49,8 @@ export const useNisathonStats = (pollInterval = 5000) => {
         timerEndTime: new Date().toISOString(),
         isPaused: false,
         activeEvent: null,
-        isEnded: false
+        isEnded: false,
+        eventListenerActive: true
     });
     const [leaderboard, setLeaderboard] = useState<TopContributor[]>([]);
     const [recentEvents, setRecentEvents] = useState<ContributorEvent[]>([]);
@@ -62,7 +64,7 @@ export const useNisathonStats = (pollInterval = 5000) => {
             const [statsRes, lbRes, recentRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/api/nisathon/stats`),
                 fetch(`${API_BASE_URL}/api/nisathon/leaderboard`),
-                fetch(`${API_BASE_URL}/api/nisathon/recent`)
+                fetch(`${API_BASE_URL}/api/nisathon/recent?limit=250`)
             ]);
 
             const newStats = statsRes.ok ? await statsRes.json() : null;
@@ -72,7 +74,29 @@ export const useNisathonStats = (pollInterval = 5000) => {
             // Batch State Updates
             // In React 18+, updates inside async functions are batched automatically, 
             // ensuring the component re-renders once with all new data.
-            if (newStats) setStats(newStats);
+            if (newStats) {
+                // If live timer data has positive remaining time, cache it in localStorage
+                if (typeof newStats.remainingTimeMs === 'number' && newStats.remainingTimeMs > 0) {
+                    try { localStorage.setItem('nisathon_preserved_timer_ms', newStats.remainingTimeMs.toString()); } catch (_) {}
+                } else if (!newStats.isPaused && newStats.timerEndTime) {
+                    const diff = new Date(newStats.timerEndTime).getTime() - Date.now();
+                    if (diff > 0) {
+                        try { localStorage.setItem('nisathon_preserved_timer_ms', diff.toString()); } catch (_) {}
+                    }
+                }
+
+                // If ended or paused and remainingTimeMs is missing/zero, restore from cache if available
+                if ((newStats.isEnded || newStats.isPaused) && (!newStats.remainingTimeMs || newStats.remainingTimeMs <= 0)) {
+                    try {
+                        const cached = localStorage.getItem('nisathon_preserved_timer_ms');
+                        if (cached && Number(cached) > 0) {
+                            newStats.remainingTimeMs = Number(cached);
+                        }
+                    } catch (_) {}
+                }
+
+                setStats(newStats);
+            }
             if (newLb) setLeaderboard(newLb);
             if (newRecent) setRecentEvents(newRecent);
 
@@ -85,8 +109,10 @@ export const useNisathonStats = (pollInterval = 5000) => {
 
     useEffect(() => {
         fetchAll();
-        const interval = setInterval(fetchAll, pollInterval);
-        return () => clearInterval(interval);
+        if (pollInterval > 0) {
+            const interval = setInterval(fetchAll, pollInterval);
+            return () => clearInterval(interval);
+        }
     }, [pollInterval]);
 
     return { stats, leaderboard, recentEvents, loading, refetch: fetchAll };

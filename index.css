@@ -8,6 +8,7 @@
   --color-brand-accent: #f7c548;
 
   --animate-wave: wave 1.5s ease-in-out infinite;
+  --animate-pause-blink: pause-blink 1.5s ease-in-out infinite;
   
   @keyframes wave {
     0%, 100% {
@@ -15,6 +16,15 @@
     }
     50% {
       transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pause-blink {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
     }
   }
 }

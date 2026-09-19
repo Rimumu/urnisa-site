@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Nisathon from './pages/Nisathon';
+import NisathonTimer from './pages/NisathonTimer';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
 import Rankings from './pages/Rankings';
@@ -35,7 +36,9 @@ import GoalWidget from './pages/overlays/GoalWidget';
 import ActivityWidget from './pages/overlays/ActivityWidget';
 import SpinWidget from './pages/overlays/SpinWidget';
 import CountdownWidget from './pages/overlays/CountdownWidget';
+import ClockWidget from './pages/overlays/ClockWidget';
 import DuoCard from './pages/DuoCard';
+import HiddenArchive from './pages/HiddenArchive';
 import InteractiveBackground from './components/InteractiveBackground';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -90,9 +93,11 @@ const App: React.FC = () => {
         <Route path="/overlay/activity" element={<ActivityWidget />} />
         <Route path="/overlay/spin" element={<SpinWidget />} />
         <Route path="/overlay/countdown" element={<CountdownWidget />} />
+        <Route path="/overlay/clock" element={<ClockWidget />} />
+        <Route path="/overlay/london" element={<ClockWidget />} />
         <Route path="/duo-card" element={<DuoCard />} />
-        <Route path="/minecraft/duo-card" element={<DuoCard />} />
-        <Route path="/minecraft/duo-cards" element={<DuoCard />} />
+        <Route path="/arch/minecraft/duo-card" element={<DuoCard />} />
+        <Route path="/arch/minecraft/duo-cards" element={<DuoCard />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/twitch/callback" element={<TwitchCallback />} />
 
@@ -101,31 +106,42 @@ const App: React.FC = () => {
           <Route path="/" element={<About />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/nisathon" element={<Nisathon />} />
-          <Route path="/nisathon/wheel" element={<Wheel />} />
-          <Route path="/snakesladder" element={<SnakesLadder />} />
-          <Route path="/minecraft" element={<Minecraft />} />
-          <Route path="/minecraft/shop" element={<Shop />} />
-          <Route path="/minecraft/gacha" element={<Gacha />} />
-          <Route path="/minecraft/rankings" element={<Rankings />} />
-          <Route path="/minecraft/tournament" element={<Tournament />} />
-          {/* Dev Routes */}
-          <Route path="/dev/gacha" element={<GachaDev />} />
-          <Route path="/dev/tournament" element={<TournamentDev />} />
-          <Route path="/dev/admintournament" element={<AdminTournamentDev />} />
-          <Route path="/dev/snakesladder" element={<SnakesLadder />} />
-          {/* Prod Admin Routes */}
-          <Route path="/admin/tournament" element={<AdminTournament />} />
+          <Route path="/nisathon/return" element={<NisathonTimer />} />
+          <Route path="/return" element={<Navigate to="/nisathon/return" replace />} />
+          <Route path="/nisathon/timer" element={<Navigate to="/nisathon/return" replace />} />
+          <Route path="/timer" element={<Navigate to="/nisathon/return" replace />} />
 
-          <Route path="/minecraft/bingo" element={<BingoDashboard />} />
-          <Route path="/minecraft/bingo/card" element={<Bingo />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/redeem" element={<Redeem />} />
+          {/* Public Gallery & Historical Archive */}
           <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/archive/nisathon" element={<ArchiveNisathon />} />
           <Route path="/archive/wheel" element={<ArchiveWheel />} />
           <Route path="/archive/tournament" element={<ArchiveTournament />} />
+
+          {/* 3. HIDDEN ARCHIVE ROUTES (/arch/*) */}
+          <Route path="/arch" element={<HiddenArchive />} />
+          <Route path="/arch/wheels" element={<Wheel />} />
+          <Route path="/arch/wheel" element={<Wheel />} />
+          <Route path="/arch/snakesladder" element={<SnakesLadder />} />
+          <Route path="/arch/snakesladders" element={<SnakesLadder />} />
+          <Route path="/arch/s-and-l" element={<SnakesLadder />} />
+          <Route path="/arch/minecraft" element={<Minecraft />} />
+          <Route path="/arch/minecraft/shop" element={<Shop />} />
+          <Route path="/arch/minecraft/gacha" element={<Gacha />} />
+          <Route path="/arch/minecraft/rankings" element={<Rankings />} />
+          <Route path="/arch/minecraft/tournament" element={<Tournament />} />
+          <Route path="/arch/minecraft/bingo" element={<BingoDashboard />} />
+          <Route path="/arch/minecraft/bingo/card" element={<Bingo />} />
+          <Route path="/arch/inventory" element={<Inventory />} />
+          <Route path="/arch/redeem" element={<Redeem />} />
+
+          {/* Hidden Dev & Admin Sub-Routes */}
+          <Route path="/arch/dev/gacha" element={<GachaDev />} />
+          <Route path="/arch/dev/tournament" element={<TournamentDev />} />
+          <Route path="/arch/dev/admintournament" element={<AdminTournamentDev />} />
+          <Route path="/arch/dev/snakesladder" element={<SnakesLadder />} />
+          <Route path="/admin/tournament" element={<AdminTournament />} />
 
           {/* 404 Fallback - Redirects unknown paths to Home */}
           <Route path="*" element={<About />} />

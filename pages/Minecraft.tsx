@@ -362,7 +362,7 @@ const Minecraft: React.FC = () => {
                 <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 h-full">
                         {/* Nisamon Shop */}
-                        <Link to="/minecraft/shop" className="bg-black/40 backdrop-blur-md border border-brand-accent/30 hover:border-brand-accent/60 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden hover:scale-[1.02] transition-all duration-300 group flex flex-col justify-between h-full min-h-[190px]">
+                        <Link to="/arch/minecraft/shop" className="bg-black/40 backdrop-blur-md border border-brand-accent/30 hover:border-brand-accent/60 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden hover:scale-[1.02] transition-all duration-300 group flex flex-col justify-between h-full min-h-[190px]">
                             <div className="absolute top-0 right-0 w-28 h-28 bg-brand-accent/10 rounded-full blur-xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                             <div>
                                 <div className="flex items-center gap-3.5 mb-3.5">
@@ -386,7 +386,7 @@ const Minecraft: React.FC = () => {
                         </Link>
 
                         {/* Gacha Crate - OPEN */}
-                        <Link to="/minecraft/gacha" className="bg-black/40 backdrop-blur-md border border-amber-500/30 hover:border-amber-400/60 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden hover:scale-[1.02] transition-all duration-300 group flex flex-col justify-between h-full min-h-[190px]">
+                        <Link to="/arch/minecraft/gacha" className="bg-black/40 backdrop-blur-md border border-amber-500/30 hover:border-amber-400/60 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden hover:scale-[1.02] transition-all duration-300 group flex flex-col justify-between h-full min-h-[190px]">
                             <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/10 rounded-full blur-xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                             <div>
                                 <div className="flex items-center gap-3.5 mb-3.5">
@@ -429,7 +429,7 @@ const Minecraft: React.FC = () => {
                         </div>
 
                         {/* Tournament - OPEN */}
-                        <Link to="/minecraft/tournament" className="bg-black/40 backdrop-blur-md border border-red-500/30 hover:border-red-500/60 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden hover:scale-[1.02] transition-all duration-300 group flex flex-col justify-between h-full min-h-[190px]">
+                        <Link to="/arch/minecraft/tournament" className="bg-black/40 backdrop-blur-md border border-red-500/30 hover:border-red-500/60 p-6 sm:p-7 rounded-3xl shadow-xl relative overflow-hidden hover:scale-[1.02] transition-all duration-300 group flex flex-col justify-between h-full min-h-[190px]">
                             <div className="absolute top-0 right-0 w-28 h-28 bg-red-500/10 rounded-full blur-xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
                             <div>
                                 <div className="flex items-center gap-3.5 mb-3.5">
