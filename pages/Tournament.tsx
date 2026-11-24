@@ -3019,7 +3019,7 @@ const Tournament: React.FC = () => {
                                                 {/* Save/Lock Buttons - Check both solo isLocked and duo isLocked */}
                                                 {!(activeSeason.format.includes('Doubles Duos') ? myDuo?.isLocked : isLocked) && tournamentStatus !== 'ONGOING' && (
                                                     <div className="pt-6 flex flex-col md:flex-row justify-center items-center gap-6">
-                                                        <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1 transition-all">
+                                                        <button onClick={handleSaveDraft} disabled={saving || hasBannedPokemon} className="cursor-pointer disabled:cursor-not-allowed px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white/20 text-white border-b-4 border-white/20 flex-1 transition-all">
                                                             {saveStatus === 'success' ? (
                                                                 <span className="flex items-center justify-center gap-2"><Check className="w-4 h-4 text-green-400 stroke-[3]" /> SYNCED</span>
                                                             ) : saving ? (
@@ -3029,7 +3029,7 @@ const Tournament: React.FC = () => {
                                                             )}
                                                         </button>
                                                         {tournamentStatus === 'LOCK_IN' && (
-                                                            <button onClick={handleLockInClick} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon} className="px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] bg-green-600 hover:bg-green-500 text-white border-green-800 border-b-4 transition-all cursor-pointer">
+                                                            <button onClick={handleLockInClick} disabled={saving || selectedTeam.includes(null) || hasBannedPokemon} className="px-12 py-4 rounded-2xl text-lg font-black uppercase tracking-tighter shadow-2xl flex-[2] bg-green-600 hover:bg-green-500 text-white border-green-800 border-b-4 transition-all cursor-pointer disabled:cursor-not-allowed">
                                                                 <span className="flex items-center justify-center gap-2"><Lock className="w-5 h-5 text-white" /> FINALIZE & LOCK TEAM</span>
                                                             </button>
                                                         )}
@@ -3114,8 +3114,8 @@ const Tournament: React.FC = () => {
 
             {/* DUO DETAILS MODAL */}
             {selectedDuo && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setSelectedDuo(null)}>
-                    <div className="bg-[#120507] w-full max-w-4xl max-h-[90vh] rounded-[3rem] border-2 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300 cursor-pointer" onClick={() => setSelectedDuo(null)}>
+                    <div className="bg-[#120507] w-full max-w-4xl max-h-[90vh] rounded-[3rem] border-2 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500 cursor-default" onClick={e => e.stopPropagation()}>
 
                         {/* Decorative Header Background */}
                         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-900/30 to-transparent pointer-events-none"></div>
@@ -3147,7 +3147,7 @@ const Tournament: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedDuo(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white font-black transition-all">✕</button>
+                            <button onClick={() => setSelectedDuo(null)} className="cursor-pointer absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white font-black transition-all">✕</button>
                         </div>
 
                         {/* Team Display */}
@@ -3185,11 +3185,11 @@ const Tournament: React.FC = () => {
             {/* LOCK IN CONFIRMATION MODAL */}
             {showLockConfirmModal && (
                 <div
-                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300"
+                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300 cursor-pointer"
                     onClick={() => setShowLockConfirmModal(false)}
                 >
                     <div
-                        className="bg-[#120507] w-full max-w-md rounded-[2.5rem] border-2 border-red-500/40 shadow-[0_0_50px_rgba(220,38,38,0.35)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300 p-6 md:p-8 text-center"
+                        className="bg-[#120507] w-full max-w-md rounded-[2.5rem] border-2 border-red-500/40 shadow-[0_0_50px_rgba(220,38,38,0.35)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-300 p-6 md:p-8 text-center cursor-default"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Decorative Header Background */}
@@ -3232,7 +3232,7 @@ const Tournament: React.FC = () => {
                                 type="button"
                                 onClick={handleConfirmLockIn}
                                 disabled={saving}
-                                className="flex-1 px-5 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white border-b-4 border-red-800 shadow-xl shadow-red-950/60 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                className="flex-1 px-5 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white border-b-4 border-red-800 shadow-xl shadow-red-950/60 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {saving ? (
                                     <>

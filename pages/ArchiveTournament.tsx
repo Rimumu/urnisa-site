@@ -1498,7 +1498,7 @@ const ArchiveTournament: React.FC = () => {
             {/* DUO DETAILS MODAL */}
             {selectedDuo && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300 cursor-pointer" onClick={() => setSelectedDuo(null)}>
-                    <div className="bg-[#120507] w-full max-w-4xl max-h-[90vh] rounded-[3rem] border-2 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500" onClick={e => e.stopPropagation()}>
+                    <div className="bg-[#120507] w-full max-w-4xl max-h-[90vh] rounded-[3rem] border-2 border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] flex flex-col overflow-hidden relative animate-in slide-in-from-bottom-10 duration-500 cursor-default" onClick={e => e.stopPropagation()}>
 
                         {/* Decorative Header Background */}
                         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-900/30 to-transparent pointer-events-none"></div>
@@ -1533,7 +1533,7 @@ const ArchiveTournament: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedDuo(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white font-black transition-all">✕</button>
+                            <button onClick={() => setSelectedDuo(null)} className="cursor-pointer absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white font-black transition-all">✕</button>
                         </div>
 
                         {/* Team Display */}

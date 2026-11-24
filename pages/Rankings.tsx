@@ -386,7 +386,7 @@ const PlayerCard: React.FC<{ player: Player; onClose: () => void }> = ({ player,
                 }
             `}</style>
             <div
-                className={`bg-[#1a0b0e] border ${styles.border} rounded-3xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-2xl ${styles.glow}`}
+                className={`bg-[#1a0b0e] border ${styles.border} rounded-3xl max-w-lg w-full max-h-[85vh] overflow-hidden shadow-2xl ${styles.glow} cursor-default`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="max-h-[85vh] overflow-y-auto custom-scrollbar">
@@ -548,7 +548,7 @@ const MatchDetailModal: React.FC<{ matchId: string; onClose: () => void }> = ({ 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-in fade-in duration-200 cursor-pointer" onClick={onClose}>
             <div
-                className="bg-[#1a0b0e] border border-white/10 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl custom-scrollbar"
+                className="bg-[#1a0b0e] border border-white/10 rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl custom-scrollbar cursor-default"
                 onClick={e => e.stopPropagation()}
             >
                 {loading ? (

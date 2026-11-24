@@ -233,12 +233,12 @@ const About: React.FC = () => {
                 >
                     <img 
                         src={lightboxImage} 
-                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl select-none"
+                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl select-none cursor-default"
                         alt="Full size artwork"
                         onClick={(e) => e.stopPropagation()}
                     />
                     <button 
-                        className="absolute top-4 right-4 text-white/70 hover:text-brand-primary p-2 bg-black/50 rounded-full transition-colors z-50"
+                        className="cursor-pointer absolute top-4 right-4 text-white/70 hover:text-brand-primary p-2 bg-black/50 rounded-full transition-colors z-50"
                         onClick={() => setLightboxImage(null)}
                     >
                         <CloseIcon />
@@ -322,7 +322,7 @@ const About: React.FC = () => {
                         <div className="grid grid-cols-2 gap-3 mb-4">
                             <button 
                                 onClick={handleCopyDiscord}
-                                className="w-full bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/50 text-[#5865F2] font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(88,101,242,0.3)] text-sm"
+                                className="cursor-pointer w-full bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/50 text-[#5865F2] font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 group hover:shadow-[0_0_15px_rgba(88,101,242,0.3)] text-sm"
                             >
                                 <img src="https://cdn.simpleicons.org/discord/5865F2" className="w-5 h-5 flex-shrink-0" alt="Discord" />
                                 <span className="truncate">@urnisa</span>
@@ -339,7 +339,7 @@ const About: React.FC = () => {
 
                         <button 
                             onClick={() => setShowSpecs(!showSpecs)}
-                            className="w-full flex items-center justify-between bg-black/40 hover:bg-black/60 border border-white/10 px-4 py-3 rounded-xl text-sm text-gray-300 transition-all mb-4"
+                            className="cursor-pointer w-full flex items-center justify-between bg-black/40 hover:bg-black/60 border border-white/10 px-4 py-3 rounded-xl text-sm text-gray-300 transition-all mb-4"
                         >
                             <div className="flex items-center gap-2">
                                 <HardwareIcon />
@@ -362,7 +362,7 @@ const About: React.FC = () => {
                             <button 
                                 onClick={() => toggleTab('about')} 
                                 className={`
-                                    rounded-xl py-3 flex flex-col items-center gap-1 transition-all duration-300 group
+                                    cursor-pointer rounded-xl py-3 flex flex-col items-center gap-1 transition-all duration-300 group
                                     ${activeTab === 'about' 
                                         ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' 
                                         : 'bg-white/5 hover:bg-brand-primary/20 border border-white/5 hover:border-brand-primary/50 text-gray-400 hover:text-white'}
@@ -374,7 +374,7 @@ const About: React.FC = () => {
                             <button 
                                 onClick={() => toggleTab('contact')} 
                                 className={`
-                                    rounded-xl py-3 flex flex-col items-center gap-1 transition-all duration-300 group
+                                    cursor-pointer rounded-xl py-3 flex flex-col items-center gap-1 transition-all duration-300 group
                                     ${activeTab === 'contact' 
                                         ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' 
                                         : 'bg-white/5 hover:bg-brand-primary/20 border border-white/5 hover:border-brand-primary/50 text-gray-400 hover:text-white'}
@@ -386,8 +386,8 @@ const About: React.FC = () => {
                             <button 
                                 onClick={() => toggleTab('credits')} 
                                 className={`
-                                    rounded-xl py-3 flex flex-col items-center gap-1 transition-all duration-300 group
-                                    ${activeTab === 'credits'
+                                    cursor-pointer rounded-xl py-3 flex flex-col items-center gap-1 transition-all duration-300 group
+                                    ${activeTab === 'credits' 
                                         ? 'bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20' 
                                         : 'bg-white/5 hover:bg-brand-primary/20 border border-white/5 hover:border-brand-primary/50 text-gray-400 hover:text-white'}
                                 `}
@@ -417,7 +417,7 @@ const About: React.FC = () => {
                             </h2>
                             <button 
                                 onClick={() => setActiveTab(null)} 
-                                className="p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all duration-300 transform hover:rotate-90 shrink-0"
+                                className="cursor-pointer p-2 rounded-full bg-white/5 hover:bg-white/20 hover:text-brand-primary transition-all duration-300 transform hover:rotate-90 shrink-0"
                             >
                                 <CloseIcon />
                             </button>
@@ -457,7 +457,7 @@ const About: React.FC = () => {
                                             <span className="text-white font-mono text-sm truncate mr-2">urniisaa@gmail.com</span>
                                             <button 
                                                 onClick={() => { navigator.clipboard.writeText('urniisaa@gmail.com'); triggerToast("Copied email to clipboard!"); }}
-                                                className="text-brand-primary hover:text-white transition-colors p-1"
+                                                className="cursor-pointer text-brand-primary hover:text-white transition-colors p-1"
                                                 title="Copy Email"
                                             >
                                                 <CopyIcon />
@@ -616,12 +616,12 @@ const About: React.FC = () => {
                     onClick={() => setShowDonatePopup(false)}
                 >
                     <div 
-                        className="glass-card rounded-[30px] border border-white/10 p-6 md:p-8 max-w-sm w-full relative shadow-2xl" 
+                        className="glass-card rounded-[30px] border border-white/10 p-6 md:p-8 max-w-sm w-full relative shadow-2xl cursor-default" 
                         onClick={e => e.stopPropagation()}
                     >
                         <button 
                             onClick={() => setShowDonatePopup(false)} 
-                            className="absolute top-6 right-6 text-white/50 hover:text-brand-primary p-2 bg-black/40 rounded-full transition-colors"
+                            className="cursor-pointer absolute top-6 right-6 text-white/50 hover:text-brand-primary p-2 bg-black/40 rounded-full transition-colors"
                         >
                             <CloseIcon />
                         </button>

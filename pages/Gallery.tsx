@@ -152,14 +152,14 @@ const Gallery: React.FC = () => {
                         animate={{ opacity: 1, backdropFilter: "blur(24px)" }}
                         exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
                         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                        className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center group/lightbox"
+                        className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center group/lightbox cursor-pointer"
                         onClick={() => setLightboxImage(null)}
                     >
                         <motion.button 
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="absolute left-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl opacity-0 group-hover/lightbox:opacity-100 hidden md:block"
+                            className="cursor-pointer absolute left-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl opacity-0 group-hover/lightbox:opacity-100 hidden md:block"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 const allImages = filteredArtworks.flatMap(artist => artist.images);
@@ -177,7 +177,7 @@ const Gallery: React.FC = () => {
                             exit={{ scale: 0.8, opacity: 0, y: 30 }}
                             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                             src={lightboxImage} 
-                            className="max-w-[95vw] max-h-[95vh] object-contain rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.8)] select-none"
+                            className="max-w-[95vw] max-h-[95vh] object-contain rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.8)] select-none cursor-default"
                             alt="Full size artwork"
                             loading="lazy"
                             onClick={(e) => e.stopPropagation()}
@@ -186,7 +186,7 @@ const Gallery: React.FC = () => {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
-                            className="absolute right-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl opacity-0 group-hover/lightbox:opacity-100 hidden md:block"
+                            className="cursor-pointer absolute right-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl opacity-0 group-hover/lightbox:opacity-100 hidden md:block"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 const allImages = filteredArtworks.flatMap(artist => artist.images);
@@ -203,7 +203,7 @@ const Gallery: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.8 }}
                             transition={{ delay: 0.1, duration: 0.3 }}
-                            className="absolute top-6 right-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl"
+                            className="cursor-pointer absolute top-6 right-6 text-white hover:text-brand-primary p-3 bg-black/40 backdrop-blur-md rounded-full transition-colors z-50 hover:bg-black/80 border border-white/10 shadow-xl"
                             onClick={() => setLightboxImage(null)}
                         >
                             <CloseIcon />
@@ -252,7 +252,7 @@ const Gallery: React.FC = () => {
                         {searchQuery && (
                             <button 
                                 onClick={() => setSearchQuery('')}
-                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
+                                className="cursor-pointer absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
                             >
                                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18" />

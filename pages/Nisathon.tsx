@@ -1007,12 +1007,12 @@ const Nisathon: React.FC = () => {
                     onClick={() => setShowDonatePopup(false)}
                 >
                     <div 
-                        className="glass-card rounded-[30px] border border-white/10 p-6 md:p-8 max-w-sm w-full relative shadow-2xl" 
+                        className="glass-card rounded-[30px] border border-white/10 p-6 md:p-8 max-w-sm w-full relative shadow-2xl cursor-default" 
                         onClick={e => e.stopPropagation()}
                     >
                         <button 
                             onClick={() => setShowDonatePopup(false)} 
-                            className="absolute top-6 right-6 text-white/50 hover:text-brand-primary p-2 bg-black/40 rounded-full transition-colors"
+                            className="cursor-pointer absolute top-6 right-6 text-white/50 hover:text-brand-primary p-2 bg-black/40 rounded-full transition-colors"
                         >
                             <CloseIcon />
                         </button>

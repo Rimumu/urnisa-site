@@ -243,7 +243,7 @@ const DuoCard: FC = () => {
                         <button
                             onClick={downloadAll}
                             disabled={filteredDuos.length === 0}
-                            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase px-5 py-3 rounded-2xl shadow-xl shadow-purple-900/30 transition-all cursor-pointer disabled:opacity-50"
+                            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase px-5 py-3 rounded-2xl shadow-xl shadow-purple-900/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Download className="w-4 h-4" /> Download All ({filteredDuos.length})
                         </button>

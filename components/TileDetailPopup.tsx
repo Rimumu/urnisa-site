@@ -25,7 +25,7 @@ const TileDetailPopup: React.FC<Props> = ({ tile, players, specialEvent, board, 
             onClick={onClose}
         >
             <div
-                className="bg-gradient-to-br from-[#2a0f13]/95 to-[#120507]/95 border border-brand-accent/30 rounded-3xl p-6 max-w-md w-[90%] shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden"
+                className="bg-gradient-to-br from-[#2a0f13]/95 to-[#120507]/95 border border-brand-accent/30 rounded-3xl p-6 max-w-md w-[90%] shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden cursor-default"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Decorative background pattern */}

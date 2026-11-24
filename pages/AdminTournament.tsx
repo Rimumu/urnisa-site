@@ -1214,7 +1214,7 @@ const AdminTournament: React.FC = () => {
                             <button
                                 onClick={() => handleToggleVisibility(activeSeason)}
                                 disabled={loading}
-                                className={`w-full py-3 px-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50 ${isSeasonHidden(activeSeason)
+                                className={`w-full py-3 px-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${isSeasonHidden(activeSeason)
                                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/40 border border-emerald-400/30 hover:scale-[1.02] active:scale-95'
                                     : 'bg-amber-700/80 hover:bg-amber-600 text-amber-100 border border-amber-500/30 hover:scale-[1.02] active:scale-95'
                                     }`}

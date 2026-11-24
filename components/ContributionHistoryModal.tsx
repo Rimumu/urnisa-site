@@ -166,7 +166,7 @@ export const ContributionHistoryModal: React.FC<ContributionHistoryModalProps> =
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.25 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/85 backdrop-blur-xl"
+                        className="fixed inset-0 bg-black/85 backdrop-blur-xl cursor-pointer"
                     />
 
                     {/* Modal Window Container */}

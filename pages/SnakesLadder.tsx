@@ -412,7 +412,7 @@ const SnakesLadder: React.FC = () => {
                     onClick={() => setShowResultPopup(false)}
                 >
                     <div
-                        className={`relative w-full max-w-md p-8 rounded-[2rem] border-[3px] shadow-[0_0_80px_rgba(0,0,0,0.5)] flex flex-col items-center animate-in zoom-in-95 duration-300 ${moveResult.isWinner
+                        className={`relative w-full max-w-md p-8 rounded-[2rem] border-[3px] shadow-[0_0_80px_rgba(0,0,0,0.5)] flex flex-col items-center animate-in zoom-in-95 duration-300 cursor-default ${moveResult.isWinner
                             ? 'bg-gradient-to-b from-yellow-900/90 to-yellow-950/90 border-yellow-400'
                             : moveResult.specialMove === 'ladder'
                                 ? 'bg-gradient-to-b from-emerald-900/90 to-emerald-950/90 border-emerald-400'
@@ -427,7 +427,7 @@ const SnakesLadder: React.FC = () => {
                         {/* Close button */}
                         <button
                             onClick={() => setShowResultPopup(false)}
-                            className="absolute top-4 right-4 text-white/50 hover:text-white text-2xl transition-colors"
+                            className="cursor-pointer absolute top-4 right-4 text-white/50 hover:text-white text-2xl transition-colors"
                         >
                             ✕
                         </button>
