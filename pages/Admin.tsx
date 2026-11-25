@@ -1,15 +1,44 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE_URL, DISCORD_API_URL } from '../constants';
-import { useSchedule } from '../hooks/useSchedule';
+import { useSchedule, ScheduleMode, BackdropFit } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
 import ImageUploader from '../components/ImageUploader';
 import OptimizedImage from '../components/OptimizedImage';
+import { StreamCountdownDisplay } from '../components/StreamScheduleSection';
 import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
 import { Link } from 'react-router-dom';
+
+const isoToLocalDatetimeInput = (iso: string): string => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+const localDatetimeInputToIso = (localVal: string): string => {
+    if (!localVal) return '';
+    const d = new Date(localVal);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toISOString();
+};
+
+const getAdminTimeZoneLabel = (): string => {
+    try {
+        const tzName = Intl.DateTimeFormat(undefined, { timeZoneName: 'short' })
+            .formatToParts(new Date())
+            .find((p) => p.type === 'timeZoneName')?.value;
+        const tzIana = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tzName && tzIana) return `${tzName} (${tzIana})`;
+        return tzName || tzIana || 'Local Time';
+    } catch {
+        return 'Local Time';
+    }
+};
 
 // --- HELPER: URL PROCESSOR (Google Drive & Imgur) ---
 const processImageUrl = (url: string): string => {
@@ -447,8 +476,13 @@ const Admin: React.FC = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // --- DATA STATE ---
-    const { scheduleUrl: currentScheduleUrl } = useSchedule();
+    const { scheduleConfig, refetch: refetchSchedule } = useSchedule();
+    const [scheduleMode, setScheduleMode] = useState<ScheduleMode>('poster');
     const [newScheduleUrl, setNewScheduleUrl] = useState('');
+    const [countdownTitle, setCountdownTitle] = useState('');
+    const [countdownTargetLocal, setCountdownTargetLocal] = useState('');
+    const [countdownBackdropUrl, setCountdownBackdropUrl] = useState('');
+    const [countdownBackdropFit, setCountdownBackdropFit] = useState<BackdropFit>('cover');
     const [scheduleStatus, setScheduleStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     const { aboutContent, creditsContent, artworksContent, avatar, refetch: refetchProfile } = useProfileContent();
@@ -613,7 +647,14 @@ const Admin: React.FC = () => {
 
 
     // --- EFFECTS ---
-    useEffect(() => { setNewScheduleUrl(currentScheduleUrl); }, [currentScheduleUrl]);
+    useEffect(() => {
+        setScheduleMode(scheduleConfig.mode);
+        setNewScheduleUrl(scheduleConfig.url);
+        setCountdownTitle(scheduleConfig.countdownTitle);
+        setCountdownTargetLocal(isoToLocalDatetimeInput(scheduleConfig.countdownTarget));
+        setCountdownBackdropUrl(scheduleConfig.countdownBackdropUrl);
+        setCountdownBackdropFit(scheduleConfig.countdownBackdropFit);
+    }, [scheduleConfig]);
     useEffect(() => {
         setLocalAbout(aboutContent);
         setLocalCredits(creditsContent);
@@ -809,21 +850,51 @@ const Admin: React.FC = () => {
 
     const handleUpdateSchedule = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        setLoading(true);
         setScheduleStatus(null);
+
+        const trimmedTitle = countdownTitle.trim();
+        const targetIso = localDatetimeInputToIso(countdownTargetLocal);
         const processedUrl = processImageUrl(newScheduleUrl);
+        const processedBackdropUrl = processImageUrl(countdownBackdropUrl);
+
+        if (scheduleMode === 'countdown') {
+            if (!trimmedTitle) {
+                setScheduleStatus({ type: 'error', message: 'Please enter a countdown title (e.g. DRINKING STREAM).' });
+                setTimeout(() => setScheduleStatus(null), 3500);
+                return;
+            }
+            if (!targetIso) {
+                setScheduleStatus({ type: 'error', message: 'Please select a valid date and time for the countdown.' });
+                setTimeout(() => setScheduleStatus(null), 3500);
+                return;
+            }
+        }
+
+        setLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/api/schedule`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': password },
-                body: JSON.stringify({ url: processedUrl })
+                body: JSON.stringify({
+                    url: processedUrl,
+                    mode: scheduleMode,
+                    countdownTitle: trimmedTitle,
+                    countdownTarget: targetIso,
+                    countdownBackdropUrl: processedBackdropUrl,
+                    countdownBackdropFit,
+                })
             });
             if (response.ok) {
-                setScheduleStatus({ type: 'success', message: 'Schedule updated!' });
+                setScheduleStatus({
+                    type: 'success',
+                    message: scheduleMode === 'countdown' ? 'Countdown schedule saved!' : 'Schedule poster updated!'
+                });
                 setNewScheduleUrl(processedUrl);
+                setCountdownBackdropUrl(processedBackdropUrl);
+                await refetchSchedule();
                 setTimeout(() => setScheduleStatus(null), 3000);
             } else {
-                setScheduleStatus({ type: 'error', message: 'Failed to update.' });
+                setScheduleStatus({ type: 'error', message: 'Failed to update schedule.' });
                 setTimeout(() => setScheduleStatus(null), 3000);
             }
         } catch (error) {
@@ -2355,30 +2426,222 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
                                         <span className="text-brand-primary drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">Schedule Manager</span>
                                     </h2>
-                                    <p className="text-xs text-gray-400 mt-1">Upload and manage your stream schedule poster image.</p>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Switch between the normal schedule poster or a live stream countdown display.
+                                    </p>
                                 </div>
                                 <div className="flex items-center gap-3 w-full sm:w-auto">
                                     <button 
+                                        type="button"
                                         onClick={() => handleUpdateSchedule()} 
                                         disabled={loading}
-                                        className="flex-1 sm:flex-initial bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-sm disabled:opacity-50"
+                                        className="cursor-pointer disabled:cursor-not-allowed flex-1 sm:flex-initial bg-brand-primary hover:bg-red-600 text-white font-extrabold py-3 px-8 rounded-xl transition-all hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-sm disabled:opacity-50 whitespace-nowrap"
                                     >
                                         {loading ? 'Saving...' : 'Save Schedule'}
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="bg-white/5 backdrop-blur-3xl p-8 rounded-3xl border border-white/10 shadow-2xl">
-                                <div className="space-y-6">
-                                    <div className="bg-black/20 p-6 rounded-3xl border border-white/5">
-                                        <ImageUploader 
-                                            onUploadSuccess={setNewScheduleUrl} 
-                                            initialUrl={newScheduleUrl}
-                                            dropzoneClassName="min-h-[450px] md:min-h-[600px] w-full"
-                                        />
-                                    </div>
+                            {/* Mode Switcher */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-4 sm:p-5 rounded-2xl border border-white/10 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                    <h3 className="text-sm font-bold text-white">Display Mode</h3>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        {scheduleMode === 'poster'
+                                            ? 'Showing the uploaded stream schedule image on the homepage.'
+                                            : 'Showing the live animated countdown clock on the homepage.'}
+                                    </p>
+                                </div>
+                                <div className="inline-flex p-1 rounded-xl bg-black/40 border border-white/10 self-start sm:self-auto shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setScheduleMode('poster')}
+                                        className={`cursor-pointer px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                            scheduleMode === 'poster'
+                                                ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/25'
+                                                : 'text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        Schedule Poster
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setScheduleMode('countdown')}
+                                        className={`cursor-pointer px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                            scheduleMode === 'countdown'
+                                                ? 'bg-brand-primary text-white shadow-md shadow-brand-primary/25'
+                                                : 'text-gray-400 hover:text-white'
+                                        }`}
+                                    >
+                                        Stream Countdown
+                                    </button>
                                 </div>
                             </div>
+
+                            {scheduleMode === 'poster' ? (
+                                <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white">Schedule Poster Image</h3>
+                                            <p className="text-xs text-gray-400 mt-0.5">Upload or replace your stream schedule poster.</p>
+                                        </div>
+                                        <div className="bg-black/20 p-4 sm:p-6 rounded-3xl border border-white/5">
+                                            <ImageUploader 
+                                                onUploadSuccess={setNewScheduleUrl} 
+                                                initialUrl={newScheduleUrl}
+                                                dropzoneClassName="min-h-[420px] md:min-h-[540px] w-full"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    {/* Countdown Configuration Inputs */}
+                                    <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            {/* Title Input */}
+                                            <div className="space-y-2">
+                                                <label htmlFor="schedule-countdown-title" className="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                                                    Stream Title
+                                                </label>
+                                                <input
+                                                    id="schedule-countdown-title"
+                                                    type="text"
+                                                    value={countdownTitle}
+                                                    onChange={(e) => setCountdownTitle(e.target.value)}
+                                                    placeholder="e.g. DRINKING STREAM"
+                                                    maxLength={80}
+                                                    className="w-full bg-black/40 border border-white/10 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 rounded-xl px-4 py-3 text-white font-bold placeholder-gray-500 outline-none transition-all"
+                                                />
+                                                <p className="text-[11px] text-gray-400">
+                                                    Displayed centered in uppercase directly above the countdown digits.
+                                                </p>
+                                            </div>
+
+                                            {/* Date & Time Picker */}
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <label htmlFor="schedule-countdown-datetime" className="block text-xs font-bold uppercase tracking-wider text-gray-300">
+                                                        Stream Date &amp; Time
+                                                    </label>
+                                                    {countdownTargetLocal && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setCountdownTargetLocal('')}
+                                                            className="cursor-pointer text-[11px] font-bold text-gray-400 hover:text-brand-primary transition-colors"
+                                                        >
+                                                            Clear
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <input
+                                                    id="schedule-countdown-datetime"
+                                                    type="datetime-local"
+                                                    value={countdownTargetLocal}
+                                                    onChange={(e) => setCountdownTargetLocal(e.target.value)}
+                                                    className="w-full bg-black/40 border border-white/10 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 rounded-xl px-4 py-3 text-white font-mono text-sm outline-none transition-all [color-scheme:dark]"
+                                                />
+                                                <p className="text-[11px] text-gray-400">
+                                                    Entered in your local timezone ({getAdminTimeZoneLabel()}). Viewers automatically see the exact time in theirs.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Optional Custom Backdrop */}
+                                        <div className="pt-4 border-t border-white/10 space-y-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-white">Custom Backdrop Image (Optional)</h4>
+                                                    <p className="text-xs text-gray-400">
+                                                        Leave blank to use the native STEAK House crimson dark theme, or upload a background image.
+                                                    </p>
+                                                </div>
+                                                {countdownBackdropUrl && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCountdownBackdropUrl('')}
+                                                        className="cursor-pointer self-start sm:self-auto px-3 py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/40 text-xs font-bold text-gray-300 hover:text-red-300 transition-colors whitespace-nowrap"
+                                                    >
+                                                        Remove Backdrop
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                                                <ImageUploader
+                                                    onUploadSuccess={setCountdownBackdropUrl}
+                                                    initialUrl={countdownBackdropUrl}
+                                                    dropzoneClassName="min-h-[180px] w-full"
+                                                />
+                                                <div className="space-y-2">
+                                                    <label htmlFor="schedule-countdown-backdrop-url" className="block text-xs font-bold uppercase tracking-wider text-gray-400">
+                                                        Or Paste Image URL
+                                                    </label>
+                                                    <input
+                                                        id="schedule-countdown-backdrop-url"
+                                                        type="url"
+                                                        value={countdownBackdropUrl}
+                                                        onChange={(e) => setCountdownBackdropUrl(e.target.value)}
+                                                        placeholder="https://..."
+                                                        className="w-full bg-black/40 border border-white/10 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/30 rounded-xl px-4 py-3 text-xs text-white placeholder-gray-500 outline-none transition-all font-mono"
+                                                    />
+                                                    <div className="pt-2 space-y-2">
+                                                        <span className="block text-xs font-bold uppercase tracking-wider text-gray-400">
+                                                            Backdrop Framing
+                                                        </span>
+                                                        <div className="inline-flex p-1 rounded-xl bg-black/40 border border-white/10">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setCountdownBackdropFit('cover')}
+                                                                className={`cursor-pointer px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                                                    countdownBackdropFit === 'cover'
+                                                                        ? 'bg-brand-primary text-white shadow-sm'
+                                                                        : 'text-gray-400 hover:text-white'
+                                                                }`}
+                                                            >
+                                                                Fill Frame
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setCountdownBackdropFit('contain')}
+                                                                className={`cursor-pointer px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                                                                    countdownBackdropFit === 'contain'
+                                                                        ? 'bg-brand-primary text-white shadow-sm'
+                                                                        : 'text-gray-400 hover:text-white'
+                                                                }`}
+                                                            >
+                                                                Fit Whole Image
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                                                            Use <strong className="text-gray-300">Fit Whole Image</strong> for transparent character PNGs so nothing gets cropped, or <strong className="text-gray-300">Fill Frame</strong> for full wallpapers.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Live Countdown Preview */}
+                                    <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-4">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-white">Homepage Preview</h3>
+                                                <p className="text-xs text-gray-400">Live preview of how visitors will see the countdown on the homepage.</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-black/30 rounded-2xl p-1.5 border border-white/10 shadow-2xl">
+                                            <StreamCountdownDisplay
+                                                title={countdownTitle}
+                                                targetIso={localDatetimeInputToIso(countdownTargetLocal)}
+                                                backdropUrl={processImageUrl(countdownBackdropUrl)}
+                                                backdropFit={countdownBackdropFit}
+                                                compact
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

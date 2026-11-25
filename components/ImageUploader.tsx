@@ -370,20 +370,18 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                                 playsInline 
                             />
                         ) : (
-                            /* Grid background for transparency checking */
-                            <div 
-                                className="w-full h-full bg-cover bg-center flex items-center justify-center relative"
-                                style={{
-                                    backgroundImage: `url(${previewUrl})`,
-                                    backgroundSize: 'contain',
-                                    backgroundRepeat: 'no-repeat',
-                                }}
-                            >
+                            <div className="w-full h-full flex items-center justify-center relative p-2">
                                 {/* Checkered pattern indicating transparency in background */}
-                                <div className="absolute inset-0 bg-[linear-gradient(45deg,#222_25%,transparent_25%),linear-gradient(-45deg,#222_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#222_75%),linear-gradient(-45deg,transparent_75%,#222_75%)] bg-[size:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] opacity-30 -z-10"></div>
+                                <div className="absolute inset-0 bg-[linear-gradient(45deg,#222_25%,transparent_25%),linear-gradient(-45deg,#222_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#222_75%),linear-gradient(-45deg,transparent_75%,#222_75%)] bg-[size:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] opacity-35 z-0 pointer-events-none" />
+                                <img
+                                    src={previewUrl}
+                                    alt={fileInfo?.name || 'Uploaded preview'}
+                                    referrerPolicy="no-referrer"
+                                    className="max-w-full max-h-full w-auto h-auto object-contain relative z-10"
+                                />
                             </div>
                         )}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                        <div className="absolute inset-0 z-20 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                             <span className="text-white text-xs font-bold uppercase bg-brand-primary py-1.5 px-3 rounded-full">Replace File</span>
                             {fileInfo && (
                                 <span className="text-gray-300 text-[10px] font-mono px-2 bg-black/60 rounded py-0.5">
@@ -395,7 +393,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 ) : null}
 
                 {/* Content Overlay */}
-                <div className={`flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${(previewUrl && !hidePreview) ? 'opacity-0 hover:opacity-100 z-10' : 'opacity-100'}`}>
+                <div className={`flex flex-col items-center justify-center gap-3 transition-opacity duration-300 ${(previewUrl && !hidePreview) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:scale-110 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />

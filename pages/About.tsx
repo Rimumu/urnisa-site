@@ -8,6 +8,7 @@ import { TWITCH_CHANNEL_NAME, DISCORD_SERVER_ID } from '../constants';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useSchedule } from '../hooks/useSchedule';
 import DiscordWidget from '../components/DiscordWidget';
+import StreamScheduleSection from '../components/StreamScheduleSection';
 
 // Assets
 const PROFILE_IMAGE = "https://res.cloudinary.com/dsencimjn/image/upload/v1764677430/urnisapfp2_l3a3xx.png";
@@ -85,7 +86,7 @@ const About: React.FC = () => {
     const [twitchRef, isTwitchVisible] = useScrollAnimation<HTMLDivElement>();
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
     const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
-    const { scheduleUrl } = useSchedule();
+    const { scheduleConfig } = useSchedule();
     const [hasDiscordLoaded, setHasDiscordLoaded] = useState(false);
 
     useEffect(() => {
@@ -582,15 +583,7 @@ const About: React.FC = () => {
                     <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-white">
                         Stream <span className="text-brand-primary">Schedule</span>
                     </h2>
-                    <div className="bg-black/30 backdrop-blur-lg rounded-2xl p-1 md:p-2 border border-white/10 shadow-2xl shadow-black/40">
-                        <OptimizedImage
-                            src={scheduleUrl}
-                            alt="Urnisa's weekly stream schedule"
-                            className="rounded-lg w-full h-auto aspect-video md:aspect-auto"
-                            contain
-                            priority
-                        />
-                    </div>
+                    <StreamScheduleSection config={scheduleConfig} />
                 </div>
 
                 {/* Discord Section */}
