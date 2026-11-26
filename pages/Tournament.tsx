@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import UserProfile, { UserData } from '../components/UserProfile';
 import OptimizedImage from '../components/OptimizedImage';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, TOURNAMENT_ADMIN_URL } from '../constants';
 import { TournamentCrown, TournamentMedalBadge } from '../components/TournamentIcons';
 
 // --- TYPES ---
@@ -1434,8 +1434,8 @@ const Tournament: React.FC = () => {
                     <span>ADMIN IMPERSONATION MODE: Viewing/Drafting as <strong className="text-white font-black">{effectiveUser?.minecraftUsername}</strong> ({adminDummyId})</span>
                 </div>
                 <button 
-                    onClick={() => window.location.href = "/admin/tournament"}
-                    className="bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-1 rounded-lg text-[11px] font-black uppercase transition-colors shadow-sm"
+                    onClick={() => { window.location.href = TOURNAMENT_ADMIN_URL; }}
+                    className="cursor-pointer bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-1 rounded-lg text-[11px] font-black uppercase transition-colors shadow-sm"
                 >
                     Return to Admin
                 </button>

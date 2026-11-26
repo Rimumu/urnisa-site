@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { API_BASE_URL, DISCORD_API_URL } from '../constants';
+import { API_BASE_URL, DISCORD_API_URL, IS_ADMIN_SUBDOMAIN, MAIN_SITE_URL } from '../constants';
 import { Link } from 'react-router-dom';
 import {
     Trophy,
@@ -1113,8 +1113,8 @@ const AdminTournament: React.FC = () => {
                     <h1 className="text-3xl font-black uppercase tracking-tighter">Tournament Admin</h1>
                     <p className="text-gray-500 text-sm">Manage seasons, players, and tournament progress</p>
                 </div>
-                <Link to="/minecraft" className="text-gray-400 hover:text-white transition-colors text-sm">
-                    ← Back to Dashboard
+                <Link to={IS_ADMIN_SUBDOMAIN ? '/' : '/admin'} className="text-gray-400 hover:text-white transition-colors text-sm">
+                    ← Back to Admin Panel
                 </Link>
             </div>
 
@@ -1419,7 +1419,7 @@ const AdminTournament: React.FC = () => {
                             {activeSeason?.format.includes('Doubles Duos') && (
                                 <div className="flex gap-2">
                                 <button
-                                    onClick={() => window.open(`/minecraft/duo-cards?seasonId=${activeSeason.seasonId}`, '_blank')}
+                                    onClick={() => window.open(`${MAIN_SITE_URL}/arch/minecraft/duo-cards?seasonId=${activeSeason.seasonId}`, '_blank')}
                                     className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 shadow-lg shadow-indigo-900/30"
                                     title="Generate and download graphic cards for all duos"
                                 >
@@ -1489,7 +1489,7 @@ const AdminTournament: React.FC = () => {
                                                     <span
                                                         className="text-[10px] text-gray-400 font-mono bg-black/40 px-1.5 py-0.5 rounded border border-white/5 flex items-center gap-1 shrink-0 cursor-pointer hover:text-white hover:border-emerald-500/40 transition-colors"
                                                         title={`Discord ID: ${player.discordId} (Click to draft as player)`}
-                                                        onClick={() => window.open(`/minecraft/tournament?adminDummyId=${player.discordId}`, '_blank')}
+                                                        onClick={() => window.open(`${MAIN_SITE_URL}/arch/minecraft/tournament?adminDummyId=${player.discordId}`, '_blank')}
                                                     >
                                                         <Hash className="w-2.5 h-2.5 text-emerald-400" />
                                                         {player.discordId.length > 10 ? `${player.discordId.slice(0, 5)}...` : player.discordId}
@@ -1589,7 +1589,7 @@ const AdminTournament: React.FC = () => {
                                             </>
                                         )}
                                         <button
-                                            onClick={() => window.open(`/minecraft/tournament?adminDummyId=${player.discordId}`, '_blank')}
+                                            onClick={() => window.open(`${MAIN_SITE_URL}/arch/minecraft/tournament?adminDummyId=${player.discordId}`, '_blank')}
                                             className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-xs font-bold py-1.5 px-2 rounded transition-colors flex items-center gap-1"
                                             title="Open draft view for this player in a new tab"
                                         >
@@ -2381,7 +2381,7 @@ const AdminTournament: React.FC = () => {
                                     const targetId = editingTeamTarget.type === 'solo' 
                                         ? editingTeamTarget.player.discordId 
                                         : editingTeamTarget.duo.player1DiscordId;
-                                    window.open(`/minecraft/tournament?adminDummyId=${targetId}`, '_blank');
+                                    window.open(`${MAIN_SITE_URL}/arch/minecraft/tournament?adminDummyId=${targetId}`, '_blank');
                                 }}
                                 className="bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 border border-blue-500/30"
                             >
@@ -2464,7 +2464,7 @@ const AdminTournament: React.FC = () => {
                                         {manualDiscordId && (
                                             <button
                                                 type="button"
-                                                onClick={() => window.open(`/minecraft/tournament?adminDummyId=${manualDiscordId}`, '_blank')}
+                                                onClick={() => window.open(`${MAIN_SITE_URL}/arch/minecraft/tournament?adminDummyId=${manualDiscordId}`, '_blank')}
                                                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow"
                                             >
                                                 <ExternalLink className="w-3.5 h-3.5" /> Draft on their behalf in New Tab

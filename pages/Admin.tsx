@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { API_BASE_URL, DISCORD_API_URL } from '../constants';
+import { API_BASE_URL, DISCORD_API_URL, IS_ADMIN_SUBDOMAIN, MAIN_SITE_URL } from '../constants';
 import { useSchedule, ScheduleMode, BackdropFit } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
@@ -1806,13 +1806,23 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                     <h1 className="text-xl font-black text-white tracking-tight">Admin <span className="text-brand-primary">Panel</span></h1>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link to="/" className="flex items-center justify-center p-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-all" title="Exit Admin">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                    </Link>
+                    {IS_ADMIN_SUBDOMAIN ? (
+                        <a href={MAIN_SITE_URL} className="flex items-center justify-center p-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-all" title="Exit Admin">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                        </a>
+                    ) : (
+                        <Link to="/" className="flex items-center justify-center p-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-lg transition-all" title="Exit Admin">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                        </Link>
+                    )}
                     <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-brand-primary hover:bg-red-600 text-white rounded-lg transition-all">
                         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             {isMobileMenuOpen ? (
@@ -1915,14 +1925,25 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                 </nav>
                 
                 <div className="p-4 md:p-6 border-t border-white/5 shrink-0 hidden md:block">
-                    <Link to="/" className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-2xl transition-all font-bold text-sm">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                        Exit Admin
-                    </Link>
+                    {IS_ADMIN_SUBDOMAIN ? (
+                        <a href={MAIN_SITE_URL} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-2xl transition-all font-bold text-sm">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Exit Admin
+                        </a>
+                    ) : (
+                        <Link to="/" className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-2xl transition-all font-bold text-sm">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Exit Admin
+                        </Link>
+                    )}
                 </div>
             </div>
 
@@ -3723,7 +3744,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                 </div>
                                 <h3 className="text-4xl font-black text-white mb-4 tracking-tight">Tournament Admin Moved</h3>
                                 <p className="text-gray-400 mb-10 max-w-lg text-lg">All tournament management features have been consolidated to a dedicated page for a focused workflow.</p>
-                                <Link to="/admin/tournament" className="bg-purple-600 hover:bg-purple-500 text-white font-black py-5 px-10 rounded-2xl flex items-center gap-4 shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all hover:scale-105 border border-purple-400/50 text-xl group z-10">
+                                <Link to={IS_ADMIN_SUBDOMAIN ? '/tournament' : '/admin/tournament'} className="bg-purple-600 hover:bg-purple-500 text-white font-black py-5 px-10 rounded-2xl flex items-center gap-4 shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all hover:scale-105 border border-purple-400/50 text-xl group z-10">
                                     <span>Launch Tournament Admin</span>
                                     <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
                                 </Link>

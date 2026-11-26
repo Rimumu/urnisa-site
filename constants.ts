@@ -10,10 +10,35 @@ export const DEFAULT_SCHEDULE_URL = 'https://cdn.discordapp.com/attachments/1338
 // --------------------------------------------------------------------------
 
 const hostname = window.location.hostname;
+const lowerHost = hostname.toLowerCase();
 const isLocal =
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname.startsWith('192.168.');
+    lowerHost === 'localhost' ||
+    lowerHost === '127.0.0.1' ||
+    lowerHost.startsWith('192.168.');
+
+export const IS_ADMIN_SUBDOMAIN =
+    lowerHost === 'admin.urnisa.site' || lowerHost === 'admin.localhost';
+
+export const IS_PUBLIC_PROD_DOMAIN =
+    lowerHost === 'urnisa.site' || lowerHost === 'www.urnisa.site';
+
+export const MAIN_SITE_URL =
+    IS_ADMIN_SUBDOMAIN || IS_PUBLIC_PROD_DOMAIN
+        ? (lowerHost === 'admin.localhost'
+            ? `${window.location.protocol}//localhost${window.location.port ? `:${window.location.port}` : ''}`
+            : 'https://www.urnisa.site')
+        : window.location.origin;
+
+export const ADMIN_SITE_URL =
+    IS_ADMIN_SUBDOMAIN || IS_PUBLIC_PROD_DOMAIN
+        ? (lowerHost === 'admin.localhost' ? window.location.origin : 'https://admin.urnisa.site')
+        : window.location.origin;
+
+export const TOURNAMENT_ADMIN_URL = IS_ADMIN_SUBDOMAIN
+    ? '/tournament'
+    : IS_PUBLIC_PROD_DOMAIN
+        ? 'https://admin.urnisa.site/tournament'
+        : '/admin/tournament';
 
 // 1. General Website Backend (Database, Nisathon, Admin)
 const BACKEND_PROD_URL = 'https://urnisa-backend-3b3m.onrender.com';

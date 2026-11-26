@@ -44,6 +44,7 @@ import InteractiveBackground from './components/InteractiveBackground';
 import CapybaraEasterEgg from './components/CapybaraEasterEgg';
 import ScrollToTopButton from './components/ScrollToTopButton';
 import ScrollToTop from './components/ScrollToTop';
+import { IS_ADMIN_SUBDOMAIN, IS_PUBLIC_PROD_DOMAIN } from './constants';
 
 // Main Layout Wrapper
 // Handles the persistent UI elements (Navbar, Footer, Background)
@@ -84,6 +85,20 @@ const MainLayout: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  if (IS_ADMIN_SUBDOMAIN) {
+    return (
+      <div className="min-h-screen flex flex-col font-sans overflow-x-hidden">
+        <Routes>
+          <Route path="/" element={<Admin />} />
+          <Route path="/tournament" element={<AdminTournament />} />
+          <Route path="/duo-card" element={<DuoCard />} />
+          <Route path="/duo-cards" element={<DuoCard />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col font-sans overflow-x-hidden">
       <Routes>
@@ -99,7 +114,7 @@ const App: React.FC = () => {
         <Route path="/duo-card" element={<DuoCard />} />
         <Route path="/arch/minecraft/duo-card" element={<DuoCard />} />
         <Route path="/arch/minecraft/duo-cards" element={<DuoCard />} />
-        <Route path="/admin" element={<Admin />} />
+        {!IS_PUBLIC_PROD_DOMAIN && <Route path="/admin" element={<Admin />} />}
         <Route path="/twitch/callback" element={<TwitchCallback />} />
 
         {/* 2. MAIN WEBSITE ROUTES (Wrapped in Layout) */}
@@ -143,7 +158,7 @@ const App: React.FC = () => {
           <Route path="/arch/dev/tournament" element={<TournamentDev />} />
           <Route path="/arch/dev/admintournament" element={<AdminTournamentDev />} />
           <Route path="/arch/dev/snakesladder" element={<SnakesLadder />} />
-          <Route path="/admin/tournament" element={<AdminTournament />} />
+          {!IS_PUBLIC_PROD_DOMAIN && <Route path="/admin/tournament" element={<AdminTournament />} />}
 
           {/* 404 Fallback - Redirects unknown paths to Home */}
           <Route path="*" element={<About />} />

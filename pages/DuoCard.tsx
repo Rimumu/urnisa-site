@@ -12,7 +12,7 @@ import {
     Copy,
     Check
 } from 'lucide-react';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, IS_ADMIN_SUBDOMAIN, IS_PUBLIC_PROD_DOMAIN, TOURNAMENT_ADMIN_URL } from '../constants';
 import { Link, useSearchParams } from 'react-router-dom';
 
 interface Duo {
@@ -164,13 +164,23 @@ const DuoCard: FC = () => {
                 {/* Header Navigation & Branding */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white/5 border border-white/10 p-6 rounded-3xl backdrop-blur-xl shadow-2xl">
                     <div className="flex items-center gap-4">
-                        <Link 
-                            to="/admin/tournament"
-                            className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-gray-300 hover:text-white group"
-                            title="Back to Admin Panel"
-                        >
-                            <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-                        </Link>
+                        {IS_PUBLIC_PROD_DOMAIN ? (
+                            <a 
+                                href={TOURNAMENT_ADMIN_URL}
+                                className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-gray-300 hover:text-white group"
+                                title="Back to Admin Panel"
+                            >
+                                <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+                            </a>
+                        ) : (
+                            <Link 
+                                to={IS_ADMIN_SUBDOMAIN ? '/tournament' : '/admin/tournament'}
+                                className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-gray-300 hover:text-white group"
+                                title="Back to Admin Panel"
+                            >
+                                <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+                            </Link>
+                        )}
                         <div>
                             <div className="flex items-center gap-3">
                                 <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white">
@@ -283,12 +293,21 @@ const DuoCard: FC = () => {
                                 ? `No teams match "${searchQuery}". Try a different search term.` 
                                 : `Admins have not paired any duos for this season yet.`}
                         </p>
-                        <Link
-                            to="/admin/tournament"
-                            className="mt-4 bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
-                        >
-                            Open Admin Pairing Panel
-                        </Link>
+                        {IS_PUBLIC_PROD_DOMAIN ? (
+                            <a
+                                href={TOURNAMENT_ADMIN_URL}
+                                className="mt-4 bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
+                            >
+                                Open Admin Pairing Panel
+                            </a>
+                        ) : (
+                            <Link
+                                to={IS_ADMIN_SUBDOMAIN ? '/tournament' : '/admin/tournament'}
+                                className="mt-4 bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all"
+                            >
+                                Open Admin Pairing Panel
+                            </Link>
+                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 justify-items-center">
