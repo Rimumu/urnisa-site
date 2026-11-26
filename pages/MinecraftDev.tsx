@@ -32,7 +32,7 @@ const CurseforgeLogo = () => (
 
 const MinecraftDev: React.FC = () => {
     const [copied, setCopied] = useState(false);
-    const SERVER_IP = "mc.urnisa.live";
+    const SERVER_IP = "mc.urnisa.site";
 
     // Auth State
     const [user, setUser] = useState<UserData | null>(() => {

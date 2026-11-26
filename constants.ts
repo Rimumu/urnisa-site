@@ -30,13 +30,13 @@ export const DISCORD_CLIENT_ID = "1381873499173421056"; // Using Server ID as pl
 // Discord only allows explicitly registered redirect URIs.
 // Registered URIs in the portal:
 // - http://localhost:5173/minecraft
-// - https://www.urnisa.live/minecraft
+// - https://www.urnisa.site/minecraft
 // For other environments (Vercel dev site, preview environments, other ports), we route through the live production URL
 // and pass the destination back via the OAuth state parameter.
 const isLocal5173 = isLocal && window.location.port === '5173';
 export const DISCORD_REDIRECT_URI = isLocal5173
     ? `http://localhost:5173/minecraft`
-    : `https://www.urnisa.live/minecraft`;
+    : `https://www.urnisa.site/minecraft`;
 
 
 // Configuration for grouping online members from the Discord Widget API.

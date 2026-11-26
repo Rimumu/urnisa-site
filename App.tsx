@@ -9,6 +9,7 @@ import Nisathon from './pages/Nisathon';
 import NisathonTimer from './pages/NisathonTimer';
 import Wheel from './pages/Wheel';
 import Minecraft from './pages/Minecraft';
+import MinecraftTeaser from './pages/MinecraftTeaser';
 import Rankings from './pages/Rankings';
 import Shop from './pages/Shop';
 import Archive from './pages/Archive';
@@ -113,6 +114,7 @@ const App: React.FC = () => {
 
           {/* Public Gallery & Historical Archive */}
           <Route path="/about" element={<Navigate to="/" replace />} />
+          <Route path="/minecraft" element={<MinecraftTeaser />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/archive/nisathon" element={<ArchiveNisathon />} />
