@@ -3396,19 +3396,147 @@ app.post('/api/profile', auth, async (req, res) => {
     res.json({ success: true });
 });
 
+const scheduleTwitchCache = {
+    isLive: false,
+    checkedAt: 0,
+    title: '',
+    titleCheckedAt: 0
+};
+
+async function resolveBackendTwitchLive(overrideValue) {
+    if (overrideValue === 'live') return true;
+    if (overrideValue === 'offline') return false;
+
+    const now = Date.now();
+    if (now - scheduleTwitchCache.checkedAt < 5000) {
+        return scheduleTwitchCache.isLive;
+    }
+
+    try {
+        const res = await axios.get('https://decapi.me/twitch/uptime/urnisa_', { timeout: 4000 });
+        const text = typeof res.data === 'string' ? res.data.trim().toLowerCase() : '';
+        const live = Boolean(
+            text &&
+            !text.includes('offline') &&
+            !text.includes('404') &&
+            !text.includes('error') &&
+            !text.includes('not found')
+        );
+        scheduleTwitchCache.isLive = live;
+        scheduleTwitchCache.checkedAt = now;
+        return live;
+    } catch (e) {
+        return scheduleTwitchCache.isLive;
+    }
+}
+
+async function fetchBackendTwitchTitle(fallbackTitle = '') {
+    const now = Date.now();
+    if (scheduleTwitchCache.title && now - scheduleTwitchCache.titleCheckedAt < 15000) {
+        return scheduleTwitchCache.title;
+    }
+
+    try {
+        const res = await axios.get('https://decapi.me/twitch/title/urnisa_', { timeout: 4000 });
+        const raw = typeof res.data === 'string' ? res.data.trim() : '';
+        const lower = raw.toLowerCase();
+        if (
+            raw &&
+            !raw.startsWith('<') &&
+            !lower.includes('offline') &&
+            !lower.includes('404') &&
+            !lower.includes('error') &&
+            !lower.includes('not found')
+        ) {
+            scheduleTwitchCache.title = raw;
+            scheduleTwitchCache.titleCheckedAt = now;
+            return raw;
+        }
+    } catch (e) {
+        // Ignore fetch error and fall back
+    }
+
+    return scheduleTwitchCache.title || fallbackTitle || '';
+}
+
 app.get('/api/schedule', async (req, res) => {
-    const [urlDoc, configDoc] = await Promise.all([
+    const [urlDoc, configDoc, overrideDoc] = await Promise.all([
         Setting.findOne({ key: 'schedule_url' }),
-        Setting.findOne({ key: 'schedule_config' })
+        Setting.findOne({ key: 'schedule_config' }),
+        Setting.findOne({ key: 'stream_status_override' })
     ]);
-    const cfg = (configDoc && typeof configDoc.value === 'object' && configDoc.value) ? configDoc.value : {};
+    const cfg = (configDoc && typeof configDoc.value === 'object' && configDoc.value) ? { ...configDoc.value } : {};
+    const mode = cfg.mode === 'countdown' ? 'countdown' : 'poster';
+    const countdownTitle = typeof cfg.countdownTitle === 'string' ? cfg.countdownTitle : '';
+    const countdownTarget = typeof cfg.countdownTarget === 'string' ? cfg.countdownTarget : '';
+    const countdownBackdropUrl = typeof cfg.countdownBackdropUrl === 'string' ? cfg.countdownBackdropUrl : '';
+    const countdownBackdropFit = cfg.countdownBackdropFit === 'contain' ? 'contain' : 'cover';
+    let liveDetectedAt = typeof cfg.liveDetectedAt === 'string' ? cfg.liveDetectedAt : '';
+    let streamStarted = Boolean(cfg.streamStarted);
+    let streamTitle = typeof cfg.streamTitle === 'string' ? cfg.streamTitle : '';
+
+    if (mode === 'countdown' && countdownTarget) {
+        const targetMs = new Date(countdownTarget).getTime();
+        if (!Number.isNaN(targetMs) && Date.now() >= targetMs) {
+            const override = overrideDoc?.value || 'auto';
+            let dirty = false;
+
+            if (!streamStarted) {
+                const isLive = await resolveBackendTwitchLive(override);
+                if (isLive) {
+                    if (!liveDetectedAt) {
+                        liveDetectedAt = new Date().toISOString();
+                        dirty = true;
+                    }
+                    const detectedMs = new Date(liveDetectedAt).getTime();
+                    if (!Number.isNaN(detectedMs) && Date.now() - detectedMs >= 30000) {
+                        streamStarted = true;
+                        streamTitle = await fetchBackendTwitchTitle(streamTitle);
+                        dirty = true;
+                    }
+                } else if (liveDetectedAt) {
+                    liveDetectedAt = '';
+                    dirty = true;
+                }
+            } else {
+                const latestTitle = await fetchBackendTwitchTitle(streamTitle);
+                if (latestTitle && latestTitle !== streamTitle) {
+                    streamTitle = latestTitle;
+                    dirty = true;
+                }
+            }
+
+            if (dirty) {
+                await Setting.findOneAndUpdate(
+                    { key: 'schedule_config' },
+                    {
+                        value: {
+                            mode,
+                            countdownTitle,
+                            countdownTarget,
+                            countdownBackdropUrl,
+                            countdownBackdropFit,
+                            liveDetectedAt,
+                            streamStarted,
+                            streamTitle
+                        }
+                    },
+                    { upsert: true }
+                );
+            }
+        }
+    }
+
     res.json({
         url: urlDoc?.value || DEFAULT_SCHEDULE_URL,
-        mode: cfg.mode === 'countdown' ? 'countdown' : 'poster',
-        countdownTitle: typeof cfg.countdownTitle === 'string' ? cfg.countdownTitle : '',
-        countdownTarget: typeof cfg.countdownTarget === 'string' ? cfg.countdownTarget : '',
-        countdownBackdropUrl: typeof cfg.countdownBackdropUrl === 'string' ? cfg.countdownBackdropUrl : '',
-        countdownBackdropFit: cfg.countdownBackdropFit === 'contain' ? 'contain' : 'cover'
+        mode,
+        countdownTitle,
+        countdownTarget,
+        countdownBackdropUrl,
+        countdownBackdropFit,
+        liveDetectedAt,
+        streamStarted,
+        streamTitle
     });
 });
 app.post('/api/schedule', auth, async (req, res) => {
@@ -3420,12 +3548,43 @@ app.post('/api/schedule', auth, async (req, res) => {
     const existingDoc = await Setting.findOne({ key: 'schedule_config' });
     const existingCfg = (existingDoc && typeof existingDoc.value === 'object' && existingDoc.value) ? existingDoc.value : {};
 
+    const nextMode = body.mode === 'countdown' ? 'countdown' : (body.mode === 'poster' ? 'poster' : (existingCfg.mode === 'countdown' ? 'countdown' : 'poster'));
+    const nextTarget = typeof body.countdownTarget === 'string' ? body.countdownTarget.trim() : (existingCfg.countdownTarget || '');
+    const shouldResetLiveState = Boolean(body.resetLiveState) || nextMode === 'poster' || nextTarget !== (existingCfg.countdownTarget || '');
+
     const nextCfg = {
-        mode: body.mode === 'countdown' ? 'countdown' : (body.mode === 'poster' ? 'poster' : (existingCfg.mode === 'countdown' ? 'countdown' : 'poster')),
+        mode: nextMode,
         countdownTitle: typeof body.countdownTitle === 'string' ? body.countdownTitle.trim() : (existingCfg.countdownTitle || ''),
-        countdownTarget: typeof body.countdownTarget === 'string' ? body.countdownTarget.trim() : (existingCfg.countdownTarget || ''),
+        countdownTarget: nextTarget,
         countdownBackdropUrl: typeof body.countdownBackdropUrl === 'string' ? body.countdownBackdropUrl.trim() : (existingCfg.countdownBackdropUrl || ''),
-        countdownBackdropFit: body.countdownBackdropFit === 'contain' ? 'contain' : (body.countdownBackdropFit === 'cover' ? 'cover' : (existingCfg.countdownBackdropFit === 'contain' ? 'contain' : 'cover'))
+        countdownBackdropFit: body.countdownBackdropFit === 'contain' ? 'contain' : (body.countdownBackdropFit === 'cover' ? 'cover' : (existingCfg.countdownBackdropFit === 'contain' ? 'contain' : 'cover')),
+        liveDetectedAt: shouldResetLiveState ? '' : (typeof body.liveDetectedAt === 'string' ? body.liveDetectedAt : (existingCfg.liveDetectedAt || '')),
+        streamStarted: shouldResetLiveState ? false : (typeof body.streamStarted === 'boolean' ? body.streamStarted : Boolean(existingCfg.streamStarted)),
+        streamTitle: shouldResetLiveState ? '' : (typeof body.streamTitle === 'string' ? body.streamTitle : (existingCfg.streamTitle || ''))
+    };
+
+    await Setting.findOneAndUpdate({ key: 'schedule_config' }, { value: nextCfg }, { upsert: true });
+    const urlDoc = await Setting.findOne({ key: 'schedule_url' });
+
+    res.json({
+        success: true,
+        url: urlDoc?.value || DEFAULT_SCHEDULE_URL,
+        ...nextCfg
+    });
+});
+
+app.post('/api/schedule/reset', auth, async (req, res) => {
+    const existingDoc = await Setting.findOne({ key: 'schedule_config' });
+    const existingCfg = (existingDoc && typeof existingDoc.value === 'object' && existingDoc.value) ? existingDoc.value : {};
+    const nextCfg = {
+        mode: 'poster',
+        countdownTitle: existingCfg.countdownTitle || '',
+        countdownTarget: existingCfg.countdownTarget || '',
+        countdownBackdropUrl: existingCfg.countdownBackdropUrl || '',
+        countdownBackdropFit: existingCfg.countdownBackdropFit === 'contain' ? 'contain' : 'cover',
+        liveDetectedAt: '',
+        streamStarted: false,
+        streamTitle: ''
     };
 
     await Setting.findOneAndUpdate({ key: 'schedule_config' }, { value: nextCfg }, { upsert: true });

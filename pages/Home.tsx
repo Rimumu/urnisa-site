@@ -10,7 +10,7 @@ import StreamScheduleSection from '../components/StreamScheduleSection';
 const Home: React.FC = () => {
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
     const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
-    const { scheduleConfig } = useSchedule();
+    const { scheduleConfig, refetch: refetchSchedule } = useSchedule({ pollIntervalMs: 15000 });
     
     // Track if the Discord widget has ever been visible to keep it mounted during exit animations
     const [hasDiscordLoaded, setHasDiscordLoaded] = useState(false);
@@ -65,7 +65,7 @@ const Home: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-extrabold mb-6">
                     Stream <span className="text-brand-primary">Schedule</span>
                 </h2>
-                <StreamScheduleSection config={scheduleConfig} />
+                <StreamScheduleSection config={scheduleConfig} onSyncRequest={refetchSchedule} />
             </div>
 
             {/* Discord Section */}

@@ -86,7 +86,7 @@ const About: React.FC = () => {
     const [twitchRef, isTwitchVisible] = useScrollAnimation<HTMLDivElement>();
     const [scheduleRef, isScheduleVisible] = useScrollAnimation<HTMLDivElement>();
     const [discordRef, isDiscordVisible] = useScrollAnimation<HTMLDivElement>();
-    const { scheduleConfig } = useSchedule();
+    const { scheduleConfig, refetch: refetchSchedule } = useSchedule({ pollIntervalMs: 15000 });
     const [hasDiscordLoaded, setHasDiscordLoaded] = useState(false);
 
     useEffect(() => {
@@ -583,7 +583,7 @@ const About: React.FC = () => {
                     <h2 className="text-3xl md:text-4xl font-extrabold mb-6 text-white">
                         Stream <span className="text-brand-primary">Schedule</span>
                     </h2>
-                    <StreamScheduleSection config={scheduleConfig} />
+                    <StreamScheduleSection config={scheduleConfig} onSyncRequest={refetchSchedule} />
                 </div>
 
                 {/* Discord Section */}

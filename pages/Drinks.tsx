@@ -1003,9 +1003,6 @@ const Drinks: React.FC = () => {
                                 ) : (
                                     <div className="py-10 text-center border-t border-dashed border-white/10">
                                         <p className="text-sm font-bold text-gray-300">No spins recorded yet</p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Reach {settings.shotsPerSpin} served shots to unlock tonight&apos;s first wheel spin.
-                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -1080,9 +1077,6 @@ const Drinks: React.FC = () => {
                         ) : (
                             <div className="py-14 text-center border-t border-dashed border-white/10">
                                 <p className="text-sm font-bold text-gray-300">No bartenders ranked yet</p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                    First donor to queue a shot claims the #1 bartender seat.
-                                </p>
                             </div>
                         )}
                 </section>

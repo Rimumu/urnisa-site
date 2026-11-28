@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { API_BASE_URL, DISCORD_API_URL, IS_ADMIN_SUBDOMAIN, MAIN_SITE_URL } from '../constants';
-import { useSchedule, ScheduleMode, BackdropFit } from '../hooks/useSchedule';
+import { useSchedule, ScheduleMode, BackdropFit, clearStoredScheduleLiveState } from '../hooks/useSchedule';
 import { useProfileContent, AboutItem, CreditItem, ArtistItem } from '../hooks/useProfileContent';
 import { useNisathonGoals, NisathonGoal } from '../hooks/useNisathonGoals';
 import { useWheelSettings, WheelItem } from '../hooks/useWheelSettings';
@@ -961,6 +961,8 @@ const Admin: React.FC = () => {
             }
         }
 
+        const shouldResetLive = scheduleMode === 'poster' || targetIso !== scheduleConfig.countdownTarget;
+
         setLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/api/schedule`, {
@@ -973,9 +975,20 @@ const Admin: React.FC = () => {
                     countdownTarget: targetIso,
                     countdownBackdropUrl: processedBackdropUrl,
                     countdownBackdropFit,
+                    ...(shouldResetLive
+                        ? {
+                              resetLiveState: true,
+                              liveDetectedAt: '',
+                              streamStarted: false,
+                              streamTitle: '',
+                          }
+                        : {}),
                 })
             });
             if (response.ok) {
+                if (shouldResetLive) {
+                    clearStoredScheduleLiveState();
+                }
                 setScheduleStatus({
                     type: 'success',
                     message: scheduleMode === 'countdown' ? 'Countdown schedule saved!' : 'Schedule poster updated!'
@@ -989,6 +1002,49 @@ const Admin: React.FC = () => {
                 setTimeout(() => setScheduleStatus(null), 3000);
             }
         } catch (error) {
+            setScheduleStatus({ type: 'error', message: 'Network error.' });
+            setTimeout(() => setScheduleStatus(null), 3000);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetScheduleState = async () => {
+        setScheduleStatus(null);
+        setLoading(true);
+        try {
+            const processedUrl = processImageUrl(newScheduleUrl);
+            const processedBackdropUrl = processImageUrl(countdownBackdropUrl);
+            const response = await fetch(`${API_BASE_URL}/api/schedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': password },
+                body: JSON.stringify({
+                    url: processedUrl,
+                    mode: 'poster',
+                    countdownTitle: countdownTitle.trim(),
+                    countdownTarget: localDatetimeInputToIso(countdownTargetLocal),
+                    countdownBackdropUrl: processedBackdropUrl,
+                    countdownBackdropFit,
+                    resetLiveState: true,
+                    liveDetectedAt: '',
+                    streamStarted: false,
+                    streamTitle: '',
+                })
+            });
+            if (response.ok) {
+                clearStoredScheduleLiveState();
+                setScheduleMode('poster');
+                await refetchSchedule();
+                setScheduleStatus({
+                    type: 'success',
+                    message: 'Schedule state reset and switched to Poster mode!'
+                });
+                setTimeout(() => setScheduleStatus(null), 3500);
+            } else {
+                setScheduleStatus({ type: 'error', message: 'Failed to reset schedule state.' });
+                setTimeout(() => setScheduleStatus(null), 3000);
+            }
+        } catch {
             setScheduleStatus({ type: 'error', message: 'Network error.' });
             setTimeout(() => setScheduleStatus(null), 3000);
         } finally {
@@ -2548,6 +2604,15 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <button
+                                        type="button"
+                                        onClick={handleResetScheduleState}
+                                        disabled={loading}
+                                        title="Clear Stream Started state and switch back to Poster mode"
+                                        className="cursor-pointer disabled:cursor-not-allowed bg-white/5 hover:bg-red-500/20 border border-white/15 hover:border-red-500/50 text-gray-200 hover:text-white font-bold py-3 px-5 rounded-xl transition-all text-sm disabled:opacity-50 whitespace-nowrap"
+                                    >
+                                        Reset State
+                                    </button>
                                     <button 
                                         type="button"
                                         onClick={() => handleUpdateSchedule()} 
@@ -2568,6 +2633,13 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                             ? 'Showing the uploaded stream schedule image on the homepage.'
                                             : 'Showing the live animated countdown clock on the homepage.'}
                                     </p>
+                                    {(scheduleConfig.streamStarted || scheduleConfig.liveDetectedAt) && (
+                                        <p className="text-xs text-brand-accent mt-1 font-medium">
+                                            {scheduleConfig.streamStarted
+                                                ? 'Stream Started state is currently latched. Use Reset State to clear and return to Poster mode.'
+                                                : 'Twitch live status detected — awaiting 30-second transition.'}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="inline-flex p-1 rounded-xl bg-black/40 border border-white/10 self-start sm:self-auto shrink-0">
                                     <button
@@ -2753,6 +2825,10 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                                 targetIso={localDatetimeInputToIso(countdownTargetLocal)}
                                                 backdropUrl={processImageUrl(countdownBackdropUrl)}
                                                 backdropFit={countdownBackdropFit}
+                                                liveDetectedAt={scheduleConfig.liveDetectedAt}
+                                                streamStarted={scheduleConfig.streamStarted}
+                                                streamTitle={scheduleConfig.streamTitle}
+                                                isPreview
                                                 compact
                                             />
                                         </div>
