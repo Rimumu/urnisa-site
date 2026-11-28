@@ -38,6 +38,9 @@ import ActivityWidget from './pages/overlays/ActivityWidget';
 import SpinWidget from './pages/overlays/SpinWidget';
 import CountdownWidget from './pages/overlays/CountdownWidget';
 import ClockWidget from './pages/overlays/ClockWidget';
+import DrinkWidget from './pages/overlays/DrinkWidget';
+import SojuWidget from './pages/overlays/SojuWidget';
+import Drinks from './pages/Drinks';
 import DuoCard from './pages/DuoCard';
 import HiddenArchive from './pages/HiddenArchive';
 import InteractiveBackground from './components/InteractiveBackground';
@@ -111,6 +114,9 @@ const App: React.FC = () => {
         <Route path="/overlay/countdown" element={<CountdownWidget />} />
         <Route path="/overlay/clock" element={<ClockWidget />} />
         <Route path="/overlay/london" element={<ClockWidget />} />
+        <Route path="/overlay/drinks" element={<DrinkWidget />} />
+        <Route path="/soju" element={<SojuWidget />} />
+        <Route path="/overlay/soju" element={<SojuWidget />} />
         <Route path="/duo-card" element={<DuoCard />} />
         <Route path="/arch/minecraft/duo-card" element={<DuoCard />} />
         <Route path="/arch/minecraft/duo-cards" element={<DuoCard />} />
@@ -130,6 +136,7 @@ const App: React.FC = () => {
           {/* Public Gallery & Historical Archive */}
           <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/minecraft" element={<MinecraftTeaser />} />
+          <Route path="/drinks" element={<Drinks />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/archive" element={<Archive />} />
           <Route path="/archive/nisathon" element={<ArchiveNisathon />} />

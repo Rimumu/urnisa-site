@@ -5,6 +5,8 @@ import ActivityWidget from './overlays/ActivityWidget';
 import SpinWidget from './overlays/SpinWidget';
 import CountdownWidget from './overlays/CountdownWidget'; // NEW
 import ClockWidget from './overlays/ClockWidget';
+import DrinkWidget from './overlays/DrinkWidget';
+import SojuWidget from './overlays/SojuWidget';
 
 const Overlay: React.FC = () => {
     return (
@@ -54,6 +56,26 @@ const Overlay: React.FC = () => {
                     <div className="absolute -top-6 left-0 text-xs text-gray-400">Spin (350x120)</div>
                     <div style={{ width: 350, height: 120 }} className="bg-black/20">
                         <SpinWidget />
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-wrap items-end justify-center gap-10 pb-12">
+                <div className="border border-dashed border-gray-600 p-2 relative">
+                    <div className="absolute -top-6 left-0 text-xs text-gray-400">
+                        Drinks Bar Widget (Recommended: 500x360) — /overlay/drinks
+                    </div>
+                    <div style={{ width: 500, height: 360 }} className="bg-black/20">
+                        <DrinkWidget />
+                    </div>
+                </div>
+
+                <div className="border border-dashed border-gray-600 p-2 relative">
+                    <div className="absolute -top-6 left-0 text-xs text-gray-400">
+                        Soju &amp; Glass (Recommended: 420x600) — /soju
+                    </div>
+                    <div style={{ width: 420, height: 600 }} className="bg-black/20">
+                        <SojuWidget />
                     </div>
                 </div>
             </div>

@@ -233,6 +233,72 @@ const BingoWinner = mongoose.model('BingoWinner', new mongoose.Schema({
     completedAt: { type: Date, default: Date.now }
 }));
 
+// Drinking Stream Event Schemas (Completely Isolated from Nisathon & Snakes)
+const DEFAULT_DRINK_WHEEL_ITEMS = [
+    { label: 'Take an Extra Shot', weight: 15 },
+    { label: 'No-Hands Shot', weight: 15 },
+    { label: 'Truth or Shot', weight: 20 },
+    { label: 'Sour Candy Chaser', weight: 15 },
+    { label: 'Chat Picks 5-Min Dare', weight: 15 },
+    { label: 'Double Pour Next Tip', weight: 10 },
+    { label: 'Free Pass (Lucky!)', weight: 10 }
+];
+
+const DrinkSettings = mongoose.model('DrinkSettings', new mongoose.Schema({
+    key: { type: String, default: 'main', unique: true },
+    eventTitle: { type: String, default: 'Shots with Urnisa' },
+    eventSubtitle: { type: String, default: 'Every donation auto-converts to GBP (£), rounds down to whole shots, and unlocks a live Wheel Spin every 5 shots.' },
+    donationsActive: { type: Boolean, default: false },
+    gbpPerShot: { type: Number, default: 3 },
+    shotLabel: { type: String, default: 'Shot' },
+    shotsPerSpin: { type: Number, default: 5 },
+    wheelItems: {
+        type: [{ label: String, weight: Number }],
+        default: DEFAULT_DRINK_WHEEL_ITEMS
+    }
+}));
+
+const DrinkQueueItem = mongoose.model('DrinkQueueItem', new mongoose.Schema({
+    user: { type: String, required: true },
+    drinkType: { type: String, enum: ['shot'], default: 'shot' },
+    drinkLabel: { type: String, required: true },
+    triggerType: { type: String, default: 'manual' },
+    amountDisplay: { type: String, default: '' },
+    gbpAmount: { type: Number, default: 0 },
+    message: { type: String, default: '' },
+    totalShots: { type: Number, default: 1 },
+    servedShots: { type: Number, default: 0 },
+    skippedShots: { type: Number, default: 0 },
+    status: { type: String, enum: ['pending', 'completed', 'skipped'], default: 'pending' },
+    isTest: { type: Boolean, default: false },
+    sourceEventId: { type: String, index: true },
+    completedAt: { type: Date, default: null },
+    createdAt: { type: Date, default: Date.now }
+}));
+
+const DrinkSpinHistory = mongoose.model('DrinkSpinHistory', new mongoose.Schema({
+    spinId: { type: String, required: true, unique: true },
+    winningIndex: { type: Number, required: true },
+    reward: { type: String, required: true },
+    isFreeSpin: { type: Boolean, default: false },
+    shotCountAtSpin: { type: Number, default: 0 },
+    spunBy: { type: String, default: 'Admin' },
+    startedAt: { type: Date, default: Date.now },
+    revealAt: { type: Date, required: true }
+}));
+
+const DrinkDebugLog = mongoose.model('DrinkDebugLog', new mongoose.Schema({
+    source: { type: String, default: 'live' },
+    triggerType: { type: String, default: '' },
+    user: { type: String, default: '' },
+    amountDisplay: { type: String, default: '' },
+    outcome: { type: String, enum: ['queued', 'skipped', 'dry_run', 'error'], default: 'queued' },
+    reason: { type: String, default: '' },
+    queuedSummary: { type: String, default: '' },
+    isTest: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+}));
+
 // Tournament Schemas
 const tournamentEntrySchema = new mongoose.Schema({
     discordId: { type: String, required: true },
@@ -599,6 +665,351 @@ const processSnakesEvent = async (type, user, amount, providerId, tier = '1000',
     }
 };
 
+// --- Drinking Stream Event Engine (Donations-Only GBP, Shots-Only, Wheel Spins, Isolated from Nisathon & Snakes) ---
+const drinkProcessedCache = new Set();
+const DRINK_CACHE_EXPIRY_MS = 60000;
+
+const CURRENCY_FALLBACK_USD_RATES = {
+    USD: 1,
+    GBP: 0.79,
+    EUR: 0.92,
+    MYR: 4.70,
+    IDR: 15500,
+    SGD: 1.34,
+    AUD: 1.52,
+    CAD: 1.36,
+    PHP: 56.0,
+    THB: 35.0,
+    JPY: 155.0,
+    KRW: 1350.0
+};
+
+const normalizeDrinkCurrency = (rawCurrency) => {
+    const cur = String(rawCurrency || 'USD').trim().toUpperCase();
+    if (cur === 'RM') return 'MYR';
+    if (cur === '£') return 'GBP';
+    if (cur === '$') return 'USD';
+    if (cur === '€') return 'EUR';
+    return cur || 'USD';
+};
+
+const convertAmountToGBP = async (rawAmount, rawCurrency = 'USD') => {
+    const amount = Math.max(0, Number(rawAmount) || 0);
+    const currency = normalizeDrinkCurrency(rawCurrency);
+    if (amount <= 0) {
+        return { gbpAmount: 0, originalAmount: 0, originalCurrency: currency, gbpRate: 1 };
+    }
+    if (currency === 'GBP') {
+        return { gbpAmount: amount, originalAmount: amount, originalCurrency: 'GBP', gbpRate: 1 };
+    }
+
+    let rateFromUSD = currency === 'USD' ? 1 : await getUSDRate(currency);
+    if (!rateFromUSD || rateFromUSD <= 0) {
+        rateFromUSD = CURRENCY_FALLBACK_USD_RATES[currency] || 1;
+    }
+
+    let gbpPerUSD = await getUSDRate('GBP');
+    if (!gbpPerUSD || gbpPerUSD <= 0) {
+        gbpPerUSD = CURRENCY_FALLBACK_USD_RATES.GBP;
+    }
+
+    const usdAmount = currency === 'USD' ? amount : (amount / rateFromUSD);
+    const gbpAmount = usdAmount * gbpPerUSD;
+    return {
+        gbpAmount,
+        originalAmount: amount,
+        originalCurrency: currency,
+        gbpRate: gbpPerUSD / rateFromUSD
+    };
+};
+
+const formatDrinkOriginalAmount = (amount, currency) => {
+    const cur = normalizeDrinkCurrency(currency);
+    if (cur === 'GBP') return `£${amount.toFixed(2)}`;
+    if (cur === 'USD') return `$${amount.toFixed(2)} USD`;
+    if (cur === 'MYR') return `RM${amount.toFixed(2)} MYR`;
+    if (cur === 'EUR') return `€${amount.toFixed(2)} EUR`;
+    if (cur === 'IDR') return `Rp${Math.round(amount).toLocaleString()} IDR`;
+    return `${amount.toFixed(2)} ${cur}`;
+};
+
+const parseDrinkShotCountFromText = (drinkLabel = '', amountDisplay = '') => {
+    const labelStr = String(drinkLabel || '');
+    const xMatch = labelStr.match(/(\d+)\s*x\b/i);
+    if (xMatch) return Math.max(0, parseInt(xMatch[1], 10) || 0);
+    const wordsMatch = labelStr.match(/\b(\d+)\s+shots?\b/i);
+    if (wordsMatch) return Math.max(0, parseInt(wordsMatch[1], 10) || 0);
+    const amtMatch = String(amountDisplay || '').match(/\((\d+)\s+shots?\)/i);
+    if (amtMatch) return Math.max(0, parseInt(amtMatch[1], 10) || 0);
+    return 0;
+};
+
+const getDrinkTotalShots = (item) => {
+    if (!item) return 1;
+    const explicit = Number(item.totalShots) || 0;
+    const parsed = parseDrinkShotCountFromText(item.drinkLabel, item.amountDisplay);
+    return Math.max(1, explicit, parsed);
+};
+
+const getDrinkServedShots = (item) => {
+    if (!item) return 0;
+    const total = getDrinkTotalShots(item);
+    const skipped = Math.max(0, Number(item.skippedShots) || 0);
+    if (item.status === 'completed' && skipped === 0) {
+        return total;
+    }
+    const explicit = Math.max(0, Number(item.servedShots) || 0);
+    if (explicit > 0) return Math.min(total, explicit);
+    return 0;
+};
+
+const getDrinkRemainingShots = (item) => {
+    if (!item) return 0;
+    const total = getDrinkTotalShots(item);
+    const resolved = getDrinkServedShots(item) + Math.max(0, Number(item.skippedShots) || 0);
+    if (item.status !== 'pending' && resolved === 0) return 0;
+    return Math.max(0, total - resolved);
+};
+
+const getDrinkGbpAmount = (item) => {
+    if (!item) return 0;
+    const explicit = Number(item.gbpAmount);
+    if (Number.isFinite(explicit) && explicit > 0) {
+        return Math.round(explicit * 100) / 100;
+    }
+    const display = String(item.amountDisplay || '');
+    const gbpMatch = display.match(/£\s*([\d,]+(?:\.\d+)?)/i);
+    if (gbpMatch) {
+        const parsed = parseFloat(gbpMatch[1].replace(/,/g, ''));
+        if (Number.isFinite(parsed) && parsed > 0) {
+            return Math.round(parsed * 100) / 100;
+        }
+    }
+    return 0;
+};
+
+const serializeDrinkQueueItem = (doc) => {
+    const obj = doc.toObject ? doc.toObject() : { ...doc };
+    const totalShots = getDrinkTotalShots(obj);
+    const servedShots = getDrinkServedShots(obj);
+    const skippedShots = Number(obj.skippedShots) || (obj.status === 'skipped' && servedShots === 0 ? totalShots : 0);
+    const remainingShots = obj.status === 'pending' ? Math.max(0, totalShots - servedShots - skippedShots) : 0;
+    const gbpAmount = getDrinkGbpAmount(obj);
+    return {
+        ...obj,
+        drinkType: 'shot',
+        gbpAmount,
+        totalShots,
+        servedShots,
+        skippedShots,
+        remainingShots
+    };
+};
+
+const getOrCreateDrinkSettings = async () => {
+    let settings = await DrinkSettings.findOne({ key: 'main' });
+    if (!settings) {
+        settings = await DrinkSettings.create({ key: 'main', wheelItems: DEFAULT_DRINK_WHEEL_ITEMS });
+    } else if (!Array.isArray(settings.wheelItems) || settings.wheelItems.length === 0) {
+        settings.wheelItems = DEFAULT_DRINK_WHEEL_ITEMS;
+        await settings.save();
+    }
+    return settings;
+};
+
+const evaluateDrinkTrigger = async (settings, payload) => {
+    const rawType = String(payload.type || '').toLowerCase();
+    const rawAmount = Number(payload.amount) || 0;
+    const rawCurrency = normalizeDrinkCurrency(payload.currency || 'USD');
+    const isTest = Boolean(payload.isTest);
+    const ignoreToggles = Boolean(payload.ignoreToggles);
+
+    let normalizedType = rawType;
+    if (['tip', 'donation', 'tip-myr', 'donation_myr', 'donation_gbp'].includes(rawType)) {
+        normalizedType = 'donation';
+    } else {
+        return {
+            shouldQueue: false,
+            normalizedType,
+            amountDisplay: '',
+            gbpAmount: 0,
+            originalAmount: rawAmount,
+            originalCurrency: rawCurrency,
+            shotCount: 0,
+            items: [],
+            reason: `Donations only — ignored "${rawType}"`
+        };
+    }
+
+    const converted = await convertAmountToGBP(rawAmount, rawCurrency);
+    const gbpAmount = converted.gbpAmount;
+    const amountDisplay = converted.originalCurrency === 'GBP'
+        ? `£${gbpAmount.toFixed(2)} GBP`
+        : `£${gbpAmount.toFixed(2)} GBP (${formatDrinkOriginalAmount(converted.originalAmount, converted.originalCurrency)})`;
+
+    if (!ignoreToggles && !settings.donationsActive) {
+        return {
+            shouldQueue: false,
+            normalizedType,
+            amountDisplay,
+            gbpAmount,
+            originalAmount: converted.originalAmount,
+            originalCurrency: converted.originalCurrency,
+            shotCount: 0,
+            items: [],
+            reason: 'Donations shot listener is OFF'
+        };
+    }
+
+    const gbpPerShot = Math.max(0.5, Number(settings.gbpPerShot) || 3);
+    const shotCount = Math.floor((gbpAmount + 1e-6) / gbpPerShot);
+    const mathDetail = `floor(£${gbpAmount.toFixed(2)} / £${gbpPerShot}) = ${shotCount}`;
+
+    if (shotCount <= 0) {
+        return {
+            shouldQueue: false,
+            normalizedType,
+            amountDisplay,
+            gbpAmount,
+            originalAmount: converted.originalAmount,
+            originalCurrency: converted.originalCurrency,
+            shotCount: 0,
+            items: [],
+            reason: `Below 1-shot threshold (${mathDetail})`
+        };
+    }
+
+    const baseShotLabel = settings.shotLabel || 'Shot';
+    const bundledLabel = shotCount === 1 ? baseShotLabel : `${shotCount}x ${baseShotLabel}s`;
+
+    const items = [
+        {
+            drinkType: 'shot',
+            drinkLabel: bundledLabel,
+            totalShots: shotCount
+        }
+    ];
+
+    const summary = `${shotCount} Shot${shotCount > 1 ? 's' : ''}`;
+
+    return {
+        shouldQueue: true,
+        normalizedType,
+        amountDisplay,
+        gbpAmount,
+        originalAmount: converted.originalAmount,
+        originalCurrency: converted.originalCurrency,
+        shotCount,
+        items,
+        reason: `Matched GBP rule (${mathDetail})`,
+        summary
+    };
+};
+
+const recordDrinkDebugLog = async (entry) => {
+    try {
+        await DrinkDebugLog.create(entry);
+        const total = await DrinkDebugLog.countDocuments();
+        if (total > 60) {
+            const oldest = await DrinkDebugLog.find().sort({ createdAt: -1 }).skip(50).select('_id');
+            if (oldest.length > 0) {
+                await DrinkDebugLog.deleteMany({ _id: { $in: oldest.map(d => d._id) } });
+            }
+        }
+    } catch {
+        // Non-fatal debug log failure
+    }
+};
+
+const processDrinkEvent = async (type, user, amount, message = '', providerId = '', _tier = '1000', options = {}) => {
+    const isTest = Boolean(options.isTest);
+    const dryRun = Boolean(options.dryRun);
+    const ignoreToggles = Boolean(options.ignoreToggles);
+    const currency = normalizeDrinkCurrency(options.currency || 'USD');
+    const sourceLabel = dryRun ? 'dry_run' : (isTest ? 'test' : 'live');
+
+    if (providerId && !isTest && !dryRun) {
+        if (drinkProcessedCache.has(providerId)) return null;
+        drinkProcessedCache.add(providerId);
+        setTimeout(() => drinkProcessedCache.delete(providerId), DRINK_CACHE_EXPIRY_MS);
+
+        const existing = await DrinkQueueItem.findOne({ sourceEventId: providerId });
+        if (existing) return null;
+    }
+
+    const settings = await getOrCreateDrinkSettings();
+    const evalResult = await evaluateDrinkTrigger(
+        settings,
+        { type, user, amount, currency, message, isTest, ignoreToggles }
+    );
+
+    if (!evalResult.shouldQueue) {
+        if (isTest || dryRun || evalResult.normalizedType === 'donation') {
+            await recordDrinkDebugLog({
+                source: sourceLabel,
+                triggerType: evalResult.normalizedType,
+                user: user || 'Anonymous',
+                amountDisplay: evalResult.amountDisplay,
+                outcome: dryRun ? 'dry_run' : 'skipped',
+                reason: evalResult.reason,
+                queuedSummary: 'None',
+                isTest
+            });
+        }
+        return evalResult;
+    }
+
+    if (dryRun) {
+        await recordDrinkDebugLog({
+            source: 'dry_run',
+            triggerType: evalResult.normalizedType,
+            user: user || 'Anonymous',
+            amountDisplay: evalResult.amountDisplay,
+            outcome: 'dry_run',
+            reason: `Dry run (${evalResult.reason})`,
+            queuedSummary: evalResult.summary,
+            isTest: true
+        });
+        return evalResult;
+    }
+
+    const baseSourceId = providerId || `drink-${isTest ? 'test-' : ''}${Date.now()}-${Math.random()}`;
+    const createdDocs = [];
+    for (let idx = 0; idx < evalResult.items.length; idx++) {
+        const entry = evalResult.items[idx];
+        const doc = await DrinkQueueItem.create({
+            user: user || 'Anonymous',
+            drinkType: 'shot',
+            drinkLabel: entry.drinkLabel,
+            triggerType: evalResult.normalizedType,
+            amountDisplay: evalResult.amountDisplay,
+            gbpAmount: Math.round((Number(evalResult.gbpAmount) || 0) * 100) / 100,
+            message: message || '',
+            totalShots: entry.totalShots || 1,
+            servedShots: 0,
+            skippedShots: 0,
+            status: 'pending',
+            isTest,
+            sourceEventId: idx === 0 ? baseSourceId : `${baseSourceId}#${idx}`
+        });
+        createdDocs.push(doc);
+    }
+
+    console.log(`🥃 [Drinks/${sourceLabel}] ${user || 'Anonymous'} (${evalResult.amountDisplay}) -> ${evalResult.summary}`);
+    await recordDrinkDebugLog({
+        source: sourceLabel,
+        triggerType: evalResult.normalizedType,
+        user: user || 'Anonymous',
+        amountDisplay: evalResult.amountDisplay,
+        outcome: 'queued',
+        reason: evalResult.reason,
+        queuedSummary: evalResult.summary,
+        isTest
+    });
+
+    return { ...evalResult, createdCount: createdDocs.length };
+};
+
 // --- Nisathon Event Processing Engine ---
 const processEvent = async (stats, type, user, amount, message, providerId, tier = '1000', isManual = false, adminNote = '', myrAmount = 0) => {
     if (stats.eventListenerActive === false && !isManual) {
@@ -617,7 +1028,7 @@ const processEvent = async (stats, type, user, amount, message, providerId, tier
     let eventType = type;
 
     if (['subscriber', 'sub', 'resub', 'subscription'].includes(type)) {
-        if (!isManual && ((message || '').includes('gift') || amount === 0)) {
+        if (!isManual && amount === 0) {
             return 0;
         }
 
@@ -862,6 +1273,15 @@ const connectSocket = () => {
             }
 
             await processSnakesEvent(type, username, amount, providerId, tier, false, info.avatar);
+            if (type === 'tip') {
+                try {
+                    await processDrinkEvent(type, username, amount, info.message || '', providerId, tier, {
+                        currency: info.currency || 'USD'
+                    });
+                } catch (drinkErr) {
+                    console.error('[Drinks] Non-fatal socket event error:', drinkErr.message);
+                }
+            }
         } catch (e) {
             console.error('Socket Error:', e);
         }
@@ -931,7 +1351,7 @@ const fetchAndProcess = async (channelId, _label, stats, limit = 25, offset = 0)
             timeout: 10000
         });
 
-        if (!activities || activities.length === 0) return [];
+        if (!activities || activities.length === 0) return offset === 0 ? null : [];
 
         if (offset === 0) {
             activities.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -966,12 +1386,21 @@ const fetchAndProcess = async (channelId, _label, stats, limit = 25, offset = 0)
                 }
 
                 await processSnakesEvent(type, username, amt, act._id, tier);
+                if (type === 'tip') {
+                    try {
+                        await processDrinkEvent(type, username, amt, act.data.message || '', act._id, tier, {
+                            currency: act.data.currency || 'USD'
+                        });
+                    } catch (drinkErr) {
+                        console.error('[Drinks] Non-fatal poll event error:', drinkErr.message);
+                    }
+                }
             }
             return changes;
         }
         return activities;
     } catch {
-        return [];
+        return offset === 0 ? null : [];
     }
 };
 
@@ -1001,6 +1430,13 @@ const syncSessionFallback = async (channelId, stats) => {
         if (lastTip) {
             if (stats) await processEvent(stats, 'tip', lastTip.name, lastTip.amount, lastTip.message, `session-tip-${lastTip.name}-${lastTip.amount}`);
             await processSnakesEvent('tip', lastTip.name, lastTip.amount, `session-tip-${lastTip.name}-${lastTip.amount}`);
+            try {
+                await processDrinkEvent('tip', lastTip.name, lastTip.amount, lastTip.message || '', `session-tip-${lastTip.name}-${lastTip.amount}`, '1000', {
+                    currency: lastTip.currency || 'USD'
+                });
+            } catch (drinkErr) {
+                console.error('[Drinks] Non-fatal session tip sync error:', drinkErr.message);
+            }
             changes = true;
         }
 
@@ -1029,7 +1465,7 @@ const runSync = async (forceDeep = false) => {
         if (resolvedId) {
             const limit = forceDeep ? 100 : 25;
             const c1 = await fetchAndProcess(resolvedId, 'AUTO-ID', stats, limit);
-            if (!c1 && forceDeep) await syncSessionFallback(resolvedId, stats);
+            if (c1 === null && forceDeep) await syncSessionFallback(resolvedId, stats);
             if ((c1 || forceDeep) && stats) await stats.save();
         }
     } catch (e) {
@@ -1862,6 +2298,12 @@ app.post('/api/webhooks/sociabuzz', async (req, res) => {
             console.error('❌ [SociaBuzz Webhook] Error routing to Snakes:', snakesErr.message);
         }
 
+        try {
+            await processDrinkEvent('tip', name, amount, message, providerId, '1000', { currency });
+        } catch (drinkErr) {
+            console.error('❌ [SociaBuzz Webhook] Error routing to Drinks:', drinkErr.message);
+        }
+
         res.json({ success: true });
     } catch (err) {
         console.error('❌ [SociaBuzz Webhook] Critical Error processing webhook:', err);
@@ -2463,6 +2905,416 @@ app.post('/api/snakes/simulate-event', auth, async (req, res) => {
         const providerId = `man-snake-${Date.now()}`;
         await processSnakesEvent(type, user, amount || 1, providerId, tier, true, avatarUrl);
         res.json({ success: true, message: 'Simulated event processed' });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- Drinking Stream Event Routes (Donations-Only GBP + Spin Wheel) ---
+
+app.get('/api/drinks/state', async (req, res) => {
+    try {
+        const settings = await getOrCreateDrinkSettings();
+        const [pendingDocs, historyDocs, allShotDocs, spinDocs] = await Promise.all([
+            DrinkQueueItem.find({ status: 'pending', drinkType: 'shot' }).sort({ createdAt: 1 }).limit(100),
+            DrinkQueueItem.find({
+                drinkType: 'shot',
+                $or: [
+                    { status: { $in: ['completed', 'skipped'] } },
+                    { servedShots: { $gt: 0 } }
+                ]
+            }).sort({ completedAt: -1, createdAt: -1 }).limit(40),
+            DrinkQueueItem.find({ drinkType: 'shot' }).sort({ createdAt: -1 }).limit(5000),
+            DrinkSpinHistory.find().sort({ startedAt: -1 }).limit(50)
+        ]);
+
+        const pendingQueue = pendingDocs.map(serializeDrinkQueueItem);
+        const recentHistory = historyDocs.map(serializeDrinkQueueItem);
+
+        let completedShots = 0;
+        let skippedShots = 0;
+        let pendingShotsCount = 0;
+
+        const leaderboardMap = new Map();
+
+        for (const doc of allShotDocs) {
+            const item = serializeDrinkQueueItem(doc);
+            completedShots += item.servedShots;
+            skippedShots += item.skippedShots;
+            if (item.status === 'pending') {
+                pendingShotsCount += item.remainingShots;
+            }
+
+            if (item.totalShots > 0 || item.gbpAmount > 0) {
+                const rawUser = (item.user || 'Anonymous').trim() || 'Anonymous';
+                const key = rawUser.toLowerCase();
+                if (!leaderboardMap.has(key)) {
+                    leaderboardMap.set(key, {
+                        user: rawUser,
+                        totalShots: 0,
+                        servedShots: 0,
+                        totalGbp: 0,
+                        lastTrigger: item.amountDisplay || ''
+                    });
+                }
+                const entry = leaderboardMap.get(key);
+                entry.totalShots += item.totalShots;
+                entry.servedShots += item.servedShots;
+                entry.totalGbp = Math.round((entry.totalGbp + (item.gbpAmount || 0)) * 100) / 100;
+            }
+        }
+
+        const shotsPerSpin = Math.max(0, Number(settings.shotsPerSpin) || 0);
+        const unlockedSpins = shotsPerSpin > 0 ? Math.floor(completedShots / shotsPerSpin) : 0;
+        const usedEarnedSpins = spinDocs.filter(s => !s.isFreeSpin).length;
+        const availableSpins = Math.max(0, unlockedSpins - usedEarnedSpins);
+        const shotsIntoCurrentSpin = shotsPerSpin > 0 ? (completedShots % shotsPerSpin) : 0;
+        const nextSpinIn = shotsPerSpin > 0 ? (shotsPerSpin - shotsIntoCurrentSpin) : 0;
+
+        const nowMs = Date.now();
+        const latestSpinDoc = spinDocs[0] || null;
+        const activeSpin = latestSpinDoc && nowMs <= new Date(latestSpinDoc.revealAt).getTime() + 4000
+            ? {
+                spinId: latestSpinDoc.spinId,
+                winningIndex: latestSpinDoc.winningIndex,
+                reward: latestSpinDoc.reward,
+                isFreeSpin: latestSpinDoc.isFreeSpin,
+                shotCountAtSpin: latestSpinDoc.shotCountAtSpin,
+                startedAt: latestSpinDoc.startedAt,
+                revealAt: latestSpinDoc.revealAt
+            }
+            : null;
+
+        const spinHistory = spinDocs
+            .filter(s => nowMs >= new Date(s.revealAt).getTime())
+            .map(s => ({
+                _id: s._id,
+                spinId: s.spinId,
+                winningIndex: s.winningIndex,
+                reward: s.reward,
+                isFreeSpin: s.isFreeSpin,
+                shotCountAtSpin: s.shotCountAtSpin,
+                spunBy: s.spunBy,
+                startedAt: s.startedAt,
+                revealAt: s.revealAt
+            }));
+
+        const leaderboard = Array.from(leaderboardMap.values())
+            .filter(e => e.totalShots > 0)
+            .sort((a, b) => (b.totalShots - a.totalShots) || (b.servedShots - a.servedShots) || (b.totalGbp - a.totalGbp))
+            .slice(0, 20)
+            .map((entry, idx) => ({
+                rank: idx + 1,
+                ...entry,
+                lastTrigger: entry.totalGbp > 0 ? `£${entry.totalGbp.toFixed(2)} GBP` : entry.lastTrigger
+            }));
+
+        const latestShotDoc = allShotDocs.find(d => d.status !== 'skipped') || null;
+
+        res.json({
+            settings,
+            stats: {
+                pendingCardsCount: pendingQueue.length,
+                pendingShotsCount,
+                completedShots,
+                skippedShots,
+                totalShotsQueued: completedShots + pendingShotsCount,
+                shotsPerSpin,
+                unlockedSpins,
+                usedEarnedSpins,
+                availableSpins,
+                shotsIntoCurrentSpin,
+                nextSpinIn,
+                spinReady: availableSpins > 0
+            },
+            pendingQueue,
+            recentHistory,
+            leaderboard,
+            latestTrigger: latestShotDoc ? serializeDrinkQueueItem(latestShotDoc) : null,
+            activeSpin,
+            spinHistory
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/settings', auth, async (req, res) => {
+    try {
+        const body = req.body || {};
+        const settings = await getOrCreateDrinkSettings();
+
+        if (typeof body.eventTitle === 'string') settings.eventTitle = body.eventTitle.trim() || 'Shots with Urnisa';
+        if (typeof body.eventSubtitle === 'string') settings.eventSubtitle = body.eventSubtitle.trim();
+        if (typeof body.donationsActive === 'boolean') settings.donationsActive = body.donationsActive;
+
+        if (body.gbpPerShot !== undefined) settings.gbpPerShot = Math.max(0.5, parseFloat(body.gbpPerShot) || 3);
+        if (body.shotsPerSpin !== undefined) settings.shotsPerSpin = Math.max(0, parseInt(body.shotsPerSpin, 10) || 0);
+        if (typeof body.shotLabel === 'string' && body.shotLabel.trim()) settings.shotLabel = body.shotLabel.trim();
+
+        if (Array.isArray(body.wheelItems)) {
+            const cleanedItems = body.wheelItems
+                .filter(w => w && typeof w.label === 'string' && w.label.trim())
+                .map(w => ({ label: w.label.trim(), weight: Math.max(1, parseInt(w.weight, 10) || 10) }));
+            if (cleanedItems.length > 0) {
+                settings.wheelItems = cleanedItems;
+            }
+        }
+
+        await settings.save();
+        res.json({ success: true, settings });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/toggle-listener', auth, async (req, res) => {
+    try {
+        const settings = await getOrCreateDrinkSettings();
+        settings.donationsActive = !settings.donationsActive;
+        await settings.save();
+        res.json({ success: true, settings });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/queue/:id/action', auth, async (req, res) => {
+    try {
+        const { action } = req.body || {};
+        const item = await DrinkQueueItem.findById(req.params.id);
+        if (!item) return res.status(404).json({ error: 'Queue item not found' });
+
+        item.totalShots = getDrinkTotalShots(item);
+        const remaining = getDrinkRemainingShots(item);
+        if (remaining <= 0) {
+            return res.json({ success: true, item: serializeDrinkQueueItem(item) });
+        }
+
+        if (action === 'complete_one') {
+            item.servedShots = (Number(item.servedShots) || 0) + 1;
+        } else if (action === 'complete_all' || action === 'complete') {
+            item.servedShots = (Number(item.servedShots) || 0) + remaining;
+        } else if (action === 'skip_one') {
+            item.skippedShots = (Number(item.skippedShots) || 0) + 1;
+        } else if (action === 'skip' || action === 'skip_all') {
+            item.skippedShots = (Number(item.skippedShots) || 0) + remaining;
+        } else {
+            return res.status(400).json({ error: 'Invalid action' });
+        }
+
+        const leftAfter = getDrinkRemainingShots(item);
+        if (leftAfter <= 0) {
+            item.status = (item.servedShots || 0) > 0 ? 'completed' : 'skipped';
+        }
+        item.completedAt = new Date();
+        await item.save();
+        res.json({ success: true, item: serializeDrinkQueueItem(item) });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/manual', auth, async (req, res) => {
+    try {
+        const { user = 'Urnisa', shotCount = 1, drinkLabel, message = '' } = req.body || {};
+        const settings = await getOrCreateDrinkSettings();
+        const safeCount = Math.max(1, parseInt(shotCount, 10) || 1);
+        const baseShotLabel = settings.shotLabel || 'Shot';
+        const resolvedLabel = (drinkLabel && String(drinkLabel).trim()) || (safeCount === 1 ? baseShotLabel : `${safeCount}x ${baseShotLabel}s`);
+
+        const item = await DrinkQueueItem.create({
+            user: (user || 'Admin').trim(),
+            drinkType: 'shot',
+            drinkLabel: resolvedLabel,
+            triggerType: 'manual',
+            amountDisplay: `Manual (${safeCount} Shot${safeCount > 1 ? 's' : ''})`,
+            message: String(message || '').trim(),
+            totalShots: safeCount,
+            servedShots: 0,
+            skippedShots: 0,
+            status: 'pending',
+            isTest: false,
+            sourceEventId: `drink-manual-${Date.now()}-${Math.random()}`
+        });
+
+        await recordDrinkDebugLog({
+            source: 'manual',
+            triggerType: 'shot',
+            user: item.user,
+            amountDisplay: item.amountDisplay,
+            outcome: 'queued',
+            reason: 'Added manually from Admin',
+            queuedSummary: item.drinkLabel,
+            isTest: false
+        });
+
+        res.json({ success: true, item: serializeDrinkQueueItem(item) });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/wheel/spin', auth, async (req, res) => {
+    try {
+        const { freeSpin = false } = req.body || {};
+        const settings = await getOrCreateDrinkSettings();
+        const items = Array.isArray(settings.wheelItems) && settings.wheelItems.length > 0
+            ? settings.wheelItems
+            : DEFAULT_DRINK_WHEEL_ITEMS;
+
+        const [allShotDocs, spinDocs] = await Promise.all([
+            DrinkQueueItem.find({ drinkType: 'shot' }).select('totalShots servedShots skippedShots status'),
+            DrinkSpinHistory.find().sort({ startedAt: -1 }).limit(50)
+        ]);
+
+        let completedShots = 0;
+        for (const doc of allShotDocs) {
+            completedShots += getDrinkServedShots(doc);
+        }
+
+        const shotsPerSpin = Math.max(0, Number(settings.shotsPerSpin) || 0);
+        const unlockedSpins = shotsPerSpin > 0 ? Math.floor(completedShots / shotsPerSpin) : 0;
+        const usedEarnedSpins = spinDocs.filter(s => !s.isFreeSpin).length;
+        const availableSpins = Math.max(0, unlockedSpins - usedEarnedSpins);
+
+        const latestSpin = spinDocs[0] || null;
+        if (latestSpin && Date.now() < new Date(latestSpin.revealAt).getTime()) {
+            return res.status(409).json({ error: 'A wheel spin is already in progress. Wait a few seconds!' });
+        }
+
+        if (!freeSpin && availableSpins <= 0) {
+            return res.status(400).json({ error: `No earned spins available yet (${completedShots} served shots)` });
+        }
+
+        const totalWeight = items.reduce((acc, item) => acc + Math.max(1, Number(item.weight) || 1), 0);
+        let rand = Math.random() * totalWeight;
+        let winningIndex = 0;
+        for (let i = 0; i < items.length; i++) {
+            const w = Math.max(1, Number(items[i].weight) || 1);
+            if (rand < w) {
+                winningIndex = i;
+                break;
+            }
+            rand -= w;
+        }
+
+        const reward = items[winningIndex]?.label || 'Take a Shot';
+        const now = new Date();
+        const revealAt = new Date(now.getTime() + 6000);
+        const spin = await DrinkSpinHistory.create({
+            spinId: `dspin-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            winningIndex,
+            reward,
+            isFreeSpin: Boolean(freeSpin),
+            shotCountAtSpin: completedShots,
+            spunBy: 'Urnisa',
+            startedAt: now,
+            revealAt
+        });
+
+        await recordDrinkDebugLog({
+            source: 'wheel',
+            triggerType: freeSpin ? 'free_spin' : 'earned_spin',
+            user: 'Urnisa',
+            amountDisplay: `${completedShots} Shots Served`,
+            outcome: 'queued',
+            reason: `Wheel spun (${freeSpin ? 'Free Admin Spin' : `Every ${shotsPerSpin} Shots`})`,
+            queuedSummary: reward,
+            isTest: false
+        });
+
+        res.json({ success: true, spin });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/simulate', auth, async (req, res) => {
+    try {
+        const {
+            user = 'TestDonor',
+            amount = 5,
+            currency = 'GBP',
+            message = 'Test GBP donation!',
+            dryRun = false,
+            ignoreToggles = false
+        } = req.body || {};
+
+        const result = await processDrinkEvent(
+            'donation',
+            user,
+            Number(amount) || 0,
+            message,
+            `drink-test-${Date.now()}-${Math.random()}`,
+            '1000',
+            {
+                isTest: true,
+                dryRun: Boolean(dryRun),
+                ignoreToggles: Boolean(ignoreToggles),
+                currency
+            }
+        );
+
+        res.json({ success: true, dryRun: Boolean(dryRun), result });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/drinks/debug', auth, async (req, res) => {
+    try {
+        const [settings, nisathonStats, logs, testCount] = await Promise.all([
+            getOrCreateDrinkSettings(),
+            NisathonStats.findOne({ key: 'main' }).select('eventListenerActive isEnded'),
+            DrinkDebugLog.find().sort({ createdAt: -1 }).limit(25),
+            DrinkQueueItem.countDocuments({ isTest: true })
+        ]);
+
+        res.json({
+            seSocketConnected: Boolean(socket && socket.connected),
+            seJwtConfigured: Boolean(SE_JWT),
+            resolvedChannelId: cachedChannelId || ENV_CHANNEL_ID || null,
+            nisathonListenerActive: nisathonStats ? nisathonStats.eventListenerActive !== false : true,
+            nisathonEnded: Boolean(nisathonStats?.isEnded),
+            drinkSettings: settings,
+            testItemsCount: testCount,
+            logs
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/clear-tests', auth, async (req, res) => {
+    try {
+        const [deletedItems] = await Promise.all([
+            DrinkQueueItem.deleteMany({ isTest: true }),
+            DrinkDebugLog.deleteMany({ isTest: true })
+        ]);
+        res.json({ success: true, deletedCount: deletedItems.deletedCount || 0 });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/reset', auth, async (req, res) => {
+    try {
+        await Promise.all([
+            DrinkQueueItem.deleteMany({}),
+            DrinkDebugLog.deleteMany({}),
+            DrinkSpinHistory.deleteMany({})
+        ]);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/drinks/wheel/clear', auth, async (req, res) => {
+    try {
+        const result = await DrinkSpinHistory.deleteMany({});
+        res.json({ success: true, deletedCount: result.deletedCount || 0 });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

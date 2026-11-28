@@ -1,6 +1,8 @@
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer'); // Stripped for AI Studio compatibility
 
 (async () => {
+  console.log('Puppeteer disabled in AI Studio environment');
+  /*
   const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await page.goto('http://localhost:3000/nisathon', { waitUntil: 'networkidle2', timeout: 30000 });
@@ -10,4 +12,5 @@ const puppeteer = require('puppeteer');
   console.log("TEXT CONTENT:\n", text.substring(0, 1000));
   
   await browser.close();
+  */
 })();

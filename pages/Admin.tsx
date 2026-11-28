@@ -10,6 +10,16 @@ import OptimizedImage from '../components/OptimizedImage';
 import { StreamCountdownDisplay } from '../components/StreamScheduleSection';
 import { useNisathonStats, ContributorEvent } from '../hooks/useNisathonStats';
 import { useCountdown } from '../hooks/useCountdown';
+import {
+    DrinkSettings,
+    DrinkStats,
+    DrinkQueueItem,
+    DrinkSpinRecord,
+    DrinkDebugResponse,
+    DrinkSimulationEvalResult,
+    DEFAULT_DRINK_SETTINGS,
+    DEFAULT_DRINK_STATS
+} from '../hooks/useDrinkingEvent';
 import { Link } from 'react-router-dom';
 
 const isoToLocalDatetimeInput = (iso: string): string => {
@@ -251,6 +261,14 @@ const AdminIcons = {
             <circle cx="15" cy="13" r="1" />
         </svg>
     ),
+    Drinks: () => (
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 22h8" />
+            <path d="M12 11v11" />
+            <path d="m19 3-7 8-7-8Z" />
+            <path d="M15 3l3-2" />
+        </svg>
+    ),
 };
 
 // --- RICH TEXT EDITOR COMPONENT ---
@@ -472,7 +490,7 @@ const Admin: React.FC = () => {
     const [loginError, setLoginError] = useState('');
 
     // --- NAVIGATION STATE ---
-    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'goals_editor' | 'wheel_editor' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament' | 'snakes'>('nisathon_mgr');
+    const [activeTab, setActiveTab] = useState<'nisathon_mgr' | 'countdown' | 'schedule' | 'goals_editor' | 'wheel_editor' | 'profile' | 'gallery' | 'minecraft' | 'codes' | 'users' | 'merger' | 'tournament' | 'snakes' | 'drinks'>('nisathon_mgr');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // --- DATA STATE ---
@@ -599,6 +617,46 @@ const Admin: React.FC = () => {
     const [snakesSimDonoAmount, setSnakesSimDonoAmount] = useState(5);
     const [snakesQueue, setSnakesQueue] = useState<{ _id: string; user: string; avatarUrl?: string; type: string; createdAt: string }[]>([]);
     const [snakesQueueFilter, setSnakesQueueFilter] = useState('');
+
+    // --- DRINKING STREAM EVENT STATE ---
+    const [drinkSettings, setDrinkSettings] = useState<DrinkSettings>(DEFAULT_DRINK_SETTINGS);
+    const [drinkStats, setDrinkStats] = useState<DrinkStats>(DEFAULT_DRINK_STATS);
+    const [drinkPendingQueue, setDrinkPendingQueue] = useState<DrinkQueueItem[]>([]);
+    const [drinkRecentHistory, setDrinkRecentHistory] = useState<DrinkQueueItem[]>([]);
+    const [drinkActiveSpin, setDrinkActiveSpin] = useState<DrinkSpinRecord | null>(null);
+    const [drinkSpinHistory, setDrinkSpinHistory] = useState<DrinkSpinRecord[]>([]);
+    const [drinkWheelSpinningLoading, setDrinkWheelSpinningLoading] = useState(false);
+    const [drinkDebug, setDrinkDebug] = useState<DrinkDebugResponse | null>(null);
+    const [drinksStatus, setDrinksStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [drinkSimCurrency, setDrinkSimCurrency] = useState<string>('GBP');
+    const [drinkSimUser, setDrinkSimUser] = useState('TestBartender');
+    const [drinkSimAmount, setDrinkSimAmount] = useState(5);
+    const [drinkSimMessage, setDrinkSimMessage] = useState('Drink!');
+    const [drinkSimIgnoreToggles, setDrinkSimIgnoreToggles] = useState(true);
+    const [drinkLastSimResult, setDrinkLastSimResult] = useState<DrinkSimulationEvalResult | null>(null);
+    const [drinkManualUser, setDrinkManualUser] = useState('Urnisa');
+    const [drinkManualCount, setDrinkManualCount] = useState(1);
+    const [drinkManualNote, setDrinkManualNote] = useState('');
+    const [confirmDrinksReset, setConfirmDrinksReset] = useState(false);
+    const [confirmClearWheelHistory, setConfirmClearWheelHistory] = useState(false);
+    const wheelSegmentsListRef = useRef<HTMLDivElement>(null);
+    const lastSegmentInputRef = useRef<HTMLInputElement>(null);
+    const shouldFocusNewSegmentRef = useRef(false);
+
+    useEffect(() => {
+        if (!shouldFocusNewSegmentRef.current) return;
+        shouldFocusNewSegmentRef.current = false;
+        if (wheelSegmentsListRef.current) {
+            wheelSegmentsListRef.current.scrollTo({
+                top: wheelSegmentsListRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+        if (lastSegmentInputRef.current) {
+            lastSegmentInputRef.current.focus({ preventScroll: true });
+            lastSegmentInputRef.current.select();
+        }
+    }, [drinkSettings.wheelItems.length]);
 
     const [currencySettings, setCurrencySettings] = useState({
         subsRate: 2,
@@ -802,6 +860,34 @@ const Admin: React.FC = () => {
         } catch (error) { console.error(error); }
     }, []);
 
+    const fetchDrinkAdminData = useCallback(async (syncForm = false) => {
+        try {
+            const [stateRes, debugRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/api/drinks/state`),
+                fetch(`${API_BASE_URL}/api/drinks/debug`, {
+                    headers: { Authorization: password }
+                })
+            ]);
+
+            if (stateRes.ok) {
+                const stateData = await stateRes.json();
+                if (stateData.stats) setDrinkStats(stateData.stats);
+                if (Array.isArray(stateData.pendingQueue)) setDrinkPendingQueue(stateData.pendingQueue);
+                if (Array.isArray(stateData.recentHistory)) setDrinkRecentHistory(stateData.recentHistory);
+                setDrinkActiveSpin(stateData.activeSpin || null);
+                if (Array.isArray(stateData.spinHistory)) setDrinkSpinHistory(stateData.spinHistory);
+                if (syncForm && stateData.settings) setDrinkSettings(stateData.settings);
+            }
+
+            if (debugRes.ok) {
+                const debugData: DrinkDebugResponse = await debugRes.json();
+                setDrinkDebug(debugData);
+            }
+        } catch {
+            // Silent catch during admin polling
+        }
+    }, [password]);
+
     // Tab Data Fetching
     useEffect(() => {
         let interval: number;
@@ -818,10 +904,15 @@ const Admin: React.FC = () => {
                 fetchCodes();
             } else if (activeTab === 'snakes') {
                 fetchSnakesTiles();
+            } else if (activeTab === 'drinks') {
+                fetchDrinkAdminData(true);
+                interval = window.setInterval(() => {
+                    fetchDrinkAdminData(false);
+                }, 3500);
             }
         }
         return () => { if (interval) clearInterval(interval); };
-    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchBingoWinners, fetchSnakesTiles]);
+    }, [isAuthenticated, activeTab, fetchWhitelistData, fetchCodes, fetchBingoConfig, fetchBingoWinners, fetchSnakesTiles, fetchDrinkAdminData]);
 
     // --- HANDLERS ---
     const handleLogin = async (e: React.FormEvent) => {
@@ -1882,6 +1973,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                         {
                             title: "Widgets & Events",
                             items: [
+                                { id: 'drinks', label: 'Drinking Stream', icon: AdminIcons.Drinks, gold: true },
                                 { id: 'countdown', label: 'Countdown', icon: AdminIcons.Countdown },
                                 { id: 'snakes', label: 'Snakes & Ladders', icon: AdminIcons.Snakes, special: true },
                             ]
@@ -1906,16 +1998,20 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                             <div className="text-[10px] uppercase font-extrabold text-gray-500 tracking-[0.2em] px-3 pt-2 pb-1">
                                 {category.title}
                             </div>
-                            {category.items.map(item => (
+                            {category.items.map((item: { id: string; label: string; icon: React.FC; special?: boolean; gold?: boolean }) => (
                                 <button 
                                     key={item.id} 
                                     onClick={() => { setActiveTab(item.id as any); setIsMobileMenuOpen(false); }} 
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 font-bold text-sm whitespace-nowrap 
-                                    ${activeTab === item.id 
-                                        ? (item.special 
-                                            ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]' 
-                                            : 'bg-brand-primary text-white shadow-[0_0_20px_rgba(220,38,38,0.3)]') 
-                                        : 'text-gray-400 bg-transparent hover:bg-white/10 hover:text-white'}`}
+                                    className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 font-bold text-sm whitespace-nowrap 
+                                    ${item.gold
+                                        ? (activeTab === item.id
+                                            ? 'bg-brand-accent text-black border border-brand-accent shadow-[0_0_22px_rgba(247,197,72,0.45)]'
+                                            : 'bg-brand-accent/15 text-brand-accent border border-brand-accent/35 hover:bg-brand-accent/25 hover:border-brand-accent/60 shadow-[0_0_14px_rgba(247,197,72,0.12)]')
+                                        : activeTab === item.id 
+                                            ? (item.special 
+                                                ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]' 
+                                                : 'bg-brand-primary text-white shadow-[0_0_20px_rgba(220,38,38,0.3)]') 
+                                            : 'text-gray-400 bg-transparent hover:bg-white/10 hover:text-white'}`}
                                 >
                                     <item.icon /> <span>{item.label}</span>
                                 </button>
@@ -1953,7 +2049,7 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
 
                     {/* --- STATUS TOASTS (STACKED & POINTER-EVENTS CONTROLLED) --- */}
                     <div className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-[200] flex flex-col gap-3 pointer-events-none w-full max-w-sm">
-                        {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus, snakesStatus].map((status, i) => status && (
+                        {[profileStatus, goalsStatus, wheelStatus, scheduleStatus, managerStatus, userActionStatus, bingoStatus, snakesStatus, drinksStatus].map((status, i) => status && (
                             <div key={i} className={`pointer-events-auto flex items-center gap-4 p-4 rounded-2xl shadow-2xl backdrop-blur-xl border ${
                                 status.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
                             } animate-in fade-in slide-in-from-top-4 sm:slide-in-from-right-8 duration-300 ease-out fill-mode-both group relative overflow-hidden`}>
@@ -4299,6 +4395,991 @@ export const getSpawnInfo = (pokemonName: string): string | null => {
                                     OPEN SNAKES & LADDERS BOARD
                                     <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
                                 </Link>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'drinks' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* HEADER + ISOLATION NOTICE + DIRECT LINKS */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-white/10">
+                                    <div>
+                                        <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
+                                            <span className="w-9 h-9 rounded-xl bg-brand-accent/15 border border-brand-accent/30 text-brand-accent flex items-center justify-center shrink-0">
+                                                <AdminIcons.Drinks />
+                                            </span>
+                                            <span>Drinking Stream Event Control</span>
+                                        </h2>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2.5 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const url = `${MAIN_SITE_URL}/overlay/drinks`;
+                                                navigator.clipboard?.writeText(url);
+                                                setDrinksStatus({ type: 'success', message: `Copied OBS Overlay URL: ${url}` });
+                                                setTimeout(() => setDrinksStatus(null), 3000);
+                                            }}
+                                            className="cursor-pointer px-4 py-2.5 rounded-xl bg-brand-primary/20 hover:bg-brand-primary border border-brand-primary/40 text-xs font-bold text-white transition-colors"
+                                        >
+                                            Copy OBS Widget URL
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const url = `${MAIN_SITE_URL}/soju`;
+                                                navigator.clipboard?.writeText(url);
+                                                setDrinksStatus({ type: 'success', message: `Copied /soju Overlay URL: ${url}` });
+                                                setTimeout(() => setDrinksStatus(null), 3000);
+                                            }}
+                                            className="cursor-pointer px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 border border-amber-400/40 text-xs font-bold text-amber-200 transition-colors"
+                                        >
+                                            Copy /soju Overlay URL
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* LIVE DONATION LISTENER TOGGLE */}
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const res = await fetch(`${API_BASE_URL}/api/drinks/toggle-listener`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                body: JSON.stringify({ target: 'donations' })
+                                            });
+                                            const data = await res.json();
+                                            if (data.success && data.settings) {
+                                                setDrinkSettings(data.settings);
+                                                setDrinksStatus({
+                                                    type: 'success',
+                                                    message: `Donations listener ${data.settings.donationsActive ? 'ENABLED' : 'PAUSED'}`
+                                                });
+                                                setTimeout(() => setDrinksStatus(null), 3000);
+                                                fetchDrinkAdminData(false);
+                                            }
+                                        } catch {
+                                            setDrinksStatus({ type: 'error', message: 'Failed to toggle donations listener' });
+                                            setTimeout(() => setDrinksStatus(null), 3000);
+                                        }
+                                    }}
+                                    className={`cursor-pointer w-full text-left p-4 sm:p-5 rounded-2xl border transition-all flex items-center justify-between gap-4 ${
+                                        drinkSettings.donationsActive
+                                            ? 'bg-emerald-500/15 border-emerald-500/40'
+                                            : 'bg-black/30 border-white/10 hover:border-white/25'
+                                    }`}
+                                >
+                                    <div>
+                                        <div className="text-sm sm:text-base font-bold text-white">
+                                            StreamElements &amp; SociaBuzz Donations Listener
+                                        </div>
+                                        <div className="text-xs text-gray-400 mt-0.5">
+                                            Subs, gift subs &amp; bits are ignored. All tips auto-convert to £ GBP (£{drinkSettings.gbpPerShot} = 1 {drinkSettings.shotLabel}).
+                                        </div>
+                                    </div>
+                                    <span className={`px-4 py-1.5 rounded-xl text-xs font-mono font-black shrink-0 ${
+                                        drinkSettings.donationsActive ? 'bg-emerald-500 text-black' : 'bg-white/10 text-gray-400'
+                                    }`}>
+                                        {drinkSettings.donationsActive ? 'LIVE ON' : 'PAUSED'}
+                                    </span>
+                                </button>
+
+                                {/* QUICK COUNTERS */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                                    <div className="rounded-2xl bg-black/30 border border-white/10 p-4">
+                                        <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">Queue Cards</div>
+                                        <div className="text-2xl font-black font-mono tabular-nums text-white mt-1">{drinkPendingQueue.length}</div>
+                                    </div>
+                                    <div className="rounded-2xl bg-black/30 border border-white/10 p-4">
+                                        <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">Shots Up Next</div>
+                                        <div className="text-2xl font-black font-mono tabular-nums text-amber-300 mt-1">{drinkStats.pendingShotsCount}</div>
+                                    </div>
+                                    <div className="rounded-2xl bg-black/30 border border-white/10 p-4">
+                                        <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">Shots Served</div>
+                                        <div className="text-2xl font-black font-mono tabular-nums text-brand-primary mt-1">{drinkStats.completedShots}</div>
+                                    </div>
+                                    <div className={`rounded-2xl border p-4 ${
+                                        drinkStats.availableSpins > 0
+                                            ? 'bg-brand-accent/15 border-brand-accent/45'
+                                            : 'bg-black/30 border-white/10'
+                                    }`}>
+                                        <div className="text-[11px] uppercase tracking-wider text-brand-accent font-bold">Spins Ready</div>
+                                        <div className="flex items-baseline justify-between gap-2 mt-1">
+                                            <span className="text-2xl font-black font-mono tabular-nums text-brand-accent">{drinkStats.availableSpins}</span>
+                                            <span className="text-[11px] font-mono text-gray-400">
+                                                {drinkStats.shotsPerSpin > 0 ? `Next in ${drinkStats.nextSpinIn}` : 'Manual'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* GBP SHOT RULES */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+                                    <div>
+                                        <h3 className="text-xl font-black text-white">Shot Rules</h3>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            try {
+                                                const res = await fetch(`${API_BASE_URL}/api/drinks/settings`, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                    body: JSON.stringify(drinkSettings)
+                                                });
+                                                const data = await res.json();
+                                                if (data.success && data.settings) {
+                                                    setDrinkSettings(data.settings);
+                                                    setDrinksStatus({ type: 'success', message: 'Shot rules saved!' });
+                                                    setTimeout(() => setDrinksStatus(null), 3000);
+                                                    fetchDrinkAdminData(false);
+                                                } else {
+                                                    setDrinksStatus({ type: 'error', message: data.error || 'Failed to save settings' });
+                                                    setTimeout(() => setDrinksStatus(null), 3000);
+                                                }
+                                            } catch {
+                                                setDrinksStatus({ type: 'error', message: 'Network error saving settings' });
+                                                setTimeout(() => setDrinksStatus(null), 3000);
+                                            }
+                                        }}
+                                        className="cursor-pointer px-6 py-3 rounded-xl bg-brand-primary hover:bg-red-700 text-white text-xs font-black tracking-wider uppercase transition-colors shrink-0"
+                                    >
+                                        Save Shot Rules
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Event Subtitle</label>
+                                    <input
+                                        type="text"
+                                        value={drinkSettings.eventSubtitle}
+                                        onChange={(e) => setDrinkSettings({ ...drinkSettings, eventSubtitle: e.target.value })}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brand-primary"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase text-brand-accent block mb-1">£ (GBP) Per Shot</label>
+                                        <input
+                                            type="number"
+                                            min={0.5}
+                                            step={0.5}
+                                            value={drinkSettings.gbpPerShot}
+                                            onChange={(e) => setDrinkSettings({ ...drinkSettings, gbpPerShot: Math.max(0.5, parseFloat(e.target.value) || 3) })}
+                                            className="w-full bg-amber-950/20 border border-brand-accent/35 rounded-xl px-3 py-2.5 text-sm text-brand-accent font-mono font-bold outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Shots Per Wheel Spin (0 = Manual Only)</label>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            step={1}
+                                            value={drinkSettings.shotsPerSpin}
+                                            onChange={(e) => setDrinkSettings({ ...drinkSettings, shotsPerSpin: Math.max(0, parseInt(e.target.value, 10) || 0) })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white font-mono outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Shot Label</label>
+                                        <input
+                                            type="text"
+                                            value={drinkSettings.shotLabel}
+                                            onChange={(e) => setDrinkSettings({ ...drinkSettings, shotLabel: e.target.value })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* LIVE QUEUE CHECK-OFF + MANUAL TRIGGER */}
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                                <div className="lg:col-span-7 bg-white/5 backdrop-blur-3xl p-6 rounded-3xl border border-white/10 shadow-2xl flex flex-col">
+                                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+                                        <div>
+                                            <h3 className="text-xl font-black text-white">Live Shot Queue ({drinkStats.pendingShotsCount} Shots)</h3>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => fetchDrinkAdminData(false)}
+                                            className="cursor-pointer px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-xs font-bold text-gray-300"
+                                        >
+                                            Refresh
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-4 space-y-2.5 max-h-[480px] overflow-y-auto pr-1 custom-scrollbar">
+                                        {drinkPendingQueue.length > 0 ? drinkPendingQueue.map((item, idx) => {
+                                            const runQueueAction = async (action: string, toastMsg: string) => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/drinks/queue/${item._id}/action`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                        body: JSON.stringify({ action })
+                                                    });
+                                                    if (res.ok) {
+                                                        setDrinksStatus({ type: 'success', message: toastMsg });
+                                                        setTimeout(() => setDrinksStatus(null), 2500);
+                                                        fetchDrinkAdminData(false);
+                                                    }
+                                                } catch { }
+                                            };
+
+                                            const isMulti = item.remainingShots > 1;
+
+                                            return (
+                                                <div
+                                                    key={item._id}
+                                                    className="p-4 rounded-2xl border bg-black/35 border-white/10 flex flex-col gap-3"
+                                                >
+                                                    <div className="flex flex-wrap items-start justify-between gap-2">
+                                                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                                                            <div className="w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 bg-brand-accent/15 border-brand-accent/35 text-brand-accent">
+                                                                <AdminIcons.Drinks />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <span className="text-xs font-mono font-bold text-gray-500">#{idx + 1}</span>
+                                                                    <span className="font-bold text-white truncate">{item.user}</span>
+                                                                    <span className="text-xs font-bold text-amber-300">
+                                                                        · {item.drinkLabel}
+                                                                    </span>
+                                                                    {item.totalShots > 1 && (
+                                                                        <span className="text-xs font-mono tabular-nums text-white/70">
+                                                                            · {item.remainingShots}/{item.totalShots} left
+                                                                        </span>
+                                                                    )}
+                                                                    {item.isTest && (
+                                                                        <span className="text-[10px] font-mono uppercase text-amber-300">· TEST</span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-xs text-gray-400 mt-0.5">
+                                                                    {item.amountDisplay} · {new Date(item.createdAt).toLocaleTimeString()}
+                                                                </div>
+                                                                {item.message && (
+                                                                    <p className="text-xs text-gray-400 italic mt-1 break-words">“{item.message}”</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => runQueueAction('complete_one', `Marked 1 shot served for ${item.user}`)}
+                                                            className="cursor-pointer px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-black border border-emerald-500/35 text-xs font-bold transition-colors"
+                                                        >
+                                                            {isMulti ? 'Take 1 Shot' : 'Mark Served'}
+                                                        </button>
+                                                        {isMulti && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => runQueueAction('complete_all', `Marked all ${item.remainingShots} shots served for ${item.user}`)}
+                                                                className="cursor-pointer px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-200 hover:text-black border border-emerald-500/25 text-xs font-bold transition-colors"
+                                                            >
+                                                                Done All ({item.remainingShots})
+                                                            </button>
+                                                        )}
+                                                        {isMulti ? (
+                                                            <>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => runQueueAction('skip_one', `Skipped 1 shot for ${item.user}`)}
+                                                                    className="cursor-pointer px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/35 text-xs font-bold transition-colors"
+                                                                >
+                                                                    Skip 1 Shot
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => runQueueAction('skip_all', `Skipped all ${item.remainingShots} remaining shots for ${item.user}`)}
+                                                                    className="cursor-pointer px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/25 text-xs font-bold transition-colors"
+                                                                >
+                                                                    Skip All ({item.remainingShots})
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => runQueueAction('skip_all', `Skipped shot for ${item.user}`)}
+                                                                className="cursor-pointer px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/25 text-xs font-bold transition-colors"
+                                                            >
+                                                                Skip
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        }) : (
+                                            <div className="py-12 text-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-sm text-gray-500">
+                                                Queue is empty — fire a test donation or add manual shots.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* RECENT RESOLVED HISTORY */}
+                                <div className="lg:col-span-5 bg-white/5 backdrop-blur-3xl p-6 rounded-3xl border border-white/10 shadow-2xl space-y-4">
+                                    <div className="pb-3 border-b border-white/10">
+                                        <h3 className="text-xl font-black text-white">Recent Resolved ({drinkRecentHistory.length})</h3>
+                                    </div>
+                                    <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1 custom-scrollbar">
+                                        {drinkRecentHistory.length > 0 ? drinkRecentHistory.slice(0, 10).map((item) => (
+                                            <div key={item._id} className="flex items-center justify-between gap-2 text-xs py-2 border-b border-white/5 last:border-0">
+                                                <div className="min-w-0">
+                                                    <span className="font-bold text-white">{item.user}</span>
+                                                    <span className="text-gray-400"> · {item.drinkLabel}</span>
+                                                </div>
+                                                <span className={`font-mono shrink-0 ${
+                                                    item.status === 'skipped' ? 'text-gray-500' : 'text-emerald-400'
+                                                }`}>
+                                                    {`${item.servedShots}/${item.totalShots} SHOT${item.totalShots > 1 ? 'S' : ''}`}
+                                                    {item.skippedShots > 0 ? ` (${item.skippedShots} skip)` : ''}
+                                                </span>
+                                            </div>
+                                        )) : (
+                                            <p className="text-xs text-gray-500 py-8 text-center">No shots resolved yet.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* LIVE DRINK WHEEL CONTROL */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 rounded-3xl border border-brand-accent/25 shadow-2xl space-y-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+                                    <div>
+                                        <h3 className="text-xl font-black text-white">Wheel Control</h3>
+                                    </div>
+                                </div>
+
+                                {/* Spin Actions */}
+                                {(() => {
+                                    const isWheelBusy = drinkWheelSpinningLoading || Boolean(
+                                        drinkActiveSpin && Date.now() < new Date(drinkActiveSpin.revealAt).getTime()
+                                    );
+                                    return (
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <button
+                                                type="button"
+                                                disabled={isWheelBusy || drinkStats.availableSpins <= 0}
+                                                onClick={async () => {
+                                                    setDrinkWheelSpinningLoading(true);
+                                                    try {
+                                                        const res = await fetch(`${API_BASE_URL}/api/drinks/wheel/spin`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                            body: JSON.stringify({ freeSpin: false })
+                                                        });
+                                                        const data = await res.json();
+                                                        if (data.success && data.spin) {
+                                                            setDrinkActiveSpin(data.spin);
+                                                            setDrinksStatus({ type: 'success', message: 'Wheel spinning live on /drinks!' });
+                                                            setTimeout(() => setDrinksStatus(null), 3500);
+                                                            fetchDrinkAdminData(false);
+                                                        } else {
+                                                            setDrinksStatus({ type: 'error', message: data.error || 'Could not spin wheel' });
+                                                            setTimeout(() => setDrinksStatus(null), 3500);
+                                                        }
+                                                    } catch {
+                                                        setDrinksStatus({ type: 'error', message: 'Network error spinning wheel' });
+                                                        setTimeout(() => setDrinksStatus(null), 3000);
+                                                    } finally {
+                                                        setDrinkWheelSpinningLoading(false);
+                                                    }
+                                                }}
+                                                className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-45 px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider transition-colors whitespace-nowrap shrink-0"
+                                            >
+                                                {isWheelBusy ? 'Spinning Wheel...' : `Spin Earned Wheel (${drinkStats.availableSpins})`}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={isWheelBusy}
+                                                onClick={async () => {
+                                                    setDrinkWheelSpinningLoading(true);
+                                                    try {
+                                                        const res = await fetch(`${API_BASE_URL}/api/drinks/wheel/spin`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                            body: JSON.stringify({ freeSpin: true })
+                                                        });
+                                                        const data = await res.json();
+                                                        if (data.success && data.spin) {
+                                                            setDrinkActiveSpin(data.spin);
+                                                            setDrinksStatus({ type: 'success', message: 'Free admin spin launched live!' });
+                                                            setTimeout(() => setDrinksStatus(null), 3500);
+                                                            fetchDrinkAdminData(false);
+                                                        } else {
+                                                            setDrinksStatus({ type: 'error', message: data.error || 'Could not spin wheel' });
+                                                            setTimeout(() => setDrinksStatus(null), 3500);
+                                                        }
+                                                    } catch {
+                                                        setDrinksStatus({ type: 'error', message: 'Network error spinning wheel' });
+                                                        setTimeout(() => setDrinksStatus(null), 3000);
+                                                    } finally {
+                                                        setDrinkWheelSpinningLoading(false);
+                                                    }
+                                                }}
+                                                className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-45 px-4 py-2.5 rounded-xl bg-brand-accent/15 hover:bg-brand-accent text-brand-accent hover:text-black border border-brand-accent/35 text-xs font-black uppercase tracking-wider transition-colors whitespace-nowrap shrink-0"
+                                            >
+                                                Free Admin Spin
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
+
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                                    {/* Merged Drink Wheel Segments Editor */}
+                                    <div className="lg:col-span-7 space-y-3">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <div className="flex flex-wrap items-center gap-2.5">
+                                                <div className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                                                    Drink Wheel Segments ({drinkSettings.wheelItems.length})
+                                                </div>
+                                                <span className="px-2.5 py-0.5 rounded-lg bg-brand-accent/10 border border-brand-accent/30 text-[11px] font-mono font-bold text-brand-accent tabular-nums">
+                                                    Total WT: {drinkSettings.wheelItems.reduce((sum, s) => sum + Math.max(1, Number(s.weight) || 1), 0)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        shouldFocusNewSegmentRef.current = true;
+                                                        setDrinkSettings({
+                                                            ...drinkSettings,
+                                                            wheelItems: [
+                                                                ...drinkSettings.wheelItems,
+                                                                { label: 'New Wheel Dare', weight: 10 }
+                                                            ]
+                                                        });
+                                                    }}
+                                                    className="cursor-pointer px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-colors"
+                                                >
+                                                    + Add Segment
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        try {
+                                                            const res = await fetch(`${API_BASE_URL}/api/drinks/settings`, {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                                body: JSON.stringify(drinkSettings)
+                                                            });
+                                                            const data = await res.json();
+                                                            if (data.success && data.settings) {
+                                                                setDrinkSettings(data.settings);
+                                                                setDrinksStatus({ type: 'success', message: 'Wheel segments saved!' });
+                                                                setTimeout(() => setDrinksStatus(null), 3000);
+                                                                fetchDrinkAdminData(false);
+                                                            } else {
+                                                                setDrinksStatus({ type: 'error', message: data.error || 'Failed to save wheel segments' });
+                                                                setTimeout(() => setDrinksStatus(null), 3000);
+                                                            }
+                                                        } catch {
+                                                            setDrinksStatus({ type: 'error', message: 'Network error saving wheel segments' });
+                                                            setTimeout(() => setDrinksStatus(null), 3000);
+                                                        }
+                                                    }}
+                                                    className="cursor-pointer px-3.5 py-1.5 rounded-lg bg-brand-primary hover:bg-red-700 text-white text-xs font-bold transition-colors"
+                                                >
+                                                    Save Segments
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            ref={wheelSegmentsListRef}
+                                            className="space-y-2 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar"
+                                        >
+                                            {drinkSettings.wheelItems.map((seg, idx) => (
+                                                <div key={idx} className="flex items-center gap-2.5">
+                                                    <input
+                                                        ref={idx === drinkSettings.wheelItems.length - 1 ? lastSegmentInputRef : undefined}
+                                                        type="text"
+                                                        value={seg.label}
+                                                        onChange={(e) => {
+                                                            const next = [...drinkSettings.wheelItems];
+                                                            next[idx] = { ...next[idx], label: e.target.value };
+                                                            setDrinkSettings({ ...drinkSettings, wheelItems: next });
+                                                        }}
+                                                        placeholder="Reward / Dare label"
+                                                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-primary"
+                                                    />
+                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                        <span className="text-[10px] font-bold uppercase text-gray-500">Wt</span>
+                                                        <input
+                                                            type="number"
+                                                            min={1}
+                                                            value={seg.weight}
+                                                            onChange={(e) => {
+                                                                const next = [...drinkSettings.wheelItems];
+                                                                next[idx] = { ...next[idx], weight: Math.max(1, parseInt(e.target.value, 10) || 1) };
+                                                                setDrinkSettings({ ...drinkSettings, wheelItems: next });
+                                                            }}
+                                                            className="w-20 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono text-center outline-none focus:border-brand-primary"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        disabled={drinkSettings.wheelItems.length <= 2}
+                                                        onClick={() => {
+                                                            const next = drinkSettings.wheelItems.filter((_, i) => i !== idx);
+                                                            setDrinkSettings({ ...drinkSettings, wheelItems: next });
+                                                        }}
+                                                        aria-label="Remove segment"
+                                                        title="Remove segment"
+                                                        className="cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed p-2 rounded-xl bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/25 transition-colors flex items-center justify-center shrink-0"
+                                                    >
+                                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M18 6L6 18M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Recent Wheel Spins */}
+                                    <div className="lg:col-span-5 space-y-3">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <div className="text-sm font-black text-white">Recent Wheel Spins ({drinkSpinHistory.length})</div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="text-xs font-mono text-gray-400">
+                                                    {drinkStats.shotsPerSpin > 0
+                                                        ? `${drinkStats.shotsIntoCurrentSpin}/${drinkStats.shotsPerSpin} to next`
+                                                        : 'Auto-unlock off'}
+                                                </div>
+                                                {!confirmClearWheelHistory ? (
+                                                    <button
+                                                        type="button"
+                                                        disabled={drinkSpinHistory.length === 0}
+                                                        onClick={() => setConfirmClearWheelHistory(true)}
+                                                        className="cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/25 text-[11px] font-bold transition-colors"
+                                                    >
+                                                        Clear History
+                                                    </button>
+                                                ) : (
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const res = await fetch(`${API_BASE_URL}/api/drinks/wheel/clear`, {
+                                                                        method: 'POST',
+                                                                        headers: { Authorization: password }
+                                                                    });
+                                                                    const data = await res.json().catch(() => ({}));
+                                                                    if (res.ok && data.success) {
+                                                                        setConfirmClearWheelHistory(false);
+                                                                        setDrinkSpinHistory([]);
+                                                                        setDrinkActiveSpin(null);
+                                                                        setDrinksStatus({ type: 'success', message: 'Wheel spin history cleared!' });
+                                                                        setTimeout(() => setDrinksStatus(null), 3000);
+                                                                        fetchDrinkAdminData(false);
+                                                                    } else {
+                                                                        setDrinksStatus({ type: 'error', message: data.error || 'Failed to clear wheel history' });
+                                                                        setTimeout(() => setDrinksStatus(null), 3000);
+                                                                    }
+                                                                } catch {
+                                                                    setDrinksStatus({ type: 'error', message: 'Network error clearing wheel history' });
+                                                                    setTimeout(() => setDrinksStatus(null), 3000);
+                                                                }
+                                                            }}
+                                                            className="cursor-pointer px-2 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold"
+                                                        >
+                                                            Confirm
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setConfirmClearWheelHistory(false)}
+                                                            className="cursor-pointer px-2 py-1 rounded-lg bg-white/10 text-gray-300 text-[11px] font-bold"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                                            {drinkSpinHistory.length > 0 ? drinkSpinHistory.map((spin) => (
+                                                <div key={spin.spinId} className="rounded-xl bg-black/35 border border-white/10 px-4 py-2.5 flex items-center justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <div className="font-bold text-white text-sm truncate">{spin.reward}</div>
+                                                        <div className="text-[11px] font-mono text-gray-400">
+                                                            At {spin.shotCountAtSpin} shot{spin.shotCountAtSpin === 1 ? '' : 's'}
+                                                            {spin.isFreeSpin ? ' · Free Spin' : ' · Earned Spin'}
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[11px] font-mono text-gray-500 shrink-0">
+                                                        {new Date(spin.revealAt || spin.startedAt).toLocaleTimeString()}
+                                                    </span>
+                                                </div>
+                                            )) : (
+                                                <div className="py-10 text-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-xs text-gray-500">
+                                                    No wheel spins recorded yet. Spin when {drinkSettings.shotsPerSpin} shots are served or test with Free Admin Spin.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* GBP MULTI-CURRENCY TESTING & DEBUG INSPECTOR */}
+                            <div className="bg-white/5 backdrop-blur-3xl p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+                                    <div>
+                                        <h3 className="text-xl font-black text-white">Testing &amp; Dev Tools</h3>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch(`${API_BASE_URL}/api/drinks/clear-tests`, {
+                                                        method: 'POST',
+                                                        headers: { Authorization: password }
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) {
+                                                        setDrinksStatus({ type: 'success', message: `Cleared ${data.deletedCount || 0} test item(s)` });
+                                                        setTimeout(() => setDrinksStatus(null), 3000);
+                                                        fetchDrinkAdminData(false);
+                                                    }
+                                                } catch { }
+                                            }}
+                                            className="cursor-pointer px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/35 text-xs font-bold transition-colors"
+                                        >
+                                            Clear Test Events ({drinkDebug?.testItemsCount || 0})
+                                        </button>
+
+                                        {!confirmDrinksReset ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => setConfirmDrinksReset(true)}
+                                                className="cursor-pointer px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-xs font-bold transition-colors"
+                                            >
+                                                Reset Shot Session
+                                            </button>
+                                        ) : (
+                                            <div className="flex items-center gap-1.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        try {
+                                                            const res = await fetch(`${API_BASE_URL}/api/drinks/reset`, {
+                                                                method: 'POST',
+                                                                headers: { Authorization: password }
+                                                            });
+                                                            if (res.ok) {
+                                                                setConfirmDrinksReset(false);
+                                                                setDrinkLastSimResult(null);
+                                                                setDrinkActiveSpin(null);
+                                                                setDrinksStatus({ type: 'success', message: 'Full shot & wheel session cleared!' });
+                                                                setTimeout(() => setDrinksStatus(null), 3000);
+                                                                fetchDrinkAdminData(false);
+                                                            }
+                                                        } catch { }
+                                                    }}
+                                                    className="cursor-pointer px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold"
+                                                >
+                                                    Confirm Clear All
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setConfirmDrinksReset(false)}
+                                                    className="cursor-pointer px-3 py-2 rounded-xl bg-white/10 text-gray-300 text-xs font-bold"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+
+
+                                {/* CUSTOM CURRENCY SIMULATOR + MANUAL SHOT TRIGGER + LIVE DEBUG STATUS */}
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                                    <div className="lg:col-span-5 space-y-5">
+                                        <div className="rounded-2xl bg-black/30 border border-white/10 p-5 space-y-4">
+                                            <div className="text-sm font-black text-white">Custom Currency Simulator &amp; Dry Run</div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[11px] font-bold text-gray-400 uppercase block mb-1">Currency</label>
+                                                    <select
+                                                        value={drinkSimCurrency}
+                                                        onChange={(e) => setDrinkSimCurrency(e.target.value)}
+                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none"
+                                                    >
+                                                        <option value="GBP">GBP (£)</option>
+                                                        <option value="USD">USD ($)</option>
+                                                        <option value="MYR">MYR (RM)</option>
+                                                        <option value="EUR">EUR (€)</option>
+                                                        <option value="SGD">SGD (S$)</option>
+                                                        <option value="IDR">IDR (Rp)</option>
+                                                        <option value="AUD">AUD (A$)</option>
+                                                        <option value="CAD">CAD (C$)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="text-[11px] font-bold text-gray-400 uppercase block mb-1">Amount ({drinkSimCurrency})</label>
+                                                    <input
+                                                        type="number"
+                                                        min={0.5}
+                                                        step="0.5"
+                                                        value={drinkSimAmount}
+                                                        onChange={(e) => setDrinkSimAmount(Number(e.target.value) || 0)}
+                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="text-[11px] font-bold text-gray-400 uppercase block mb-1">Donor Username</label>
+                                                <input
+                                                    type="text"
+                                                    value={drinkSimUser}
+                                                    onChange={(e) => setDrinkSimUser(e.target.value)}
+                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none"
+                                                />
+                                            </div>
+
+                                            <input
+                                                type="text"
+                                                placeholder="Custom donor message..."
+                                                value={drinkSimMessage}
+                                                onChange={(e) => setDrinkSimMessage(e.target.value)}
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none"
+                                            />
+
+                                            <label className="flex items-center gap-2.5 text-xs text-gray-300 cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={drinkSimIgnoreToggles}
+                                                    onChange={(e) => setDrinkSimIgnoreToggles(e.target.checked)}
+                                                    className="w-4 h-4 accent-brand-primary cursor-pointer"
+                                                />
+                                                Ignore PAUSED donations toggle during test simulation
+                                            </label>
+
+                                            <div className="grid grid-cols-2 gap-2.5">
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        try {
+                                                            const res = await fetch(`${API_BASE_URL}/api/drinks/simulate`, {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                                body: JSON.stringify({
+                                                                    user: drinkSimUser || 'DryRunTester',
+                                                                    amount: drinkSimAmount,
+                                                                    currency: drinkSimCurrency,
+                                                                    message: drinkSimMessage,
+                                                                    dryRun: true,
+                                                                    ignoreToggles: drinkSimIgnoreToggles
+                                                                })
+                                                            });
+                                                            const data = await res.json();
+                                                            if (data.result) setDrinkLastSimResult(data.result);
+                                                            fetchDrinkAdminData(false);
+                                                        } catch { }
+                                                    }}
+                                                    className="cursor-pointer py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors"
+                                                >
+                                                    Dry Run (Preview Only)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        try {
+                                                            const res = await fetch(`${API_BASE_URL}/api/drinks/simulate`, {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                                body: JSON.stringify({
+                                                                    user: drinkSimUser || 'TestBartender',
+                                                                    amount: drinkSimAmount,
+                                                                    currency: drinkSimCurrency,
+                                                                    message: drinkSimMessage,
+                                                                    dryRun: false,
+                                                                    ignoreToggles: drinkSimIgnoreToggles
+                                                                })
+                                                            });
+                                                            const data = await res.json();
+                                                            if (data.result) setDrinkLastSimResult(data.result);
+                                                            if (data.success) {
+                                                                setDrinksStatus({
+                                                                    type: data.result?.shouldQueue ? 'success' : 'error',
+                                                                    message: data.result?.shouldQueue
+                                                                        ? `Test queued: ${data.result.summary}`
+                                                                        : `Not queued: ${data.result?.reason || 'Below 1 shot'}`
+                                                                });
+                                                                setTimeout(() => setDrinksStatus(null), 3500);
+                                                                fetchDrinkAdminData(false);
+                                                            }
+                                                        } catch { }
+                                                    }}
+                                                    className="cursor-pointer py-2.5 px-3 rounded-xl bg-brand-primary hover:bg-red-700 text-white text-xs font-bold transition-colors"
+                                                >
+                                                    Fire Test Event
+                                                </button>
+                                            </div>
+
+                                            {drinkLastSimResult && (
+                                                <div className="rounded-xl border border-white/10 bg-black/50 p-3 text-xs space-y-1">
+                                                    <div className="flex items-center justify-between font-bold">
+                                                        <span className={drinkLastSimResult.shouldQueue ? 'text-emerald-400' : 'text-amber-300'}>
+                                                            {drinkLastSimResult.dryRun ? 'DRY RUN PREVIEW' : (drinkLastSimResult.shouldQueue ? 'QUEUED' : 'SKIPPED')}
+                                                        </span>
+                                                        <span className="font-mono text-gray-300">{drinkLastSimResult.amountDisplay}</span>
+                                                    </div>
+                                                    <div className="text-gray-200">{drinkLastSimResult.summary || drinkLastSimResult.reason}</div>
+                                                    <div className="text-[11px] font-mono text-gray-500">{drinkLastSimResult.reason}</div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* MANUAL SHOT TRIGGER */}
+                                        <div className="rounded-2xl bg-black/30 border border-white/10 p-5 space-y-4">
+                                            <div className="text-sm font-black text-white">Manual Shot Trigger</div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">For / Bartender</label>
+                                                    <input
+                                                        type="text"
+                                                        value={drinkManualUser}
+                                                        onChange={(e) => setDrinkManualUser(e.target.value)}
+                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-brand-primary outline-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Shot Count</label>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        value={drinkManualCount}
+                                                        onChange={(e) => setDrinkManualCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-brand-primary outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder="Optional note (e.g. Wheel punish extra shot)"
+                                                value={drinkManualNote}
+                                                onChange={(e) => setDrinkManualNote(e.target.value)}
+                                                className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-brand-primary outline-none"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    try {
+                                                        const res = await fetch(`${API_BASE_URL}/api/drinks/manual`, {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json', Authorization: password },
+                                                            body: JSON.stringify({
+                                                                user: drinkManualUser || 'Urnisa',
+                                                                shotCount: drinkManualCount,
+                                                                message: drinkManualNote
+                                                            })
+                                                        });
+                                                        if (res.ok) {
+                                                            setDrinkManualNote('');
+                                                            setDrinksStatus({ type: 'success', message: `Queued ${drinkManualCount} manual shot${drinkManualCount > 1 ? 's' : ''}` });
+                                                            setTimeout(() => setDrinksStatus(null), 2500);
+                                                            fetchDrinkAdminData(false);
+                                                        }
+                                                    } catch { }
+                                                }}
+                                                className="cursor-pointer w-full py-2.5 px-4 rounded-xl bg-brand-primary hover:bg-red-700 text-white text-xs font-bold transition-colors"
+                                            >
+                                                + Queue {drinkManualCount} Shot{drinkManualCount > 1 ? 's' : ''}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* LIVE DEBUG INSPECTOR */}
+                                    <div className="lg:col-span-7 rounded-2xl bg-black/30 border border-white/10 p-5 space-y-4">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <div className="text-sm font-black text-white">StreamElements &amp; Event Pipeline Inspector</div>
+                                            <button
+                                                type="button"
+                                                onClick={() => fetchDrinkAdminData(false)}
+                                                className="cursor-pointer text-xs font-bold text-gray-400 hover:text-white"
+                                            >
+                                                Refresh Logs
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                                            <div className="rounded-xl bg-black/40 border border-white/10 p-3">
+                                                <div className="text-gray-500 text-[10px] uppercase font-bold">SE Socket</div>
+                                                <div className={`font-mono font-bold mt-0.5 ${drinkDebug?.seSocketConnected ? 'text-emerald-400' : 'text-amber-300'}`}>
+                                                    {drinkDebug ? (drinkDebug.seSocketConnected ? 'CONNECTED' : 'STANDBY') : '—'}
+                                                </div>
+                                            </div>
+                                            <div className="rounded-xl bg-black/40 border border-white/10 p-3">
+                                                <div className="text-gray-500 text-[10px] uppercase font-bold">SE Channel ID</div>
+                                                <div className="font-mono font-bold text-white truncate mt-0.5">
+                                                    {drinkDebug?.resolvedChannelId || (drinkDebug?.seJwtConfigured ? 'Resolving...' : 'No JWT')}
+                                                </div>
+                                            </div>
+                                            <div className="rounded-xl bg-black/40 border border-white/10 p-3">
+                                                <div className="text-gray-500 text-[10px] uppercase font-bold">Nisathon Guard</div>
+                                                <div className="font-mono font-bold text-emerald-400 mt-0.5">
+                                                    {drinkDebug ? (drinkDebug.nisathonListenerActive ? 'ISOLATED · OK' : 'PAUSED · OK') : '—'}
+                                                </div>
+                                            </div>
+                                            <div className="rounded-xl bg-black/40 border border-white/10 p-3">
+                                                <div className="text-gray-500 text-[10px] uppercase font-bold">SE JWT Env</div>
+                                                <div className={`font-mono font-bold mt-0.5 ${drinkDebug?.seJwtConfigured ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                    {drinkDebug ? (drinkDebug.seJwtConfigured ? 'CONFIGURED' : 'MISSING') : '—'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="max-h-[240px] overflow-y-auto pr-1 custom-scrollbar space-y-1.5">
+                                            {drinkDebug?.logs && drinkDebug.logs.length > 0 ? drinkDebug.logs.map((log) => (
+                                                <div key={log._id} className="rounded-xl bg-black/40 border border-white/5 px-3 py-2 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                                                    <div className="min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-1.5">
+                                                            <span className={`font-mono font-bold uppercase ${
+                                                                log.outcome === 'queued'
+                                                                    ? 'text-emerald-400'
+                                                                    : log.outcome === 'dry_run'
+                                                                        ? 'text-sky-300'
+                                                                        : log.outcome === 'error'
+                                                                            ? 'text-red-400'
+                                                                            : 'text-amber-300'
+                                                            }`}>
+                                                                {log.outcome}
+                                                            </span>
+                                                            <span className="text-gray-500">·</span>
+                                                            <span className="font-mono text-gray-300">{log.source}</span>
+                                                            <span className="text-gray-500">·</span>
+                                                            <span className="font-bold text-white">{log.user}</span>
+                                                            <span className="text-gray-400">({log.amountDisplay || log.triggerType})</span>
+                                                        </div>
+                                                        <div className="text-gray-400 truncate mt-0.5">
+                                                            {log.queuedSummary !== 'None' ? `${log.queuedSummary} — ` : ''}{log.reason}
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-[11px] font-mono text-gray-500 shrink-0">
+                                                        {new Date(log.createdAt).toLocaleTimeString()}
+                                                    </span>
+                                                </div>
+                                            )) : (
+                                                <div className="text-xs text-gray-500 text-center py-8 border border-dashed border-white/10 rounded-xl">
+                                                    No shot pipeline events logged yet. Run a preset or dry-run above to inspect!
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}

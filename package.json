@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -19,7 +19,6 @@
     "mongoose": "^7.8.8",
     "motion": "^12.42.0",
     "multer": "^2.2.0",
-    "puppeteer": "^24.35.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-router-dom": "6.22.3",

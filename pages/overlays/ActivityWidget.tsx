@@ -76,12 +76,14 @@ const ActivityWidget: React.FC = () => {
         if (!latest) return;
         
         const updateTime = () => {
-            const diff = Date.now() - new Date(latest.createdAt).getTime();
+            const diff = Math.max(0, Date.now() - new Date(latest.createdAt).getTime());
             const seconds = Math.floor(diff / 1000);
-            
+            const hours = Math.floor(seconds / 3600);
+
             if (seconds < 60) setTimeAgo("Just now");
             else if (seconds < 3600) setTimeAgo(`${Math.floor(seconds / 60)}m ago`);
-            else setTimeAgo(`${Math.floor(seconds / 3600)}h ago`);
+            else if (hours <= 48) setTimeAgo(`${hours}h ago`);
+            else setTimeAgo(`${Math.max(3, Math.floor(hours / 24))}d ago`);
         };
 
         updateTime();

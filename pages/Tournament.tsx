@@ -33,7 +33,8 @@ import {
     Search,
     AlertTriangle,
     X,
-    Plus
+    Plus,
+    Clock
 } from 'lucide-react';
 import UserProfile, { UserData } from '../components/UserProfile';
 import OptimizedImage from '../components/OptimizedImage';

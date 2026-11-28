@@ -1,7 +1,9 @@
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer'); // Stripped for AI Studio compatibility
 const fs = require('fs');
 
 (async () => {
+  console.log('Puppeteer disabled in AI Studio environment');
+  /*
   const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
   
@@ -26,4 +28,5 @@ const fs = require('fs');
   }
   
   await browser.close();
+  */
 })();
