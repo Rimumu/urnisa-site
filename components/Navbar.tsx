@@ -7,6 +7,7 @@ import { useTwitchStatus } from '../hooks/useTwitchStatus';
 const NavLinks: React.FC = () => (
   <>
     <NavLink to="/" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Home</NavLink>
+    <NavLink to="/drinks" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Drinking</NavLink>
     <NavLink to="/nisathon" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Nisathon</NavLink>
     <NavLink to="/gallery" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Art Gallery</NavLink>
     <NavLink to="/archive" className={({ isActive }) => `flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 transform hover:scale-105 ${isActive ? 'bg-brand-primary text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>Archive</NavLink>
@@ -138,6 +139,7 @@ const Navbar: React.FC<NavbarProps> = ({ onEasterEggTrigger }) => {
       >
         <div className="flex flex-col px-8 py-8 h-full overflow-y-auto space-y-8 custom-scrollbar">
           <NavLink to="/" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Home</NavLink>
+          <NavLink to="/drinks" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Drinking</NavLink>
           <NavLink to="/nisathon" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Nisathon</NavLink>
           <NavLink to="/gallery" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Art Gallery</NavLink>
           <NavLink to="/archive" onClick={closeMenu} className={({ isActive }) => `text-3xl font-extrabold tracking-tight transition-colors duration-200 ${isActive ? 'text-brand-primary' : 'text-white hover:text-brand-primary'}`}>Archive</NavLink>
